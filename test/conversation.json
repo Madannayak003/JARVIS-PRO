@@ -1,0 +1,36 @@
+{
+    "session_id": "38831141-a228-4405-b706-9db923f57376",
+    "started_at": "2026-07-07T19:11:35.594789",
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello",
+            "timestamp": "2026-07-07T19:11:35",
+            "metadata": null
+        },
+        {
+            "role": "assistant",
+            "content": "Hi Madan!",
+            "timestamp": "2026-07-07T19:11:35",
+            "metadata": null
+        },
+        {
+            "role": "user",
+            "content": "Open VS Code",
+            "timestamp": "2026-07-07T19:11:35",
+            "metadata": null
+        },
+        {
+            "role": "assistant",
+            "content": "Opening VS Code",
+            "timestamp": "2026-07-07T19:11:35",
+            "metadata": null
+        },
+        {
+            "role": "user",
+            "content": "Create Python file",
+            "timestamp": "2026-07-07T19:11:35",
+            "metadata": null
+        }
+    ]
+}
