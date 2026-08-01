@@ -14,49 +14,94 @@ ROOT = Path(__file__).resolve().parents[1]
 
 STRUCTURES = {
 
-        "workspace": {
+    "editor": {
 
         "folders": [
 
-            "workspace",
+            "editor",
 
-            "workspace/builders",
+            "editor/analyzer",
 
-            "workspace/models",
+            "editor/planner",
 
-            "workspace/rules",
+            "editor/prompt_builder",
 
-            "workspace/writers",
+            "editor/provider",
+
+            "editor/parser",
+
+            "editor/validator",
+
+            "editor/workspace",
+
+            "editor/models",
+
+            "editor/rules",
+
+            "editor/tests",
 
         ],
 
         "files": [
 
-            "workspace/__init__.py",
+            # Root
+            "editor/__init__.py",
+            "editor/editor.py",
 
-            "workspace/workspace.py",
+            # Analyzer
+            "editor/analyzer/__init__.py",
+            "editor/analyzer/edit_analyzer.py",
+            "editor/analyzer/target_locator.py",
 
-            "workspace/builders/__init__.py",
-            "workspace/builders/project_builder.py",
-            "workspace/builders/folder_builder.py",
-            "workspace/builders/file_builder.py",
+            # Planner
+            "editor/planner/__init__.py",
+            "editor/planner/edit_planner.py",
 
-            "workspace/models/__init__.py",
-            "workspace/models/workspace_result.py",
-            "workspace/models/created_file.py",
-            "workspace/models/created_folder.py",
+            # Prompt Builder
+            "editor/prompt_builder/__init__.py",
+            "editor/prompt_builder/prompt_builder.py",
+            "editor/prompt_builder/system_builder.py",
+            "editor/prompt_builder/context_builder.py",
+            "editor/prompt_builder/instruction_builder.py",
 
-            "workspace/rules/__init__.py",
-            "workspace/rules/workspace_rules.py",
+            # Provider
+            "editor/provider/__init__.py",
+            "editor/provider/base_provider.py",
+            "editor/provider/ollama_provider.py",
 
-            "workspace/writers/__init__.py",
-            "workspace/writers/folder_writer.py",
-            "workspace/writers/file_writer.py",
+            # Parser
+            "editor/parser/__init__.py",
+            "editor/parser/response_parser.py",
+            "editor/parser/patch_parser.py",
+
+            # Validator
+            "editor/validator/__init__.py",
+            "editor/validator/edit_validator.py",
+
+            # Workspace
+            "editor/workspace/__init__.py",
+            "editor/workspace/patch_writer.py",
+            "editor/workspace/backup_builder.py",
+            "editor/workspace/rollback.py",
+
+            # Models
+            "editor/models/__init__.py",
+            "editor/models/edit_context.py",
+            "editor/models/edit_request.py",
+            "editor/models/edit_result.py",
+            "editor/models/patch.py",
+
+            # Rules
+            "editor/rules/__init__.py",
+            "editor/rules/edit_rules.py",
+
+            # Tests
+            "editor/tests/__init__.py",
+            "editor/tests/test_editor.py",
 
         ]
 
     },
-
 }
 
 
