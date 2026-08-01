@@ -56,7 +56,20 @@ log/
 # Generated Workspace
 # ----------------------------------------------------------
 
-workspace/
+generated/
+
+# ----------------------------------------------------------
+# Generated Projects
+# ----------------------------------------------------------
+
+workspace/Arduino/
+workspace/Python/
+workspace/ESP32/
+workspace/General/
+workspace/Html/
+workspace/Javascript/
+workspace/Web/
+workspace/jarvis/
 
 # ----------------------------------------------------------
 # Previous project backups
