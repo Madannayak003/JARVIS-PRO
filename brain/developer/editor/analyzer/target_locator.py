@@ -7,6 +7,8 @@ Target Locator
 
 import re
 
+from collections import defaultdict
+
 from brain.developer.editor.models.project_index import (
     ProjectIndex,
 )
@@ -14,27 +16,23 @@ from brain.developer.editor.models.project_index import (
 
 class TargetLocator:
     """
-    Uses the ProjectIndex to intelligently locate
-    files relevant to the user's request.
+    Uses a scoring system to locate the
+    most relevant project files.
     """
 
     COMMON_FILES = {
 
         "readme": "readme",
-
         "license": "license",
-
         "requirements": "requirements",
-
         "main": "main",
-
         "test": "test",
-
         "config": "config",
-
         "settings": "settings",
 
     }
+
+    MAX_RESULTS = 5
 
     # --------------------------------------------------
 
@@ -50,8 +48,6 @@ class TargetLocator:
 
         request = request.lower()
 
-        selected = set()
-
         words = {
 
             word.lower()
@@ -66,8 +62,11 @@ class TargetLocator:
 
         }
 
+        scores = defaultdict(int)
+
         # --------------------------------------------------
         # Exact filename
+        # +100
         # --------------------------------------------------
 
         for file in index.files:
@@ -76,10 +75,11 @@ class TargetLocator:
 
             if filename in request:
 
-                selected.add(file)
+                scores[file] += 100
 
         # --------------------------------------------------
-        # Filename without extension
+        # Filename stem
+        # +80
         # --------------------------------------------------
 
         for file in index.files:
@@ -90,10 +90,11 @@ class TargetLocator:
 
             if stem in words:
 
-                selected.add(file)
+                scores[file] += 80
 
         # --------------------------------------------------
         # Common project files
+        # +50
         # --------------------------------------------------
 
         for keyword, value in self.COMMON_FILES.items():
@@ -106,98 +107,83 @@ class TargetLocator:
 
                 if value in file.lower():
 
-                    selected.add(file)
+                    scores[file] += 50
 
         # --------------------------------------------------
-        # Function names
-        # --------------------------------------------------
-
-        for word in words:
-
-            if word in index.functions:
-
-                selected.update(
-
-                    index.functions[word]
-
-                )
-
-        # --------------------------------------------------
-        # Class names
+        # Functions
+        # +90
         # --------------------------------------------------
 
         for word in words:
 
-            if word in index.classes:
+            if word not in index.functions:
 
-                selected.update(
+                continue
 
-                    index.classes[word]
+            for file in index.functions[word]:
 
-                )
+                scores[file] += 90
+
+        # --------------------------------------------------
+        # Classes
+        # +85
+        # --------------------------------------------------
+
+        for word in words:
+
+            if word not in index.classes:
+
+                continue
+
+            for file in index.classes[word]:
+
+                scores[file] += 85
 
         # --------------------------------------------------
         # Imports
+        # +40
         # --------------------------------------------------
 
         for word in words:
 
-            if word in index.imports:
+            if word not in index.imports:
 
-                selected.update(
+                continue
 
-                    index.imports[word]
+            for file in index.imports[word]:
 
-                )
+                scores[file] += 40
 
         # --------------------------------------------------
-        # Smart fallback
+        # Nothing matched
         # --------------------------------------------------
 
-        if selected:
+        if not scores:
 
-            return sorted(selected)
+            return []
 
-        # Prefer source files over documentation
+        # --------------------------------------------------
+        # Highest score first
+        # --------------------------------------------------
 
-        source = [
+        ranked = sorted(
+
+            scores.items(),
+
+            key=lambda item: (
+
+                -item[1],
+
+                item[0],
+
+            ),
+
+        )
+
+        return [
 
             file
 
-            for file in index.files
-
-            if file.endswith(
-
-                (
-
-                    ".py",
-
-                    ".ino",
-
-                    ".cpp",
-
-                    ".c",
-
-                    ".h",
-
-                    ".hpp",
-
-                    ".js",
-
-                    ".ts",
-
-                    ".html",
-
-                    ".css",
-
-                )
-
-            )
+            for file, _ in ranked[: self.MAX_RESULTS]
 
         ]
-
-        if source:
-
-            return sorted(source)
-
-        return sorted(index.files)

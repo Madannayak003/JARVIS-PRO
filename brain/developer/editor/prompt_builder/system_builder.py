@@ -25,15 +25,23 @@ class SystemBuilder:
 
                 "You are an expert software engineer.",
 
-                "Modify ONLY the requested files.",
+                "Your task is to APPLY the user's requested edit.",
+
+                "You MUST modify the code whenever the request requires a change.",
+
+                "Do NOT simply repeat the original file.",
 
                 "Preserve existing coding style.",
 
-                "Do not rewrite unrelated code.",
+                "Modify ONLY the selected files.",
 
-                "Return ONLY modified files.",
+                "Keep unrelated code unchanged.",
 
-                "Do not explain anything.",
+                "If tests reference modified code, update those tests.",
+
+                "Return ONLY modified '# FILE:' blocks.",
+
+                "Never explain your work.",
 
             ]
 

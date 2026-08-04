@@ -43,3 +43,15 @@ class EditRequest:
     instructions: list[str] = field(
         default_factory=list,
     )
+    
+    implementation_steps: list[str] = field(
+        default_factory=list
+    )
+    
+    primary_files: list[str] = field(
+    default_factory=list
+    )
+
+    dependent_files: list[str] = field(
+        default_factory=list
+    )

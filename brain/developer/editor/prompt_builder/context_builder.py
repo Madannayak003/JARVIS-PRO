@@ -38,15 +38,59 @@ class ContextBuilder:
 
             "",
 
-            "# Selected Files",
+            "# Execution Plan",
 
             "",
 
         ]
 
+        # ------------------------------------------
+        # Execution Plan
+        # ------------------------------------------
+
+        if request.implementation_steps:
+
+            for step in request.implementation_steps:
+
+                lines.append(
+
+                    f"- {step}"
+
+                )
+
+        else:
+
+            lines.append(
+
+                "- Apply the requested edit."
+
+            )
+
+        lines.extend(
+
+            [
+
+                "",
+
+                "# Selected Files",
+
+                "",
+
+            ]
+
+        )
+
+        # ------------------------------------------
+        # Selected Files
+        # ------------------------------------------
+
         if not request.target_files:
 
-            lines.append("(None)")
+            lines.append(
+
+                "(None)"
+
+            )
 
             return "\n".join(lines)
 
@@ -63,12 +107,19 @@ class ContextBuilder:
             extension = file.rsplit(".", 1)[-1]
 
             lines.append(f"## {file}")
+
             lines.append("")
 
             if not content:
 
-                lines.append("(File is empty or could not be read.)")
+                lines.append(
+
+                    "(File is empty or could not be read.)"
+
+                )
+
                 lines.append("")
+
                 continue
 
             # ------------------------------------------
@@ -86,8 +137,11 @@ class ContextBuilder:
                 )
 
             lines.append(f"```{extension}")
+
             lines.append(content)
+
             lines.append("```")
+
             lines.append("")
 
         return "\n".join(lines)
