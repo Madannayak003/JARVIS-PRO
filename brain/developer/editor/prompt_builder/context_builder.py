@@ -11,6 +11,9 @@ from brain.developer.editor.models.prompt_context import (
 
 
 class ContextBuilder:
+    """
+    Builds the edit context for the LLM.
+    """
 
     def build(
         self,
@@ -43,9 +46,35 @@ class ContextBuilder:
 
                 lines.append(
 
-                    f"- {file}"
+                    f"## {file}"
 
                 )
+
+                lines.append("")
+
+                extension = file.split(".")[-1]
+
+                lines.append(
+
+                    f"```{extension}"
+
+                )
+
+                lines.append(
+
+                    request.file_contents.get(
+
+                        file,
+
+                        "",
+
+                    )
+
+                )
+
+                lines.append("```")
+
+                lines.append("")
 
         else:
 

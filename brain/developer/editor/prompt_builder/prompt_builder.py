@@ -29,6 +29,10 @@ from brain.developer.editor.prompt_builder.instruction_builder import (
     InstructionBuilder,
 )
 
+from brain.developer.editor.workspace.file_reader import (
+    FileReader,
+)
+
 
 class PromptBuilder:
 
@@ -39,6 +43,8 @@ class PromptBuilder:
         self.context_builder = ContextBuilder()
 
         self.instruction_builder = InstructionBuilder()
+        
+        self.reader = FileReader()
 
     # --------------------------------------------------
 
@@ -46,6 +52,30 @@ class PromptBuilder:
         self,
         request: EditRequest,
     ) -> PromptResult:
+
+        # --------------------------------------
+        # Read Selected Files
+        # --------------------------------------
+
+        if (
+
+            request.project_path
+
+            and
+
+            request.target_files
+
+        ):
+
+            request.file_contents = self.reader.read(
+
+                request.project_path,
+
+                request.target_files,
+
+            )
+
+        # --------------------------------------
 
         context = PromptContext(
 

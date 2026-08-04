@@ -16,10 +16,18 @@ class EditRequest:
 
     user_request: str = ""
 
-    target_files: list[str] = field(default_factory=list)
-
-    instructions: list[str] = field(default_factory=list)
-
     edit_type: str = ""
 
     project_path: str = ""
+
+    target_files: list[str] = field(
+        default_factory=list,
+    )
+
+    file_contents: dict[str, str] = field(
+        default_factory=dict,
+    )
+
+    instructions: list[str] = field(
+        default_factory=list,
+    )
