@@ -15,8 +15,26 @@ from brain.developer.editor.models.project_index import (
 class TargetLocator:
     """
     Uses the ProjectIndex to intelligently locate
-    files that are relevant to the user's request.
+    files relevant to the user's request.
     """
+
+    COMMON_FILES = {
+
+        "readme": "readme",
+
+        "license": "license",
+
+        "requirements": "requirements",
+
+        "main": "main",
+
+        "test": "test",
+
+        "config": "config",
+
+        "settings": "settings",
+
+    }
 
     # --------------------------------------------------
 
@@ -34,10 +52,6 @@ class TargetLocator:
 
         selected = set()
 
-        # -------------------------------------
-        # Extract words from request
-        # -------------------------------------
-
         words = {
 
             word.lower()
@@ -52,11 +66,9 @@ class TargetLocator:
 
         }
 
-        # -------------------------------------
-        # Exact filename match
-        # Example:
-        # "format main.py"
-        # -------------------------------------
+        # --------------------------------------------------
+        # Exact filename
+        # --------------------------------------------------
 
         for file in index.files:
 
@@ -66,12 +78,9 @@ class TargetLocator:
 
                 selected.add(file)
 
-        # -------------------------------------
-        # Partial filename match
-        # Example:
-        # parser -> parser.py
-        # login -> login.py
-        # -------------------------------------
+        # --------------------------------------------------
+        # Filename without extension
+        # --------------------------------------------------
 
         for file in index.files:
 
@@ -83,9 +92,25 @@ class TargetLocator:
 
                 selected.add(file)
 
-        # -------------------------------------
+        # --------------------------------------------------
+        # Common project files
+        # --------------------------------------------------
+
+        for keyword, value in self.COMMON_FILES.items():
+
+            if keyword not in words:
+
+                continue
+
+            for file in index.files:
+
+                if value in file.lower():
+
+                    selected.add(file)
+
+        # --------------------------------------------------
         # Function names
-        # -------------------------------------
+        # --------------------------------------------------
 
         for word in words:
 
@@ -97,9 +122,9 @@ class TargetLocator:
 
                 )
 
-        # -------------------------------------
+        # --------------------------------------------------
         # Class names
-        # -------------------------------------
+        # --------------------------------------------------
 
         for word in words:
 
@@ -111,9 +136,9 @@ class TargetLocator:
 
                 )
 
-        # -------------------------------------
-        # Imported modules
-        # -------------------------------------
+        # --------------------------------------------------
+        # Imports
+        # --------------------------------------------------
 
         for word in words:
 
@@ -125,18 +150,54 @@ class TargetLocator:
 
                 )
 
-        # -------------------------------------
-        # Fallback
-        #
-        # If nothing matched,
-        # temporarily return every file.
-        #
-        # This will later be replaced by
-        # smarter ranking.
-        # -------------------------------------
+        # --------------------------------------------------
+        # Smart fallback
+        # --------------------------------------------------
 
-        if not selected:
+        if selected:
 
-            return sorted(index.files)
+            return sorted(selected)
 
-        return sorted(selected)
+        # Prefer source files over documentation
+
+        source = [
+
+            file
+
+            for file in index.files
+
+            if file.endswith(
+
+                (
+
+                    ".py",
+
+                    ".ino",
+
+                    ".cpp",
+
+                    ".c",
+
+                    ".h",
+
+                    ".hpp",
+
+                    ".js",
+
+                    ".ts",
+
+                    ".html",
+
+                    ".css",
+
+                )
+
+            )
+
+        ]
+
+        if source:
+
+            return sorted(source)
+
+        return sorted(index.files)

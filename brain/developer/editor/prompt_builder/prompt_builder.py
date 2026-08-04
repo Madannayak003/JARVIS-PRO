@@ -85,6 +85,8 @@ class PromptBuilder:
 
                 request.user_request,
 
+                request.edit_type,
+
                 request.file_contents,
 
             )

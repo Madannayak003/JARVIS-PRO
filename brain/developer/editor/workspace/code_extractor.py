@@ -5,101 +5,60 @@ Developer Editor
 Code Extractor
 """
 
-import re
+from pathlib import Path
+
+from brain.developer.editor.workspace.extractors.python_extractor import (
+    PythonExtractor,
+)
+
+from brain.developer.editor.workspace.extractors.regex_extractor import (
+    RegexExtractor,
+)
 
 
 class CodeExtractor:
     """
-    Extracts only the relevant code that should
-    be sent to the LLM.
+    Dispatches extraction to the correct
+    language-specific extractor.
     """
 
-    CONTEXT_LINES = 20
+    def __init__(self):
+
+        self.python = PythonExtractor()
+
+        self.regex = RegexExtractor()
 
     # --------------------------------------------------
 
     def extract(
         self,
         request: str,
+        edit_type: str,
         file_contents: dict[str, str],
     ) -> dict[str, str]:
 
         result = {}
 
-        request = request.lower()
-
-        # -------------------------------------
-        # Look for function/class names
-        # -------------------------------------
-
-        words = re.findall(
-
-            r"[A-Za-z_][A-Za-z0-9_]*",
-
-            request,
-
-        )
-
         for path, content in file_contents.items():
 
-            snippet = self._extract_snippet(
+            suffix = Path(path).suffix.lower()
+
+            if suffix == ".py":
+
+                extractor = self.python
+
+            else:
+
+                extractor = self.regex
+
+            result[path] = extractor.extract(
+
+                request,
+
+                edit_type,
 
                 content,
 
-                words,
-
             )
 
-            result[path] = snippet
-
         return result
-
-    # --------------------------------------------------
-
-    def _extract_snippet(
-
-        self,
-
-        content: str,
-
-        words: list[str],
-
-    ) -> str:
-
-        if not content:
-
-            return ""
-
-        lines = content.splitlines()
-
-        for index, line in enumerate(lines):
-
-            lower = line.lower()
-
-            for word in words:
-
-                if word in lower:
-
-                    start = max(
-
-                        0,
-
-                        index - self.CONTEXT_LINES,
-
-                    )
-
-                    end = min(
-
-                        len(lines),
-
-                        index + self.CONTEXT_LINES,
-
-                    )
-
-                    return "\n".join(
-
-                        lines[start:end]
-
-                    )
-
-        return content
