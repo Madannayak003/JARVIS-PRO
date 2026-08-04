@@ -2,6 +2,10 @@ from brain.developer.editor.analyzer import EditAnalyzer
 from brain.developer.editor.planner import EditPlanner
 from brain.developer.editor.prompt_builder import PromptBuilder
 
+from brain.developer.generator.providers.ollama_provider import (
+    OllamaProvider,
+)
+
 
 def main():
 
@@ -10,6 +14,8 @@ def main():
     planner = EditPlanner()
 
     prompt_builder = PromptBuilder()
+    
+    provider = OllamaProvider()
 
     project = "workspace/Python/PythonCalculator"
 
@@ -45,6 +51,12 @@ def main():
             result,
 
         )
+        
+        response = provider.generate(
+
+            prompt,
+
+        )
 
         print("=" * 60)
         print("Request        :", command)
@@ -54,6 +66,11 @@ def main():
 
         print("=" * 80)
         print(prompt.prompt)
+        
+        print("=" * 80)
+        print("RAW AI RESPONSE")
+        print("=" * 80)
+        print(response)
 
 
 if __name__ == "__main__":
