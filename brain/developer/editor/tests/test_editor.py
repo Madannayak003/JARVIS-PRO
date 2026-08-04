@@ -1,11 +1,15 @@
 from brain.developer.editor.analyzer import EditAnalyzer
 from brain.developer.editor.planner import EditPlanner
+from brain.developer.editor.prompt_builder import PromptBuilder
 
 
 def main():
 
     analyzer = EditAnalyzer()
+
     planner = EditPlanner()
+
+    prompt_builder = PromptBuilder()
 
     project = "workspace/Python/PythonCalculator"
 
@@ -22,10 +26,6 @@ def main():
 
     for command in tests:
 
-        # -------------------------
-        # Analyze
-        # -------------------------
-
         result = analyzer.analyze(
 
             command,
@@ -34,11 +34,13 @@ def main():
 
         )
 
-        # -------------------------
-        # Plan
-        # -------------------------
-
         result = planner.plan(
+
+            result,
+
+        )
+
+        prompt = prompt_builder.build(
 
             result,
 
@@ -49,6 +51,9 @@ def main():
         print("Action         :", result.edit_type)
         print("Instructions   :", result.instructions)
         print("Selected Files :", result.target_files)
+
+        print("=" * 80)
+        print(prompt.prompt)
 
 
 if __name__ == "__main__":
