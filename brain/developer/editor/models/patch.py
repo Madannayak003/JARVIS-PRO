@@ -11,13 +11,16 @@ from dataclasses import dataclass
 @dataclass
 class Patch:
     """
-    Represents a single file modification.
+    Represents one modified file returned
+    by the LLM.
     """
 
     path: str = ""
 
-    old_content: str = ""
+    language: str = ""
 
-    new_content: str = ""
+    content: str = ""
 
-    changed: bool = False
+    is_new_file: bool = False
+
+    is_deleted: bool = False
