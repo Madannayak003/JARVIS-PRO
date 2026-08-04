@@ -15,6 +15,9 @@ from brain.developer.editor.analyzer.target_locator import (
     TargetLocator,
 )
 
+from brain.developer.editor.analyzer.project_scanner import (
+    ProjectScanner,
+)
 
 class EditAnalyzer:
     """
@@ -95,6 +98,7 @@ class EditAnalyzer:
     def __init__(self):
 
         self.target_locator = TargetLocator()
+        self.scanner = ProjectScanner()
 
     # --------------------------------------------------
 
@@ -127,9 +131,25 @@ class EditAnalyzer:
 
             request.project_path = project_path
 
-            request.target_files = self.target_locator.locate(
+            # ---------------------------------
+            # Build project index
+            # ---------------------------------
+
+            request.project_index = self.scanner.scan(
 
                 project_path,
+
+            )
+
+            # ---------------------------------
+            # Locate relevant files
+            # ---------------------------------
+
+            request.target_files = self.target_locator.locate(
+
+                request.user_request,
+
+                request.project_index,
 
             )
 

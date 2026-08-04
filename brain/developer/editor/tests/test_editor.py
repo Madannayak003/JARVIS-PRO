@@ -21,12 +21,20 @@ def main():
 
     tests = [
 
-        "Add login page",
-        "Fix RFID code",
-        "Rename login() to signIn()",
-        "Replace Firebase with Supabase",
-        "Optimize parser",
-        "Format main.py",
+        # Existing functions
+        "Fix divide()",
+        "Optimize multiply()",
+        "Rename add() to addition()",
+        "Rename calculator to simple_calculator",
+
+        # New feature
+        "Add modulo() function",
+
+        # Formatting
+        "Format main.py",      
+
+        # Documentation
+        "Update README.md",
 
     ]
 
@@ -39,6 +47,19 @@ def main():
             project,
 
         )
+        
+        print("=" * 80)
+        print("PROJECT INDEX")
+        print("=" * 80)
+
+        if result.project_index:
+
+            print("Files      :", result.project_index.files)
+            print("Functions  :", sorted(result.project_index.functions.keys()))
+            print("Classes    :", sorted(result.project_index.classes.keys()))
+            print("Imports    :", sorted(result.project_index.imports.keys()))
+
+        print()
 
         result = planner.plan(
 
@@ -63,6 +84,20 @@ def main():
         print("Action         :", result.edit_type)
         print("Instructions   :", result.instructions)
         print("Selected Files :", result.target_files)
+        
+        print()
+
+        print("FILE CONTENT SENT TO OLLAMA")
+        print("-" * 80)
+
+        for file, content in result.file_contents.items():
+
+            print(file)
+            print("-" * 80)
+
+            print(content)
+
+            print("=" * 80)
 
         print("=" * 80)
         print(prompt.prompt)

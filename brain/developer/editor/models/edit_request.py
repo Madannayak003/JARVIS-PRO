@@ -7,6 +7,10 @@ Edit Request
 
 from dataclasses import dataclass, field
 
+from brain.developer.editor.models.project_index import (
+    ProjectIndex,
+)
+
 
 @dataclass
 class EditRequest:
@@ -14,11 +18,19 @@ class EditRequest:
     Represents a user's edit request.
     """
 
+    # -------------------------------------
+
     user_request: str = ""
 
     edit_type: str = ""
 
     project_path: str = ""
+
+    # -------------------------------------
+
+    project_index: ProjectIndex | None = None
+
+    # -------------------------------------
 
     target_files: list[str] = field(
         default_factory=list,

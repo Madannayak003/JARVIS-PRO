@@ -33,6 +33,10 @@ from brain.developer.editor.workspace.file_reader import (
     FileReader,
 )
 
+from brain.developer.editor.workspace.code_extractor import (
+    CodeExtractor,
+)
+
 
 class PromptBuilder:
 
@@ -45,6 +49,8 @@ class PromptBuilder:
         self.instruction_builder = InstructionBuilder()
         
         self.reader = FileReader()
+        
+        self.extractor = CodeExtractor()
 
     # --------------------------------------------------
 
@@ -72,6 +78,14 @@ class PromptBuilder:
                 request.project_path,
 
                 request.target_files,
+
+            )
+
+            request.file_contents = self.extractor.extract(
+
+                request.user_request,
+
+                request.file_contents,
 
             )
 

@@ -15,6 +15,10 @@ class ContextBuilder:
     Builds the edit context for the LLM.
     """
 
+    MAX_PREVIEW_LENGTH = 8000
+
+    # --------------------------------------------------
+
     def build(
         self,
         context: PromptContext,
@@ -40,48 +44,50 @@ class ContextBuilder:
 
         ]
 
-        if request.target_files:
+        if not request.target_files:
 
-            for file in request.target_files:
+            lines.append("(None)")
 
-                lines.append(
+            return "\n".join(lines)
 
-                    f"## {file}"
+        for file in request.target_files:
 
-                )
+            content = request.file_contents.get(
 
-                lines.append("")
+                file,
 
-                extension = file.split(".")[-1]
-
-                lines.append(
-
-                    f"```{extension}"
-
-                )
-
-                lines.append(
-
-                    request.file_contents.get(
-
-                        file,
-
-                        "",
-
-                    )
-
-                )
-
-                lines.append("```")
-
-                lines.append("")
-
-        else:
-
-            lines.append(
-
-                "(None)"
+                "",
 
             )
+
+            extension = file.rsplit(".", 1)[-1]
+
+            lines.append(f"## {file}")
+            lines.append("")
+
+            if not content:
+
+                lines.append("(File is empty or could not be read.)")
+                lines.append("")
+                continue
+
+            # ------------------------------------------
+            # Limit prompt size
+            # ------------------------------------------
+
+            if len(content) > self.MAX_PREVIEW_LENGTH:
+
+                content = (
+
+                    content[: self.MAX_PREVIEW_LENGTH]
+
+                    + "\n\n... (truncated) ..."
+
+                )
+
+            lines.append(f"```{extension}")
+            lines.append(content)
+            lines.append("```")
+            lines.append("")
 
         return "\n".join(lines)

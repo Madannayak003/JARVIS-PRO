@@ -5,67 +5,138 @@ Developer Editor
 Target Locator
 """
 
-from pathlib import Path
+import re
+
+from brain.developer.editor.models.project_index import (
+    ProjectIndex,
+)
 
 
 class TargetLocator:
     """
-    Finds candidate files that should be edited.
+    Uses the ProjectIndex to intelligently locate
+    files that are relevant to the user's request.
     """
-
-    DEFAULT_EXTENSIONS = {
-
-        ".py",
-        ".ino",
-        ".cpp",
-        ".c",
-        ".h",
-        ".hpp",
-        ".html",
-        ".css",
-        ".js",
-        ".ts",
-        ".json",
-        ".md",
-
-    }
 
     # --------------------------------------------------
 
     def locate(
         self,
-        project_path: str,
+        request: str,
+        index: ProjectIndex,
     ) -> list[str]:
-        """
-        Locate editable files.
-        """
 
-        root = Path(project_path)
-
-        if not root.exists():
+        if index is None:
 
             return []
 
-        files = []
+        request = request.lower()
 
-        for path in root.rglob("*"):
+        selected = set()
 
-            if not path.is_file():
+        # -------------------------------------
+        # Extract words from request
+        # -------------------------------------
 
-                continue
+        words = {
 
-            if path.suffix.lower() not in self.DEFAULT_EXTENSIONS:
+            word.lower()
 
-                continue
+            for word in re.findall(
 
-            files.append(
+                r"[A-Za-z_][A-Za-z0-9_]*",
 
-                str(
-
-                    path.relative_to(root)
-
-                ).replace("\\", "/")
+                request,
 
             )
 
-        return sorted(files)
+        }
+
+        # -------------------------------------
+        # Exact filename match
+        # Example:
+        # "format main.py"
+        # -------------------------------------
+
+        for file in index.files:
+
+            filename = file.split("/")[-1].lower()
+
+            if filename in request:
+
+                selected.add(file)
+
+        # -------------------------------------
+        # Partial filename match
+        # Example:
+        # parser -> parser.py
+        # login -> login.py
+        # -------------------------------------
+
+        for file in index.files:
+
+            filename = file.split("/")[-1].lower()
+
+            stem = filename.rsplit(".", 1)[0]
+
+            if stem in words:
+
+                selected.add(file)
+
+        # -------------------------------------
+        # Function names
+        # -------------------------------------
+
+        for word in words:
+
+            if word in index.functions:
+
+                selected.update(
+
+                    index.functions[word]
+
+                )
+
+        # -------------------------------------
+        # Class names
+        # -------------------------------------
+
+        for word in words:
+
+            if word in index.classes:
+
+                selected.update(
+
+                    index.classes[word]
+
+                )
+
+        # -------------------------------------
+        # Imported modules
+        # -------------------------------------
+
+        for word in words:
+
+            if word in index.imports:
+
+                selected.update(
+
+                    index.imports[word]
+
+                )
+
+        # -------------------------------------
+        # Fallback
+        #
+        # If nothing matched,
+        # temporarily return every file.
+        #
+        # This will later be replaced by
+        # smarter ranking.
+        # -------------------------------------
+
+        if not selected:
+
+            return sorted(index.files)
+
+        return sorted(selected)
