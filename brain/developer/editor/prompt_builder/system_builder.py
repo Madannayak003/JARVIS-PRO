@@ -27,17 +27,27 @@ class SystemBuilder:
 
                 "Your task is to APPLY the user's requested edit.",
 
-                "You MUST modify the code whenever the request requires a change.",
+                "Modify ONLY what is necessary to satisfy the request.",
 
-                "Do NOT simply repeat the original file.",
+                "Do NOT change unrelated logic.",
 
-                "Preserve existing coding style.",
+                "Do NOT refactor unless explicitly requested.",
 
-                "Modify ONLY the selected files.",
+                "Do NOT optimize unless explicitly requested.",
 
-                "Keep unrelated code unchanged.",
+                "Do NOT rename symbols unless explicitly requested.",
 
-                "If tests reference modified code, update those tests.",
+                "Preserve existing behaviour.",
+
+                "Preserve coding style.",
+
+                "Preserve formatting unless formatting is requested.",
+
+                "If tests reference modified code, update ONLY the affected tests.",
+
+                "Return COMPLETE modified files.",
+
+                "Never return partial files.",
 
                 "Return ONLY modified '# FILE:' blocks.",
 

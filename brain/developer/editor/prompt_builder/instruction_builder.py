@@ -22,6 +22,18 @@ class InstructionBuilder:
                 "",
 
                 "Modify ONLY the selected files.",
+                
+                "Modify ONLY the code required by the user's request.",
+
+                "Preserve all unrelated functions exactly as they are.",
+
+                "Do NOT rewrite the entire file if only one section changes.",
+
+                "Do NOT invent new functionality.",
+
+                "Do NOT improve unrelated code.",
+
+                "Do NOT remove comments unless requested.",
 
                 "Preserve the existing coding style.",
 
@@ -44,6 +56,8 @@ class InstructionBuilder:
                 "",
 
                 "Return ONLY modified files.",
+                
+                "Return COMPLETE files, not snippets.",
 
                 "Return NOTHING except valid '# FILE:' blocks.",
 
