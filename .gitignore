@@ -71,6 +71,8 @@ workspace/Javascript/
 workspace/Web/
 workspace/jarvis/
 
+tools/scaffold.py
+
 # ----------------------------------------------------------
 # Previous project backups
 # ----------------------------------------------------------

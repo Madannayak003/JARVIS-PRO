@@ -14,92 +14,68 @@ ROOT = Path(__file__).resolve().parents[1]
 
 STRUCTURES = {
 
-    "editor": {
+    "memory": {
 
         "folders": [
 
-            "editor",
+            "memory",
 
-            "editor/analyzer",
+            "memory/models",
 
-            "editor/planner",
+            "memory/rules",
 
-            "editor/prompt_builder",
-
-            "editor/provider",
-
-            "editor/parser",
-
-            "editor/validator",
-
-            "editor/workspace",
-
-            "editor/models",
-
-            "editor/rules",
-
-            "editor/tests",
+            "memory/tests",
 
         ],
 
         "files": [
 
             # Root
-            "editor/__init__.py",
-            "editor/editor.py",
+            "memory/__init__.py",
+            "memory/developer_memory.py",
+            "memory/memory_manager.py",
+            "memory/memory_store.py",
+            "memory/memory_loader.py",
+            "memory/memory_saver.py",
+            "memory/memory_indexer.py",
+            "memory/memory_search.py",
+            "memory/memory_builder.py",
+            "memory/memory_context.py",
 
-            # Analyzer
-            "editor/analyzer/__init__.py",
-            "editor/analyzer/edit_analyzer.py",
-            "editor/analyzer/target_locator.py",
-
-            # Planner
-            "editor/planner/__init__.py",
-            "editor/planner/edit_planner.py",
-
-            # Prompt Builder
-            "editor/prompt_builder/__init__.py",
-            "editor/prompt_builder/prompt_builder.py",
-            "editor/prompt_builder/system_builder.py",
-            "editor/prompt_builder/context_builder.py",
-            "editor/prompt_builder/instruction_builder.py",
-
-            # Provider
-            "editor/provider/__init__.py",
-            "editor/provider/base_provider.py",
-            "editor/provider/ollama_provider.py",
-
-            # Parser
-            "editor/parser/__init__.py",
-            "editor/parser/response_parser.py",
-            "editor/parser/patch_parser.py",
-
-            # Validator
-            "editor/validator/__init__.py",
-            "editor/validator/edit_validator.py",
-
-            # Workspace
-            "editor/workspace/__init__.py",
-            "editor/workspace/patch_writer.py",
-            "editor/workspace/backup_builder.py",
-            "editor/workspace/rollback.py",
+            # Specialized Memory
+            "memory/project_memory.py",
+            "memory/file_memory.py",
+            "memory/symbol_memory.py",
+            "memory/dependency_memory.py",
+            "memory/style_memory.py",
+            "memory/session_memory.py",
+            "memory/edit_history.py",
 
             # Models
-            "editor/models/__init__.py",
-            "editor/models/edit_context.py",
-            "editor/models/edit_request.py",
-            "editor/models/edit_result.py",
-            "editor/models/patch.py",
+            "memory/models/__init__.py",
+            "memory/models/memory_record.py",
+            "memory/models/project_profile.py",
+            "memory/models/file_profile.py",
+            "memory/models/symbol_record.py",
+            "memory/models/dependency_record.py",
+            "memory/models/style_profile.py",
+            "memory/models/edit_record.py",
+            "memory/models/session_state.py",
 
             # Rules
-            "editor/rules/__init__.py",
-            "editor/rules/edit_rules.py",
+            "memory/rules/__init__.py",
+            "memory/rules/memory_rules.py",
 
             # Tests
-            "editor/tests/__init__.py",
-            "editor/tests/test_editor.py",
+            "memory/tests/__init__.py",
+            "memory/tests/test_memory.py",
+            "memory/tests/test_manager.py",
+            "memory/tests/test_store.py",
+            "memory/tests/test_search.py",
+            "memory/tests/test_indexer.py",
+            "memory/tests/test_context.py",
 
-        ]
+        ],
 
     },
 }
@@ -144,7 +120,7 @@ def main():
 
         print("\nUsage:")
 
-        print("python -m brain.developer.tools.scaffold prompt_builder")
+        print("python -m brain.developer.tools.scaffold memory")
 
         return
 
