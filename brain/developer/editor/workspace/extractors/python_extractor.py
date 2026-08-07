@@ -15,13 +15,18 @@ from brain.developer.editor.workspace.extractors.base_extractor import (
 class PythonExtractor(BaseExtractor):
     """
     AST-based extractor for Python files.
+
+    Strategy
+    --------
+    Small files:
+        Return the entire file.
+
+    Large files:
+        Extract only the relevant function/class.
     """
 
-    FULL_FILE_ACTIONS = {
-
-        "FORMAT",
-
-    }
+    # Maximum number of lines to send entirely
+    FULL_FILE_LIMIT = 300
 
     # --------------------------------------------------
 
@@ -36,9 +41,21 @@ class PythonExtractor(BaseExtractor):
 
             return ""
 
-        if edit_type in self.FULL_FILE_ACTIONS:
+        # ------------------------------------------
+        # Small project?
+        # Send the whole file.
+        # ------------------------------------------
+
+        lines = content.splitlines()
+
+        if len(lines) <= self.FULL_FILE_LIMIT:
 
             return content
+
+        # ------------------------------------------
+        # Large project
+        # AST extraction
+        # ------------------------------------------
 
         try:
 
@@ -49,8 +66,6 @@ class PythonExtractor(BaseExtractor):
             return content
 
         request = request.lower()
-
-        lines = content.splitlines()
 
         for node in ast.walk(tree):
 
@@ -102,4 +117,8 @@ class PythonExtractor(BaseExtractor):
 
                 )
 
-        return "\n".join(lines[:100])
+        # ------------------------------------------
+        # Fallback
+        # ------------------------------------------
+
+        return content
