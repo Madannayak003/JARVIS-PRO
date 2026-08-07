@@ -11,37 +11,47 @@ from brain.developer.editor.models.patch import (
     Patch,
 )
 
+from brain.developer.editor.workspace.appliers.python_applier import (
+    PythonApplier,
+)
+
+from brain.developer.editor.workspace.appliers.text_applier import (
+    TextApplier,
+)
+
 
 class PatchApplier:
     """
     Applies parsed patches to existing files.
 
-    The PatchApplier decides whether to:
-
-    - replace the entire file
-    - merge a partial update
-    - delegate to a language-specific applier
-
-    Current version:
-        Full-file replacement.
-
-    Future versions:
-        Python AST merge
-        HTML DOM merge
-        JSON merge
-        C/C++ merge
+    Dispatches each patch to the correct language-specific
+    applier based on the file extension.
     """
+
+    def __init__(self):
+
+        # ------------------------------------------
+        # Language-specific appliers
+        # ------------------------------------------
+
+        self.appliers = {
+
+            ".py": PythonApplier(),
+
+        }
+
+        # ------------------------------------------
+        # Default fallback
+        # ------------------------------------------
+
+        self.default_applier = TextApplier()
 
     # --------------------------------------------------
 
     def apply(
-
         self,
-
         project_path: str,
-
         patch: Patch,
-
     ) -> str:
 
         root = Path(project_path)
@@ -49,7 +59,7 @@ class PatchApplier:
         target = root / patch.path
 
         # ------------------------------------------
-        # Existing file
+        # Read existing file
         # ------------------------------------------
 
         original = ""
@@ -63,50 +73,31 @@ class PatchApplier:
             )
 
         # ------------------------------------------
-        # Current strategy
-        #
-        # Phase 8:
-        # Return full generated file.
-        #
-        # Phase 9:
-        # Merge snippets.
+        # Detect file type
         # ------------------------------------------
 
-        merged = self._merge(
+        extension = target.suffix.lower()
+
+        # ------------------------------------------
+        # Select appropriate applier
+        # ------------------------------------------
+
+        applier = self.appliers.get(
+
+            extension,
+
+            self.default_applier,
+
+        )
+
+        # ------------------------------------------
+        # Apply patch
+        # ------------------------------------------
+
+        return applier.apply(
 
             original,
 
             patch.content,
 
         )
-
-        return merged
-
-    # --------------------------------------------------
-
-    def _merge(
-
-        self,
-
-        original: str,
-
-        generated: str,
-
-    ) -> str:
-
-        generated = generated.strip()
-
-        if not generated:
-
-            return original
-
-        # ------------------------------------------
-        # Current implementation
-        #
-        # If the model generated a complete file,
-        # return it.
-        #
-        # Later this becomes AST-based.
-        # ------------------------------------------
-
-        return generated + "\n"

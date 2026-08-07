@@ -9,12 +9,20 @@ from brain.developer.editor.models.edit_result import (
     EditResult,
 )
 
+from brain.developer.editor.validator.syntax_validator import (
+    SyntaxValidator,
+)
+
 
 class EditValidator:
     """
     Validates parsed patches before
     they are written to disk.
     """
+
+    def __init__(self):
+
+        self.syntax_validator = SyntaxValidator()
 
     # --------------------------------------------------
 
@@ -72,6 +80,26 @@ class EditValidator:
                 result.errors.append(
 
                     f"{patch.path} is empty."
+
+                )
+
+                continue
+
+            # -----------------------------
+            # Syntax Validation
+            # -----------------------------
+
+            success, message = self.syntax_validator.validate(
+
+                patch,
+
+            )
+
+            if not success:
+
+                result.errors.append(
+
+                    f"{patch.path}: {message}"
 
                 )
 

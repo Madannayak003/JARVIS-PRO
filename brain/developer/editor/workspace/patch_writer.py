@@ -2,7 +2,7 @@
 JARVIS PRO
 Developer Editor
 
-Patch Writer
+Patch Applier
 """
 
 from pathlib import Path
@@ -11,98 +11,73 @@ from brain.developer.editor.models.patch import (
     Patch,
 )
 
-from brain.developer.editor.workspace.backup_builder import (
-    BackupBuilder,
+from brain.developer.editor.workspace.appliers.python_applier import (
+    PythonApplier,
 )
 
-from brain.developer.editor.workspace.patch_applier import (
-    PatchApplier,
+from brain.developer.editor.workspace.appliers.text_applier import (
+    TextApplier,
 )
 
 
-class PatchWriter:
+class PatchApplier:
     """
-    Applies validated patches to the project.
+    Dispatches patches to the correct language-specific
+    patch applier.
     """
 
     def __init__(self):
 
-        self.backup_builder = BackupBuilder()
+        self.python = PythonApplier()
 
-        self.applier = PatchApplier()
+        self.text = TextApplier()
 
     # --------------------------------------------------
 
-    def write(
+    def apply(
         self,
         project_path: str,
-        patches: list[Patch],
-    ) -> list[str]:
-
-        written = []
+        patch: Patch,
+    ) -> str:
 
         root = Path(project_path)
 
-        for patch in patches:
+        target = root / patch.path
 
-            destination = root / patch.path
+        original = ""
 
-            # --------------------------------------
-            # Create folders automatically
-            # --------------------------------------
+        if target.exists():
 
-            destination.parent.mkdir(
-
-                parents=True,
-
-                exist_ok=True,
-
-            )
-
-            # --------------------------------------
-            # Backup original file
-            # --------------------------------------
-
-            self.backup_builder.backup(
-
-                project_path,
-
-                patch.path,
-
-            )
-
-            # --------------------------------------
-            # Apply patch
-            # --------------------------------------
-
-            content = self.applier.apply(
-
-                project_path,
-
-                patch,
-
-            )
-
-            # --------------------------------------
-            # Write merged content
-            # --------------------------------------
-
-            destination.write_text(
-
-                content,
+            original = target.read_text(
 
                 encoding="utf-8",
 
             )
 
-            written.append(
+        extension = target.suffix.lower()
 
-                str(
+        # ------------------------------------------
+        # Python
+        # ------------------------------------------
 
-                    destination.relative_to(root)
+        if extension == ".py":
 
-                ).replace("\\", "/")
+            return self.python.apply(
+
+                original,
+
+                patch.content,
 
             )
 
-        return written
+        # ------------------------------------------
+        # Default
+        # ------------------------------------------
+
+        return self.text.apply(
+
+            original,
+
+            patch.content,
+
+        )
