@@ -5,8 +5,8 @@ Developer Editor
 Prompt Builder
 """
 
-from brain.developer.editor.models.edit_request import (
-    EditRequest,
+from brain.developer.editor.models.edit_plan import (
+    EditPlan,
 )
 
 from brain.developer.editor.models.prompt_context import (
@@ -56,8 +56,18 @@ class PromptBuilder:
 
     def build(
         self,
-        request: EditRequest,
+        plan: EditPlan,
     ) -> PromptResult:
+        
+        request = plan.request
+
+        if request is None:
+
+            raise ValueError(
+
+                "EditPlan has no EditRequest."
+
+            )
 
         # --------------------------------------
         # Read Selected Files

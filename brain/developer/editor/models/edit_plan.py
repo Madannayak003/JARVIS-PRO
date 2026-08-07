@@ -7,6 +7,10 @@ Edit Plan
 
 from dataclasses import dataclass, field
 
+from brain.developer.editor.models.edit_request import (
+    EditRequest,
+)
+
 
 @dataclass
 class EditPlan:
@@ -14,6 +18,12 @@ class EditPlan:
     Represents the execution plan generated
     by the Edit Planner.
     """
+    
+    # -------------------------------------
+    # Original Request
+    # -------------------------------------
+
+    request: EditRequest | None = None
 
     # -------------------------------------
     # Files

@@ -71,6 +71,8 @@ class EditPlanner:
         # ------------------------------------------
 
         plan = EditPlan()
+        
+        plan.request = request
 
         plan.primary_files = list(
 

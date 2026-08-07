@@ -75,7 +75,7 @@ class Editor:
         # Plan
         # ------------------------------------------
 
-        request = self.planner.plan(
+        plan  = self.planner.plan(
 
             request,
 
@@ -87,7 +87,7 @@ class Editor:
 
         prompt = self.prompt_builder.build(
 
-            request,
+            plan,
 
         )
 
