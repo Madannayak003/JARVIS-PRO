@@ -15,16 +15,21 @@ from brain.developer.editor.workspace.backup_builder import (
     BackupBuilder,
 )
 
+from brain.developer.editor.workspace.patch_applier import (
+    PatchApplier,
+)
+
 
 class PatchWriter:
     """
-    Applies parsed patches to the project.
+    Applies validated patches to the project.
     """
-    
-    
+
     def __init__(self):
 
         self.backup_builder = BackupBuilder()
+
+        self.applier = PatchApplier()
 
     # --------------------------------------------------
 
@@ -55,10 +60,9 @@ class PatchWriter:
             )
 
             # --------------------------------------
-            # Write file
+            # Backup original file
             # --------------------------------------
-            
-            
+
             self.backup_builder.backup(
 
                 project_path,
@@ -66,11 +70,26 @@ class PatchWriter:
                 patch.path,
 
             )
-            
+
+            # --------------------------------------
+            # Apply patch
+            # --------------------------------------
+
+            content = self.applier.apply(
+
+                project_path,
+
+                patch,
+
+            )
+
+            # --------------------------------------
+            # Write merged content
+            # --------------------------------------
 
             destination.write_text(
 
-                patch.content,
+                content,
 
                 encoding="utf-8",
 
