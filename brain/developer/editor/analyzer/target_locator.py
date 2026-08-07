@@ -62,6 +62,31 @@ class TargetLocator:
 
         }
 
+        # ------------------------------------------
+        # Remove common edit verbs
+        # ------------------------------------------
+
+        IGNORE_WORDS = {
+
+            "fix",
+            "add",
+            "remove",
+            "replace",
+            "rename",
+            "update",
+            "format",
+            "optimize",
+            "refactor",
+            "implement",
+            "insert",
+            "delete",
+            "repair",
+            "solve",
+
+        }
+
+        words -= IGNORE_WORDS
+
         scores = defaultdict(int)
 
         # --------------------------------------------------
@@ -91,6 +116,26 @@ class TargetLocator:
             if stem in words:
 
                 scores[file] += 80
+                
+                
+        # --------------------------------------------------
+        # Partial filename match
+        # +60
+        # Example:
+        # divide -> math/divide.py
+        # --------------------------------------------------
+
+        for file in index.files:
+
+            filename = file.split("/")[-1].lower()
+
+            stem = filename.rsplit(".", 1)[0]
+
+            for word in words:
+
+                if word in stem:
+
+                    scores[file] += 60
 
         # --------------------------------------------------
         # Common project files
@@ -116,13 +161,19 @@ class TargetLocator:
 
         for word in words:
 
-            if word not in index.functions:
+            for function_name, files in index.functions.items():
 
-                continue
+                if word == function_name.lower():
 
-            for file in index.functions[word]:
+                    for file in files:
 
-                scores[file] += 90
+                        scores[file] += 90
+
+                elif word in function_name.lower():
+
+                    for file in files:
+
+                        scores[file] += 70
 
         # --------------------------------------------------
         # Classes
@@ -161,6 +212,34 @@ class TargetLocator:
         if not scores:
 
             return []
+        
+        # --------------------------------------------------
+        # Prefer source files
+        # --------------------------------------------------
+
+        for file in scores:
+
+            if file.endswith(
+
+                (
+
+                    ".py",
+
+                    ".cpp",
+
+                    ".ino",
+
+                    ".c",
+
+                    ".h",
+
+                    ".hpp",
+
+                )
+
+            ):
+
+                scores[file] += 5
 
         # --------------------------------------------------
         # Highest score first

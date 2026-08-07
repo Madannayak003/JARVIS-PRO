@@ -27,36 +27,9 @@ class EditAnalyzer:
 
     ACTION_RULES = {
 
-        "ADD": [
-
-            r"\badd\b",
-            r"\binsert\b",
-            r"\binclude\b",
-            r"\bimplement\b",
-
-        ],
-
-        "REMOVE": [
-
-            r"\bremove\b",
-            r"\bdelete\b",
-
-        ],
-
-        "UPDATE": [
-
-            r"\bupdate\b",
-            r"\bupgrade\b",
-
-        ],
-
-        "FIX": [
-
-            r"\bfix\b",
-            r"\brepair\b",
-            r"\bsolve\b",
-
-        ],
+        # -------------------------------------
+        # Highest priority
+        # -------------------------------------
 
         "RENAME": [
 
@@ -68,6 +41,28 @@ class EditAnalyzer:
 
             r"\breplace\b",
             r"\bswap\b",
+
+        ],
+
+        "REMOVE": [
+
+            r"\bremove\b",
+            r"\bdelete\b",
+
+        ],
+
+        "FIX": [
+
+            r"\bfix\b",
+            r"\brepair\b",
+            r"\bsolve\b",
+
+        ],
+
+        "UPDATE": [
+
+            r"\bupdate\b",
+            r"\bupgrade\b",
 
         ],
 
@@ -86,6 +81,19 @@ class EditAnalyzer:
         "FORMAT": [
 
             r"\bformat\b",
+
+        ],
+
+        # -------------------------------------
+        # Lowest priority
+        # -------------------------------------
+
+        "ADD": [
+
+            r"\badd\b",
+            r"\binsert\b",
+            r"\binclude\b",
+            r"\bimplement\b",
 
         ],
 
@@ -165,7 +173,11 @@ class EditAnalyzer:
         Detect the requested edit action.
         """
 
-        request = user_request.lower()
+        request = user_request.lower().strip()
+
+        # -------------------------------------
+        # Priority-based detection
+        # -------------------------------------
 
         for action, patterns in self.ACTION_RULES.items():
 
@@ -176,6 +188,8 @@ class EditAnalyzer:
                     pattern,
 
                     request,
+
+                    re.IGNORECASE,
 
                 ):
 
