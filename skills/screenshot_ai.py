@@ -1,11 +1,11 @@
+import os
+
 from core.registry import register
 from voice.manager import speak
 
-from ai.ollama import ask_ollama
+from ai.core.service import ai_service
 
 from core.paths import SCREENSHOTS
-
-import os
 
 
 def screenshot_ai(data):
@@ -26,22 +26,50 @@ def screenshot_ai(data):
 
     latest = files[-1]
 
-    answer = ask_ollama(
+    print(
+        "[SCREENSHOT AI] Analyzing:",
+        latest
+    )
 
-        "Describe this screenshot.",
+    response = ai_service.generate(
 
-        str(latest)
+        prompt=str(latest),
+
+        system_prompt="Describe this screenshot.",
+
+        capability="conversation",
 
     )
 
-    speak(answer)
+    if not response.success:
+
+        print(
+            "[SCREENSHOT AI] Generation failed:",
+            response.error,
+        )
+
+        speak(
+            "I could not analyze the screenshot."
+        )
+
+        return True
+
+    print(
+        "[SCREENSHOT AI] Provider:",
+        response.provider,
+    )
+
+    print(
+        "[SCREENSHOT AI] Model:",
+        response.model,
+    )
+
+    speak(response.text)
 
     return True
 
 
 register(
-
     "screenshot_ai",
-
     screenshot_ai
 )

@@ -5,8 +5,6 @@ Developer Repair
 Repair Provider
 """
 
-# from ai.ollama import ask_ollama
-
 from ai.core.service import ai_service
 
 from brain.developer.prompt_builder.models.prompt_result import (

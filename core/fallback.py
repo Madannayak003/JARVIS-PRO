@@ -1,6 +1,7 @@
 import json
 
-from ai.ollama import ask_ollama
+from ai.core.service import ai_service
+
 
 def fallback(step):
 
@@ -25,6 +26,28 @@ clarify
 Return ONLY JSON.
 """
 
-    answer = ask_ollama("", prompt)
+    response = ai_service.generate(
+        prompt=prompt,
+        capability="conversation",
+    )
 
-    return answer
+    if not response.success:
+
+        print(
+            "[FALLBACK AI] Generation failed:",
+            response.error,
+        )
+
+        return ""
+
+    print(
+        "[FALLBACK AI] Provider:",
+        response.provider,
+    )
+
+    print(
+        "[FALLBACK AI] Model:",
+        response.model,
+    )
+
+    return response.text

@@ -2,52 +2,52 @@
 JARVIS PRO
 Developer
 
-Ollama Provider
+AI Provider Adapter for Editor
 """
 
 from typing import Any
 
-from ai.ollama import ask_ollama
+from ai.core.service import ai_service
 
-from brain.developer.generator.providers.base_provider import BaseProvider
+from brain.developer.generator.providers.base_provider import (
+    BaseProvider
+)
 
 
 class OllamaProvider(BaseProvider):
     """
-    Shared Ollama provider.
+    Shared AI provider for Developer Editor.
 
-    Can be used by both Generator and Editor because
-    both PromptResult objects expose:
+    Historical class name is preserved for compatibility.
 
-        prompt.system_prompt
-        prompt.user_prompt
+    Actual model selection is handled by AIService.
     """
 
     def __init__(
-
         self,
-
         system_prompt: str = "",
-
     ):
 
         self.system_prompt = system_prompt
 
     # --------------------------------------------------
+    # Generate
+    # --------------------------------------------------
 
     def generate(
-
         self,
-
         prompt: Any,
-
     ) -> str:
 
         system = (
 
             prompt.system_prompt
 
-            if getattr(prompt, "system_prompt", "")
+            if getattr(
+                prompt,
+                "system_prompt",
+                ""
+            )
 
             else self.system_prompt
 
@@ -63,7 +63,9 @@ class OllamaProvider(BaseProvider):
 
         )
 
-        print("OllamaProvider : Sending request...")
+        print(
+            "Editor AI Provider : Sending request..."
+        )
 
         print("=" * 80)
         print("SYSTEM")
@@ -74,16 +76,40 @@ class OllamaProvider(BaseProvider):
         print("USER")
         print("=" * 80)
         print(user)
+
         print("=" * 80)
 
-        response = ask_ollama(
+        response = ai_service.generate(
 
-            system,
+            prompt=user,
 
-            user,
+            system_prompt=system,
+
+            capability="coding",
 
         )
 
-        print("OllamaProvider : Response received")
+        if not response.success:
 
-        return response
+            print(
+                "[EDITOR AI] Generation failed:",
+                response.error,
+            )
+
+            return ""
+
+        print(
+            "Editor AI Provider : Response received"
+        )
+
+        print(
+            "Provider:",
+            response.provider
+        )
+
+        print(
+            "Model:",
+            response.model
+        )
+
+        return response.text

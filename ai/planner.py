@@ -197,15 +197,6 @@ def create_plan(command, stop_event):
     User Command:
     {command}
     """
-
-    # answer = ask_ollama(
-    #     SYSTEM_PROMPT,
-    #     prompt
-    # )
-    
-    # if stop_event.is_set():
-    #     return None
-    
     # ---------------------------------------
     # AI Model System
     # ---------------------------------------

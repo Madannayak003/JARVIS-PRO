@@ -91,11 +91,6 @@ Return ONLY JSON.
 """
 
     try:
-
-        # response = ask_ollama(
-        #     SYSTEM_PROMPT,
-        #     prompt
-        # ).strip()
         
         ai_response = ai_service.generate(
 

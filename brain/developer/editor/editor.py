@@ -11,7 +11,7 @@ from brain.developer.editor.planner import EditPlanner
 
 from brain.developer.editor.prompt_builder import PromptBuilder
 
-from brain.developer.generator.providers.ollama_provider import (
+from brain.developer.editor.provider.ollama_provider import (
     OllamaProvider,
 )
 

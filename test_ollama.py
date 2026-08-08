@@ -1,8 +1,19 @@
-from ai.ollama import ask_ollama
+from ai.core.service import ai_service
 
-response = ask_ollama(
-    "You are helpful.",
-    "Say hello."
+
+response = ai_service.generate(
+
+    prompt="Say hello.",
+
+    system_prompt="You are a helpful assistant.",
+
+    capability="conversation",
+
 )
 
-print(response)
+
+print("Provider:", response.provider)
+print("Model:", response.model)
+print("Success:", response.success)
+print("Response:")
+print(response.text)

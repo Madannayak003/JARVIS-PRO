@@ -3,50 +3,107 @@ import pyperclip
 from core.registry import register
 from voice.manager import speak
 
-from ai.ollama import ask_ollama
+from ai.core.service import ai_service
 
 
 def clipboard(data):
 
     text = pyperclip.paste()
 
-    mode = data.get("mode","read")
+    mode = data.get("mode", "read")
 
-    if mode=="read":
+    # --------------------------------------------------
+    # Read
+    # --------------------------------------------------
+
+    if mode == "read":
 
         speak(text[:300])
 
         return True
 
-    if mode=="summary":
+    # --------------------------------------------------
+    # Summary
+    # --------------------------------------------------
 
-        answer = ask_ollama(
+    if mode == "summary":
 
-            "Summarize this.",
+        response = ai_service.generate(
 
-            text
+            prompt=text,
+
+            system_prompt="Summarize this.",
+
+            capability="conversation",
 
         )
 
-        speak(answer)
+        if not response.success:
+
+            print(
+                "[CLIPBOARD AI] Generation failed:",
+                response.error,
+            )
+
+            return True
+
+        print(
+            "[CLIPBOARD AI] Provider:",
+            response.provider,
+        )
+
+        print(
+            "[CLIPBOARD AI] Model:",
+            response.model,
+        )
+
+        speak(response.text)
 
         return True
 
-    if mode=="explain":
+    # --------------------------------------------------
+    # Explain
+    # --------------------------------------------------
 
-        answer = ask_ollama(
+    if mode == "explain":
 
-            "Explain this.",
+        response = ai_service.generate(
 
-            text
+            prompt=text,
+
+            system_prompt="Explain this.",
+
+            capability="conversation",
 
         )
 
-        speak(answer)
+        if not response.success:
+
+            print(
+                "[CLIPBOARD AI] Generation failed:",
+                response.error,
+            )
+
+            return True
+
+        print(
+            "[CLIPBOARD AI] Provider:",
+            response.provider,
+        )
+
+        print(
+            "[CLIPBOARD AI] Model:",
+            response.model,
+        )
+
+        speak(response.text)
 
         return True
 
     return True
 
 
-register("clipboard", clipboard)
+register(
+    "clipboard",
+    clipboard
+)
