@@ -100,6 +100,7 @@ CATEGORIES = {
         "wifi_list",
         "bluetooth_status",
         "bluetooth_devices",
+        "weather",
     },
 
     "screen": {
