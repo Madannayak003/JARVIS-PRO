@@ -173,37 +173,99 @@ def dispatch(command):
 
                 if result.success:
 
-                    files = []
+                    # -----------------------------------------
+                    # Developer CREATE result
+                    # -----------------------------------------
+                    #
+                    # CREATE returns WorkspaceResult.
+                    # It contains generated files instead
+                    # of editor patches.
+                    #
 
-                    for patch in result.patches:
+                    if hasattr(result, "files"):
 
-                        if patch.path not in files:
+                        files = []
 
-                            files.append(
-                                patch.path
+                        for file in result.files:
+
+                            path = getattr(
+                                file,
+                                "path",
+                                "",
                             )
 
-                    if files:
+                            if path and path not in files:
 
-                        if len(files) == 1:
+                                files.append(path)
+
+                        if files:
 
                             message = (
-                                "Developer edit completed. "
-                                f"Modified {files[0]}."
+                                "Developer project created successfully. "
+                                f"Created {len(files)} files."
                             )
 
                         else:
 
                             message = (
-                                "Developer edit completed. "
-                                f"Modified {len(files)} files."
+                                "Developer project created successfully."
                             )
+
+                    # -----------------------------------------
+                    # Developer EDIT result
+                    # -----------------------------------------
+                    #
+                    # EDIT returns an Editor result containing
+                    # patches.
+                    #
+
+                    elif hasattr(result, "patches"):
+
+                        files = []
+
+                        for patch in result.patches:
+
+                            path = getattr(
+                                patch,
+                                "path",
+                                "",
+                            )
+
+                            if path and path not in files:
+
+                                files.append(path)
+
+                        if files:
+
+                            if len(files) == 1:
+
+                                message = (
+                                    "Developer edit completed. "
+                                    f"Modified {files[0]}."
+                                )
+
+                            else:
+
+                                message = (
+                                    "Developer edit completed. "
+                                    f"Modified {len(files)} files."
+                                )
+
+                        else:
+
+                            message = (
+                                "Developer edit completed "
+                                "successfully."
+                            )
+
+                    # -----------------------------------------
+                    # Unknown Developer result
+                    # -----------------------------------------
 
                     else:
 
                         message = (
-                            "Developer edit completed "
-                            "successfully."
+                            "Developer request completed successfully."
                         )
 
                     print(
@@ -237,7 +299,7 @@ def dispatch(command):
                         )
 
                     speak(
-                        "The Developer edit failed."
+                        "The Developer request failed."
                     )
 
                 return

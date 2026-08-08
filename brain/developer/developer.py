@@ -19,14 +19,28 @@ from brain.developer.memory.models.edit_record import (
     EditRecord,
 )
 
+from brain.developer.pipeline import (
+    DeveloperPipeline,
+)
+
 
 class Developer:
     """
     Public entry point for the Developer subsystem.
 
-    Coordinates:
+    Routes Developer requests to the correct workflow:
 
-        Developer
+        CREATE
+            ↓
+        DeveloperPipeline
+            ↓
+        Generator
+            ↓
+        Validator
+            ↓
+        Workspace
+
+        EDIT
             ↓
         Editor
             ↓
@@ -37,27 +51,85 @@ class Developer:
 
         self.editor = Editor()
 
+        self.pipeline = DeveloperPipeline()
+
         self.memory = DeveloperMemory()
 
-    # --------------------------------------------------
+    # ==================================================
     # Execute
-    # --------------------------------------------------
+    # ==================================================
 
     def execute(
         self,
         user_request: str,
-        project_path: str,
+        project_path: str = "",
     ):
         """
-        Execute a Developer edit and record the result
-        in Developer Memory.
+        Execute a Developer request.
+
+        CREATE requests do not require an active project.
+
+        EDIT requests require an existing project path.
         """
 
         if not user_request:
 
             return None
 
+        # --------------------------------------------------
+        # Analyze request first
+        # --------------------------------------------------
+
+        analysis = self.pipeline.analyzer.analyze(
+            user_request,
+        )
+
+        intent = getattr(
+            analysis,
+            "intent",
+            None,
+        )
+
+        intent_name = getattr(
+            intent,
+            "name",
+            str(intent),
+        )
+
+        # ==================================================
+        # CREATE
+        # ==================================================
+
+        if intent_name == "CREATE":
+
+            print(
+                "[DEVELOPER] Create request detected."
+            )
+
+            context = self.pipeline.process(
+                user_request,
+            )
+
+            # ----------------------------------------------
+            # Return Workspace result
+            # ----------------------------------------------
+
+            if context.workspace_result is not None:
+
+                return context.workspace_result
+
+            return None
+
+        # ==================================================
+        # EDIT
+        # ==================================================
+
         if not project_path:
+
+            print(
+                "[DEVELOPER] "
+                "Edit request requires an active project."
+            )
 
             return None
 
@@ -85,11 +157,8 @@ class Developer:
         # ----------------------------------------------
 
         result = self.editor.execute(
-
             user_request,
-
             project_path,
-
         )
 
         # ----------------------------------------------
@@ -112,8 +181,10 @@ class Developer:
 
         try:
 
-            edit_type = self.editor.analyzer._detect_action(
-                user_request,
+            edit_type = (
+                self.editor.analyzer._detect_action(
+                    user_request,
+                )
             )
 
         except Exception:

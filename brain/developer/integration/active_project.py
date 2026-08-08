@@ -25,7 +25,49 @@ class ActiveProjectResolver:
         self,
         memory: DeveloperMemory | None = None,
     ):
+
         self.memory = memory or DeveloperMemory()
+
+    # ==================================================
+    # Configure
+    # ==================================================
+
+    def configure(
+        self,
+        project_path: str,
+    ) -> bool:
+        """
+        Configure the active Developer project.
+        """
+
+        if not project_path:
+
+            return False
+
+        path = Path(
+            project_path,
+        ).expanduser().resolve()
+
+        if not path.exists():
+
+            return False
+
+        if not path.is_dir():
+
+            return False
+
+        self.memory.configure(
+            str(path),
+        )
+
+        self.memory.update_session(
+            "project_path",
+            str(path),
+        )
+
+        self.memory.save()
+
+        return True
 
     # ==================================================
     # Resolve
@@ -62,7 +104,7 @@ class ActiveProjectResolver:
                 project_path,
             )
 
-            if path.exists():
+            if path.exists() and path.is_dir():
 
                 return str(
                     path.resolve(),
@@ -87,7 +129,7 @@ class ActiveProjectResolver:
                 project_path,
             )
 
-            if path.exists():
+            if path.exists() and path.is_dir():
 
                 return str(
                     path.resolve(),
