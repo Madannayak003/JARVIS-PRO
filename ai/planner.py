@@ -1,7 +1,4 @@
 import json
-
-# from ai.ollama import ask_ollama
-
 from ai.core.service import ai_service
 from ai.planner_prompt import SYSTEM_PROMPT
 from core.context import get_history

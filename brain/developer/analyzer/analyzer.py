@@ -15,9 +15,6 @@ from brain.developer.analyzer.detectors.workspace_detector import WorkspaceDetec
 from brain.developer.analyzer.detectors.project_detector import ProjectDetector
 from brain.developer.analyzer.detectors.runtime_detector import RuntimeDetector
 from brain.developer.analyzer.detectors.board_detector import BoardDetector
-
-from brain.developer.analyzer.resolvers.language_resolver import LanguageResolver
-
 from brain.developer.analyzer.resolvers.language_resolver import LanguageResolver
 from brain.developer.analyzer.resolvers.board_resolver import BoardResolver
 from brain.developer.analyzer.resolvers.workspace_resolver import WorkspaceResolver
@@ -64,6 +61,8 @@ class Analyzer:
         context = self.create_context(text)
 
         result = AnalysisResult(
+
+            user_request=text,
 
             intent=self.intent_detector.detect(context),
 

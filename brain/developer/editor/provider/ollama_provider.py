@@ -85,7 +85,7 @@ class OllamaProvider(BaseProvider):
 
             system_prompt=system,
 
-            capability="coding",
+            capability="editing",
 
         )
 

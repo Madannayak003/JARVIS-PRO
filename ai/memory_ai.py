@@ -76,7 +76,7 @@ Otherwise return:
 
 def extract_memory(text):
     """
-    Ask Ollama whether this sentence
+    Ask the configured AI provider whether this sentence
     contains a permanent personal fact.
     """
 
