@@ -1,87 +1,277 @@
+"""
+JARVIS PRO
+Wi-Fi Skill
+
+Controls and reports Windows Wi-Fi state.
+"""
+
 import subprocess
 
 from core.registry import register
 from voice.manager import speak
 
 
-def wifi_action(data):
+# =========================================================
+# Helpers
+# =========================================================
 
-    action = data.get("action")
+def _run(command):
+    """Run a Windows netsh command safely."""
 
-    # ----------------------------
-    # Turn Wi-Fi ON
-    # ----------------------------
+    return subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        shell=True,
+    )
+
+
+# =========================================================
+# Wi-Fi Action
+# =========================================================
+
+def wifi_action(data=None):
+    """
+    Handle Wi-Fi actions.
+
+    Supported actions:
+        wifi_on
+        wifi_off
+        wifi_status
+        wifi_list
+    """
+
+    data = data or {}
+
+    action = data.get("action", "").strip().lower()
+
+    # -----------------------------------------------------
+    # Wi-Fi ON
+    # -----------------------------------------------------
+
     if action == "wifi_on":
 
-        subprocess.run(
-            'netsh interface set interface "Wi-Fi" enable',
-            shell=True
+        result = _run(
+            'netsh interface set interface "Wi-Fi" enable'
         )
 
-        speak("Wi-Fi turned on.")
+        if result.returncode == 0:
 
-        return True
+            speak("Wi-Fi is turned on.")
 
-    # ----------------------------
-    # Turn Wi-Fi OFF
-    # ----------------------------
-    elif action == "wifi_off":
+            print("[WIFI] Enabled")
 
-        subprocess.run(
-            'netsh interface set interface "Wi-Fi" disable',
-            shell=True
+            return True
+
+        print(
+            f"[WIFI ERROR] Enable failed: "
+            f"{result.stderr.strip()}"
         )
 
-        speak("Wi-Fi turned off.")
+        speak("I couldn't turn Wi-Fi on.")
 
-        return True
+        return False
 
-    # ----------------------------
-    # Wi-Fi Status
-    # ----------------------------
-    elif action == "wifi_status":
+    # -----------------------------------------------------
+    # Wi-Fi OFF
+    # -----------------------------------------------------
 
-        result = subprocess.run(
-            "netsh wlan show interfaces",
-            capture_output=True,
-            text=True,
-            shell=True
+    if action == "wifi_off":
+
+        result = _run(
+            'netsh interface set interface "Wi-Fi" disable'
+        )
+
+        if result.returncode == 0:
+
+            speak("Wi-Fi is turned off.")
+
+            print("[WIFI] Disabled")
+
+            return True
+
+        print(
+            f"[WIFI ERROR] Disable failed: "
+            f"{result.stderr.strip()}"
+        )
+
+        speak("I couldn't turn Wi-Fi off.")
+
+        return False
+
+    # -----------------------------------------------------
+    # Wi-Fi STATUS
+    # -----------------------------------------------------
+
+    if action == "wifi_status":
+
+        result = _run(
+            "netsh wlan show interfaces"
         )
 
         output = result.stdout
 
-        if "connected" in output.lower():
+        if result.returncode != 0:
 
-            speak("Wi-Fi is connected.")
+            print(
+                f"[WIFI ERROR] Status failed: "
+                f"{result.stderr.strip()}"
+            )
+
+            speak(
+                "I couldn't check the Wi-Fi status."
+            )
+
+            return False
+
+        lower = output.lower()
+
+        # -------------------------------------------------
+        # Detect connection
+        # -------------------------------------------------
+
+        if "state" in lower and "connected" in lower:
+
+            ssid = None
+
+            for line in output.splitlines():
+
+                line = line.strip()
+
+                if line.lower().startswith("ssid"):
+
+                    parts = line.split(":", 1)
+
+                    if len(parts) == 2:
+
+                        ssid = parts[1].strip()
+
+                    break
+
+            if ssid:
+
+                speak(
+                    f"Wi-Fi is connected to {ssid}."
+                )
+
+                print(
+                    f"[WIFI] Connected | SSID: {ssid}"
+                )
+
+            else:
+
+                speak("Wi-Fi is connected.")
+
+                print("[WIFI] Connected")
 
         else:
 
             speak("Wi-Fi is not connected.")
 
+            print("[WIFI] Not connected")
+
         return True
 
-    # ----------------------------
-    # List Networks
-    # ----------------------------
-    elif action == "wifi_list":
+    # -----------------------------------------------------
+    # LIST AVAILABLE NETWORKS
+    # -----------------------------------------------------
 
-        result = subprocess.run(
-            "netsh wlan show networks",
-            capture_output=True,
-            text=True,
-            shell=True
+    if action == "wifi_list":
+
+        result = _run(
+            "netsh wlan show networks"
         )
 
-        print(result.stdout)
+        if result.returncode != 0:
 
-        speak("Available Wi-Fi networks are displayed in the terminal.")
+            print(
+                f"[WIFI ERROR] Network scan failed: "
+                f"{result.stderr.strip()}"
+            )
+
+            speak(
+                "I couldn't scan for available Wi-Fi networks."
+            )
+
+            return False
+
+        output = result.stdout
+
+        print()
+        print("========== AVAILABLE WI-FI ==========")
+        print(output)
+        print("=====================================")
+        print()
+
+        # Count detected SSIDs approximately.
+        networks = []
+
+        for line in output.splitlines():
+
+            line = line.strip()
+
+            if line.lower().startswith("ssid"):
+
+                parts = line.split(":", 1)
+
+                if len(parts) == 2:
+
+                    ssid = parts[1].strip()
+
+                    if ssid:
+                        networks.append(ssid)
+
+        if networks:
+
+            speak(
+                f"I found {len(networks)} "
+                "available Wi-Fi networks. "
+                "I've listed them in the terminal."
+            )
+
+        else:
+
+            speak(
+                "I couldn't find any available Wi-Fi networks."
+            )
+
+        print(
+            f"[WIFI] Networks found: {len(networks)}"
+        )
 
         return True
+
+    # -----------------------------------------------------
+    # Unknown action
+    # -----------------------------------------------------
+
+    print(
+        f"[WIFI] Unknown action: {action!r}"
+    )
 
     return False
 
 
-register("wifi_on", wifi_action)
-register("wifi_off", wifi_action)
-register("wifi_status", wifi_action)
-register("wifi_list", wifi_action)
+# =========================================================
+# Registry
+# =========================================================
+
+register(
+    "wifi_on",
+    wifi_action,
+)
+
+register(
+    "wifi_off",
+    wifi_action,
+)
+
+register(
+    "wifi_status",
+    wifi_action,
+)
+
+register(
+    "wifi_list",
+    wifi_action,
+)

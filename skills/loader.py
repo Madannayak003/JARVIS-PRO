@@ -30,6 +30,7 @@ SKILLS = [
     "system.battery",
     "network.wifi",
     "network.bluetooth",
+    "network.weather",
     "system.process",
     "system.taskmanager",
     "screen.screenshot_ai",
