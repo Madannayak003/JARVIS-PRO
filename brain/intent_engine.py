@@ -13,14 +13,160 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+# ==========================================================
+# Result
+# ==========================================================
+
 @dataclass
 class IntentResult:
+
     mode: str
+
     confidence: float
+
     reason: str
 
 
+# ==========================================================
+# Engine
+# ==========================================================
+
 class IntentEngine:
+
+    # ------------------------------------------------------
+    # Developer action words
+    # ------------------------------------------------------
+
+    DEVELOPER_ACTIONS = {
+
+        "create",
+        "build",
+        "make",
+        "develop",
+        "implement",
+
+        "add",
+        "remove",
+        "delete",
+
+        "update",
+        "modify",
+        "change",
+
+        "fix",
+        "repair",
+
+        "refactor",
+        "optimize",
+
+        "rename",
+
+        "replace",
+
+        "edit",
+
+        "write",
+        "generate",
+
+    }
+
+    # ------------------------------------------------------
+    # Developer technologies / code terms
+    # ------------------------------------------------------
+
+    DEVELOPER_TECHNOLOGIES = {
+
+        "python",
+        "java",
+        "javascript",
+        "typescript",
+
+        "html",
+        "css",
+
+        "react",
+        "vue",
+        "angular",
+
+        "cpp",
+        "c++",
+        "c",
+
+        "arduino",
+        "esp32",
+        "esp8266",
+
+        "sql",
+
+        "firebase",
+        "mqtt",
+
+        "api",
+
+    }
+
+    # ------------------------------------------------------
+    # Developer objects
+    # ------------------------------------------------------
+
+    DEVELOPER_OBJECTS = {
+
+        "code",
+        "function",
+        "class",
+
+        "script",
+        "program",
+
+        "calculator",
+        "website",
+        "webapp",
+        "application",
+        "app",
+
+        "project",
+
+        "file",
+        "files",
+
+        "module",
+
+        "bug",
+        "error",
+
+        "feature",
+
+    }
+
+    # ------------------------------------------------------
+    # Developer file extensions
+    # ------------------------------------------------------
+
+    DEVELOPER_EXTENSIONS = {
+
+        ".py",
+        ".js",
+        ".ts",
+        ".html",
+        ".css",
+
+        ".cpp",
+        ".c",
+        ".h",
+        ".hpp",
+
+        ".ino",
+
+        ".json",
+        ".xml",
+        ".yaml",
+        ".yml",
+
+    }
+
+    # ------------------------------------------------------
+    # Chat prefixes
+    # ------------------------------------------------------
 
     CHAT_PREFIXES = {
 
@@ -49,65 +195,49 @@ class IntentEngine:
 
         "do you know",
 
-        "please"
     }
+
+    # ------------------------------------------------------
+    # Chat keywords
+    # ------------------------------------------------------
 
     CHAT_KEYWORDS = {
 
-        # Coding
-        "code",
-        "python",
-        "java",
-        "javascript",
-        "html",
-        "css",
-        "c++",
-        "c#",
-        "sql",
-
-        "function",
-        "class",
-        "algorithm",
-        "example",
-        "project",
-        "script",
-
-        # AI
-        "generate",
-        "write",
-        "create code",
-        "sample code",
-
         # Learning
-        "learn",
+
         "tutorial",
         "guide",
+        "learn",
 
         # Conversation
+
         "joke",
         "story",
         "poem",
 
         # Explanation
+
         "meaning",
         "definition",
 
         # Follow-up
-        "continue",
-        "yes",
-        "no",
-        "okay",
-        "ok",
+
         "thanks",
         "thank",
-        "thank you"
+        "thank you",
+
     }
+
+    # ------------------------------------------------------
+    # Planner / system actions
+    # ------------------------------------------------------
 
     ACTION_PREFIXES = {
 
         "open",
         "launch",
         "close",
+
         "shutdown",
         "restart",
 
@@ -120,35 +250,52 @@ class IntentEngine:
         "delete",
 
         "copy",
-
         "move",
-
         "rename",
-
         "send",
-
         "call",
 
         "turn on",
         "turn off",
 
         "increase",
-        "decrease"
+        "decrease",
+
     }
 
-    def __init__(self, state=None):
+    # ======================================================
+    # Constructor
+    # ======================================================
+
+    def __init__(
+        self,
+        state=None,
+    ):
 
         self.state = state
 
-    # --------------------------------------------------
+    # ======================================================
+    # Detect
+    # ======================================================
 
-    def detect(self, command: str) -> IntentResult:
+    def detect(
+        self,
+        command: str,
+    ) -> IntentResult:
 
         command = command.lower().strip()
 
-        # --------------------------------------------------
-        # Conversation State (future integration)
-        # --------------------------------------------------
+        if not command:
+
+            return IntentResult(
+                mode="chat",
+                confidence=1.0,
+                reason="empty_command",
+            )
+
+        # ==================================================
+        # Conversation State
+        # ==================================================
 
         if self.state:
 
@@ -161,15 +308,16 @@ class IntentEngine:
                     return IntentResult(
                         mode=owner,
                         confidence=1.0,
-                        reason="conversation_state"
+                        reason="conversation_state",
                     )
 
             except Exception:
+
                 pass
 
-        # --------------------------------------------------
+        # ==================================================
         # Planner
-        # --------------------------------------------------
+        # ==================================================
 
         for prefix in self.ACTION_PREFIXES:
 
@@ -178,43 +326,179 @@ class IntentEngine:
                 return IntentResult(
                     mode="planner",
                     confidence=0.98,
-                    reason=f"action_prefix:{prefix}"
+                    reason=f"action_prefix:{prefix}",
                 )
 
+        # ==================================================
+        # Developer Detection
+        #
+        # IMPORTANT:
+        #
+        # We check developer requests BEFORE chat
+        # keywords.
+        #
+        # This prevents:
+        #
+        # create python calculator
+        #
+        # from becoming chat because of "python".
+        # ==================================================
+
+        words = set(
+            command.replace(
+                ",",
+                " ",
+            ).split()
+        )
+
+        developer_action = None
+
+        for action in self.DEVELOPER_ACTIONS:
+
+            if action in words:
+
+                developer_action = action
+
+                break
+
+        technology_found = any(
+
+            technology in command
+
+            for technology
+            in self.DEVELOPER_TECHNOLOGIES
+
+        )
+
+        object_found = any(
+
+            obj in words
+
+            for obj
+            in self.DEVELOPER_OBJECTS
+
+        )
+
+        extension_found = any(
+
+            extension in command
+
+            for extension
+            in self.DEVELOPER_EXTENSIONS
+
+        )
+
         # --------------------------------------------------
+        # Strong developer request
+        #
+        # Example:
+        #
+        # create python calculator
+        # build html website
+        # add function
+        # fix divide function
+        # --------------------------------------------------
+
+        if (
+
+            developer_action
+            and (
+                technology_found
+                or object_found
+                or extension_found
+            )
+
+        ):
+
+            return IntentResult(
+
+                mode="developer",
+
+                confidence=0.99,
+
+                reason=(
+                    "developer_action:"
+                    f"{developer_action}"
+                ),
+
+            )
+
+        # --------------------------------------------------
+        # Strong coding request
+        #
+        # Example:
+        #
+        # write python code
+        # generate javascript
+        # create html
+        # --------------------------------------------------
+
+        if (
+
+            developer_action
+            and technology_found
+
+        ):
+
+            return IntentResult(
+
+                mode="developer",
+
+                confidence=0.98,
+
+                reason=(
+                    "developer_technology:"
+                    f"{developer_action}"
+                ),
+
+            )
+
+        # ==================================================
         # Chat Prefix
-        # --------------------------------------------------
+        # ==================================================
 
         for prefix in self.CHAT_PREFIXES:
 
             if command.startswith(prefix):
 
                 return IntentResult(
+
                     mode="chat",
+
                     confidence=0.97,
-                    reason=f"chat_prefix:{prefix}"
+
+                    reason=f"chat_prefix:{prefix}",
+
                 )
 
-        # --------------------------------------------------
+        # ==================================================
         # Chat Keyword
-        # --------------------------------------------------
+        # ==================================================
 
         for keyword in self.CHAT_KEYWORDS:
 
             if keyword in command:
 
                 return IntentResult(
+
                     mode="chat",
+
                     confidence=0.95,
-                    reason=f"chat_keyword:{keyword}"
+
+                    reason=f"chat_keyword:{keyword}",
+
                 )
 
-        # --------------------------------------------------
+        # ==================================================
         # Default
-        # --------------------------------------------------
+        # ==================================================
 
         return IntentResult(
+
             mode="planner",
+
             confidence=0.50,
-            reason="default"
+
+            reason="default",
+
         )
