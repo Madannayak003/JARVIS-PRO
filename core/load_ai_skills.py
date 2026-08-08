@@ -1,35 +1,35 @@
-import skills.memory
-import skills.clarify
-import skills.media
-import skills.volume
-import skills.browser_ai
-import skills.system
-import skills.brightness
-import skills.screenshot
-import skills.clipboard
-import skills.battery
-import skills.wifi
-import skills.bluetooth
-import skills.process
-import skills.taskmanager
-import skills.screenshot_ai
-import skills.files
-import skills.search
-import skills.zip_manager
-import skills.camera
-import skills.time_skill
-import skills.github
-import skills.chatgpt
-import skills.spotify
-import skills.greetings
-import skills.whatsapp
+import skills.memory.memory
+import skills.ai.clarify
+import skills.media.media
+import skills.system.volume
+import skills.browser.browser_ai
+import skills.system.system
+import skills.system.brightness
+import skills.screen.screenshot
+import skills.screen.clipboard
+import skills.system.battery
+import skills.network.wifi
+import skills.network.bluetooth
+import skills.system.process
+import skills.system.taskmanager
+import skills.screen.screenshot_ai
+import skills.files.files
+import skills.utilities.search
+import skills.files.zip_manager
+import skills.camera.camera
+import skills.utilities.time_skill
+import skills.communication.github
+import skills.communication.chatgpt
+import skills.media.spotify
+import skills.assistant.greetings
+import skills.communication.whatsapp
 
 
 # later
 
-# import skills.telegram
-# import skills.spotify
-# import skills.camera
-# import skills.weather
-# import skills.system
-# import skills.youtube
+# import skills.communication.telegram
+# import skills.media.spotify
+# import skills.camera.camera
+# import skills.network.weather
+# import skills.system.system
+# import skills.browser.youtube

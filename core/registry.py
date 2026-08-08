@@ -2,10 +2,12 @@
 JARVIS PRO
 Core Skill Registry
 
-Registry V2
+Registry V3
 
 Responsibilities:
+
 - Register skill actions
+- Categorize skill actions
 - Execute registered actions
 - Validate registrations
 - Prevent accidental invalid registrations
@@ -15,6 +17,11 @@ Responsibilities:
 
 from core.fallback import fallback
 
+from core.skill_categories import (
+    get_category,
+    list_categories,
+)
+
 
 # =========================================================
 # Skill Registry
@@ -22,20 +29,33 @@ from core.fallback import fallback
 
 SKILLS = {}
 
+# action -> category
+SKILL_CATEGORIES = {}
+
 
 # =========================================================
 # Register
 # =========================================================
 
-def register(action, handler):
+def register(
+    action,
+    handler,
+    category=None,
+):
     """
     Register a skill action.
 
-    Existing skills use:
+    Existing skills remain backward compatible:
 
         register("action_name", handler)
 
-    This API remains backward compatible.
+    New or updated skills can specify:
+
+        register(
+            "action_name",
+            handler,
+            category="system",
+        )
     """
 
     if not isinstance(action, str):
@@ -56,6 +76,23 @@ def register(action, handler):
         )
 
     # -----------------------------------------
+    # Category
+    # -----------------------------------------
+
+    if category is None:
+        category = get_category(action)
+
+    if not isinstance(category, str):
+        raise TypeError(
+            f"Category for '{action}' must be a string."
+        )
+
+    category = category.strip().lower()
+
+    if not category:
+        category = "uncategorized"
+
+    # -----------------------------------------
     # Duplicate registration
     # -----------------------------------------
 
@@ -68,7 +105,13 @@ def register(action, handler):
             f"Replacing existing handler for '{action}'"
         )
 
+    # -----------------------------------------
+    # Store
+    # -----------------------------------------
+
     SKILLS[action] = handler
+
+    SKILL_CATEGORIES[action] = category
 
 
 # =========================================================
@@ -93,6 +136,11 @@ def unregister(action):
 
         del SKILLS[action]
 
+        SKILL_CATEGORIES.pop(
+            action,
+            None,
+        )
+
         return True
 
     return False
@@ -113,7 +161,9 @@ def get_handler(action):
     if not isinstance(action, str):
         return None
 
-    return SKILLS.get(action.strip())
+    return SKILLS.get(
+        action.strip()
+    )
 
 
 # =========================================================
@@ -129,6 +179,32 @@ def has_skill(action):
         return False
 
     return action.strip() in SKILLS
+
+
+# =========================================================
+# Get Category
+# =========================================================
+
+def get_skill_category(action):
+    """
+    Return the category of a registered action.
+
+    Returns:
+        category name or None
+    """
+
+    if not isinstance(action, str):
+        return None
+
+    action = action.strip()
+
+    if action not in SKILLS:
+        return None
+
+    return SKILL_CATEGORIES.get(
+        action,
+        "uncategorized",
+    )
 
 
 # =========================================================
@@ -155,12 +231,17 @@ def execute(action, data=None):
 
     print(
         "Requested action :",
-        repr(action)
+        repr(action),
+    )
+
+    print(
+        "Category         :",
+        get_skill_category(action),
     )
 
     print(
         "Available actions:",
-        sorted(SKILLS.keys())
+        sorted(SKILLS.keys()),
     )
 
     handler = get_handler(action)
@@ -224,11 +305,13 @@ def list_skills():
     Return all registered skill actions.
     """
 
-    return list(SKILLS.keys())
+    return list(
+        SKILLS.keys()
+    )
 
 
 # =========================================================
-# Registry Information
+# Skill Count
 # =========================================================
 
 def skill_count():
@@ -239,12 +322,106 @@ def skill_count():
     return len(SKILLS)
 
 
+# =========================================================
+# List Categories
+# =========================================================
+
+def list_skill_categories():
+    """
+    Return categories currently used by registered actions.
+    """
+
+    return sorted(
+        set(
+            SKILL_CATEGORIES.values()
+        )
+    )
+
+
+# =========================================================
+# List Skills By Category
+# =========================================================
+
+def list_skills_by_category(category):
+    """
+    Return registered actions belonging to a category.
+    """
+
+    if not isinstance(category, str):
+        return []
+
+    category = category.strip().lower()
+
+    return sorted(
+        action
+        for action, action_category
+        in SKILL_CATEGORIES.items()
+        if action_category == category
+        and action in SKILLS
+    )
+
+
+# =========================================================
+# Categorized Skills
+# =========================================================
+
+def categorized_skills():
+    """
+    Return all registered actions grouped by category.
+    """
+
+    result = {}
+
+    for action in SKILLS:
+
+        category = SKILL_CATEGORIES.get(
+            action,
+            "uncategorized",
+        )
+
+        result.setdefault(
+            category,
+            [],
+        )
+
+        result[category].append(
+            action
+        )
+
+    for category in result:
+
+        result[category].sort()
+
+    return dict(
+        sorted(result.items())
+    )
+
+
+# =========================================================
+# Registry Information
+# =========================================================
+
 def registry_info():
     """
-    Return basic registry diagnostics.
+    Return complete registry diagnostics.
     """
+
+    grouped = categorized_skills()
 
     return {
         "count": len(SKILLS),
-        "actions": sorted(SKILLS.keys()),
+
+        "categories": len(grouped),
+
+        "category_counts": {
+            category: len(actions)
+            for category, actions
+            in grouped.items()
+        },
+
+        "actions": sorted(
+            SKILLS.keys()
+        ),
+
+        "categorized_skills": grouped,
     }

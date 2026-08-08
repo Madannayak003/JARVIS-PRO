@@ -19,7 +19,7 @@ from core.action_memory import set_memory
 
 from core.interrupt import interrupt
 
-from skills.greetings import startup_greeting
+from skills.assistant.greetings import startup_greeting
 
 from core.whatsapp_memory import (
     get_contact,
