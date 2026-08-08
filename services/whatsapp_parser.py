@@ -5,31 +5,48 @@ def parse_whatsapp(command):
 
     command = command.strip()
 
+    # -------------------------------------------------
+    # Send WhatsApp message
+    # -------------------------------------------------
+
     patterns = [
 
-        r"send whatsapp to (.+?) saying (.+)",
+        # send whatsapp to Ammu saying good night
+        r"send\s+whatsapp\s+to\s+(.+?)\s+saying\s+(.+)",
 
-        r"send whatsapp to (.+?) (.+)",
-        
-        r"send message to (.+?) (.+)",
-        
-        r"send whatsapp message to (.+?) (.+?)",
+        # send whatsapp message to Ammu good night
+        r"send\s+whatsapp\s+message\s+to\s+(.+?)\s+(.+)",
 
-        r"message (.+?) (.+)",
+        # send message to Ammu good night
+        r"send\s+message\s+to\s+(.+?)\s+(.+)",
 
-        r"tell (.+?) (.+)",
+        # send whatsapp to Ammu good night
+        r"send\s+whatsapp\s+to\s+(.+?)\s+(.+)",
 
-        r"text (.+?) (.+)",
+        # message Ammu good night
+        r"message\s+(.+?)\s+(.+)",
 
-        r"whatsapp (.+?) (.+)",
+        # tell Ammu good night
+        r"tell\s+(.+?)\s+(.+)",
 
-        r"send (.+?) (.+)"
-        
+        # text Ammu good night
+        r"text\s+(.+?)\s+(.+)",
+
+        # whatsapp Ammu good night
+        r"whatsapp\s+(.+?)\s+(.+)",
+
+        # send Ammu good night
+        r"send\s+(.+?)\s+(.+)",
+
     ]
 
     for pattern in patterns:
 
-        match = re.fullmatch(pattern, command, re.I)
+        match = re.fullmatch(
+            pattern,
+            command,
+            re.IGNORECASE
+        )
 
         if match:
 
