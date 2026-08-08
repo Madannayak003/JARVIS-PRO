@@ -19,6 +19,8 @@ from importlib import import_module
 
 SKILLS = [
     "memory.memory",
+    "memory.notes",
+    "memory.reminders",
     "ai.clarify",
     "media.media",
     "system.volume",

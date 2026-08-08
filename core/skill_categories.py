@@ -91,6 +91,14 @@ CATEGORIES = {
         "recall",
         "remember_contact",
         "forget_contact",
+
+        "create_note",
+        "list_notes",
+        "clear_notes",
+
+        "create_reminder",
+        "list_reminders",
+        "cancel_reminder",
     },
 
     "network": {

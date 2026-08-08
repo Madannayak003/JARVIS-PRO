@@ -1,134 +1,455 @@
+"""
+JARVIS PRO
+Memory Skill
+
+Handles:
+- Remembering user information
+- Recalling information
+- Natural-language memory commands
+- Listing stored memories
+- Forgetting memories
+
+The skill remains fast and keeps natural-language
+interpretation lightweight.
+"""
+
 import re
 
 from voice.manager import speak
+
 from archive.plugins import register as plugin_register
 from core.registry import register as ai_register
 
 from ai.memory_store import (
     remember,
     forget,
-    get as recall,
-    list_all as list_memory
-)
-
-from ai.memory_store import (
-    remember,
-    forget,
     get,
-    list_all
+    list_all,
 )
 
+
+# =========================================================
+# Helpers
+# =========================================================
+
+def _recall(key):
+    """Return a stored memory value."""
+
+    try:
+
+        memory = get(key)
+
+        if memory:
+            return memory.value
+
+    except Exception as e:
+
+        print(
+            f"[MEMORY ERROR] Recall failed: {e}"
+        )
+
+    return None
+
+
+def _list_memory():
+    """Return all stored memories as key/value pairs."""
+
+    try:
+
+        return [
+            (memory.key, memory.value)
+            for memory in list_all()
+        ]
+
+    except Exception as e:
+
+        print(
+            f"[MEMORY ERROR] List failed: {e}"
+        )
+
+        return []
+
+
+# =========================================================
+# Natural Memory Command
+# =========================================================
 
 def memory_command(query):
+    """
+    Handle natural-language memory commands.
 
-    print("QUERY:", query)
+    Examples:
 
-    query = query.lower()
+        remember my name is Madan
+        remember my favorite color is blue
+        what's my name
+        what is my favorite color
+    """
 
-    # ---------------- REMEMBER ----------------
+    if not query:
 
-    m = re.search(r"remember my (.+?) is (.+)", query)
+        return False
 
-    print("Remember Match =", m)
+    print(
+        "[MEMORY] Query:",
+        query,
+    )
 
-    if m:
+    query = str(query).strip()
 
-        key = m.group(1).strip()
-        value = m.group(2).strip()
+    # Keep original text for debugging,
+    # use lowercase only for pattern matching.
+    lowered = query.lower()
 
-        print("KEY =", key)
-        print("VALUE =", value)
+    # =====================================================
+    # REMEMBER
+    # =====================================================
 
-        remember(key, value)
+    patterns = [
 
-        print("Saved successfully!")
+        r"remember my (.+?) is (.+)",
 
-        speak(f"I'll remember your {key}")
+        r"remember that my (.+?) is (.+)",
 
-        return True
+        r"please remember my (.+?) is (.+)",
 
-    # ---------------- RECALL ----------------
+        r"save my (.+?) as (.+)",
 
-    m = re.search(r"what(?:'s| is) my (.+)", query)
+    ]
 
-    print("Recall Match =", m)
+    for pattern in patterns:
 
-    if m:
+        match = re.search(
+            pattern,
+            lowered,
+        )
 
-        key = m.group(1).strip()
+        if not match:
+            continue
 
-        print("Looking for:", key)
+        key = match.group(1).strip()
+        value = match.group(2).strip()
 
-        value = recall(key)
+        if not key or not value:
 
-        print("Database returned:", value)
+            speak(
+                "I need both the information name and its value."
+            )
+
+            return True
+
+        print(
+            "[MEMORY] Remember:",
+            key,
+            "=",
+            value,
+        )
+
+        try:
+
+            remember(
+                key,
+                value,
+            )
+
+            speak(
+                f"I'll remember your {key}."
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[MEMORY ERROR] Save failed: {e}"
+            )
+
+            speak(
+                "I couldn't save that to memory."
+            )
+
+            return False
+
+    # =====================================================
+    # RECALL
+    # =====================================================
+
+    recall_patterns = [
+
+        r"what(?:'s| is) my (.+)",
+
+        r"do you remember my (.+)",
+
+        r"tell me my (.+)",
+
+        r"what do you know about my (.+)",
+
+    ]
+
+    for pattern in recall_patterns:
+
+        match = re.search(
+            pattern,
+            lowered,
+        )
+
+        if not match:
+            continue
+
+        key = match.group(1).strip()
+
+        if not key:
+
+            speak(
+                "What would you like me to remember?"
+            )
+
+            return True
+
+        print(
+            "[MEMORY] Looking for:",
+            key,
+        )
+
+        value = _recall(key)
+
+        print(
+            "[MEMORY] Result:",
+            value,
+        )
 
         if value:
-            print(f"Your {key} is {value}")
+
+            speak(
+                f"Your {key} is {value}."
+            )
+
         else:
-            speak(f"I don't know your {key} yet.")
+
+            speak(
+                f"I don't know your {key} yet."
+            )
 
         return True
 
-    print("No pattern matched")
+    # =====================================================
+    # LIST MEMORY
+    # =====================================================
+
+    if (
+        "what do you remember" in lowered
+        or "show my memories" in lowered
+        or "list my memories" in lowered
+    ):
+
+        memories = _list_memory()
+
+        if not memories:
+
+            speak(
+                "I don't have anything stored in memory yet."
+            )
+
+            return True
+
+        print(
+            "\n[MEMORY] Stored memories:"
+        )
+
+        for key, value in memories:
+
+            print(
+                f" - {key}: {value}"
+            )
+
+        speak(
+            f"I have {len(memories)} stored memories."
+        )
+
+        return True
+
+    # =====================================================
+    # No match
+    # =====================================================
+
+    print(
+        "[MEMORY] No pattern matched."
+    )
 
     return False
 
-def ai_remember(data):
 
-    key = data["key"]
-    value = data["value"]
+# =========================================================
+# Registry - AI Planner
+# =========================================================
 
-    remember(key,value)
+def ai_remember(data=None):
 
-    speak(f"I'll remember your {key}")
+    data = data or {}
 
-    return True
+    key = str(
+        data.get("key", "")
+    ).strip()
+
+    value = str(
+        data.get("value", "")
+    ).strip()
+
+    if not key or not value:
+
+        speak(
+            "I need both a memory name and a value."
+        )
+
+        return False
+
+    try:
+
+        remember(
+            key,
+            value,
+        )
+
+        print(
+            f"[MEMORY] Saved: {key} = {value}"
+        )
+
+        speak(
+            f"I'll remember your {key}."
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[MEMORY ERROR] Save failed: {e}"
+        )
+
+        speak(
+            "I couldn't save that to memory."
+        )
+
+        return False
 
 
-def ai_recall(data):
+# =========================================================
+# Registry - AI Planner Recall
+# =========================================================
 
-    key = data["key"]
+def ai_recall(data=None):
 
-    value = recall(key)
+    data = data or {}
+
+    key = str(
+        data.get("key", "")
+    ).strip()
+
+    if not key:
+
+        speak(
+            "What would you like me to remember?"
+        )
+
+        return False
+
+    value = _recall(key)
 
     if value:
-        speak(value)
-    else:
-        speak("I don't know.")
+
+        speak(
+            f"Your {key} is {value}."
+        )
+
+        return True
+
+    speak(
+        f"I don't know your {key} yet."
+    )
 
     return True
 
+
+# =========================================================
+# Forget Memory
+# =========================================================
+
+def ai_forget(data=None):
+
+    data = data or {}
+
+    key = str(
+        data.get("key", "")
+    ).strip()
+
+    if not key:
+
+        speak(
+            "Tell me what you'd like me to forget."
+        )
+
+        return False
+
+    try:
+
+        result = forget(key)
+
+        print(
+            f"[MEMORY] Forget: {key} -> {result}"
+        )
+
+        speak(
+            f"I've forgotten your {key}."
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[MEMORY ERROR] Forget failed: {e}"
+        )
+
+        speak(
+            "I couldn't forget that memory."
+        )
+
+        return False
+
+
+# =========================================================
+# Plugin Registration
+# =========================================================
 
 plugin_register(
     [
         "remember",
         "what is my",
-        "what's my"
+        "what's my",
+        "do you remember my",
+        "tell me my",
+        "show my memories",
+        "what do you remember",
     ],
-    memory_command
+    memory_command,
 )
 
-def recall(key):
 
-    memory = get(key)
+# =========================================================
+# AI Registry
+# =========================================================
 
-    if memory:
+ai_register(
+    "remember",
+    ai_remember,
+)
 
-        return memory.value
+ai_register(
+    "recall",
+    ai_recall,
+)
 
-    return None
-
-
-def list_memory():
-
-    return [
-
-        (m.key, m.value)
-
-        for m in list_all()
-
-    ]
-
-ai_register("remember", ai_remember)
-ai_register("recall", ai_recall)
+ai_register(
+    "forget_contact",
+    ai_forget,
+)
