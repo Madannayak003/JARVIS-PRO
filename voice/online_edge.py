@@ -31,6 +31,53 @@ async def _generate(text, outfile):
 
 
 # =========================================================
+# Cleanup MP3
+# =========================================================
+
+def _cleanup_file(outfile):
+
+    if not outfile.exists():
+        return
+
+    # Windows may keep the file locked briefly after playback.
+    # Retry several times instead of treating this as an error.
+
+    for attempt in range(10):
+
+        try:
+
+            outfile.unlink()
+
+            print(
+                f"[EDGE TTS CACHE] Removed: {outfile.name}"
+            )
+
+            return
+
+        except PermissionError:
+
+            if attempt < 9:
+
+                time.sleep(0.5)
+
+            else:
+
+                print(
+                    "[EDGE TTS CACHE] "
+                    f"Could not remove after retries: "
+                    f"{outfile.name}"
+                )
+
+        except Exception as e:
+
+            print(
+                f"[EDGE TTS CACHE] Cleanup error: {e}"
+            )
+
+            return
+
+
+# =========================================================
 # Worker
 # =========================================================
 
@@ -45,7 +92,7 @@ def _worker(text):
     try:
 
         # -------------------------------------------------
-        # Generate MP3
+        # Generate
         # -------------------------------------------------
 
         loop.run_until_complete(
@@ -54,6 +101,22 @@ def _worker(text):
                 str(outfile),
             )
         )
+
+        # -------------------------------------------------
+        # Stop requested before playback
+        # -------------------------------------------------
+
+        if STOP_EVENT.is_set():
+
+            return False
+
+        # -------------------------------------------------
+        # Play
+        # -------------------------------------------------
+
+        play(str(outfile))
+
+        return True
 
     except Exception as e:
 
@@ -65,101 +128,28 @@ def _worker(text):
 
     finally:
 
+        # -------------------------------------------------
+        # Close asyncio loop
+        # -------------------------------------------------
+
         try:
+
             loop.close()
 
         except Exception:
             pass
 
-    # -----------------------------------------------------
-    # Stop check
-    # -----------------------------------------------------
+        # -------------------------------------------------
+        # Give audio backend a moment to release file
+        # -------------------------------------------------
 
-    if STOP_EVENT.is_set():
+        time.sleep(0.2)
 
-        _cleanup_file(outfile)
-
-        return False
-
-    # -----------------------------------------------------
-    # Play
-    #
-    # IMPORTANT:
-    # Do NOT delete immediately after play().
-    # Windows may still have the MP3 open.
-    # -----------------------------------------------------
-
-    try:
-
-        play(str(outfile))
-
-    except Exception as e:
-
-        print(
-            f"[EDGE TTS PLAY ERROR] {e}"
-        )
+        # -------------------------------------------------
+        # Remove temporary MP3
+        # -------------------------------------------------
 
         _cleanup_file(outfile)
-
-        return False
-
-    # -----------------------------------------------------
-    # Cleanup after playback
-    # -----------------------------------------------------
-
-    _cleanup_file_later(outfile)
-
-    return True
-
-
-# =========================================================
-# File Cleanup
-# =========================================================
-
-def _cleanup_file(path, attempts=5):
-
-    for _ in range(attempts):
-
-        try:
-
-            if path.exists():
-
-                path.unlink()
-
-            return True
-
-        except PermissionError:
-
-            time.sleep(0.3)
-
-        except Exception as e:
-
-            print(
-                f"[EDGE TTS CACHE] {e}"
-            )
-
-            return False
-
-    print(
-        f"[EDGE TTS CACHE] Could not remove: {path.name}"
-    )
-
-    return False
-
-
-def _cleanup_file_later(path):
-
-    def cleanup():
-
-        # Give Windows audio player time to release file.
-        time.sleep(1)
-
-        _cleanup_file(path)
-
-    threading.Thread(
-        target=cleanup,
-        daemon=True,
-    ).start()
 
 
 # =========================================================
@@ -169,7 +159,6 @@ def _cleanup_file_later(path):
 def speak_online(text, wait=False):
 
     if not text:
-
         return False
 
     thread = threading.Thread(
@@ -180,8 +169,14 @@ def speak_online(text, wait=False):
 
     thread.start()
 
+    # -----------------------------------------------------
+    # Synchronous mode
+    # -----------------------------------------------------
+
     if wait:
 
         thread.join()
+
+        return True
 
     return True
