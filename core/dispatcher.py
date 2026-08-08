@@ -446,9 +446,98 @@ def dispatch(command):
 
     if brain_result.handled:
 
-        print("[BRAIN ROUTER] Developer module handled request.")
+        print(
+            "[BRAIN ROUTER] "
+            f"{brain_result.module} module handled request."
+        )
 
-        return
+        # ---------------------------------------------
+        # Developer Result
+        # ---------------------------------------------
+
+        if brain_result.module == "developer":
+
+            from voice.manager import speak
+
+            result = brain_result.result
+
+            if result is None:
+
+                speak(
+                    "Developer request completed."
+                )
+
+                return
+
+            if result.success:
+
+                files = []
+
+                for patch in result.patches:
+
+                    if patch.path not in files:
+
+                        files.append(
+                            patch.path
+                        )
+
+                if files:
+
+                    if len(files) == 1:
+
+                        message = (
+                            "Developer edit completed. "
+                            f"Modified {files[0]}."
+                        )
+
+                    else:
+
+                        message = (
+                            "Developer edit completed. "
+                            f"Modified {len(files)} files."
+                        )
+
+                else:
+
+                    message = (
+                        "Developer edit completed successfully."
+                    )
+
+                print(
+                    "[DEVELOPER RESULT]"
+                )
+
+                print(
+                    message
+                )
+
+                speak(
+                    message
+                )
+
+            else:
+
+                errors = getattr(
+                    result,
+                    "errors",
+                    [],
+                )
+
+                print(
+                    "[DEVELOPER ERROR]"
+                )
+
+                for error in errors:
+
+                    print(
+                        error
+                    )
+
+                speak(
+                    "The Developer edit failed."
+                )
+
+            return
 
     # -------------------------------------------------
     # Existing Chat / Planner

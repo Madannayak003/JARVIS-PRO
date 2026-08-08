@@ -4,9 +4,11 @@ import requests
 from voice.online_edge import speak_online
 from voice.offline_piper import speak_offline
 
+
 ONLINE = False
 
 VOICE_STOP = threading.Event()
+
 
 def check_internet():
 
@@ -21,11 +23,13 @@ def check_internet():
 
         ONLINE = True
 
-    except:
+    except Exception:
 
         ONLINE = False
 
+
 check_internet()
+
 
 def _worker(text):
 
@@ -34,32 +38,51 @@ def _worker(text):
         try:
 
             speak_online(text)
+
             return
 
         except Exception as e:
 
             print("[VOICE]", e)
 
-    speak_offline(text)
+    try:
+
+        speak_offline(text)
+
+    except Exception as e:
+
+        print("[VOICE]", e)
+
 
 VOICE_THREAD = None
 
 
-def speak(text):
+def speak(
+    text,
+    wait=False,
+):
 
     global VOICE_THREAD
 
     if not text:
+
         return
 
     VOICE_STOP.clear()
 
     print(f"[VOICE] {text}")
 
-    # Wait for previous speech to finish
+    # ------------------------------------------
+    # Stop waiting for previous speech
+    # ------------------------------------------
+
     if VOICE_THREAD and VOICE_THREAD.is_alive():
 
         VOICE_THREAD.join()
+
+    # ------------------------------------------
+    # Start new speech
+    # ------------------------------------------
 
     VOICE_THREAD = threading.Thread(
 
@@ -67,12 +90,33 @@ def speak(text):
 
         args=(text,),
 
-        daemon=True
+        daemon=True,
 
     )
 
     VOICE_THREAD.start()
-    
+
+    # ------------------------------------------
+    # Optional synchronous wait
+    #
+    # Useful for tests / shutdown-sensitive
+    # operations.
+    # ------------------------------------------
+
+    if wait:
+
+        VOICE_THREAD.join()
+
+
+def wait_for_speech():
+
+    global VOICE_THREAD
+
+    if VOICE_THREAD and VOICE_THREAD.is_alive():
+
+        VOICE_THREAD.join()
+
+
 def stop_speaking():
 
     VOICE_STOP.set()
