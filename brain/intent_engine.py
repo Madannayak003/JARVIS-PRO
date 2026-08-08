@@ -328,6 +328,37 @@ class IntentEngine:
                     confidence=0.98,
                     reason=f"action_prefix:{prefix}",
                 )
+                
+        # ==================================================
+        # Personal Notes
+        #
+        # Notes are normal assistant commands and must
+        # always be handled before Developer Detection.
+        # ==================================================
+
+        NOTE_PREFIXES = (
+            "make a note",
+            "make note",
+            "take a note",
+            "take note",
+            "create a note",
+            "create note",
+            "save a note",
+            "save note",
+            "write a note",
+            "write note",
+            "add a note",
+            "add note",
+        )
+
+        if command.startswith(NOTE_PREFIXES):
+
+            return IntentResult(
+                mode="planner",
+                confidence=0.99,
+                reason="personal_note_command",
+            )                
+                
 
         # ==================================================
         # Developer Detection
