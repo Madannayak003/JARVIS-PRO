@@ -1,4 +1,20 @@
+"""
+JARVIS PRO
+Volume Skill
+
+Provides Windows system volume control.
+
+Supports:
+- Get current volume
+- Set volume
+- Increase volume
+- Decrease volume
+- Mute
+- Unmute
+"""
+
 from ctypes import POINTER, cast
+
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
@@ -6,92 +22,314 @@ from voice.manager import speak
 from core.registry import register
 
 
-devices = AudioUtilities.GetSpeakers()
+# =========================================================
+# Audio Device
+# =========================================================
 
-interface = devices.Activate(
-    IAudioEndpointVolume._iid_,
-    CLSCTX_ALL,
-    None
-)
+_volume = None
 
-volume = cast(interface, POINTER(IAudioEndpointVolume))
 
+def _get_volume_interface():
+    """
+    Get the Windows master-volume interface.
+
+    The interface is initialized lazily so importing this
+    skill does not unnecessarily access the audio device.
+    """
+
+    global _volume
+
+    if _volume is not None:
+        return _volume
+
+    devices = AudioUtilities.GetSpeakers()
+
+    interface = devices.Activate(
+        IAudioEndpointVolume._iid_,
+        CLSCTX_ALL,
+        None,
+    )
+
+    _volume = cast(
+        interface,
+        POINTER(IAudioEndpointVolume),
+    )
+
+    return _volume
+
+
+# =========================================================
+# Current Volume
+# =========================================================
 
 def current():
+    """
+    Return current master volume as an integer percentage.
+    """
 
-    return int(volume.GetMasterVolumeLevelScalar() * 100)
+    volume = _get_volume_interface()
 
-
-def set_volume(percent):
-
-    percent = max(0, min(100, int(percent)))
-
-    volume.SetMasterVolumeLevelScalar(
-        percent / 100,
-        None
+    return int(
+        round(
+            volume.GetMasterVolumeLevelScalar() * 100
+        )
     )
 
 
-def ai_volume(data):
+# =========================================================
+# Set Volume
+# =========================================================
 
-    direction = data.get("direction", "")
-    percent = data.get("percent")
+def set_volume(percent):
+    """
+    Set master volume between 0 and 100.
+    """
 
-    # ---------- Set Volume ----------
+    percent = max(
+        0,
+        min(
+            100,
+            int(percent),
+        ),
+    )
 
-    if percent is not None:
+    volume = _get_volume_interface()
 
-        set_volume(percent)
+    volume.SetMasterVolumeLevelScalar(
+        percent / 100,
+        None,
+    )
 
-        speak(f"Volume set to {percent} percent")
-
-        return True
-
-    # ---------- Increase ----------
-
-    if direction == "up":
-
-        new = min(100, current() + 10)
-
-        set_volume(new)
-
-        speak(f"Volume {new} percent")
-
-        return True
-
-    # ---------- Decrease ----------
-
-    if direction == "down":
-
-        new = max(0, current() - 5)
-
-        set_volume(new)
-
-        speak(f"Volume {new} percent")
-
-        return True
-
-    # ---------- Mute ----------
-
-    if direction == "mute":
-
-        volume.SetMute(1, None)
-
-        speak("Muted")
-
-        return True
-
-    # ---------- Unmute ----------
-
-    if direction == "unmute":
-
-        volume.SetMute(0, None)
-
-        speak("Unmuted")
-
-        return True
-
-    return False
+    return percent
 
 
-register("volume", ai_volume)
+# =========================================================
+# Mute Status
+# =========================================================
+
+def is_muted():
+    """
+    Return True if system audio is muted.
+    """
+
+    volume = _get_volume_interface()
+
+    return bool(
+        volume.GetMute()
+    )
+
+
+# =========================================================
+# Volume Action
+# =========================================================
+
+def volume_action(data=None):
+    """
+    Execute a volume command.
+
+    Supported data:
+
+        {"percent": 50}
+        {"direction": "up"}
+        {"direction": "down"}
+        {"direction": "mute"}
+        {"direction": "unmute"}
+        {"direction": "status"}
+    """
+
+    if data is None:
+        data = {}
+
+    try:
+
+        direction = str(
+            data.get(
+                "direction",
+                "",
+            )
+        ).strip().lower()
+
+        percent = data.get("percent")
+
+        # =================================================
+        # Exact Volume
+        # =================================================
+
+        if percent is not None:
+
+            try:
+                percent = int(percent)
+            except (TypeError, ValueError):
+
+                speak(
+                    "Please give me a valid volume percentage."
+                )
+
+                return False
+
+            percent = set_volume(percent)
+
+            # Setting volume also naturally unmutes it.
+            volume = _get_volume_interface()
+
+            volume.SetMute(
+                0,
+                None,
+            )
+
+            speak(
+                f"Volume set to {percent} percent."
+            )
+
+            return True
+
+        # =================================================
+        # Increase
+        # =================================================
+
+        if direction in {
+            "up",
+            "increase",
+            "higher",
+            "louder",
+        }:
+
+            new_volume = min(
+                100,
+                current() + 10,
+            )
+
+            set_volume(new_volume)
+
+            volume = _get_volume_interface()
+
+            volume.SetMute(
+                0,
+                None,
+            )
+
+            speak(
+                f"Volume is now {new_volume} percent."
+            )
+
+            return True
+
+        # =================================================
+        # Decrease
+        # =================================================
+
+        if direction in {
+            "down",
+            "decrease",
+            "lower",
+            "quieter",
+            "softer",
+        }:
+
+            new_volume = max(
+                0,
+                current() - 10,
+            )
+
+            set_volume(new_volume)
+
+            speak(
+                f"Volume is now {new_volume} percent."
+            )
+
+            return True
+
+        # =================================================
+        # Mute
+        # =================================================
+
+        if direction in {
+            "mute",
+            "silent",
+        }:
+
+            volume = _get_volume_interface()
+
+            volume.SetMute(
+                1,
+                None,
+            )
+
+            speak(
+                "Muted."
+            )
+
+            return True
+
+        # =================================================
+        # Unmute
+        # =================================================
+
+        if direction in {
+            "unmute",
+            "sound",
+        }:
+
+            volume = _get_volume_interface()
+
+            volume.SetMute(
+                0,
+                None,
+            )
+
+            speak(
+                f"Unmuted. Volume is {current()} percent."
+            )
+
+            return True
+
+        # =================================================
+        # Status
+        # =================================================
+
+        if direction in {
+            "status",
+            "current",
+            "check",
+        }:
+
+            percent = current()
+
+            if is_muted():
+
+                speak(
+                    f"Your volume is {percent} percent, "
+                    "and the system is muted."
+                )
+
+            else:
+
+                speak(
+                    f"Your volume is {percent} percent."
+                )
+
+            return True
+
+        return False
+
+    except Exception as e:
+
+        print(
+            f"[VOLUME ERROR] {e}"
+        )
+
+        speak(
+            "I couldn't control the system volume."
+        )
+
+        return False
+
+
+# =========================================================
+# Registry
+# =========================================================
+
+register(
+    "volume",
+    volume_action,
+)

@@ -1,36 +1,101 @@
+"""
+JARVIS PRO
+Task Manager Skill
+
+Provides quick system performance information:
+CPU, RAM and Disk usage.
+"""
+
 import psutil
 
 from core.registry import register
 from voice.manager import speak
 
 
-def taskmanager(data):
+# =========================================================
+# Task Manager / System Status
+# =========================================================
 
-    cpu = psutil.cpu_percent()
+def taskmanager(data=None):
+    """
+    Report current CPU, RAM and Disk usage.
 
-    ram = psutil.virtual_memory().percent
+    Registry action:
+        taskmanager
+    """
 
-    disk = psutil.disk_usage("/").percent
+    try:
 
-    print()
+        # -------------------------------------------------
+        # CPU
+        # -------------------------------------------------
 
-    print("CPU :", cpu)
+        cpu = psutil.cpu_percent(interval=0.2)
 
-    print("RAM :", ram)
+        # -------------------------------------------------
+        # RAM
+        # -------------------------------------------------
 
-    print("Disk:", disk)
+        ram = psutil.virtual_memory().percent
 
-    print()
+        # -------------------------------------------------
+        # Disk
+        # -------------------------------------------------
 
-    speak(
+        disk = psutil.disk_usage("C:\\").percent
 
-        f"CPU {cpu} percent. "
+        cpu = int(round(cpu))
+        ram = int(round(ram))
+        disk = int(round(disk))
 
-        f"RAM {ram} percent."
+        # -------------------------------------------------
+        # Terminal diagnostics
+        # -------------------------------------------------
 
-    )
+        print()
+        print("========== SYSTEM STATUS ==========")
+        print(f"CPU  : {cpu}%")
+        print(f"RAM  : {ram}%")
+        print(f"Disk : {disk}%")
+        print("===================================")
+        print()
 
-    return True
+        # -------------------------------------------------
+        # Natural response
+        # -------------------------------------------------
+
+        speak(
+            f"Your CPU is at {cpu} percent, "
+            f"memory usage is {ram} percent, "
+            f"and disk usage is {disk} percent."
+        )
+
+        print(
+            f"[TASKMANAGER] CPU {cpu}% | "
+            f"RAM {ram}% | "
+            f"Disk {disk}%"
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[TASKMANAGER ERROR] {e}"
+        )
+
+        speak(
+            "I couldn't check the system performance right now."
+        )
+
+        return False
 
 
-register("taskmanager", taskmanager)
+# =========================================================
+# Registry
+# =========================================================
+
+register(
+    "taskmanager",
+    taskmanager,
+)

@@ -1,105 +1,297 @@
-import os
-import ctypes
+"""
+JARVIS PRO
+System Skill
 
+Handles system-level actions:
+
+- Shutdown
+- Restart
+- Sleep
+- Lock
+
+This module preserves the existing registry actions while
+providing safer validation and error handling.
+"""
+
+import ctypes
+import platform
+import subprocess
+
+from core.confirmation import ask
 from core.registry import register
 from voice.manager import speak
-from core.confirmation import ask
 
+
+# =========================================================
+# Helpers
+# =========================================================
+
+def _is_windows() -> bool:
+    """Return True when JARVIS is running on Windows."""
+    return platform.system() == "Windows"
+
+
+def _request_confirmation(action: str, message: str) -> bool:
+    """
+    Ask the user to confirm a dangerous system action.
+
+    The confirmation data is stored so the confirmation system
+    can execute the same action with confirmed=True.
+    """
+
+    ask(
+        action,
+        {
+            "action": action,
+            "confirmed": True,
+        },
+    )
+
+    speak(message)
+
+    return True
+
+
+def _shutdown() -> bool:
+    """Shutdown Windows immediately."""
+    try:
+        subprocess.run(
+            ["shutdown", "/s", "/t", "1"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        return True
+
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"[SYSTEM] Shutdown failed: {exc}")
+        speak("I couldn't shut down the computer.")
+
+        return False
+
+
+def _restart() -> bool:
+    """Restart Windows immediately."""
+    try:
+        subprocess.run(
+            ["shutdown", "/r", "/t", "1"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        return True
+
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"[SYSTEM] Restart failed: {exc}")
+        speak("I couldn't restart the computer.")
+
+        return False
+
+
+def _sleep() -> bool:
+    """Put Windows into sleep mode."""
+    try:
+        result = ctypes.windll.powrprof.SetSuspendState(
+            False,
+            True,
+            False,
+        )
+
+        if result == 0:
+            print("[SYSTEM] Sleep request failed.")
+            speak("I couldn't put the computer to sleep.")
+
+            return False
+
+        return True
+
+    except (AttributeError, OSError, ctypes.ArgumentError) as exc:
+        print(f"[SYSTEM] Sleep failed: {exc}")
+        speak("I couldn't put the computer to sleep.")
+
+        return False
+
+
+def _lock() -> bool:
+    """Lock the Windows workstation."""
+    try:
+        result = ctypes.windll.user32.LockWorkStation()
+
+        if result == 0:
+            print("[SYSTEM] Lock request failed.")
+            speak("I couldn't lock the computer.")
+
+            return False
+
+        print("[SYSTEM] Computer locked.")
+
+        return True
+
+    except (AttributeError, OSError, ctypes.ArgumentError) as exc:
+        print(f"[SYSTEM] Lock failed: {exc}")
+        speak("I couldn't lock the computer.")
+
+        return False
+
+
+# =========================================================
+# Main System Action
+# =========================================================
 
 def system_action(data):
+    """
+    Execute a registered system action.
+
+    Expected data:
+
+        {
+            "action": "shutdown",
+            "confirmed": True
+        }
+
+    Supported actions:
+
+        shutdown
+        restart
+        sleep
+        lock
+    """
+
+    if not isinstance(data, dict):
+        print(
+            "[SYSTEM] Invalid action data:",
+            repr(data),
+        )
+
+        return False
 
     action = data.get("action")
 
+    if not isinstance(action, str):
+        print(
+            "[SYSTEM] Missing or invalid action:",
+            repr(action),
+        )
+
+        return False
+
+    action = action.strip().lower()
+
+    # -----------------------------------------------------
+    # Platform validation
+    # -----------------------------------------------------
+
+    if not _is_windows():
+        print(
+            f"[SYSTEM] Action '{action}' "
+            "is currently supported only on Windows."
+        )
+
+        speak(
+            "This system action is currently supported "
+            "only on Windows."
+        )
+
+        return False
+
+    confirmed = bool(
+        data.get("confirmed", False)
+    )
+
+    # =====================================================
+    # Shutdown
+    # =====================================================
+
     if action == "shutdown":
 
-        if data.get("confirmed"):
+        if not confirmed:
 
-            speak("Shutting down computer")
-
-            os.system("shutdown /s /t 1")
-
-        else:
-
-            ask(
+            return _request_confirmation(
                 "shutdown",
-                {
-                    "action":"shutdown",
-                    "confirmed":True
-                }
+                "Are you sure you want to shut down your computer?",
             )
 
-            speak(
-                "Are you sure you want to shut down your computer?"
-            )
+        speak("Shutting down the computer.")
 
-        return True
+        return _shutdown()
 
-    elif action == "restart":
+    # =====================================================
+    # Restart
+    # =====================================================
 
-        if data.get("confirmed"):
+    if action == "restart":
 
-            speak("Restarting computer")
+        if not confirmed:
 
-            os.system("shutdown /r /t 1")
-
-        else:
-
-            ask(
+            return _request_confirmation(
                 "restart",
-                {
-                    "action":"restart",
-                    "confirmed":True
-                }
+                "Are you sure you want to restart your computer?",
             )
 
-            speak(
-                "Are you sure you want to restart your computer?"
+        speak("Restarting the computer.")
+
+        return _restart()
+
+    # =====================================================
+    # Sleep
+    # =====================================================
+
+    if action == "sleep":
+
+        if not confirmed:
+
+            return _request_confirmation(
+                "sleep",
+                "Do you want me to put the computer to sleep?",
             )
 
-        return True
+        speak("Putting the computer to sleep.")
 
-    elif action == "sleep":
+        return _sleep()
 
-            if data.get("confirmed"):
+    # =====================================================
+    # Lock
+    # =====================================================
 
-                speak("Putting computer to sleep")
+    if action == "lock":
 
-                ctypes.windll.powrprof.SetSuspendState(
-                    False,
-                    True,
-                    False
-                )
+        print("[SYSTEM] Locking computer.")
 
-            else:
+        return _lock()
 
-                ask(
-                    "sleep",
-                    {
-                        "action":"sleep",
-                        "confirmed":True
-                    }
-                )
+    # =====================================================
+    # Unknown system action
+    # =====================================================
 
-                speak(
-                    "Do you want me to put the computer to sleep?"
-                )
+    print(
+        f"[SYSTEM] Unknown system action: {action}"
+    )
 
-            return True
-
-    elif action == "lock":
-
-        print("[SYSTEM] Lock")
-
-        try:
-            ctypes.windll.user32.LockWorkStation()
-            print("[SYSTEM] Locked")
-        except Exception as e:
-            print(e)
-
-        return True
+    return False
 
 
-register("shutdown", system_action)
-register("restart", system_action)
-register("sleep", system_action)
-register("lock", system_action)
+# =========================================================
+# Registry
+# =========================================================
+
+register(
+    "shutdown",
+    system_action,
+)
+
+register(
+    "restart",
+    system_action,
+)
+
+register(
+    "sleep",
+    system_action,
+)
+
+register(
+    "lock",
+    system_action,
+)

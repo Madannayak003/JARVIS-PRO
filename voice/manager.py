@@ -10,6 +10,10 @@ ONLINE = False
 VOICE_STOP = threading.Event()
 
 
+# =========================================================
+# Internet Detection
+# =========================================================
+
 def check_internet():
 
     global ONLINE
@@ -31,19 +35,37 @@ def check_internet():
 check_internet()
 
 
+# =========================================================
+# Voice Worker
+# =========================================================
+
 def _worker(text):
+
+    # -----------------------------------------------------
+    # Online Edge-TTS
+    # -----------------------------------------------------
 
     if ONLINE:
 
         try:
 
-            speak_online(text)
+            speak_online(
+                text,
+                wait=True
+            )
 
             return
 
         except Exception as e:
 
-            print("[VOICE]", e)
+            print(
+                "[VOICE] Online TTS failed:",
+                e
+            )
+
+    # -----------------------------------------------------
+    # Offline Piper fallback
+    # -----------------------------------------------------
 
     try:
 
@@ -51,11 +73,22 @@ def _worker(text):
 
     except Exception as e:
 
-        print("[VOICE]", e)
+        print(
+            "[VOICE] Offline TTS failed:",
+            e
+        )
 
+
+# =========================================================
+# Voice Thread
+# =========================================================
 
 VOICE_THREAD = None
 
+
+# =========================================================
+# Speak
+# =========================================================
 
 def speak(
     text,
@@ -70,52 +103,61 @@ def speak(
 
     VOICE_STOP.clear()
 
-    print(f"[VOICE] {text}")
+    print(
+        f"[VOICE] {text}"
+    )
 
-    # ------------------------------------------
-    # Stop waiting for previous speech
-    # ------------------------------------------
+    # -----------------------------------------------------
+    # Wait for previous speech
+    # -----------------------------------------------------
 
-    if VOICE_THREAD and VOICE_THREAD.is_alive():
+    if (
+        VOICE_THREAD
+        and VOICE_THREAD.is_alive()
+    ):
 
         VOICE_THREAD.join()
 
-    # ------------------------------------------
-    # Start new speech
-    # ------------------------------------------
+    # -----------------------------------------------------
+    # Start voice worker
+    # -----------------------------------------------------
 
     VOICE_THREAD = threading.Thread(
-
         target=_worker,
-
         args=(text,),
-
         daemon=True,
-
     )
 
     VOICE_THREAD.start()
 
-    # ------------------------------------------
+    # -----------------------------------------------------
     # Optional synchronous wait
-    #
-    # Useful for tests / shutdown-sensitive
-    # operations.
-    # ------------------------------------------
+    # -----------------------------------------------------
 
     if wait:
 
         VOICE_THREAD.join()
 
 
+# =========================================================
+# Wait For Speech
+# =========================================================
+
 def wait_for_speech():
 
     global VOICE_THREAD
 
-    if VOICE_THREAD and VOICE_THREAD.is_alive():
+    if (
+        VOICE_THREAD
+        and VOICE_THREAD.is_alive()
+    ):
 
         VOICE_THREAD.join()
 
+
+# =========================================================
+# Stop Speaking
+# =========================================================
 
 def stop_speaking():
 
