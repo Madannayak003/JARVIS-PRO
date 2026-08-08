@@ -5,7 +5,9 @@ Developer Repair
 Repair Provider
 """
 
-from ai.ollama import ask_ollama
+# from ai.ollama import ask_ollama
+
+from ai.core.service import ai_service
 
 from brain.developer.prompt_builder.models.prompt_result import (
     PromptResult,
@@ -21,11 +23,37 @@ class RepairProvider:
         self,
         prompt: PromptResult,
     ) -> str:
+        """
+        Send repair prompts through the central AIService.
+        """
 
-        return ask_ollama(
+        response = ai_service.generate(
 
-            prompt.system_prompt,
+            prompt=prompt.user_prompt,
 
-            prompt.user_prompt,
+            system_prompt=prompt.system_prompt,
+
+            capability="coding",
 
         )
+
+        if not response.success:
+
+            print(
+                "[REPAIR AI] Generation failed:",
+                response.error,
+            )
+
+            return ""
+
+        print(
+            "[REPAIR AI] Provider:",
+            response.provider,
+        )
+
+        print(
+            "[REPAIR AI] Model:",
+            response.model,
+        )
+
+        return response.text

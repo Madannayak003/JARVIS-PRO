@@ -1,6 +1,8 @@
 import json
 
-from ai.ollama import ask_ollama
+# from ai.ollama import ask_ollama
+
+from ai.core.service import ai_service
 from ai.planner_prompt import SYSTEM_PROMPT
 from core.context import get_history
 from core.context import get_value
@@ -196,13 +198,54 @@ def create_plan(command, stop_event):
     {command}
     """
 
-    answer = ask_ollama(
-        SYSTEM_PROMPT,
-        prompt
-    )
+    # answer = ask_ollama(
+    #     SYSTEM_PROMPT,
+    #     prompt
+    # )
     
+    # if stop_event.is_set():
+    #     return None
+    
+    # ---------------------------------------
+    # AI Model System
+    # ---------------------------------------
+
+    response = ai_service.generate(
+
+        prompt=prompt,
+
+        system_prompt=SYSTEM_PROMPT,
+
+        capability="planning",
+
+    )
+
     if stop_event.is_set():
         return None
+
+    if not response.success:
+
+        print(
+            "[PLANNER AI ERROR]",
+            response.error
+        )
+
+        return [
+            {
+                "action": "clarify",
+                "question": (
+                    f"I couldn't process "
+                    f"'{command}' right now."
+                ),
+                "context": {
+                    "subject": command,
+                    "type": "ai_generation_error",
+                    "error": response.error,
+                }
+            }
+        ]
+
+    answer = response.text
 
     answer = answer.strip()
 

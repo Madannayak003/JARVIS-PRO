@@ -20,6 +20,7 @@ from ai.core.model_manager import ModelManager
 from ai.core.schemas import (
     AIRequest,
     AIResponse,
+    AIStreamChunk,
 )
 
 from ai.providers.base import AIProvider
@@ -364,7 +365,7 @@ class AIRouter:
         )
 
     # ======================================================
-    # Streaming
+    # Streaming With Fallback
     # ======================================================
 
     def stream(
@@ -384,43 +385,209 @@ class AIRouter:
             )
 
         # --------------------------------------------------
-        # Find first available provider
+        # Streaming generator
         # --------------------------------------------------
 
-        for model in candidates:
+        def generate_stream():
 
-            provider = self.get_provider(
-                model.provider
-            )
+            last_error = None
 
-            if provider is None:
+            # ----------------------------------------------
+            # Try every candidate in policy order
+            # ----------------------------------------------
 
-                continue
+            for model in candidates:
 
-            if not provider.is_available():
+                provider = self.get_provider(
+                    model.provider
+                )
+
+                # ------------------------------------------
+                # Provider not registered
+                # ------------------------------------------
+
+                if provider is None:
+
+                    print(
+                        "[AI ROUTER] Streaming provider "
+                        "not registered:",
+                        model.provider,
+                    )
+
+                    continue
+
+                # ------------------------------------------
+                # Provider unavailable
+                # ------------------------------------------
+
+                if not provider.is_available():
+
+                    print(
+                        "[AI ROUTER] Streaming skip:",
+                        model.provider,
+                        model.name,
+                    )
+
+                    continue
+
+                # ------------------------------------------
+                # Select provider/model
+                # ------------------------------------------
+
+                request.model = model.name
+
+                request.provider = model.provider
 
                 print(
-                    "[AI ROUTER] Streaming skip:",
+                    "[AI ROUTER] Streaming:",
                     model.provider,
                     model.name,
                 )
 
-                continue
+                # ------------------------------------------
+                # Start provider stream
+                # ------------------------------------------
 
-            request.model = model.name
+                try:
 
-            request.provider = model.provider
+                    provider_stream = provider.stream(
+                        request
+                    )
+
+                    received_text = False
+
+                    # --------------------------------------
+                    # Consume provider stream
+                    # --------------------------------------
+
+                    for chunk in provider_stream:
+
+                        # ----------------------------------
+                        # Stop requested
+                        # ----------------------------------
+
+                        if (
+                            request.stop_event is not None
+                            and request.stop_event.is_set()
+                        ):
+
+                            return
+
+                        # ----------------------------------
+                        # Provider reported an error
+                        # ----------------------------------
+
+                        if (
+                            chunk.done
+                            and
+                            chunk.metadata.get(
+                                "success"
+                            ) is False
+                        ):
+
+                            last_error = (
+                                chunk.metadata.get(
+                                    "error"
+                                )
+                                or
+                                "Streaming generation failed."
+                            )
+
+                            print(
+                                "[AI ROUTER] Streaming failed:",
+                                model.provider,
+                                model.name,
+                            )
+
+                            print(
+                                "[AI ROUTER] Error:",
+                                last_error,
+                            )
+
+                            # ----------------------------------
+                            # If no text was produced, safely
+                            # try the next provider.
+                            # ----------------------------------
+
+                            if not received_text:
+
+                                break
+
+                            # ----------------------------------
+                            # Partial response already sent.
+                            # Do not duplicate it with another
+                            # provider.
+                            # ----------------------------------
+
+                            yield chunk
+
+                            return
+
+                        # ----------------------------------
+                        # Normal chunk
+                        # ----------------------------------
+
+                        if chunk.text:
+
+                            received_text = True
+
+                        yield chunk
+
+                        # ----------------------------------
+                        # Normal completion
+                        # ----------------------------------
+
+                        if chunk.done:
+
+                            return
+
+                    # --------------------------------------
+                    # Provider stream ended without an
+                    # explicit error.
+                    # --------------------------------------
+
+                    if received_text:
+
+                        return
+
+                except Exception as e:
+
+                    last_error = str(e)
+
+                    print(
+                        "[AI ROUTER] Streaming exception:",
+                        model.provider,
+                        e,
+                    )
+
+                    continue
+
+            # ----------------------------------------------
+            # All providers failed
+            # ----------------------------------------------
 
             print(
-                "[AI ROUTER] Streaming:",
-                model.provider,
-                model.name,
+                "[AI ROUTER] All streaming providers failed."
             )
 
-            return provider.stream(
-                request
+            yield AIStreamChunk(
+
+                text="",
+
+                provider="",
+
+                model="",
+
+                done=True,
+
+                metadata={
+                    "success": False,
+                    "error": (
+                        last_error
+                        or
+                        "All AI streaming providers failed."
+                    ),
+                },
             )
 
-        raise RuntimeError(
-            "No available AI provider for streaming."
-        )
+        return generate_stream()

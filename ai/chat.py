@@ -1,10 +1,51 @@
-from ai.ollama import ask_ollama_stream
+from ai.core.service import ai_service
 from ai.chat_prompt import CHAT_PROMPT
 
 from brain import pipeline
 
 from dataclasses import dataclass
 from typing import Optional, Iterator
+
+
+# ==========================================================
+# AI Chat Streaming Adapter
+# ==========================================================
+
+def ai_chat_stream(
+    system_prompt,
+    prompt,
+    stop_event=None,
+):
+    """
+    Adapter between the new AIService streaming API
+    and the existing Brain AIPipeline.
+    """
+
+    stream = ai_service.stream(
+
+        prompt=prompt,
+
+        system_prompt=system_prompt,
+
+        capability="conversation",
+
+        stop_event=stop_event,
+
+    )
+
+    for chunk in stream:
+
+        if chunk.text:
+
+            yield {
+                "response": chunk.text,
+
+                "provider": chunk.provider,
+
+                "model": chunk.model,
+
+                "done": chunk.done,
+            }
 
 
 # ==========================================================
@@ -29,13 +70,16 @@ class ChatSession:
 # AI Chat Entry
 # ==========================================================
 
-def ask_chat(question, stop_event=None):
+def ask_chat(
+    question,
+    stop_event=None,
+):
 
     stream = pipeline.process_stream(
 
         user_input=question,
 
-        stream_callback=ask_ollama_stream,
+        stream_callback=ai_chat_stream,
 
         system_prompt=CHAT_PROMPT,
 

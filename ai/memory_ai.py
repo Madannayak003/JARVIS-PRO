@@ -14,7 +14,9 @@ Responsibilities
 
 import json
 
-from ai.ollama import ask_ollama
+# from ai.ollama import ask_ollama
+
+from ai.core.service import ai_service
 
 
 SYSTEM_PROMPT = """
@@ -90,10 +92,31 @@ Return ONLY JSON.
 
     try:
 
-        response = ask_ollama(
-            SYSTEM_PROMPT,
-            prompt
-        ).strip()
+        # response = ask_ollama(
+        #     SYSTEM_PROMPT,
+        #     prompt
+        # ).strip()
+        
+        ai_response = ai_service.generate(
+
+            prompt=prompt,
+
+            system_prompt=SYSTEM_PROMPT,
+
+            capability="memory",
+
+        )
+
+        if not ai_response.success:
+
+            print(
+                "[MEMORY AI ERROR]",
+                ai_response.error
+            )
+
+            return None
+
+        response = ai_response.text.strip()
 
         # Remove markdown if model adds it
         if response.startswith("```"):
