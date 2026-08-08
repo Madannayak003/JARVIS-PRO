@@ -1,3 +1,11 @@
+"""
+JARVIS PRO
+Screenshot AI Skill
+
+Analyzes the latest captured screenshot using the
+configured AI service.
+"""
+
 import os
 
 from core.registry import register
@@ -8,68 +16,136 @@ from ai.core.service import ai_service
 from core.paths import SCREENSHOTS
 
 
-def screenshot_ai(data):
+# =========================================================
+# Screenshot AI
+# =========================================================
 
-    files = sorted(
+def screenshot_ai(data=None):
+    """
+    Analyze the latest screenshot.
+    """
 
-        SCREENSHOTS.glob("*.png"),
+    try:
 
-        key=os.path.getmtime
+        SCREENSHOTS.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
-    )
+        files = sorted(
+            SCREENSHOTS.glob("*.png"),
+            key=os.path.getmtime,
+        )
 
-    if not files:
+        # -------------------------------------------------
+        # No screenshots
+        # -------------------------------------------------
 
-        speak("No screenshots found.")
+        if not files:
+
+            speak(
+                "I couldn't find any screenshots to analyze."
+            )
+
+            return True
+
+        latest = files[-1]
+
+        print(
+            "[SCREENSHOT AI] Analyzing:",
+            latest,
+        )
+
+        # -------------------------------------------------
+        # AI Analysis
+        # -------------------------------------------------
+
+        response = ai_service.generate(
+
+            prompt=str(latest),
+
+            system_prompt=(
+                "Describe what is visible in this screenshot "
+                "clearly and naturally. Mention important "
+                "text, applications, windows, or visual "
+                "elements when available."
+            ),
+
+            capability="conversation",
+
+        )
+
+        # -------------------------------------------------
+        # AI failure
+        # -------------------------------------------------
+
+        if not response.success:
+
+            print(
+                "[SCREENSHOT AI] Generation failed:",
+                response.error,
+            )
+
+            speak(
+                "I couldn't analyze the screenshot."
+            )
+
+            return False
+
+        # -------------------------------------------------
+        # Diagnostics
+        # -------------------------------------------------
+
+        print(
+            "[SCREENSHOT AI] Provider:",
+            response.provider,
+        )
+
+        print(
+            "[SCREENSHOT AI] Model:",
+            response.model,
+        )
+
+        # -------------------------------------------------
+        # Empty response
+        # -------------------------------------------------
+
+        if not response.text:
+
+            speak(
+                "I couldn't get a useful description of the screenshot."
+            )
+
+            return False
+
+        # -------------------------------------------------
+        # Speak result
+        # -------------------------------------------------
+
+        speak(
+            response.text
+        )
 
         return True
 
-    latest = files[-1]
-
-    print(
-        "[SCREENSHOT AI] Analyzing:",
-        latest
-    )
-
-    response = ai_service.generate(
-
-        prompt=str(latest),
-
-        system_prompt="Describe this screenshot.",
-
-        capability="conversation",
-
-    )
-
-    if not response.success:
+    except Exception as e:
 
         print(
-            "[SCREENSHOT AI] Generation failed:",
-            response.error,
+            f"[SCREENSHOT AI ERROR] {e}"
         )
 
         speak(
-            "I could not analyze the screenshot."
+            "Something went wrong while analyzing the screenshot."
         )
 
-        return True
+        return False
 
-    print(
-        "[SCREENSHOT AI] Provider:",
-        response.provider,
-    )
 
-    print(
-        "[SCREENSHOT AI] Model:",
-        response.model,
-    )
-
-    speak(response.text)
-
-    return True
-
+# =========================================================
+# Registry
+# =========================================================
 
 register(
     "screenshot_ai",
-    screenshot_ai
+    screenshot_ai,
 )
