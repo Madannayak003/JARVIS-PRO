@@ -2,20 +2,21 @@
 JARVIS PRO
 AI Core - AI Router
 
-Central routing and fallback system.
+Central runtime AI routing system.
 
 Responsibilities:
-- Select models
-- Select providers
+- Select providers using ModelManager policy
 - Check provider availability
-- Try fallback models
-- Generate responses
-- Stream responses
+- Try preferred models in order
+- Fallback when a provider is unavailable
+- Fallback when generation fails
+- Support streaming
 """
 
 from typing import Dict, Optional
 
 from ai.core.model_manager import ModelManager
+
 from ai.core.schemas import (
     AIRequest,
     AIResponse,
@@ -26,7 +27,7 @@ from ai.providers.base import AIProvider
 
 class AIRouter:
     """
-    Central AI routing system.
+    Central AI runtime router.
     """
 
     def __init__(
@@ -67,6 +68,9 @@ class AIRouter:
         provider_name: str,
     ) -> Optional[AIProvider]:
 
+        if not provider_name:
+            return None
+
         return self.providers.get(
             provider_name.lower()
         )
@@ -99,15 +103,15 @@ class AIRouter:
             return [model]
 
         # --------------------------------------------------
-        # Capability models
+        # Policy-aware candidates
         # --------------------------------------------------
 
-        candidates = self.model_manager.find_models(
+        candidates = self.model_manager.candidates(
             request.capability
         )
 
         # --------------------------------------------------
-        # Provider override
+        # Explicit provider filter
         # --------------------------------------------------
 
         if request.provider:
@@ -117,16 +121,20 @@ class AIRouter:
             )
 
             candidates = [
+
                 model
+
                 for model in candidates
+
                 if model.provider.lower()
                 == provider_name
+
             ]
 
         return candidates
 
     # ======================================================
-    # Route
+    # Route Only
     # ======================================================
 
     def route(
@@ -169,15 +177,10 @@ class AIRouter:
                 print(
                     "[AI ROUTER] Provider unavailable:",
                     model.provider,
-                    "model:",
                     model.name,
                 )
 
                 continue
-
-            # ----------------------------------------------
-            # Select this model
-            # ----------------------------------------------
 
             request.model = model.name
 
@@ -197,7 +200,7 @@ class AIRouter:
         )
 
     # ======================================================
-    # Generate
+    # Generate With Fallback
     # ======================================================
 
     def generate(
@@ -212,19 +215,26 @@ class AIRouter:
         if not candidates:
 
             return AIResponse(
+
                 text="",
+
+                provider="",
+
+                model="",
+
                 success=False,
+
                 error=(
-                    "No AI model available for "
+                    "No AI models available for "
                     f"capability: {request.capability}"
                 ),
             )
 
-        # --------------------------------------------------
-        # Try models in priority order
-        # --------------------------------------------------
-
         last_error = None
+
+        # --------------------------------------------------
+        # Try every candidate in policy order
+        # --------------------------------------------------
 
         for model in candidates:
 
@@ -232,9 +242,22 @@ class AIRouter:
                 model.provider
             )
 
+            # ----------------------------------------------
+            # Provider not registered
+            # ----------------------------------------------
+
             if provider is None:
 
+                print(
+                    "[AI ROUTER] Provider not registered:",
+                    model.provider,
+                )
+
                 continue
+
+            # ----------------------------------------------
+            # Provider unavailable
+            # ----------------------------------------------
 
             if not provider.is_available():
 
@@ -246,6 +269,10 @@ class AIRouter:
 
                 continue
 
+            # ----------------------------------------------
+            # Select model
+            # ----------------------------------------------
+
             request.model = model.name
 
             request.provider = model.provider
@@ -256,21 +283,64 @@ class AIRouter:
                 model.name,
             )
 
-            response = provider.generate(
-                request
-            )
+            # ----------------------------------------------
+            # Generate
+            # ----------------------------------------------
+
+            try:
+
+                response = provider.generate(
+                    request
+                )
+
+            except Exception as e:
+
+                last_error = str(e)
+
+                print(
+                    "[AI ROUTER] Provider exception:",
+                    model.provider,
+                    e,
+                )
+
+                continue
+
+            # ----------------------------------------------
+            # Success
+            # ----------------------------------------------
 
             if response.success:
 
+                print(
+                    "[AI ROUTER] Success:",
+                    model.provider,
+                    model.name,
+                )
+
                 return response
+
+            # ----------------------------------------------
+            # Provider returned failure
+            # ----------------------------------------------
 
             last_error = response.error
 
             print(
-                "[AI ROUTER] Model failed:",
+                "[AI ROUTER] Generation failed:",
+                model.provider,
                 model.name,
-                last_error,
             )
+
+            print(
+                "[AI ROUTER] Error:",
+                response.error,
+            )
+
+            # ----------------------------------------------
+            # Continue to next provider
+            # ----------------------------------------------
+
+            continue
 
         # --------------------------------------------------
         # Everything failed
@@ -294,7 +364,7 @@ class AIRouter:
         )
 
     # ======================================================
-    # Stream
+    # Streaming
     # ======================================================
 
     def stream(
@@ -302,10 +372,55 @@ class AIRouter:
         request: AIRequest,
     ):
 
-        provider = self.route(
+        candidates = self._get_candidates(
             request
         )
 
-        return provider.stream(
-            request
+        if not candidates:
+
+            raise RuntimeError(
+                "No AI models available for "
+                f"capability: {request.capability}"
+            )
+
+        # --------------------------------------------------
+        # Find first available provider
+        # --------------------------------------------------
+
+        for model in candidates:
+
+            provider = self.get_provider(
+                model.provider
+            )
+
+            if provider is None:
+
+                continue
+
+            if not provider.is_available():
+
+                print(
+                    "[AI ROUTER] Streaming skip:",
+                    model.provider,
+                    model.name,
+                )
+
+                continue
+
+            request.model = model.name
+
+            request.provider = model.provider
+
+            print(
+                "[AI ROUTER] Streaming:",
+                model.provider,
+                model.name,
+            )
+
+            return provider.stream(
+                request
+            )
+
+        raise RuntimeError(
+            "No available AI provider for streaming."
         )

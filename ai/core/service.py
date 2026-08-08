@@ -30,6 +30,10 @@ from ai.providers.gemini import GeminiProvider
 
 from ai.providers.openai import OpenAIProvider
 
+from ai.core.preference import AIPreference
+
+from ai.core.commands import AICommandHandler
+
 
 class AIService:
     """
@@ -52,10 +56,16 @@ class AIService:
         )
 
         # --------------------------------------------------
-        # Register currently available providers
+        # Register providers
         # --------------------------------------------------
 
         self._register_default_providers()
+
+        # --------------------------------------------------
+        # AI Preference
+        # --------------------------------------------------
+
+        self.preference = AIPreference()
 
     # ======================================================
     # Provider Registration
@@ -111,6 +121,26 @@ class AIService:
         Generate a complete AI response.
         """
 
+        # --------------------------------------------------
+        # Resolve AI Preference
+        # --------------------------------------------------
+
+        selected_provider = (
+            provider
+            if provider is not None
+            else self.preference.provider
+        )
+
+        selected_model = (
+            model
+            if model is not None
+            else self.preference.model
+        )
+
+        # --------------------------------------------------
+        # Build Request
+        # --------------------------------------------------
+
         request = AIRequest(
 
             prompt=prompt,
@@ -119,9 +149,9 @@ class AIService:
 
             capability=capability,
 
-            provider=provider,
+            provider=selected_provider,
 
-            model=model,
+            model=selected_model,
 
             stream=False,
 
@@ -134,10 +164,14 @@ class AIService:
             ),
         )
 
+        # --------------------------------------------------
+        # Generate
+        # --------------------------------------------------
+
         return self.router.generate(
             request
         )
-
+        
     # ======================================================
     # Stream
     # ======================================================
@@ -155,6 +189,22 @@ class AIService:
         """
         Stream an AI response.
         """
+        
+        # --------------------------------------------------
+        # Resolve AI Preference
+        # --------------------------------------------------
+
+        selected_provider = (
+            provider
+            if provider is not None
+            else self.preference.provider
+        )
+
+        selected_model = (
+            model
+            if model is not None
+            else self.preference.model
+        )
 
         request = AIRequest(
 
@@ -164,9 +214,9 @@ class AIService:
 
             capability=capability,
 
-            provider=provider,
-
-            model=model,
+            provider=selected_provider,
+            
+            model=selected_model,
 
             stream=True,
 
@@ -182,6 +232,30 @@ class AIService:
         return self.router.stream(
             request
         )
+        
+    # ======================================================
+    # AI Selection Command
+    # ======================================================
+
+    def handle_command(
+        self,
+        command: str,
+    ):
+        """
+        Handle AI selection commands.
+
+        Examples:
+            use Gemini
+            use GPT
+            use Ollama
+            use Qwen
+            auto mode
+        """
+
+        return AICommandHandler.handle(
+            command,
+            self.preference,
+        )    
 
 
 # ==========================================================
