@@ -1,6 +1,8 @@
 print("CORE INIT LOADED")
 
 import skills.memory.memory
+import skills.memory.notes
+import skills.memory.reminders
 import skills.ai.clarify
 import skills.media.media
 import skills.system.volume

@@ -14,17 +14,136 @@ from core.app_resolver import resolve_app
 
 def create_plan(command, stop_event):
 
-    command = command.strip().lower()
+    # command = command.strip().lower()
     
+    # if stop_event.is_set():
+    #     return None
+    
+    # print("[PLANNER] Command:", command)
+    
+    # plan = fast_route(command)
+    
+    # =========================================================
+    # Preserve original command
+    # =========================================================
+
+    original_command = command.strip()
+
+    command = original_command.lower()
+
     if stop_event.is_set():
         return None
-    
-    print("[PLANNER] Command:", command)
-    
-    plan = fast_route(command)
-    
-    print("[PLANNER] Fast Route:", plan)
 
+    print("[PLANNER] Command:", command)
+
+
+    # =========================================================
+    # Natural Notes Routing
+    # =========================================================
+
+    import re
+
+
+    # ---------------------------------------------------------
+    # Create note
+    # ---------------------------------------------------------
+
+    note_patterns = [
+        r"^(?:take|make|write|save|create|add)\s+(?:a\s+)?note(?:\s+(?:that|to|about|for|saying))?\s+(.+)$",
+
+        r"^note\s+(?:that|to|about|for|saying)?\s*(.+)$",
+
+        r"^write\s+this\s+down\s*[:\-]?\s*(.+)$",
+
+        r"^save\s+this\s+as\s+a\s+note\s*[:\-]?\s*(.+)$",
+    ]
+
+
+    for pattern in note_patterns:
+
+        match = re.match(
+            pattern,
+            original_command,
+            re.IGNORECASE,
+        )
+
+        if match:
+
+            note_text = match.group(1).strip()
+
+            # Remove accidental leading filler words
+            note_text = re.sub(
+                r"^(?:that|to|about|for)\s+",
+                "",
+                note_text,
+                flags=re.IGNORECASE,
+            ).strip()
+
+            if note_text:
+
+                print(
+                    "[NOTES ROUTER] Creating note:",
+                    note_text,
+                )
+
+                return [{
+                    "action": "create_note",
+                    "text": note_text,
+                }]
+
+
+    # ---------------------------------------------------------
+    # List notes
+    # ---------------------------------------------------------
+
+    if re.fullmatch(
+        r"(?:show|list|read|display)\s+(?:my\s+)?notes?",
+        command,
+    ):
+
+        print("[NOTES ROUTER] Listing notes")
+
+        return [{
+            "action": "list_notes"
+        }]
+
+
+    if re.fullmatch(
+        r"(?:what\s+are|what's|whats)\s+(?:my\s+)?notes?",
+        command,
+    ):
+
+        print("[NOTES ROUTER] Listing notes")
+
+        return [{
+            "action": "list_notes"
+        }]
+
+
+    # ---------------------------------------------------------
+    # Clear notes
+    # ---------------------------------------------------------
+
+    if re.fullmatch(
+        r"(?:clear|delete|remove)\s+(?:all\s+)?(?:my\s+)?notes?",
+        command,
+    ):
+
+        print("[NOTES ROUTER] Clearing notes")
+
+        return [{
+            "action": "clear_notes"
+        }]
+
+
+    # =========================================================
+    # Existing Fast Router
+    # =========================================================
+
+    plan = fast_route(command)
+
+    print("[PLANNER] Fast Route:", plan)
+    
     if plan:
         return plan
     
