@@ -182,3 +182,61 @@ def latest_file(folder):
         files,
         key=lambda f: f.stat().st_mtime
     )
+    
+def search_files(query="", extension=None, limit=20):
+    """
+    Search common user folders for files.
+
+    query:
+        Text to match against filename.
+
+    extension:
+        Optional extension such as ".pdf" or "pdf".
+
+    limit:
+        Maximum number of results.
+    """
+
+    query = str(query or "").strip().lower()
+
+    if extension:
+        extension = str(extension).strip().lower()
+
+        if not extension.startswith("."):
+            extension = "." + extension
+
+    matches = []
+
+    for folder in SEARCH_FOLDERS:
+
+        folder = Path(folder)
+
+        if not folder.exists():
+            continue
+
+        try:
+
+            for file in folder.rglob("*"):
+
+                if not file.is_file():
+                    continue
+
+                name = file.name.lower()
+
+                if query and query not in name:
+                    continue
+
+                if extension and file.suffix.lower() != extension:
+                    continue
+
+                matches.append(file)
+
+        except Exception:
+            continue
+
+    matches.sort(
+        key=lambda f: f.stat().st_mtime,
+        reverse=True
+    )
+
+    return matches[:limit]

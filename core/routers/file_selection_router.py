@@ -1,5 +1,6 @@
 from core.file_selection_memory import get_files
 
+
 def file_selection_route(command):
 
     pending = get_files()
@@ -8,6 +9,16 @@ def file_selection_route(command):
         return None
 
     command = command.lower().strip()
+
+    files = pending.get("files", [])
+    purpose = pending.get("purpose", "search")
+
+    if not files:
+        return None
+
+    # -------------------------------------------------
+    # File index
+    # -------------------------------------------------
 
     mapping = {
         "first": 0,
@@ -29,57 +40,93 @@ def file_selection_route(command):
         "fifth": 4,
         "fifth one": 4,
         "5": 4,
-        
+
         "sixth": 5,
         "sixth one": 5,
         "6": 5,
-        
+
         "seventh": 6,
-        "seventh one": 6,   
+        "seventh one": 6,
         "7": 6,
-        
+
         "eighth": 7,
         "eighth one": 7,
         "8": 7,
-        
+
         "ninth": 8,
         "ninth one": 8,
         "9": 8,
-        
+
         "tenth": 9,
         "tenth one": 9,
-        "10": 9
+        "10": 9,
     }
+
+    # -------------------------------------------------
+    # Selected file
+    # -------------------------------------------------
 
     if command in mapping:
 
-        return [{
-            "action": "whatsapp_send_selected_file",
-            "index": mapping[command]
-        }]
+        index = mapping[command]
 
-    if "latest" in command:
+        if index >= len(files):
+            return None
 
-        return [{
-            "action": "whatsapp_send_latest_selected_file"
-        }]
+        path = str(files[index])
 
-    if "oldest" in command:
+        # ---------------------------------------------
+        # Normal file search
+        # ---------------------------------------------
 
-        return [{
-            "action": "whatsapp_send_oldest_selected_file"
-        }]
+        if purpose == "search":
 
-    if "pdf" in command:
+            return [{
+                "action": "open_file",
+                "path": path
+            }]
 
-        return [{
-            "action": "whatsapp_send_pdf"
-        }]
+        # ---------------------------------------------
+        # WhatsApp selection
+        # ---------------------------------------------
 
-    if "docx" in command:
+        if purpose == "whatsapp":
 
-        return [{
-            "action": "whatsapp_send_docx"
-        }]
+            return [{
+                "action": "whatsapp_send_selected_file",
+                "index": index
+            }]
+
+        return None
+
+    # -------------------------------------------------
+    # WhatsApp-specific selections
+    # -------------------------------------------------
+
+    if purpose == "whatsapp":
+
+        if "latest" in command:
+
+            return [{
+                "action": "whatsapp_send_latest_selected_file"
+            }]
+
+        if "oldest" in command:
+
+            return [{
+                "action": "whatsapp_send_oldest_selected_file"
+            }]
+
+        if "pdf" in command:
+
+            return [{
+                "action": "whatsapp_send_pdf"
+            }]
+
+        if "docx" in command:
+
+            return [{
+                "action": "whatsapp_send_docx"
+            }]
 
     return None

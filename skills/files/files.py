@@ -7,48 +7,127 @@ from voice.manager import speak
 from core.confirmation import ask
 from send2trash import send2trash
 from core.path_resolver import resolve
+from skills.files.file_info import info
+
+# =========================================================
+# Helpers
+# =========================================================
+
+def _resolve_path(value):
+    """
+    Resolve a JARVIS path if possible.
+    Falls back to the original value.
+    """
+
+    if not value:
+        return None
+
+    value = str(value).strip()
+
+    if not value:
+        return None
+
+    resolved = resolve(value)
+
+    if resolved:
+        return resolved
+
+    return value
 
 
-def file_action(data):
+def _path_exists(path):
+    """
+    Safe existence check.
+    """
+
+    try:
+        return bool(path) and os.path.exists(path)
+
+    except Exception:
+        return False
+
+
+# =========================================================
+# File Action
+# =========================================================
+
+def file_action(data=None):
+
+    data = data or {}
 
     action = data.get("action")
 
-    # -----------------------
+    # =====================================================
     # Open File
-    # -----------------------
+    # =====================================================
 
     if action == "open_file":
 
-        path = resolve(
-            data.get("path")
-        ) or data.get("path")
-
-        if os.path.exists(path):
-
-            os.startfile(path)
-
-            speak("Opening file.")
-
-        else:
-
-            speak("File not found.")
-
-        return True
-
-    # -----------------------
-    # Open Folder
-    # -----------------------
-
-    elif action == "open_folder":
-
-        path = resolve(
+        path = _resolve_path(
             data.get("path")
         )
 
-        if path is None:
-            path = data.get("path")
+        if not path:
 
-        if os.path.exists(path):
+            speak("Which file should I open?")
+
+            return False
+
+        if not _path_exists(path):
+
+            speak("File not found.")
+
+            print(
+                f"[FILES] File not found: {path}"
+            )
+
+            return False
+
+        if not os.path.isfile(path):
+
+            speak("That path is not a file.")
+
+            return False
+
+        try:
+
+            os.startfile(path)
+
+            print(
+                f"[FILES] Opened file: {path}"
+            )
+
+            speak("Opening file.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Open file failed: {e}"
+            )
+
+            speak("I couldn't open that file.")
+
+            return False
+
+    # =====================================================
+    # Open Folder
+    # =====================================================
+
+    elif action == "open_folder":
+
+        path = _resolve_path(
+            data.get("path")
+        )
+
+        if not path:
+
+            speak("Which folder should I open?")
+
+            return False
+
+        try:
 
             if path == "This PC":
 
@@ -56,152 +135,374 @@ def file_action(data):
                     "explorer shell:MyComputerFolder"
                 )
 
-            else:
+            elif _path_exists(path):
+
+                if not os.path.isdir(path):
+
+                    speak("That path is not a folder.")
+
+                    return False
 
                 subprocess.Popen(
                     f'explorer "{path}"'
                 )
 
+            else:
+
+                speak("Folder not found.")
+
+                print(
+                    f"[FILES] Folder not found: {path}"
+                )
+
+                return False
+
+            print(
+                f"[FILES] Opened folder: {path}"
+            )
+
             speak("Opening folder.")
 
-        else:
+            return True
 
-            speak("Folder not found.")
+        except Exception as e:
 
-        return True
+            print(
+                f"[FILES ERROR] Open folder failed: {e}"
+            )
 
-    # -----------------------
+            speak("I couldn't open that folder.")
+
+            return False
+
+    # =====================================================
     # Create Folder
-    # -----------------------
+    # =====================================================
 
     elif action == "create_folder":
 
-        path = resolve(
+        path = _resolve_path(
             data.get("path")
-        ) or data.get("path")
-
-        os.makedirs(
-            path,
-            exist_ok=True
         )
 
-        speak("Folder created.")
+        if not path:
 
-        return True
+            speak("Where should I create the folder?")
 
-    # -----------------------
+            return False
+
+        try:
+
+            os.makedirs(
+                path,
+                exist_ok=True
+            )
+
+            print(
+                f"[FILES] Folder created: {path}"
+            )
+
+            speak("Folder created.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Create folder failed: {e}"
+            )
+
+            speak("I couldn't create that folder.")
+
+            return False
+
+    # =====================================================
     # Create File
-    # -----------------------
+    # =====================================================
 
     elif action == "create_file":
 
-        path = resolve(
+        path = _resolve_path(
             data.get("path")
-        ) or data.get("path")
+        )
 
-        open(
-            path,
-            "a"
-        ).close()
+        if not path:
 
-        speak("File created.")
+            speak("What should I name the file?")
 
-        return True
+            return False
 
-    # -----------------------
+        try:
+
+            parent = os.path.dirname(
+                os.path.abspath(path)
+            )
+
+            if parent:
+
+                os.makedirs(
+                    parent,
+                    exist_ok=True
+                )
+
+            open(
+                path,
+                "a",
+                encoding="utf-8"
+            ).close()
+
+            print(
+                f"[FILES] File created: {path}"
+            )
+
+            speak("File created.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Create file failed: {e}"
+            )
+
+            speak("I couldn't create that file.")
+
+            return False
+
+    # =====================================================
     # Copy
-    # -----------------------
+    # =====================================================
 
     elif action == "copy":
 
-        shutil.copy2(
-
-            data["source"],
-
-            data["destination"]
-
+        source = _resolve_path(
+            data.get("source")
         )
 
-        speak("Copied.")
+        destination = _resolve_path(
+            data.get("destination")
+        )
 
-        return True
+        if not source or not destination:
 
-    # -----------------------
+            speak("I need both the source and destination.")
+
+            return False
+
+        if not _path_exists(source):
+
+            speak("The source file or folder was not found.")
+
+            return False
+
+        try:
+
+            shutil.copy2(
+                source,
+                destination
+            )
+
+            print(
+                f"[FILES] Copied: {source} -> {destination}"
+            )
+
+            speak("Copied.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Copy failed: {e}"
+            )
+
+            speak("I couldn't copy that.")
+
+            return False
+
+    # =====================================================
     # Move
-    # -----------------------
+    # =====================================================
 
     elif action == "move":
 
-        shutil.move(
-
-            data["source"],
-
-            data["destination"]
-
+        source = _resolve_path(
+            data.get("source")
         )
 
-        speak("Moved.")
+        destination = _resolve_path(
+            data.get("destination")
+        )
 
-        return True
+        if not source or not destination:
 
-    # -----------------------
+            speak("I need both the source and destination.")
+
+            return False
+
+        if not _path_exists(source):
+
+            speak("The source file or folder was not found.")
+
+            return False
+
+        try:
+
+            shutil.move(
+                source,
+                destination
+            )
+
+            print(
+                f"[FILES] Moved: {source} -> {destination}"
+            )
+
+            speak("Moved.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Move failed: {e}"
+            )
+
+            speak("I couldn't move that.")
+
+            return False
+
+    # =====================================================
     # Rename
-    # -----------------------
+    # =====================================================
 
     elif action == "rename":
 
-        os.rename(
-
-            data["old"],
-
-            data["new"]
-
+        old = _resolve_path(
+            data.get("old")
         )
 
-        speak("Renamed.")
+        new = _resolve_path(
+            data.get("new")
+        )
 
-        return True
+        if not old or not new:
 
-    # -----------------------
+            speak("I need both the old and new names.")
+
+            return False
+
+        if not _path_exists(old):
+
+            speak("The file or folder to rename was not found.")
+
+            return False
+
+        try:
+
+            os.rename(
+                old,
+                new
+            )
+
+            print(
+                f"[FILES] Renamed: {old} -> {new}"
+            )
+
+            speak("Renamed.")
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[FILES ERROR] Rename failed: {e}"
+            )
+
+            speak("I couldn't rename that.")
+
+            return False
+
+    # =====================================================
     # Delete
-    # -----------------------
+    # =====================================================
 
     elif action == "delete":
 
+        path = _resolve_path(
+            data.get("path")
+        )
+
+        if not path:
+
+            speak("Which file should I delete?")
+
+            return False
+
+        if not _path_exists(path):
+
+            speak("The file or folder was not found.")
+
+            return False
+
+        # -------------------------------------------------
+        # Confirmed deletion
+        # -------------------------------------------------
+
         if data.get("confirmed"):
 
-            send2trash(data["path"])
+            try:
 
-            speak("Deleted.")
+                send2trash(path)
 
-        else:
+                print(
+                    f"[FILES] Moved to recycle bin: {path}"
+                )
 
-            ask(
+                speak("Deleted.")
 
-                "delete",
+                return True
 
-                {
+            except Exception as e:
 
-                    "action":"delete",
+                print(
+                    f"[FILES ERROR] Delete failed: {e}"
+                )
 
-                    "path":data["path"],
+                speak(
+                    "I couldn't delete that file."
+                )
 
-                    "confirmed":True
+                return False
 
-                }
+        # -------------------------------------------------
+        # Ask confirmation
+        # -------------------------------------------------
 
-            )
+        ask(
+            "delete",
+            {
+                "action": "delete",
+                "path": path,
+                "confirmed": True
+            }
+        )
 
-            speak(
-
-                "Are you sure you want to delete this file?"
-
-            )
+        speak(
+            "Are you sure you want to delete this file?"
+        )
 
         return True
 
+    # =====================================================
+    # Unknown action
+    # =====================================================
+
     return False
 
+
+# =========================================================
+# Registry
+# =========================================================
 
 register(
     "open_file",

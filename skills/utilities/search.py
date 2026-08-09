@@ -1,78 +1,116 @@
-import os
-
 from core.registry import register
 from voice.manager import speak
 
-
-SEARCH_FOLDERS = [
-
-    os.path.expanduser("~/Desktop"),
-
-    os.path.expanduser("~/Documents"),
-
-    os.path.expanduser("~/Downloads"),
-
-    "D:\\"
-
-]
+from services.file_manager import search_files
+from core.file_selection_memory import (
+    set_files,
+    clear_files,
+)
 
 
 def search_action(data):
 
-    filename = data.get("filename","").lower()
+    data = data or {}
 
-    results = []
+    query = str(
+        data.get("query", "")
+    ).strip()
 
-    for root in SEARCH_FOLDERS:
+    extension = str(
+        data.get("extension", "")
+    ).strip()
 
-        for path, dirs, files in os.walk(root):
-
-            for file in files:
-
-                if filename in file.lower():
-
-                    full = os.path.join(
-
-                        path,
-
-                        file
-
-                    )
-
-                    results.append(full)
-
-    if results:
-
-        print()
-
-        print("Found Files\n")
-
-        for f in results:
-
-            print(f)
-
-        print()
+    if not query and not extension:
 
         speak(
+            "What file should I search for?"
+        )
 
-            f"I found {len(results)} matching files."
+        return False
 
+    try:
+
+        results = search_files(
+            query,
+            extension
+        )
+
+    except Exception as e:
+
+        print(
+            f"[FILE SEARCH ERROR] {e}"
+        )
+
+        clear_files()
+
+        speak(
+            "I couldn't search for the file."
+        )
+
+        return False
+
+    # -------------------------------------------------
+    # No Results
+    # -------------------------------------------------
+
+    if not results:
+
+        clear_files()
+
+        speak(
+            "No matching files found."
+        )
+
+        return True
+
+    # -------------------------------------------------
+    # Remember Search Results
+    # -------------------------------------------------
+
+    set_files({
+        "purpose": "search",
+        "files": results,
+    })
+
+    # -------------------------------------------------
+    # Display Results
+    # -------------------------------------------------
+
+    print()
+    print("Found Files")
+    print()
+
+    for index, path in enumerate(
+        results[:10],
+        1
+    ):
+
+        print(
+            f"{index}. {path}"
+        )
+
+    print()
+
+    # -------------------------------------------------
+    # Voice Response
+    # -------------------------------------------------
+
+    if len(results) == 1:
+
+        speak(
+            "I found one matching file."
         )
 
     else:
 
         speak(
-
-            "No matching files found."
-
+            f"I found {len(results)} matching files."
         )
 
     return True
 
 
 register(
-
     "search_file",
-
     search_action
 )
