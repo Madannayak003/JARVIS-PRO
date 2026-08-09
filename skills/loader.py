@@ -25,6 +25,7 @@ SKILLS = [
     "media.media",
     "system.volume",
     "browser.browser_ai",
+    "browser.youtube",
     "system.system",
     "system.brightness",
     "screen.screenshot",

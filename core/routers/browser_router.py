@@ -1,5 +1,19 @@
-WINDOWS_APPS = [
+"""
+JARVIS PRO
+Browser Router
 
+Routes normal browser websites, searches,
+and Windows applications.
+
+Personal/custom web destinations are handled
+by web_router.py and must not be duplicated here.
+"""
+
+# =========================================================
+# Windows Applications
+# =========================================================
+
+WINDOWS_APPS = [
     "notepad",
     "calculator",
     "calc",
@@ -9,155 +23,250 @@ WINDOWS_APPS = [
     "powershell",
     "explorer",
     "file explorer",
-    "settings",
+    "task manager",
+    "registry editor",
+    "device manager",
     "control panel",
-    "task manager"
-
+    "settings",
 ]
 
 
+# =========================================================
+# Browser Websites
+# =========================================================
+
+BROWSER_SITES = [
+    "google",
+    "youtube",
+    "chrome",
+    "gmail",
+    "github",
+    "spotify",
+    "chatgpt",
+]
+
+
+# =========================================================
+# Browser Router
+# =========================================================
+
 def browser_route(command):
 
-    command = command.lower().strip()
+    if not command:
+        return None
 
-    # ---------- Open Google Search ----------
+    command = str(command).strip().lower()
+
+    if not command:
+        return None
+
+    # -----------------------------------------------------
+    # Open Google Search
+    # -----------------------------------------------------
 
     if command.startswith("open google search"):
 
         query = command.replace(
             "open google search",
-            ""
+            "",
+            1
         ).strip()
 
         return [
-
             {
                 "action": "open",
                 "app": "google"
             },
-
             {
                 "action": "google_search",
                 "query": query
             }
-
         ]
 
-    # ---------- Open YouTube Search ----------
+    # -----------------------------------------------------
+    # Open YouTube Search
+    # -----------------------------------------------------
 
     if command.startswith("open youtube search"):
 
         query = command.replace(
             "open youtube search",
-            ""
+            "",
+            1
         ).strip()
 
         return [
-
             {
                 "action": "open",
                 "app": "youtube"
             },
-
             {
                 "action": "youtube_search",
                 "query": query
             }
-
         ]
 
-    # ---------- Google Search ----------
+    # -----------------------------------------------------
+    # Google Search
+    # -----------------------------------------------------
 
     if command.startswith("search google"):
 
         query = command.replace(
             "search google",
-            ""
+            "",
+            1
         ).strip()
 
         return [
-
             {
                 "action": "google_search",
                 "query": query
             }
-
         ]
 
-    # ---------- YouTube Search ----------
+    # -----------------------------------------------------
+    # YouTube Search
+    # -----------------------------------------------------
 
     if command.startswith("search youtube"):
 
         query = command.replace(
             "search youtube",
-            ""
+            "",
+            1
         ).strip()
 
         return [
-
             {
                 "action": "youtube_search",
                 "query": query
             }
+        ]
+        
+    # -----------------------------------------------------
+    # YouTube Controls
+    # -----------------------------------------------------
 
+    if command in [
+        "play youtube",
+        "play youtube video",
+        "play first youtube video",
+        "play first video",
+    ]:
+
+        return [
+            {
+                "action": "youtube_play_first"
+            }
         ]
 
-    # ---------- Windows Apps ----------
+
+    if command in [
+        "pause youtube",
+        "pause youtube video",
+        "pause video",
+    ]:
+
+        return [
+            {
+                "action": "youtube_pause"
+            }
+        ]
+
+
+    if command in [
+        "resume youtube",
+        "resume youtube video",
+        "resume video",
+        "continue youtube",
+    ]:
+
+        return [
+            {
+                "action": "youtube_resume"
+            }
+        ]
+
+
+    if command in [
+        "next youtube",
+        "next youtube video",
+        "next video",
+    ]:
+
+        return [
+            {
+                "action": "youtube_next"
+            }
+        ]
+
+
+    if command in [
+        "previous youtube",
+        "previous youtube video",
+        "previous video",
+    ]:
+
+        return [
+            {
+                "action": "youtube_previous"
+            }
+        ]    
+
+    # -----------------------------------------------------
+    # Windows Applications
+    # -----------------------------------------------------
 
     if command.startswith("open "):
 
-        app = command.replace("open", "", 1).strip()
+        app = command.replace(
+            "open ",
+            "",
+            1
+        ).strip()
 
         if app in WINDOWS_APPS:
 
             return [
-
                 {
                     "action": "open",
                     "app": app
                 }
-
             ]
 
-    # ---------- Websites ----------
+    # -----------------------------------------------------
+    # Browser Websites
+    # -----------------------------------------------------
 
-    browser_commands = {
+    if command.startswith("open "):
 
-        "open google": [
+        site = command.replace(
+            "open ",
+            "",
+            1
+        ).strip()
+
+        if site in BROWSER_SITES:
+
+            return [
+                {
+                    "action": "open",
+                    "app": site
+                }
+            ]
+
+    # -----------------------------------------------------
+    # Direct website names
+    # -----------------------------------------------------
+
+    if command in BROWSER_SITES:
+
+        return [
             {
                 "action": "open",
-                "app": "google"
-            }
-        ],
-
-        "google": [
-            {
-                "action": "open",
-                "app": "google"
-            }
-        ],
-
-        "open youtube": [
-            {
-                "action": "open",
-                "app": "youtube"
-            }
-        ],
-
-        "youtube": [
-            {
-                "action": "open",
-                "app": "youtube"
-            }
-        ],
-
-        "open chrome": [
-            {
-                "action": "open",
-                "app": "chrome"
+                "app": command
             }
         ]
 
-    }
-
-    return browser_commands.get(command)
+    return None

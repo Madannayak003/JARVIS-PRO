@@ -109,6 +109,10 @@ def web_route(command):
 
     if not command:
         return None
+    
+    personal_request = bool(
+        re.search(r"\b(?:my|mine)\b", command)
+    )
 
     # -----------------------------------------------------
     # Start with original command
@@ -144,6 +148,25 @@ def web_route(command):
         "",
         target
     ).strip()
+    
+    # -----------------------------------------------------
+    # Ambiguous destinations
+    # -----------------------------------------------------
+    # Generic commands such as "open github" should go
+    # to the normal browser router.
+    #
+    # Personal versions such as "open my github" should
+    # use the personal-link system.
+
+    AMBIGUOUS_PERSONAL_TARGETS = {
+        "github",
+        "github profile",
+        "github repository",
+        "github repos",
+    }
+    
+    if target in AMBIGUOUS_PERSONAL_TARGETS and not personal_request:
+        return None
 
     # -----------------------------------------------------
     # Direct target match

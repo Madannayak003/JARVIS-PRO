@@ -6,46 +6,65 @@ class NavigationEngine:
 
     def open(self, url):
 
+        if not url:
+            return False
+
+        url = str(url).strip()
+
+        if not url:
+            return False
+
         print(f"[NAVIGATION] {url}")
 
-        webbrowser.open(url)
+        return webbrowser.open(url)
 
     def google(self, query):
 
+        if not query:
+            return False
+
         url = (
             "https://www.google.com/search?q="
-            + urllib.parse.quote(query)
+            + urllib.parse.quote(str(query))
         )
 
-        self.open(url)
+        return self.open(url)
 
     def youtube(self, query):
 
+        if not query:
+            return False
+
         url = (
             "https://www.youtube.com/results?search_query="
-            + urllib.parse.quote(query)
+            + urllib.parse.quote(str(query))
         )
 
-        self.open(url)
-        
+        return self.open(url)
+
     def github(self, query):
+
+        if not query:
+            return False
 
         url = (
             "https://github.com/search?q="
-            + urllib.parse.quote(query)
+            + urllib.parse.quote(str(query))
         )
 
-        self.open(url)
-
+        return self.open(url)
 
     def chatgpt(self, query):
 
+        if not query:
+            return False
+
         url = (
             "https://chat.openai.com/?q="
-            + urllib.parse.quote(query)
+            + urllib.parse.quote(str(query))
         )
 
-        self.open(url)
+        return self.open(url)
 
 
 navigation = NavigationEngine()
