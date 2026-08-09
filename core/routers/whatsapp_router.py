@@ -3,6 +3,9 @@ import re
 from services.whatsapp_parser import (
     parse_whatsapp,
     parse_scheduled_whatsapp,
+    parse_list_scheduled_whatsapp,
+    parse_cancel_scheduled_whatsapp,
+    parse_reschedule_scheduled_whatsapp,
 )
 
 def whatsapp_route(command):
@@ -112,6 +115,74 @@ def whatsapp_route(command):
                 "send_at": scheduled["send_at"],
             }
         ]
+        
+     # =================================================
+    # Scheduled WhatsApp Management
+    # =================================================
+
+    # -------------------------------------------------
+    # List scheduled messages
+    # -------------------------------------------------
+
+    if parse_list_scheduled_whatsapp(command):
+
+        print(
+            "[WHATSAPP SCHEDULER ROUTER] Listing scheduled messages"
+        )
+
+        return [
+            {
+                "action": "list_scheduled_whatsapp"
+            }
+        ]
+
+
+    # -------------------------------------------------
+    # Cancel scheduled message
+    # -------------------------------------------------
+
+    scheduled_id = parse_cancel_scheduled_whatsapp(
+        command
+    )
+
+    if scheduled_id is not None:
+
+        print(
+            "[WHATSAPP SCHEDULER ROUTER] "
+            f"Cancelling scheduled message #{scheduled_id}"
+        )
+
+        return [
+            {
+                "action": "cancel_scheduled_whatsapp",
+                "id": scheduled_id,
+            }
+        ]
+
+
+    # -------------------------------------------------
+    # Reschedule scheduled message
+    # -------------------------------------------------
+
+    reschedule = parse_reschedule_scheduled_whatsapp(
+        command
+    )
+
+    if reschedule:
+
+        print(
+            "[WHATSAPP SCHEDULER ROUTER] "
+            f"Rescheduling message #{reschedule['id']} "
+            f"-> {reschedule['send_at']}"
+        )
+
+        return [
+            {
+                "action": "reschedule_scheduled_whatsapp",
+                "id": reschedule["id"],
+                "send_at": reschedule["send_at"],
+            }
+        ]      
 
     # =================================================
     # Normal WhatsApp Message

@@ -315,6 +315,242 @@ def schedule_whatsapp_message(data=None):
 _scheduler_started = False
 _scheduler_lock = threading.Lock()
 
+def list_scheduled_whatsapp(data=None):
+
+    messages = _load_scheduled_whatsapp()
+
+    active = [
+        item
+        for item in messages
+        if not item.get("completed", False)
+    ]
+
+    if not active:
+
+        speak(
+            "You don't have any scheduled WhatsApp messages."
+        )
+
+        return True
+
+    print("\n[WHATSAPP SCHEDULED]")
+
+    for item in active:
+
+        try:
+
+            target = datetime.fromisoformat(
+                item["send_at"]
+            )
+
+            formatted = target.strftime(
+                "%d %B at %I:%M %p"
+            ).lstrip("0")
+
+        except Exception:
+
+            formatted = item.get(
+                "send_at",
+                "unknown time"
+            )
+
+        print(
+            f"#{item.get('id')} "
+            f"{item.get('contact')} "
+            f"-> {item.get('message')} "
+            f"at {formatted}"
+        )
+
+    speak(
+        f"You have {len(active)} scheduled WhatsApp messages."
+    )
+
+    return True
+
+def cancel_scheduled_whatsapp(data=None):
+
+    data = data or {}
+
+    try:
+
+        message_id = int(
+            data.get("id")
+        )
+
+    except Exception:
+
+        speak(
+            "I need the scheduled message number."
+        )
+
+        return False
+
+    messages = _load_scheduled_whatsapp()
+
+    found = None
+
+    for item in messages:
+
+        if int(
+            item.get("id", -1)
+        ) == message_id:
+
+            found = item
+            break
+
+    if found is None:
+
+        speak(
+            f"I couldn't find scheduled message {message_id}."
+        )
+
+        return False
+
+    if found.get("completed", False):
+
+        speak(
+            "That message has already been sent."
+        )
+
+        return False
+
+    found["completed"] = True
+
+    found["cancelled"] = True
+
+    found["cancelled_at"] = (
+        datetime.now().isoformat()
+    )
+
+    if not _save_scheduled_whatsapp(messages):
+
+        speak(
+            "I couldn't cancel that scheduled message."
+        )
+
+        return False
+
+    print(
+        f"[WHATSAPP SCHEDULER] "
+        f"Cancelled #{message_id}"
+    )
+
+    speak(
+        f"Scheduled WhatsApp message {message_id} cancelled."
+    )
+
+    return True
+
+
+def reschedule_scheduled_whatsapp(data=None):
+
+    data = data or {}
+
+    try:
+
+        message_id = int(
+            data.get("id")
+        )
+
+    except Exception:
+
+        speak(
+            "I need the scheduled message number."
+        )
+
+        return False
+
+    send_at = str(
+        data.get("send_at", "")
+    ).strip()
+
+    if not send_at:
+
+        speak(
+            "I need the new time."
+        )
+
+        return False
+
+    try:
+
+        target = datetime.fromisoformat(
+            send_at
+        )
+
+    except Exception:
+
+        speak(
+            "I couldn't understand the new time."
+        )
+
+        return False
+
+    if target <= datetime.now():
+
+        speak(
+            "That time has already passed."
+        )
+
+        return False
+
+    messages = _load_scheduled_whatsapp()
+
+    found = None
+
+    for item in messages:
+
+        if int(
+            item.get("id", -1)
+        ) == message_id:
+
+            found = item
+            break
+
+    if found is None:
+
+        speak(
+            f"I couldn't find scheduled message {message_id}."
+        )
+
+        return False
+
+    if found.get("completed", False):
+
+        speak(
+            "That message has already been completed."
+        )
+
+        return False
+
+    found["send_at"] = target.isoformat()
+
+    found["rescheduled_at"] = (
+        datetime.now().isoformat()
+    )
+
+    if not _save_scheduled_whatsapp(messages):
+
+        speak(
+            "I couldn't reschedule that message."
+        )
+
+        return False
+
+    print(
+        f"[WHATSAPP SCHEDULER] "
+        f"Rescheduled #{message_id} -> "
+        f"{target.isoformat()}"
+    )
+
+    speak(
+        "Scheduled WhatsApp message "
+        f"{message_id} moved to "
+        f"{target.strftime('%I:%M %p').lstrip('0')}."
+    )
+
+    return True
+
 
 def _whatsapp_scheduler_worker():
 
@@ -721,6 +957,25 @@ register(
 register(
     "schedule_whatsapp_message",
     schedule_whatsapp_message,
+    category="communication",
+)
+
+register(
+    "list_scheduled_whatsapp",
+    list_scheduled_whatsapp,
+    category="communication",
+)
+
+register(
+    "cancel_scheduled_whatsapp",
+    cancel_scheduled_whatsapp,
+    category="communication",
+)
+
+register(
+    "reschedule_scheduled_whatsapp",
+    reschedule_scheduled_whatsapp,
+    category="communication",
 )
 
 # =========================================================
