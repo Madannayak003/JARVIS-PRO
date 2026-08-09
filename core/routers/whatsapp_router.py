@@ -1,20 +1,23 @@
 import re
 
-from services.whatsapp_parser import parse_whatsapp
-
+from services.whatsapp_parser import (
+    parse_whatsapp,
+    parse_scheduled_whatsapp,
+)
 
 def whatsapp_route(command):
 
     command = command.lower().strip()
 
-    # -------------------------------------------------
+    # =================================================
     # Open / Close
-    # -------------------------------------------------
+    # =================================================
 
-    if command in [
+    if command in (
         "open whatsapp",
-        "launch whatsapp"
-    ]:
+        "launch whatsapp",
+        "start whatsapp",
+    ):
 
         return [
             {
@@ -22,10 +25,10 @@ def whatsapp_route(command):
             }
         ]
 
-    if command in [
+    if command in (
         "close whatsapp",
-        "exit whatsapp"
-    ]:
+        "exit whatsapp",
+    ):
 
         return [
             {
@@ -33,28 +36,9 @@ def whatsapp_route(command):
             }
         ]
 
-    # -------------------------------------------------
-    # Ask for Contact
-    # -------------------------------------------------
-
-    if command in [
-
-        "message",
-        "send message",
-        "send whatsapp",
-        "send whatsapp message"
-
-    ]:
-
-        return [
-            {
-                "action": "whatsapp_wait_contact"
-            }
-        ]
-
-    # -------------------------------------------------
+    # =================================================
     # Latest Photo
-    # -------------------------------------------------
+    # =================================================
 
     match = re.fullmatch(
 
@@ -66,8 +50,7 @@ def whatsapp_route(command):
 
         command,
 
-        re.IGNORECASE
-
+        re.IGNORECASE,
     )
 
     if match:
@@ -75,14 +58,13 @@ def whatsapp_route(command):
         return [
             {
                 "action": "whatsapp_send_latest_photo",
-
-                "contact": match.group(1).strip()
+                "contact": match.group(1).strip(),
             }
         ]
 
-    # -------------------------------------------------
+    # =================================================
     # Latest Screenshot
-    # -------------------------------------------------
+    # =================================================
 
     match = re.fullmatch(
 
@@ -94,8 +76,7 @@ def whatsapp_route(command):
 
         command,
 
-        re.IGNORECASE
-
+        re.IGNORECASE,
     )
 
     if match:
@@ -103,18 +84,38 @@ def whatsapp_route(command):
         return [
             {
                 "action": "whatsapp_send_latest_screenshot",
-
-                "contact": match.group(1).strip()
+                "contact": match.group(1).strip(),
             }
         ]
 
-    # -------------------------------------------------
-    # Natural WhatsApp Message
-    # -------------------------------------------------
-    #
-    # IMPORTANT:
-    # This MUST come before the generic file matcher.
-    #
+    # =================================================
+    # Scheduled WhatsApp Message
+    # =================================================
+
+    scheduled = parse_scheduled_whatsapp(command)
+
+    if scheduled:
+
+        print(
+            "[WHATSAPP SCHEDULER ROUTER] Creating scheduled message:",
+            scheduled,
+        )
+
+        return [
+            {
+                "action": "schedule_whatsapp_message",
+
+                "contact": scheduled["contact"],
+
+                "message": scheduled["message"],
+
+                "send_at": scheduled["send_at"],
+            }
+        ]
+
+    # =================================================
+    # Normal WhatsApp Message
+    # =================================================
 
     result = parse_whatsapp(command)
 
@@ -126,100 +127,78 @@ def whatsapp_route(command):
 
                 "contact": result["contact"],
 
-                "message": result["message"]
+                "message": result["message"],
             }
         ]
 
-    # -------------------------------------------------
-    # Conversation Mode
-    # -------------------------------------------------
-
-    if command.startswith("message "):
-
-        contact = command.replace(
-            "message",
-            "",
-            1
-        ).strip()
-
-        if contact:
-
-            return [
-                {
-                    "action": "whatsapp_wait_message",
-
-                    "contact": contact
-                }
-            ]
-
-    if command.startswith("tell "):
-
-        contact = command.replace(
-            "tell",
-            "",
-            1
-        ).strip()
-
-        if contact:
-
-            return [
-                {
-                    "action": "whatsapp_wait_message",
-
-                    "contact": contact
-                }
-            ]
-
-    if command.startswith("text "):
-
-        contact = command.replace(
-            "text",
-            "",
-            1
-        ).strip()
-
-        if contact:
-
-            return [
-                {
-                    "action": "whatsapp_wait_message",
-
-                    "contact": contact
-                }
-            ]
-
-    # -------------------------------------------------
-    # Send WhatsApp To Contact
-    # -------------------------------------------------
+    # =================================================
+    # Start WhatsApp conversation
     #
-    # Example:
-    # "send whatsapp to ammu"
+    # IMPORTANT:
+    # Only explicit WhatsApp wording is accepted.
     #
-    # This is only reached when parse_whatsapp()
-    # did NOT find a message.
+    # "send whatsapp to John"
+    # "message John on whatsapp"
     #
+    # Generic "tell John" is NOT accepted.
+    # =================================================
 
-    if command.startswith("send whatsapp to "):
+    match = re.fullmatch(
+        r"send\s+whatsapp\s+to\s+(.+)",
+        command,
+        re.IGNORECASE,
+    )
 
-        contact = command.replace(
-            "send whatsapp to",
-            "",
-            1
-        ).strip()
+    if match:
+
+        contact = match.group(1).strip()
 
         if contact:
 
             return [
                 {
                     "action": "whatsapp_wait_message",
-
-                    "contact": contact
+                    "contact": contact,
                 }
             ]
 
     # -------------------------------------------------
+    # Explicit "message ... on whatsapp"
+    # -------------------------------------------------
+
+    match = re.fullmatch(
+        r"message\s+(.+?)\s+on\s+whatsapp",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+
+        contact = match.group(1).strip()
+
+        if contact:
+
+            return [
+                {
+                    "action": "whatsapp_wait_message",
+                    "contact": contact,
+                }
+            ]
+
+    # -------------------------------------------------
+    # "message John" remains supported ONLY when
+    # explicitly followed by "on whatsapp" is absent?
+    #
+    # We intentionally do NOT route generic:
+    #
+    # message John
+    #
+    # because "message" can have other meanings.
+    # -------------------------------------------------
+
+    # =================================================
     # Send File
-    # -------------------------------------------------
+    # =================================================
 
     match = re.fullmatch(
 
@@ -227,33 +206,37 @@ def whatsapp_route(command):
 
         command,
 
-        re.IGNORECASE
-
+        re.IGNORECASE,
     )
 
     if match:
 
         filename = match.group(1).strip()
-
         contact = match.group(2).strip()
 
-        # Prevent obvious message commands
-        if filename.lower() not in [
+        # ---------------------------------------------
+        # Don't steal normal message commands
+        # ---------------------------------------------
 
+        blocked = (
             "message",
             "whatsapp",
-            "whatsapp message"
+            "whatsapp message",
+            "text",
+        )
 
-        ]:
+        if filename.lower() not in blocked:
 
             return [
                 {
                     "action": "whatsapp_send_file",
-
                     "filename": filename,
-
-                    "contact": contact
+                    "contact": contact,
                 }
             ]
+
+    # =================================================
+    # No WhatsApp match
+    # =================================================
 
     return None

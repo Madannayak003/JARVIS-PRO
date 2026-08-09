@@ -450,6 +450,6 @@ ai_register(
 )
 
 ai_register(
-    "forget_contact",
+    "forget_memory",
     ai_forget,
 )

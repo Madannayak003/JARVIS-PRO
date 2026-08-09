@@ -1,18 +1,29 @@
-from core.registry import register
+import json
+import threading
+import time
+from pathlib import Path
+from datetime import datetime
 
+from core.registry import register
 from voice.manager import speak
 
-from services.whatsapp_api import (open_whatsapp,close_whatsapp)
-
-from services.whatsapp_api import (send_message,send_photo,send_file)
+from services.whatsapp_api import (
+    open_whatsapp,
+    close_whatsapp,
+    send_message,
+    send_photo,
+    send_file,
+)
 
 from services.file_manager import (latest_photo,latest_screenshot,find_file)
 
 from services.contact_manager import (resolve_contact)
 
-from core.file_selection_memory import (set_files,clear_files)
-
-from core.file_selection_memory import (get_files,clear_files)
+from core.file_selection_memory import (
+    set_files,
+    get_files,
+    clear_files,
+)
 
 from core.whatsapp_memory import (
     set_contact,
@@ -21,6 +32,17 @@ from core.whatsapp_memory import (
     set_pending_message,
     get_pending_message,
     clear_pending_message
+)
+
+# =========================================================
+# Scheduled WhatsApp Storage
+# =========================================================
+
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
+
+SCHEDULED_WHATSAPP_FILE = (
+    DATA_DIR / "whatsapp_scheduled.json"
 )
 
 def whatsapp_open(data):
@@ -78,6 +100,411 @@ def whatsapp_send_message(data):
         speak("I couldn't send the message.")
 
     return True
+
+# =========================================================
+# Scheduled WhatsApp Storage Helpers
+# =========================================================
+
+def _load_scheduled_whatsapp():
+
+    if not SCHEDULED_WHATSAPP_FILE.exists():
+
+        return []
+
+    try:
+
+        with open(
+            SCHEDULED_WHATSAPP_FILE,
+            "r",
+            encoding="utf-8",
+        ) as f:
+
+            data = json.load(f)
+
+        if isinstance(data, list):
+
+            return data
+
+    except Exception as e:
+
+        print(
+            f"[WHATSAPP SCHEDULER ERROR] "
+            f"Load failed: {e}"
+        )
+
+    return []
+
+
+def _save_scheduled_whatsapp(messages):
+
+    try:
+
+        with open(
+            SCHEDULED_WHATSAPP_FILE,
+            "w",
+            encoding="utf-8",
+        ) as f:
+
+            json.dump(
+                messages,
+                f,
+                indent=4,
+                ensure_ascii=False,
+            )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[WHATSAPP SCHEDULER ERROR] "
+            f"Save failed: {e}"
+        )
+
+        return False
+    
+# =========================================================
+# Schedule WhatsApp Message
+# =========================================================
+
+def schedule_whatsapp_message(data=None):
+
+    data = data or {}
+
+    contact = str(
+        data.get("contact", "")
+    ).strip()
+
+    message = str(
+        data.get("message", "")
+    ).strip()
+
+    send_at = str(
+        data.get("send_at", "")
+    ).strip()
+
+    if not contact:
+
+        speak(
+            "Which contact should I send it to?"
+        )
+
+        return False
+
+    if not message:
+
+        speak(
+            "What message should I schedule?"
+        )
+
+        return False
+
+    if not send_at:
+
+        speak(
+            "When should I send the message?"
+        )
+
+        return False
+
+    # -----------------------------------------------------
+    # Validate datetime
+    # -----------------------------------------------------
+
+    try:
+
+        target = datetime.fromisoformat(
+            send_at
+        )
+
+    except Exception:
+
+        print(
+            "[WHATSAPP SCHEDULER] "
+            f"Invalid datetime: {send_at}"
+        )
+
+        speak(
+            "I couldn't understand the scheduled time."
+        )
+
+        return False
+
+    # -----------------------------------------------------
+    # Load existing messages
+    # -----------------------------------------------------
+
+    messages = _load_scheduled_whatsapp()
+
+    # -----------------------------------------------------
+    # Generate ID
+    # -----------------------------------------------------
+
+    if messages:
+
+        message_id = max(
+            int(item.get("id", 0))
+            for item in messages
+        ) + 1
+
+    else:
+
+        message_id = 1
+
+    # -----------------------------------------------------
+    # Create scheduled message
+    # -----------------------------------------------------
+
+    scheduled = {
+
+        "id": message_id,
+
+        "contact": contact,
+
+        "message": message,
+
+        "send_at": target.isoformat(),
+
+        "completed": False,
+
+        "created_at": datetime.now().isoformat(),
+    }
+
+    messages.append(
+        scheduled
+    )
+
+    # -----------------------------------------------------
+    # Save
+    # -----------------------------------------------------
+
+    if not _save_scheduled_whatsapp(
+        messages
+    ):
+
+        speak(
+            "I couldn't save the scheduled WhatsApp message."
+        )
+
+        return False
+
+    print(
+        "[WHATSAPP SCHEDULER] Saved:",
+        scheduled
+    )
+
+    # -----------------------------------------------------
+    # Voice confirmation
+    # -----------------------------------------------------
+
+    formatted_time = target.strftime(
+        "%I:%M %p"
+    ).lstrip("0")
+
+    speak(
+        f"I'll send your WhatsApp message "
+        f"to {contact} at {formatted_time}."
+    )
+
+    return True
+
+# =========================================================
+# Scheduled WhatsApp Worker
+# =========================================================
+
+_scheduler_started = False
+_scheduler_lock = threading.Lock()
+
+
+def _whatsapp_scheduler_worker():
+
+    print(
+        "[WHATSAPP SCHEDULER] Background scheduler started"
+    )
+
+    while True:
+
+        try:
+
+            messages = _load_scheduled_whatsapp()
+
+            now = datetime.now()
+
+            changed = False
+
+            for item in messages:
+
+                # -----------------------------------------
+                # Already sent
+                # -----------------------------------------
+
+                if item.get("completed", False):
+                    continue
+
+                send_at = item.get("send_at")
+
+                if not send_at:
+                    continue
+
+                # -----------------------------------------
+                # Parse scheduled time
+                # -----------------------------------------
+
+                try:
+
+                    target = datetime.fromisoformat(
+                        send_at
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "[WHATSAPP SCHEDULER] "
+                        f"Invalid time for #{item.get('id')}: {e}"
+                    )
+
+                    continue
+
+                # -----------------------------------------
+                # Not time yet
+                # -----------------------------------------
+
+                if target > now:
+                    continue
+
+                # -----------------------------------------
+                # Resolve saved contact
+                # -----------------------------------------
+
+                alias = str(
+                    item.get("contact", "")
+                ).strip()
+
+                contact = resolve_contact(alias)
+
+                message = str(
+                    item.get("message", "")
+                ).strip()
+
+                if not contact or not message:
+
+                    print(
+                        "[WHATSAPP SCHEDULER] "
+                        f"Invalid message #{item.get('id')}"
+                    )
+
+                    continue
+
+                print(
+                    "[WHATSAPP SCHEDULER] Sending:",
+                    f"#{item.get('id')}",
+                    f"{alias} -> {contact}",
+                    message,
+                )
+
+                # -----------------------------------------
+                # Send
+                # -----------------------------------------
+
+                try:
+
+                    ok = send_message(
+                        contact,
+                        message
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "[WHATSAPP SCHEDULER] "
+                        f"Send failed for #{item.get('id')}: {e}"
+                    )
+
+                    ok = False
+
+                # -----------------------------------------
+                # SUCCESS
+                # -----------------------------------------
+
+                if ok:
+
+                    item["completed"] = True
+
+                    item["sent_at"] = (
+                        datetime.now().isoformat()
+                    )
+
+                    item["resolved_contact"] = contact
+
+                    changed = True
+
+                    print(
+                        "[WHATSAPP SCHEDULER] "
+                        f"Sent successfully: #{item.get('id')}"
+                    )
+
+                    speak(
+                        f"Scheduled WhatsApp message sent to {contact}."
+                    )
+
+                # -----------------------------------------
+                # FAILURE
+                # -----------------------------------------
+
+                else:
+
+                    print(
+                        "[WHATSAPP SCHEDULER] "
+                        f"Message #{item.get('id')} "
+                        "was not sent. Keeping pending."
+                    )
+
+            # ---------------------------------------------
+            # Save changes
+            # ---------------------------------------------
+
+            if changed:
+
+                _save_scheduled_whatsapp(
+                    messages
+                )
+
+        except Exception as e:
+
+            print(
+                "[WHATSAPP SCHEDULER ERROR]",
+                e
+            )
+
+        time.sleep(1)
+
+
+# =========================================================
+# Start Scheduler
+# =========================================================
+
+def _start_whatsapp_scheduler():
+
+    global _scheduler_started
+
+    with _scheduler_lock:
+
+        if _scheduler_started:
+            return
+
+        thread = threading.Thread(
+            target=_whatsapp_scheduler_worker,
+            daemon=True,
+            name="WhatsAppScheduler",
+        )
+
+        thread.start()
+
+        _scheduler_started = True
+
+        print(
+            "[WHATSAPP SCHEDULER] Scheduler initialized"
+        )
 
 def whatsapp_send_latest_photo(data):
 
@@ -290,3 +717,14 @@ register(
     "whatsapp_wait_contact",
     whatsapp_wait_contact
 )
+
+register(
+    "schedule_whatsapp_message",
+    schedule_whatsapp_message,
+)
+
+# =========================================================
+# Start Scheduled WhatsApp Worker
+# =========================================================
+
+_start_whatsapp_scheduler()
