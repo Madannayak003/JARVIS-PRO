@@ -2,6 +2,8 @@ import re
 
 from services.whatsapp_parser import (
     parse_whatsapp,
+    parse_whatsapp_call,
+    parse_whatsapp_video_call,
     parse_scheduled_whatsapp,
     parse_list_scheduled_whatsapp,
     parse_cancel_scheduled_whatsapp,
@@ -89,7 +91,7 @@ def whatsapp_route(command):
                 "action": "whatsapp_send_latest_screenshot",
                 "contact": match.group(1).strip(),
             }
-        ]
+        ]    
 
     # =================================================
     # Scheduled WhatsApp Message
@@ -183,6 +185,47 @@ def whatsapp_route(command):
                 "send_at": reschedule["send_at"],
             }
         ]      
+        
+    # -------------------------------------------------
+    # WhatsApp Video Call
+    # -------------------------------------------------
+
+    result = parse_whatsapp_video_call(command)
+
+    if result:
+
+        print(
+            "[WHATSAPP CALL ROUTER] "
+            f"Video call: {result['contact']}"
+        )
+
+        return [
+            {
+                "action": "whatsapp_video_call",
+                "contact": result["contact"],
+            }
+        ]
+
+
+    # -------------------------------------------------
+    # WhatsApp Voice Call
+    # -------------------------------------------------
+
+    result = parse_whatsapp_call(command)
+
+    if result:
+
+        print(
+            "[WHATSAPP CALL ROUTER] "
+            f"Voice call: {result['contact']}"
+        )
+
+        return [
+            {
+                "action": "whatsapp_call",
+                "contact": result["contact"],
+            }
+        ]    
 
     # =================================================
     # Normal WhatsApp Message

@@ -13,6 +13,8 @@ from services.whatsapp_api import (
     send_message,
     send_photo,
     send_file,
+    call_contact,
+    video_call_contact,
 )
 
 from services.file_manager import (latest_photo,latest_screenshot,find_file)
@@ -924,6 +926,78 @@ def whatsapp_wait_message(data):
 
     return True
 
+# =========================================================
+# WhatsApp Voice Call
+# =========================================================
+
+def whatsapp_call(data=None):
+
+    data = data or {}
+
+    contact = resolve_contact(
+        str(
+            data.get("contact", "")
+        ).strip()
+    )
+
+    if not contact:
+
+        speak(
+            "Which contact should I call?"
+        )
+
+        return True
+
+    speak(
+        f"Calling {contact} on WhatsApp."
+    )
+
+    ok = call_contact(contact)
+
+    if not ok:
+
+        speak(
+            f"I couldn't start a WhatsApp call with {contact}."
+        )
+
+    return True
+
+# =========================================================
+# WhatsApp Video Call
+# =========================================================
+
+def whatsapp_video_call(data=None):
+
+    data = data or {}
+
+    contact = resolve_contact(
+        str(
+            data.get("contact", "")
+        ).strip()
+    )
+
+    if not contact:
+
+        speak(
+            "Which contact should I video call?"
+        )
+
+        return True
+
+    speak(
+        f"Starting a WhatsApp video call with {contact}."
+    )
+
+    ok = video_call_contact(contact)
+
+    if not ok:
+
+        speak(
+            f"I couldn't start a WhatsApp video call with {contact}."
+        )
+
+    return True
+
 register("whatsapp_open", whatsapp_open)
 register("whatsapp_close", whatsapp_close)
 register("whatsapp_send_message", whatsapp_send_message)
@@ -975,6 +1049,18 @@ register(
 register(
     "reschedule_scheduled_whatsapp",
     reschedule_scheduled_whatsapp,
+    category="communication",
+)
+
+register(
+    "whatsapp_call",
+    whatsapp_call,
+    category="communication",
+)
+
+register(
+    "whatsapp_video_call",
+    whatsapp_video_call,
     category="communication",
 )
 

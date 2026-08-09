@@ -186,7 +186,72 @@ def send_file(contact, file_path):
         print("[WHATSAPP]", e)
 
         return False
-    
+
+# =========================================================
+# WhatsApp Voice Call
+# =========================================================
+
+def call_contact(contact):
+
+    if not open_chat(contact):
+        return False
+
+    try:
+
+        time.sleep(1)
+
+        pyautogui.hotkey(
+            "ctrl",
+            "shift",
+            "c"
+        )
+
+        print(
+            f"[WHATSAPP] Voice call started: {contact}"
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[WHATSAPP] Voice call failed: {e}"
+        )
+
+        return False
+
+# =========================================================
+# WhatsApp Video Call
+# =========================================================
+
+def video_call_contact(contact):
+
+    if not open_chat(contact):
+        return False
+
+    try:
+
+        time.sleep(1)
+
+        pyautogui.hotkey(
+            "ctrl",
+            "shift",
+            "v"
+        )
+
+        print(
+            f"[WHATSAPP] Video call started: {contact}"
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"[WHATSAPP] Video call failed: {e}"
+        )
+
+        return False    
     
 def focus_whatsapp():
 

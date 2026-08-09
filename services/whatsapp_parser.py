@@ -604,3 +604,92 @@ def parse_whatsapp(command):
                 }
 
     return None
+
+# =========================================================
+# WhatsApp Call Parser
+# =========================================================
+
+def parse_whatsapp_call(command):
+
+    command = command.strip()
+
+    patterns = [
+
+        # call dad on whatsapp
+        r"call\s+(.+?)\s+on\s+whatsapp",
+
+        # whatsapp call dad
+        r"whatsapp\s+call\s+(.+)",
+
+        # call dad via whatsapp
+        r"call\s+(.+?)\s+via\s+whatsapp",
+
+        # make a whatsapp call to dad
+        r"make\s+(?:a\s+)?whatsapp\s+call\s+to\s+(.+)",
+
+    ]
+
+    for pattern in patterns:
+
+        match = re.fullmatch(
+            pattern,
+            command,
+            re.IGNORECASE,
+        )
+
+        if match:
+
+            contact = match.group(1).strip()
+
+            if contact:
+
+                return {
+                    "contact": contact
+                }
+
+    return None
+
+
+# =========================================================
+# WhatsApp Video Call Parser
+# =========================================================
+
+def parse_whatsapp_video_call(command):
+
+    command = command.strip()
+
+    patterns = [
+
+        # video call dad on whatsapp
+        r"video\s+call\s+(.+?)\s+on\s+whatsapp",
+
+        # whatsapp video call dad
+        r"whatsapp\s+video\s+call\s+(.+)",
+
+        # video call dad via whatsapp
+        r"video\s+call\s+(.+?)\s+via\s+whatsapp",
+
+        # make a whatsapp video call to dad
+        r"make\s+(?:a\s+)?whatsapp\s+video\s+call\s+to\s+(.+)",
+
+    ]
+
+    for pattern in patterns:
+
+        match = re.fullmatch(
+            pattern,
+            command,
+            re.IGNORECASE,
+        )
+
+        if match:
+
+            contact = match.group(1).strip()
+
+            if contact:
+
+                return {
+                    "contact": contact
+                }
+
+    return None
