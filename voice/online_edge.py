@@ -1,6 +1,5 @@
 import asyncio
 import threading
-import time
 import edge_tts
 
 from pathlib import Path
@@ -11,7 +10,9 @@ from voice.player import play
 
 
 CACHE = Path(__file__).parent / "cache"
+
 CACHE.mkdir(exist_ok=True)
+
 
 VOICE = "en-US-GuyNeural"
 
@@ -28,53 +29,6 @@ async def _generate(text, outfile):
     )
 
     await communicate.save(outfile)
-
-
-# =========================================================
-# Cleanup MP3
-# =========================================================
-
-def _cleanup_file(outfile):
-
-    if not outfile.exists():
-        return
-
-    # Windows may keep the file locked briefly after playback.
-    # Retry several times instead of treating this as an error.
-
-    for attempt in range(10):
-
-        try:
-
-            outfile.unlink()
-
-            print(
-                f"[EDGE TTS CACHE] Removed: {outfile.name}"
-            )
-
-            return
-
-        except PermissionError:
-
-            if attempt < 9:
-
-                time.sleep(0.5)
-
-            else:
-
-                print(
-                    "[EDGE TTS CACHE] "
-                    f"Could not remove after retries: "
-                    f"{outfile.name}"
-                )
-
-        except Exception as e:
-
-            print(
-                f"[EDGE TTS CACHE] Cleanup error: {e}"
-            )
-
-            return
 
 
 # =========================================================
@@ -95,6 +49,10 @@ def _worker(text):
         # Generate
         # -------------------------------------------------
 
+        print(
+            f"[EDGE TTS] Generating: {outfile.name}"
+        )
+
         loop.run_until_complete(
             _generate(
                 text,
@@ -103,10 +61,14 @@ def _worker(text):
         )
 
         # -------------------------------------------------
-        # Stop requested before playback
+        # Stop requested
         # -------------------------------------------------
 
         if STOP_EVENT.is_set():
+
+            print(
+                "[EDGE TTS] Playback cancelled"
+            )
 
             return False
 
@@ -114,9 +76,11 @@ def _worker(text):
         # Play
         # -------------------------------------------------
 
-        play(str(outfile))
+        result = play(
+            str(outfile)
+        )
 
-        return True
+        return result
 
     except Exception as e:
 
@@ -128,55 +92,64 @@ def _worker(text):
 
     finally:
 
-        # -------------------------------------------------
-        # Close asyncio loop
-        # -------------------------------------------------
-
         try:
-
             loop.close()
 
         except Exception:
             pass
 
         # -------------------------------------------------
-        # Give audio backend a moment to release file
+        # IMPORTANT:
+        #
+        # DO NOT DELETE MP3.
+        #
+        # Files remain in voice/cache/
         # -------------------------------------------------
-
-        time.sleep(0.2)
-
-        # -------------------------------------------------
-        # Remove temporary MP3
-        # -------------------------------------------------
-
-        _cleanup_file(outfile)
 
 
 # =========================================================
 # Public API
 # =========================================================
 
-def speak_online(text, wait=False):
+def speak_online(
+    text,
+    wait=False,
+):
 
     if not text:
         return False
+
+    # -----------------------------------------------------
+    # IMPORTANT:
+    #
+    # When wait=True, run directly.
+    #
+    # This avoids creating:
+    #
+    # manager thread
+    #       ↓
+    # edge thread
+    #       ↓
+    # asyncio
+    #
+    # unnecessarily.
+    # -----------------------------------------------------
+
+    if wait:
+
+        return _worker(text)
+
+    # -----------------------------------------------------
+    # Asynchronous mode
+    # -----------------------------------------------------
 
     thread = threading.Thread(
         target=_worker,
         args=(text,),
         daemon=True,
+        name="EdgeTTS",
     )
 
     thread.start()
-
-    # -----------------------------------------------------
-    # Synchronous mode
-    # -----------------------------------------------------
-
-    if wait:
-
-        thread.join()
-
-        return True
 
     return True

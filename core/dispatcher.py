@@ -29,6 +29,10 @@ from brain.brain_router import BrainRouter
 
 brain_router = BrainRouter()
 
+from core.fast_router import fast_route
+
+from core.registry import execute
+
 def dispatch(command):
     
     command = command.lower().strip()
@@ -120,6 +124,46 @@ def dispatch(command):
                 )
 
                 return
+            
+# ===========================================================
+# 
+# ===========================================================            
+
+def dispatch(command):
+
+    command = command.strip()
+
+    if not command:
+        return
+
+    # =====================================================
+    # HARD FAST ROUTE
+    #
+    # Deterministic commands NEVER go to AI.
+    # =====================================================
+
+    fast_plan = fast_route(command)
+
+    if fast_plan:
+
+        print(
+            "[DISPATCHER] Fast route handled command:",
+            fast_plan,
+        )
+
+        for action in fast_plan:
+
+            action_name = action.get("action")
+
+            if not action_name:
+                continue
+
+            execute(
+                action_name,
+                action,
+            )
+
+        return
 
     # -------------------------------------------------
     # Developer Intent

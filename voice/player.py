@@ -4,7 +4,6 @@ import time
 
 from voice.state import STOP_EVENT
 
-
 pygame.mixer.init()
 
 _lock = threading.Lock()
@@ -16,9 +15,14 @@ _lock = threading.Lock()
 
 def play(file):
 
-    STOP_EVENT.clear()
-
     with _lock:
+
+        # -------------------------------------------------
+        # If stop was requested, don't start audio
+        # -------------------------------------------------
+
+        if STOP_EVENT.is_set():
+            return False
 
         # -------------------------------------------------
         # Stop previous playback
@@ -32,15 +36,28 @@ def play(file):
             pass
 
         # -------------------------------------------------
-        # Load new file
+        # Load
         # -------------------------------------------------
 
-        pygame.mixer.music.load(file)
+        try:
 
-        pygame.mixer.music.play()
+            pygame.mixer.music.load(file)
+
+            if STOP_EVENT.is_set():
+                return False
+
+            pygame.mixer.music.play()
+
+        except Exception as e:
+
+            print(
+                f"[PLAYER ERROR] Could not play audio: {e}"
+            )
+
+            return False
 
         # -------------------------------------------------
-        # Wait for playback
+        # Wait
         # -------------------------------------------------
 
         while pygame.mixer.music.get_busy():
@@ -54,32 +71,24 @@ def play(file):
                 except Exception:
                     pass
 
-                return
+                return False
 
             time.sleep(0.05)
 
         # -------------------------------------------------
-        # IMPORTANT:
-        # Release MP3 after playback finishes
+        # Release pygame resource
         # -------------------------------------------------
 
         pygame.mixer.music.stop()
 
         try:
-
             pygame.mixer.music.unload()
-
         except Exception as e:
-
             print(
                 f"[PLAYER] Could not unload audio: {e}"
             )
 
-        # -------------------------------------------------
-        # Small Windows release delay
-        # -------------------------------------------------
-
-        time.sleep(0.1)
+        return True
 
 
 # =========================================================

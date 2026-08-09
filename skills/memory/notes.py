@@ -27,10 +27,12 @@ NOTES_FILE = DATA_DIR / "notes.json"
 # =========================================================
 
 def _load_notes():
+
     if not NOTES_FILE.exists():
         return []
 
     try:
+
         with open(
             NOTES_FILE,
             "r",
@@ -150,7 +152,7 @@ def list_notes(data=None):
     ):
 
         print(
-            f"{index}. {note['text']}"
+            f"{index}. {note.get('text', '')}"
         )
 
     speak(

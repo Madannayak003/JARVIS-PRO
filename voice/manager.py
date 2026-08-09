@@ -3,11 +3,12 @@ import requests
 
 from voice.online_edge import speak_online
 from voice.offline_piper import speak_offline
+from voice.state import STOP_EVENT
 
 
 ONLINE = False
 
-VOICE_STOP = threading.Event()
+VOICE_THREAD = None
 
 
 # =========================================================
@@ -42,7 +43,7 @@ check_internet()
 def _worker(text):
 
     # -----------------------------------------------------
-    # Online Edge-TTS
+    # Online Edge TTS
     # -----------------------------------------------------
 
     if ONLINE:
@@ -64,7 +65,7 @@ def _worker(text):
             )
 
     # -----------------------------------------------------
-    # Offline Piper fallback
+    # Offline Piper
     # -----------------------------------------------------
 
     try:
@@ -80,13 +81,6 @@ def _worker(text):
 
 
 # =========================================================
-# Voice Thread
-# =========================================================
-
-VOICE_THREAD = None
-
-
-# =========================================================
 # Speak
 # =========================================================
 
@@ -98,28 +92,33 @@ def speak(
     global VOICE_THREAD
 
     if not text:
-
         return
 
-    VOICE_STOP.clear()
+    # -----------------------------------------------------
+    # IMPORTANT:
+    #
+    # If the previous conversation was stopped,
+    # allow the next voice request to speak again.
+    # -----------------------------------------------------
+
+    if STOP_EVENT.is_set():
+
+        print(
+            "[VOICE] Resetting stop state for new speech"
+        )
+
+        STOP_EVENT.clear()
 
     print(
         f"[VOICE] {text}"
     )
 
     # -----------------------------------------------------
-    # Wait for previous speech
-    # -----------------------------------------------------
-
-    if (
-        VOICE_THREAD
-        and VOICE_THREAD.is_alive()
-    ):
-
-        VOICE_THREAD.join()
-
-    # -----------------------------------------------------
-    # Start voice worker
+    # Start immediately
+    #
+    # DO NOT wait for previous voice thread here.
+    #
+    # This is important for streaming AI responses.
     # -----------------------------------------------------
 
     VOICE_THREAD = threading.Thread(
@@ -131,7 +130,7 @@ def speak(
     VOICE_THREAD.start()
 
     # -----------------------------------------------------
-    # Optional synchronous wait
+    # Optional synchronous mode
     # -----------------------------------------------------
 
     if wait:
@@ -161,4 +160,12 @@ def wait_for_speech():
 
 def stop_speaking():
 
-    VOICE_STOP.set()
+    from voice.player import stop as stop_audio
+
+    print(
+        "[VOICE] Stopping speech"
+    )
+
+    STOP_EVENT.set()
+
+    stop_audio()

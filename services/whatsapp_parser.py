@@ -26,9 +26,6 @@ def parse_whatsapp(command):
         # message Ammu good night
         r"message\s+(.+?)\s+(.+)",
 
-        # tell Ammu good night
-        r"tell\s+(.+?)\s+(.+)",
-
         # text Ammu good night
         r"text\s+(.+?)\s+(.+)",
 
