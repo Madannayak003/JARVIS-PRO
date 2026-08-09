@@ -1,511 +1,343 @@
-"""
-JARVIS PRO
-Reminder Skill
-
-Handles:
-- Create reminders
-- List reminders
-- Cancel reminders
-- Automatic background reminder checking
-"""
-
-import json
-import threading
-import time
-from datetime import datetime
-from pathlib import Path
-
-from core.registry import register
-from voice.manager import speak
+import re
 from datetime import datetime, timedelta
 
-# =========================================================
-# Storage
-# =========================================================
 
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(exist_ok=True)
+def memory_route(command):
 
-REMINDERS_FILE = DATA_DIR / "reminders.json"
+    command = command.lower().strip()
 
+    # =================================================
+    # NOTES
+    # =================================================
 
-# =========================================================
-# Scheduler Configuration
-# =========================================================
-
-CHECK_INTERVAL = 5
-
-_scheduler_started = False
-_scheduler_lock = threading.Lock()
-
-
-# =========================================================
-# Storage
-# =========================================================
-
-def _load_reminders():
-
-    if not REMINDERS_FILE.exists():
-        return []
-
-    try:
-
-        with open(
-            REMINDERS_FILE,
-            "r",
-            encoding="utf-8",
-        ) as f:
-
-            data = json.load(f)
-
-        if isinstance(data, list):
-            return data
-
-    except Exception as e:
-
-        print(
-            f"[REMINDERS ERROR] Load failed: {e}"
-        )
-
-    return []
-
-
-def _save_reminders(reminders):
-
-    try:
-
-        with open(
-            REMINDERS_FILE,
-            "w",
-            encoding="utf-8",
-        ) as f:
-
-            json.dump(
-                reminders,
-                f,
-                indent=4,
-                ensure_ascii=False,
-            )
-
-        return True
-
-    except Exception as e:
-
-        print(
-            f"[REMINDERS ERROR] Save failed: {e}"
-        )
-
-        return False
-
-
-# =========================================================
-# Create Reminder
-# =========================================================
-
-def create_reminder(data=None):
-
-    data = data or {}
-
-    text = str(
-        data.get("text", "")
-    ).strip()
-
-    remind_at = str(
-        data.get("remind_at", "")
-    ).strip()
-
-    if not text:
-
-        speak(
-            "What should I remind you about?"
-        )
-
-        return False
-
-    if not remind_at:
-
-        speak(
-            "When should I remind you?"
-        )
-
-        return False
-
-    reminders = _load_reminders()
-
-    next_id = 1
-
-    if reminders:
-
-        next_id = max(
-            int(r.get("id", 0))
-            for r in reminders
-        ) + 1
-
-    reminder = {
-        "id": next_id,
-        "text": text,
-        "remind_at": remind_at,
-        "created_at": datetime.now().isoformat(),
-        "completed": False,
-    }
-
-    reminders.append(reminder)
-
-    if not _save_reminders(reminders):
-
-        speak(
-            "I couldn't save that reminder."
-        )
-
-        return False
-
-    print(
-        "[REMINDER] Created:",
-        reminder,
+    note_match = re.match(
+        r"^(?:"
+        r"make\s+(?:a\s+)?note"
+        r"|take\s+(?:a\s+)?note"
+        r"|note"
+        r")"
+        r"(?:\s+(?:to|that))?"
+        r"\s+(.+)$",
+        command,
+        re.IGNORECASE,
     )
 
-    speak(
-        f"I'll remind you to {text} at {remind_at}."
-    )
+    if note_match:
 
-    return True
+        text = note_match.group(1).strip()
 
-
-# =========================================================
-# List Reminders
-# =========================================================
-
-def list_reminders(data=None):
-
-    reminders = _load_reminders()
-
-    active = [
-        r
-        for r in reminders
-        if not r.get("completed", False)
-    ]
-
-    if not active:
-
-        speak(
-            "You don't have any active reminders."
-        )
-
-        return True
-
-    print("\n[REMINDERS]")
-
-    for reminder in active:
-
-        print(
-            f"{reminder['id']}. "
-            f"{reminder['text']} "
-            f"-> {reminder['remind_at']}"
-        )
-
-    speak(
-        f"You have {len(active)} active reminders."
-    )
-
-    return True
-
-
-# =========================================================
-# Cancel Reminder
-# =========================================================
-
-def cancel_reminder(data=None):
-
-    data = data or {}
-
-    reminder_id = data.get("id")
-
-    if reminder_id is None:
-
-        speak(
-            "Which reminder should I cancel?"
-        )
-
-        return False
-
-    reminders = _load_reminders()
-
-    found = False
-
-    for reminder in reminders:
-
-        if str(
-            reminder.get("id")
-        ) == str(reminder_id):
-
-            reminder["completed"] = True
-            found = True
-
-            break
-
-    if not found:
-
-        speak(
-            "I couldn't find that reminder."
-        )
-
-        return False
-
-    if not _save_reminders(reminders):
-
-        speak(
-            "I couldn't cancel that reminder."
-        )
-
-        return False
-
-    speak(
-        "The reminder has been cancelled."
-    )
-
-    return True
-
-
-# =========================================================
-# Reminder Scheduler
-# =========================================================
-
-def _reminder_scheduler():
-
-    print(
-        "[REMINDERS] Automatic scheduler started"
-    )
-
-    while True:
-
-        try:
-
-            reminders = _load_reminders()
-
-            now = datetime.now()
-
-            changed = False
-
-            for reminder in reminders:
-
-                if reminder.get(
-                    "completed",
-                    False,
-                ):
-
-                    continue
-
-                remind_at = str(
-                    reminder.get(
-                        "remind_at",
-                        "",
-                    )
-                ).strip()
-
-                if not remind_at:
-                    continue
-
-                target = _parse_reminder_time(
-                    remind_at
-                )
-
-                if target is None:
-
-                    print(
-                        "[REMINDERS] Invalid time:",
-                        remind_at,
-                    )
-
-                    continue
-
-                if now >= target:
-
-                    text = reminder.get(
-                        "text",
-                        "your reminder",
-                    )
-
-                    print(
-                        "[REMINDERS] Triggered:",
-                        text,
-                    )
-
-                    speak(
-                        f"Sir, here's your reminder. "
-                        f"You asked me to {text}."
-                    )
-
-                    reminder["completed"] = True
-
-                    reminder["triggered_at"] = (
-                        now.isoformat()
-                    )
-
-                    changed = True
-
-            if changed:
-
-                _save_reminders(
-                    reminders
-                )
-
-        except Exception as e:
+        if text:
 
             print(
-                f"[REMINDERS SCHEDULER ERROR] {e}"
+                f"[MEMORY ROUTER] Creating note: {text}"
             )
 
-        time.sleep(
-            CHECK_INTERVAL
-        )
+            return [
+                {
+                    "action": "create_note",
+                    "text": text,
+                }
+            ]
 
+    # -------------------------------------------------
+    # List notes
+    # -------------------------------------------------
 
-# =========================================================
-# Start Scheduler
-# =========================================================
-
-def start_reminder_scheduler():
-
-    global _scheduler_started
-
-    with _scheduler_lock:
-
-        if _scheduler_started:
-            return
-
-        _scheduler_started = True
-
-        thread = threading.Thread(
-            target=_reminder_scheduler,
-            daemon=True,
-            name="ReminderScheduler",
-        )
-
-        thread.start()
-        
-# =========================================================
-# Parse Reminder Time
-# =========================================================
-
-def _parse_reminder_time(value):
-    """
-    Convert common reminder time formats into datetime.
-
-    Supported:
-        2026-08-09T10:30:00
-        10:30 PM
-        10:30 AM
-        22:30
-    """
-
-    value = str(value).strip()
-
-    if not value:
-        return None
-
-    # -----------------------------------------
-    # ISO datetime
-    # -----------------------------------------
-
-    try:
-        return datetime.fromisoformat(value)
-    except ValueError:
-        pass
-
-    # -----------------------------------------
-    # 12-hour time
-    # -----------------------------------------
-
-    for fmt in (
-        "%I:%M %p",
-        "%I %p",
+    if command in (
+        "list notes",
+        "list my notes",
+        "show notes",
+        "show my notes",
+        "what are my notes",
+        "read my notes",
     ):
 
-        try:
+        print("[MEMORY ROUTER] Listing notes")
 
-            parsed = datetime.strptime(
-                value.upper(),
-                fmt,
+        return [
+            {
+                "action": "list_notes"
+            }
+        ]
+
+    # -------------------------------------------------
+    # Clear notes
+    # -------------------------------------------------
+
+    if command in (
+        "clear notes",
+        "clear my notes",
+        "delete notes",
+        "delete my notes",
+        "remove notes",
+    ):
+
+        print("[MEMORY ROUTER] Clearing notes")
+
+        return [
+            {
+                "action": "clear_notes"
+            }
+        ]
+
+    # =================================================
+    # REMINDERS
+    # =================================================
+
+    # -----------------------------------------------
+    # Remind me in X minutes/hours
+    #
+    # Example:
+    # remind me in 5 minutes to call John
+    # remind me in 2 hours to check the oven
+    # -----------------------------------------------
+
+    match = re.match(
+        r"^remind\s+me\s+in\s+"
+        r"(\d+)\s+"
+        r"(second|seconds|minute|minutes|hour|hours)"
+        r"\s+(?:to\s+)?(.+)$",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+
+        amount = int(match.group(1))
+        unit = match.group(2).lower()
+        text = match.group(3).strip()
+
+        if unit.startswith("second"):
+            target = datetime.now() + timedelta(
+                seconds=amount
             )
 
-            now = datetime.now()
-
-            result = now.replace(
-                hour=parsed.hour,
-                minute=parsed.minute,
-                second=0,
-                microsecond=0,
+        elif unit.startswith("minute"):
+            target = datetime.now() + timedelta(
+                minutes=amount
             )
 
-            # If today's time already passed,
-            # interpret it as tomorrow.
-            if result <= now:
+        else:
+            target = datetime.now() + timedelta(
+                hours=amount
+            )
 
-                result += timedelta(
-                    days=1
-                )
+        remind_at = target.isoformat()
 
-            return result
+        print(
+            f"[MEMORY ROUTER] Creating reminder: "
+            f"{text} -> {remind_at}"
+        )
 
-        except ValueError:
-            pass
+        return [
+            {
+                "action": "create_reminder",
+                "text": text,
+                "remind_at": remind_at,
+            }
+        ]
 
-    # -----------------------------------------
-    # 24-hour time
-    # -----------------------------------------
+    # -----------------------------------------------
+    # Remind me at TIME
+    #
+    # Example:
+    # remind me at 10:30 PM to call John
+    # remind me at 8 AM to take medicine
+    # -----------------------------------------------
+
+    match = re.match(
+        r"^remind\s+me\s+at\s+"
+        r"(\d{1,2}(?::\d{2})?\s*(?:am|pm))"
+        r"\s+(?:to\s+)?(.+)$",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+
+        time_text = match.group(1).strip().upper()
+        text = match.group(2).strip()
+
+        target = _parse_clock_time(
+            time_text
+        )
+
+        if target:
+
+            print(
+                f"[MEMORY ROUTER] Creating reminder: "
+                f"{text} -> {target.isoformat()}"
+            )
+
+            return [
+                {
+                    "action": "create_reminder",
+                    "text": text,
+                    "remind_at": target.isoformat(),
+                }
+            ]
+
+    # -----------------------------------------------
+    # Remind me tomorrow at TIME
+    #
+    # Example:
+    # remind me tomorrow at 10 PM to call John
+    # -----------------------------------------------
+
+    match = re.match(
+        r"^remind\s+me\s+tomorrow\s+at\s+"
+        r"(\d{1,2}(?::\d{2})?\s*(?:am|pm))"
+        r"\s+(?:to\s+)?(.+)$",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+
+        time_text = match.group(1).strip().upper()
+        text = match.group(2).strip()
+
+        target = _parse_clock_time(
+            time_text,
+            tomorrow=True,
+        )
+
+        if target:
+
+            print(
+                f"[MEMORY ROUTER] Creating reminder: "
+                f"{text} -> {target.isoformat()}"
+            )
+
+            return [
+                {
+                    "action": "create_reminder",
+                    "text": text,
+                    "remind_at": target.isoformat(),
+                }
+            ]
+
+    # -----------------------------------------------
+    # List reminders
+    # -----------------------------------------------
+
+    if command in (
+        "list reminders",
+        "list my reminders",
+        "show reminders",
+        "show my reminders",
+        "what are my reminders",
+    ):
+
+        print(
+            "[MEMORY ROUTER] Listing reminders"
+        )
+
+        return [
+            {
+                "action": "list_reminders"
+            }
+        ]
+
+    # -----------------------------------------------
+    # Cancel reminder by ID
+    #
+    # Example:
+    # cancel reminder 3
+    # cancel reminder number 3
+    # -----------------------------------------------
+
+    match = re.match(
+        r"^cancel\s+(?:reminder\s+)?"
+        r"(?:number\s+)?(\d+)$",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+
+        reminder_id = int(
+            match.group(1)
+        )
+
+        print(
+            f"[MEMORY ROUTER] Cancelling reminder: "
+            f"{reminder_id}"
+        )
+
+        return [
+            {
+                "action": "cancel_reminder",
+                "id": reminder_id,
+            }
+        ]
+
+    return None
+
+
+# =================================================
+# Clock Parser
+# =================================================
+
+def _parse_clock_time(
+    value,
+    tomorrow=False,
+):
 
     try:
 
-        parsed = datetime.strptime(
-            value,
-            "%H:%M",
+        formats = (
+            "%I:%M %p",
+            "%I %p",
         )
+
+        parsed = None
+
+        for fmt in formats:
+
+            try:
+
+                parsed = datetime.strptime(
+                    value.upper(),
+                    fmt,
+                )
+
+                break
+
+            except ValueError:
+
+                continue
+
+        if parsed is None:
+            return None
 
         now = datetime.now()
 
-        result = now.replace(
+        target = now.replace(
             hour=parsed.hour,
             minute=parsed.minute,
             second=0,
             microsecond=0,
         )
 
-        if result <= now:
+        if tomorrow:
 
-            result += timedelta(
+            target += timedelta(
                 days=1
             )
 
-        return result
+        elif target <= now:
 
-    except ValueError:
-        pass
+            target += timedelta(
+                days=1
+            )
 
-    return None
+        return target
 
+    except Exception as e:
 
-# =========================================================
-# Registry
-# =========================================================
+        print(
+            f"[MEMORY ROUTER ERROR] {e}"
+        )
 
-register(
-    "create_reminder",
-    create_reminder,
-)
-
-register(
-    "list_reminders",
-    list_reminders,
-)
-
-register(
-    "cancel_reminder",
-    cancel_reminder,
-)
-
-
-# =========================================================
-# Start
-# =========================================================
-
-start_reminder_scheduler()
+        return None
