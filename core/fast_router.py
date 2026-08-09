@@ -10,10 +10,13 @@ from core.routers.whatsapp_router import whatsapp_route
 from core.routers.contact_router import contact_route
 from core.routers.file_selection_router import file_selection_route
 from core.routers.memory_router import memory_route
+from core.routers.web_router import web_route
 
 ROUTERS = [
 
     memory_route,
+    
+    web_route,
 
     browser_route,
     

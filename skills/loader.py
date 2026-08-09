@@ -44,6 +44,7 @@ SKILLS = [
     "files.zip_manager",
     "camera.camera",
     "utilities.time_skill",
+    "web.personal_links",
     "communication.github",
     "communication.chatgpt",
     "media.spotify",

@@ -1,0 +1,49 @@
+"""
+JARVIS PRO
+Personal Link Service
+
+Resolves a personal-link name from configuration
+and opens it using the web launcher.
+
+No voice logic.
+No command routing.
+"""
+
+from config.personal_links import get_link
+from services.web_launcher import open_url
+
+def open_personal_link(name):
+    """
+    Open a configured personal destination.
+
+    Returns:
+        True  -> opened successfully
+        False -> missing configuration or failure
+    """
+
+    if not name:
+        print("[PERSONAL LINK] No link name provided.")
+        return False
+
+    link_name = str(name).strip().lower()
+
+    if not link_name:
+        print("[PERSONAL LINK] Empty link name.")
+        return False
+
+    url = get_link(link_name)
+
+    if not url:
+
+        print(
+            f"[PERSONAL LINK] Not configured: {link_name}"
+        )
+
+        return False
+
+    print(
+        f"[PERSONAL LINK] Opening: "
+        f"{link_name} -> {url}"
+    )
+
+    return open_url(url)
