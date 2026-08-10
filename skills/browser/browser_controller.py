@@ -218,24 +218,53 @@ class BrowserController:
 
     def search_google(self, query):
 
-        self.start()
+        print(
+            f"[Browser GOOGLE THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
-        try:
+        if not query:
+            return False
 
-            self.page.goto(
-                f"https://www.google.com/search?q={query}"
-            )
+        with _browser_lock:
 
-        except:
+            try:
 
-            self.browser = None
-            self.page = None
+                import urllib.parse
 
-            self.start()
+                encoded_query = urllib.parse.quote(query)
 
-            self.page.goto(
-                f"https://www.google.com/search?q={query}"
-            )
+                self.start()
+
+                if not self.browser or not self.page:
+                    print("[Google] Browser not connected")
+                    return False
+
+                url = (
+                    "https://www.google.com/search?q="
+                    + encoded_query
+                )
+
+                print(f"[Google] Searching: {query}")
+
+                self.page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=15000
+                )
+
+                self.page.bring_to_front()
+
+                print("[Google] Search opened in JARVIS Chrome")
+
+                return True
+
+            except Exception as e:
+
+                print(f"[Google ERROR] Search failed: {e}")
+
+                return False
         
         
     def search_youtube(self, query):
@@ -263,8 +292,43 @@ class BrowserController:
                 print(f"[YouTube ERROR] Search failed: {e}")
 
                 return False
-        
+    
+    def search_github(self, query):
 
+        print(
+            f"[Browser GITHUB THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
+
+        if not query:
+            return False
+
+        self.start()
+
+        try:
+
+            print(f"[GitHub] Searching: {query}")
+
+            self.page.goto(
+                "https://github.com/search?q="
+                + requests.utils.quote(str(query)),
+                wait_until="domcontentloaded",
+                timeout=15000
+            )
+
+            self.page.bring_to_front()
+
+            print("[GitHub] Search opened in JARVIS Chrome")
+
+            return True
+
+        except Exception as e:
+
+            print(f"[GitHub ERROR] {e}")
+
+            return False        
+            
     def play_video(self, video_id):
 
         if not video_id:

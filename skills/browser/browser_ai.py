@@ -3,8 +3,8 @@ from voice.manager import speak
 from skills.browser.navigation import navigation
 from core.action_memory import set_memory
 from core.action_memory import dump
+from skills.browser.browser_controller import browser
 
-import subprocess
 import os
 
 SITES = {
@@ -99,18 +99,25 @@ def ai_open(data):
 
 def ai_google(data):
 
-    query = data.get("query", "")
+    query = data.get("query", "").strip()
+
+    if not query:
+        return False
 
     speak(f"Searching Google for {query}")
 
-    navigation.google(query)
+    result = browser.search_google(query)
+
+    if not result:
+        print("[Google] Search failed")
+        return False
 
     # Action Memory
     set_memory("site", "google")
     set_memory("search", query)
     set_memory("action", "google_search")
     set_memory("search_platform", "google")
-    
+
     print("[MEMORY]", dump())
 
     return True
