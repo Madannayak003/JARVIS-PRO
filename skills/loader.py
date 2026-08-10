@@ -44,6 +44,7 @@ SKILLS = [
     "utilities.search",
     "files.zip_manager",
     "camera.camera",
+    "camera.vision_skill",
     "utilities.time_skill",
     "web.personal_links",
     "communication.github",

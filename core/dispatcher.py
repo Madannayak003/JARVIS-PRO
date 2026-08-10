@@ -158,10 +158,50 @@ def dispatch(command):
             if not action_name:
                 continue
 
-            execute(
+            result = execute(
                 action_name,
                 action,
             )
+
+            print(
+                "[DISPATCHER RESULT]",
+                repr(result)
+            )
+
+            # -----------------------------------------
+            # Speak skill result
+            # -----------------------------------------
+
+            if result is not None:
+
+                from voice.manager import speak
+
+                # Boolean results are handled separately
+                if isinstance(result, bool):
+
+                    if action_name == "vision_check":
+
+                        message = (
+                            "Yes, I can see it."
+                            if result
+                            else "No, I don't see it."
+                        )
+
+                        speak(message)
+
+                elif isinstance(result, dict):
+
+                    if "error" in result:
+
+                        speak(result["error"])
+
+                    else:
+
+                        speak(str(result))
+
+                else:
+
+                    speak(str(result))
 
         return
 
