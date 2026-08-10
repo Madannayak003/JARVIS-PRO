@@ -138,5 +138,3 @@ def ai_youtube(data):
 register("open", ai_open)
 
 register("google_search", ai_google)
-
-register("youtube_search", ai_youtube)

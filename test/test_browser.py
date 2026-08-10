@@ -5,7 +5,7 @@ options = Options()
 
 options.add_experimental_option(
     "debuggerAddress",
-    "127.0.0.1:9222"
+    "127.0.0.1:9223"
 )
 
 driver = webdriver.Chrome(options=options)

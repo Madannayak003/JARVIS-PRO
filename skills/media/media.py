@@ -6,17 +6,23 @@ from skills.browser.browser_controller import browser
 
 def ai_play(data):
 
-    target = data.get("target","")
+    target = data.get("target", "")
+
+    # -----------------------------------------
+    # YouTube first result
+    # -----------------------------------------
 
     if target == "first_result":
 
         speak("Playing first result")
 
-        browser.play_first_video()
+        return browser.play_first_video()
 
-    else:
+    # -----------------------------------------
+    # Normal media resume
+    # -----------------------------------------
 
-        browser.resume_video()
+    browser.resume_video()
 
     return True
 

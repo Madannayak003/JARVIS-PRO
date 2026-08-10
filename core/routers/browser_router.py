@@ -148,6 +148,65 @@ def browser_route(command):
     # YouTube Controls
     # -----------------------------------------------------
 
+    # -----------------------------------------------------
+    # YouTube Play First Video
+    # -----------------------------------------------------
+
+    if command.startswith("play first youtube video for "):
+
+        query = command.replace(
+            "play first youtube video for ",
+            "",
+            1
+        ).strip()
+
+        if query:
+            return [
+                {
+                    "action": "youtube_play_first",
+                    "query": query
+                }
+            ]
+
+
+    if command.startswith("play youtube video for "):
+
+        query = command.replace(
+            "play youtube video for ",
+            "",
+            1
+        ).strip()
+
+        if query:
+            return [
+                {
+                    "action": "youtube_play_first",
+                    "query": query
+                }
+            ]
+
+
+    if command.startswith("play first video for "):
+
+        query = command.replace(
+            "play first video for ",
+            "",
+            1
+        ).strip()
+
+        if query:
+            return [
+                {
+                    "action": "youtube_play_first",
+                    "query": query
+                }
+            ]
+
+
+    # -----------------------------------------------------
+    # YouTube Play First Video - Current Search
+    # -----------------------------------------------------
+
     if command in [
         "play youtube",
         "play youtube video",
@@ -162,6 +221,10 @@ def browser_route(command):
         ]
 
 
+    # -----------------------------------------------------
+    # YouTube Pause
+    # -----------------------------------------------------
+
     if command in [
         "pause youtube",
         "pause youtube video",
@@ -174,6 +237,10 @@ def browser_route(command):
             }
         ]
 
+
+    # -----------------------------------------------------
+    # YouTube Resume
+    # -----------------------------------------------------
 
     if command in [
         "resume youtube",
@@ -189,10 +256,16 @@ def browser_route(command):
         ]
 
 
+    # -----------------------------------------------------
+    # YouTube Next
+    # -----------------------------------------------------
+
     if command in [
         "next youtube",
         "next youtube video",
         "next video",
+        "play next video",
+        "play the next video",
     ]:
 
         return [
@@ -202,10 +275,16 @@ def browser_route(command):
         ]
 
 
+    # -----------------------------------------------------
+    # YouTube Previous
+    # -----------------------------------------------------
+
     if command in [
         "previous youtube",
         "previous youtube video",
         "previous video",
+        "play previous video",
+        "play the previous video",
     ]:
 
         return [

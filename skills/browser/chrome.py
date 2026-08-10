@@ -27,7 +27,7 @@ class ChromeController:
 
         # Is CDP already available?
         try:
-            requests.get("http://127.0.0.1:9222/json", timeout=1)
+            requests.get("http://127.0.0.1:9223/json", timeout=1)
             return
         except:
             pass
@@ -40,7 +40,7 @@ class ChromeController:
         subprocess.Popen([
             self.chrome,
             f"--user-data-dir={profile}",
-            "--remote-debugging-port=9222",
+            "--remote-debugging-port=9223",
             "--new-window",
             "about:blank"
         ])
@@ -51,7 +51,7 @@ class ChromeController:
             try:
 
                 requests.get(
-                    "http://127.0.0.1:9222/json",
+                    "http://127.0.0.1:9223/json",
                     timeout=0.5
                 )
 
