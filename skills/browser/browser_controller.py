@@ -9,13 +9,42 @@ import time
 import requests
 import subprocess
 
+_browser_lock = threading.RLock()
+
 class BrowserController:
 
     def __init__(self):
 
-        self.playwright = None
-        self.browser = None
-        self.page = None
+        self._thread_state = threading.local()
+        
+    @property
+    def playwright(self):
+        return getattr(self._thread_state, "playwright", None)
+
+
+    @playwright.setter
+    def playwright(self, value):
+        self._thread_state.playwright = value
+
+
+    @property
+    def browser(self):
+        return getattr(self._thread_state, "browser", None)
+
+
+    @browser.setter
+    def browser(self, value):
+        self._thread_state.browser = value
+
+
+    @property
+    def page(self):
+        return getattr(self._thread_state, "page", None)
+
+
+    @page.setter
+    def page(self, value):
+        self._thread_state.page = value
 
     def start(self):
 
@@ -210,31 +239,47 @@ class BrowserController:
         
         
     def search_youtube(self, query):
+        
+        print(
+            f"[Browser SEARCH THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
-        self.start()
-
-        try:
-
-            self.page.goto(
-                f"https://www.youtube.com/results?search_query={query}"
-            )
-
-        except:
-
-            self.browser = None
-            self.page = None
+        with _browser_lock:
 
             self.start()
 
-            self.page.goto(
-                f"https://www.youtube.com/results?search_query={query}"
-            )
+            try:
+
+                self.page.goto(
+                    f"https://www.youtube.com/results?search_query={query}"
+                )
+
+                return True
+
+            except Exception as e:
+
+                print(f"[YouTube ERROR] Search failed: {e}")
+
+                return False
         
 
     def play_video(self, video_id):
 
         if not video_id:
             return False
+
+        with _browser_lock:
+            return self._play_video_locked(video_id)
+
+    def _play_video_locked(self, video_id):
+        
+        print(
+            f"[Browser PLAY THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
         url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -244,10 +289,8 @@ class BrowserController:
 
             self.start()
 
-            # Use the JARVIS Chrome CDP context
             context = self.browser.contexts[0]
 
-            # Look for existing YouTube page
             youtube_page = None
 
             for page in context.pages:
@@ -256,22 +299,21 @@ class BrowserController:
                     youtube_page = page
                     break
 
-            # If no YouTube tab exists, create one
             if not youtube_page:
                 youtube_page = context.new_page()
 
             self.page = youtube_page
 
-            # Open video directly in JARVIS Chrome
-            self.page.goto(url)
+            self.page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=15000
+            )
 
             self.page.bring_to_front()
 
             print("[YouTube] Video opened in JARVIS Chrome")
 
-            # Give YouTube a moment to load an advertisement
-            
-            # Skip ad if the Skip button is available
             self.skip_ad()
 
             return True
@@ -317,18 +359,25 @@ class BrowserController:
             return False
         
     def skip_ad(self):
-
-        self.start()
+        
+        print(
+            f"[Browser AD THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
         if not self.page:
             return False
 
         try:
 
-            # Wait up to 15 seconds for YouTube's Skip button
-            for _ in range(30):
+            # Wait up to 5 seconds for YouTube's Skip button
+            for _ in range(20):
 
-                button = self.page.get_by_text("Skip", exact=True)
+                button = self.page.get_by_text(
+                    "Skip",
+                    exact=True
+                )
 
                 if button.count() > 0:
 
@@ -338,7 +387,7 @@ class BrowserController:
 
                     return True
 
-                time.sleep(0.5)
+                time.sleep(0.25)
 
         except Exception as e:
 
@@ -349,6 +398,12 @@ class BrowserController:
         return False
 
     def youtube_key(self, key):
+        
+        print(
+            f"[Browser KEY THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
         try:
 
