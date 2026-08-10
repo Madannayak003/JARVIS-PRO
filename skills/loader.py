@@ -37,6 +37,7 @@ SKILLS = [
     "system.process",
     "system.taskmanager",
     "screen.screenshot_ai",
+    "screen.screen_vision_skill",
     "files.files",
     "files.file_info",
     "files.recent",

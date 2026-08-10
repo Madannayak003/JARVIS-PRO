@@ -273,6 +273,7 @@ class ModelRegistry:
                     "reasoning",
                     "memory",
                     "vision",
+                    "screen_vision",
                 ],
 
                 streaming=True,
@@ -311,6 +312,7 @@ class ModelRegistry:
                     "memory",
                     "fast",
                     "coding",
+                    "screen_vision",
                 ],
 
                 streaming=True,
@@ -350,6 +352,7 @@ class ModelRegistry:
                     "reasoning",
                     "memory",
                     "fast",
+                    "screen_vision",
                 ],
 
                 streaming=True,

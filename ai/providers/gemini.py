@@ -5,14 +5,17 @@ AI Core - Gemini Provider
 Google Gemini implementation of the JARVIS AIProvider.
 
 Supports:
+
 - Full generation
 - Streaming generation
 - System instructions
 - Model override
+- Optional image inputs
 - Stop-event interruption
 """
 
 import os
+from pathlib import Path
 from typing import Iterator, Optional
 
 from google import genai
@@ -30,6 +33,9 @@ from ai.providers.base import AIProvider
 class GeminiProvider(AIProvider):
     """
     Google Gemini implementation of AIProvider.
+
+    Supports both normal text requests and
+    multimodal requests containing images.
     """
 
     DEFAULT_MODEL = "gemini-3.6-flash"
@@ -89,6 +95,177 @@ class GeminiProvider(AIProvider):
         return bool(self.api_key)
 
     # ======================================================
+    # Build Contents
+    # ======================================================
+
+    def _build_contents(self, request: AIRequest):
+        """
+        Build Gemini contents.
+
+        Existing text-only requests remain exactly
+        as they were.
+
+        When images are supplied, Gemini receives:
+
+            image(s) + prompt
+        """
+
+        images = (
+            request.images
+            if request.images
+            else []
+        )
+
+        # --------------------------------------------------
+        # Existing text-only behavior
+        # --------------------------------------------------
+
+        if not images:
+
+            return request.prompt
+
+        # --------------------------------------------------
+        # Multimodal request
+        # --------------------------------------------------
+
+        contents = []
+
+        for image in images:
+
+            contents.append(
+                self._prepare_image(image)
+            )
+
+        contents.append(
+            request.prompt
+        )
+
+        return contents
+
+    # ======================================================
+    # Prepare Image
+    # ======================================================
+
+    def _prepare_image(self, image):
+        """
+        Convert supported image inputs into a Gemini
+        compatible content object.
+
+        Supported:
+
+        - PIL.Image.Image
+        - Gemini Part
+        - bytes
+        - pathlib.Path
+        - string file path
+        """
+
+        # --------------------------------------------------
+        # Already a Gemini Part / supported SDK object
+        # --------------------------------------------------
+
+        if isinstance(
+            image,
+            types.Part,
+        ):
+
+            return image
+
+        # --------------------------------------------------
+        # PIL Image
+        # --------------------------------------------------
+
+        try:
+
+            from PIL import Image
+
+            if isinstance(
+                image,
+                Image.Image,
+            ):
+
+                return image
+
+        except ImportError:
+
+            pass
+
+        # --------------------------------------------------
+        # Raw bytes
+        # --------------------------------------------------
+
+        if isinstance(
+            image,
+            bytes,
+        ):
+
+            return types.Part.from_bytes(
+                data=image,
+                mime_type="image/png",
+            )
+
+        # --------------------------------------------------
+        # File path
+        # --------------------------------------------------
+
+        if isinstance(
+            image,
+            (str, Path),
+        ):
+
+            path = Path(image)
+
+            if not path.exists():
+
+                raise FileNotFoundError(
+                    f"Image file not found: {path}"
+                )
+
+            suffix = (
+                path.suffix.lower()
+            )
+
+            mime_types = {
+
+                ".jpg": "image/jpeg",
+
+                ".jpeg": "image/jpeg",
+
+                ".png": "image/png",
+
+                ".webp": "image/webp",
+
+                ".gif": "image/gif",
+
+            }
+
+            mime_type = mime_types.get(
+                suffix,
+                "image/png",
+            )
+
+            with open(
+                path,
+                "rb",
+            ) as file:
+
+                image_bytes = file.read()
+
+            return types.Part.from_bytes(
+                data=image_bytes,
+                mime_type=mime_type,
+            )
+
+        # --------------------------------------------------
+        # Unsupported input
+        # --------------------------------------------------
+
+        raise TypeError(
+            "Unsupported Gemini image input: "
+            f"{type(image).__name__}"
+        )
+
+    # ======================================================
     # Full Generation
     # ======================================================
 
@@ -110,22 +287,35 @@ class GeminiProvider(AIProvider):
 
             if request.system_prompt:
 
-                config = types.GenerateContentConfig(
-                    system_instruction=(
-                        request.system_prompt
+                config = (
+                    types.GenerateContentConfig(
+                        system_instruction=(
+                            request.system_prompt
+                        )
                     )
                 )
 
-            response = client.models.generate_content(
-
-                model=model,
-
-                contents=request.prompt,
-
-                config=config,
+            contents = (
+                self._build_contents(
+                    request
+                )
             )
 
-            text = response.text or ""
+            response = (
+                client.models.generate_content(
+
+                    model=model,
+
+                    contents=contents,
+
+                    config=config,
+                )
+            )
+
+            text = (
+                response.text
+                or ""
+            )
 
             return AIResponse(
 
@@ -139,6 +329,9 @@ class GeminiProvider(AIProvider):
 
                 metadata={
                     "response": response,
+                    "multimodal": bool(
+                        request.images
+                    ),
                 },
             )
 
@@ -189,18 +382,26 @@ class GeminiProvider(AIProvider):
 
             if request.system_prompt:
 
-                config = types.GenerateContentConfig(
-                    system_instruction=(
-                        request.system_prompt
+                config = (
+                    types.GenerateContentConfig(
+                        system_instruction=(
+                            request.system_prompt
+                        )
                     )
                 )
+
+            contents = (
+                self._build_contents(
+                    request
+                )
+            )
 
             response_stream = (
                 client.models.generate_content_stream(
 
                     model=model,
 
-                    contents=request.prompt,
+                    contents=contents,
 
                     config=config,
                 )
@@ -226,7 +427,7 @@ class GeminiProvider(AIProvider):
                 text = getattr(
                     chunk,
                     "text",
-                    ""
+                    "",
                 ) or ""
 
                 if text:
@@ -263,6 +464,7 @@ class GeminiProvider(AIProvider):
                 done=True,
 
                 metadata={
+
                     "error": str(e),
 
                     "success": False,
@@ -270,6 +472,7 @@ class GeminiProvider(AIProvider):
                     "error_type": (
                         type(e).__name__
                     ),
+
                 },
             )
 
@@ -290,6 +493,8 @@ class GeminiProvider(AIProvider):
             done=True,
 
             metadata={
+
                 "success": True,
+
             },
         )

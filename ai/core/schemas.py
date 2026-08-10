@@ -14,7 +14,6 @@ Common data contracts shared by:
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterator, Optional
 
-
 # ==========================================================
 # AI Request
 # ==========================================================
@@ -23,6 +22,12 @@ from typing import Any, Dict, Iterator, Optional
 class AIRequest:
     """
     Standard request sent to the AI Core.
+
+    Supports:
+    - Text-only requests
+    - Optional image inputs for vision-capable models
+
+    Existing text-only callers remain fully compatible.
     """
 
     prompt: str
@@ -43,6 +48,14 @@ class AIRequest:
 
     metadata: Dict[str, Any] = field(
         default_factory=dict
+    )
+
+    # ------------------------------------------------------
+    # Optional multimodal input
+    # ------------------------------------------------------
+
+    images: list[Any] = field(
+        default_factory=list
     )
 
 

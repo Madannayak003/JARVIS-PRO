@@ -138,6 +138,54 @@ VISION = {
     "what is in front of me": {
         "action": "vision_describe"
     },
+    
+    # =================================================
+    # Screen Vision
+    # =================================================
+
+    "what am i looking at": {
+        "action": "screen_vision_analyze"
+    },
+
+    "what is on my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "what's on my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "what do you see on my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "describe my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "describe the screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "analyze my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "analyze the screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "look at my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "what is showing on my screen": {
+        "action": "screen_vision_analyze"
+    },
+
+    "what is displayed on my screen": {
+        "action": "screen_vision_analyze"
+    },
 
     # =================================================
     # Vision Position

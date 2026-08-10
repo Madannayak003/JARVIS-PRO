@@ -15,7 +15,7 @@ Consumers such as:
 should use AIService instead of calling providers directly.
 """
 
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from ai.core.router import AIRouter
 from ai.core.schemas import (
@@ -116,7 +116,8 @@ class AIService:
         model: Optional[str] = None,
         output_format: str = "text",
         metadata: Optional[dict] = None,
-    ) -> AIResponse:
+        images: Optional[list[Any]] = None,
+        ) -> AIResponse:
         """
         Generate a complete AI response.
         """
@@ -162,6 +163,12 @@ class AIService:
                 if metadata is not None
                 else {}
             ),
+            
+            images=(
+                images
+                if images is not None
+                else []
+            ),
         )
 
         # --------------------------------------------------
@@ -185,7 +192,8 @@ class AIService:
         model: Optional[str] = None,
         stop_event=None,
         metadata: Optional[dict] = None,
-    ) -> Iterator[AIStreamChunk]:
+        images: Optional[list[Any]] = None,
+        ) -> Iterator[AIStreamChunk]:
         """
         Stream an AI response.
         """
@@ -226,6 +234,12 @@ class AIService:
                 metadata
                 if metadata is not None
                 else {}
+            ),
+            
+            images=(
+                images
+                if images is not None
+                else []
             ),
         )
 
