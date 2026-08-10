@@ -5,12 +5,16 @@ Live Screen Vision Skill
 Analyzes the current desktop directly from memory.
 
 Unlike screenshot_ai, this skill does NOT:
+
 - save a screenshot
 - search for a previous screenshot
 - analyze a PNG from disk
 
-It captures the current screen and sends the image
-directly to the AI vision system.
+It captures the current screen once and sends the
+image directly to the AI vision system.
+
+The successful analysis is also stored in the
+ScreenContextManager for later contextual use.
 """
 
 from core.registry import register
@@ -18,6 +22,8 @@ from core.registry import register
 from ai.core.service import ai_service
 
 from skills.screen.screen_vision import screen_vision
+
+from brain.screen_context import screen_context
 
 
 # =========================================================
@@ -30,6 +36,8 @@ def screen_vision_analyze(data=None):
 
     The screen is captured directly into memory and
     passed to the multimodal AI system.
+
+    The resulting analysis is stored as screen context.
     """
 
     # -----------------------------------------------------
@@ -132,10 +140,57 @@ def screen_vision_analyze(data=None):
         )
 
     # -----------------------------------------------------
+    # Final Analysis
+    # -----------------------------------------------------
+
+    analysis = response.text.strip()
+
+    # -----------------------------------------------------
+    # Store Screen Context
+    #
+    # IMPORTANT:
+    # The existing captured image is NOT captured again.
+    # Only the AI's understanding is stored.
+    # -----------------------------------------------------
+
+    try:
+
+        screen_context.set_context({
+
+            "analysis": analysis,
+
+            "provider": response.provider,
+
+            "model": response.model,
+
+            "resolution": (
+                image.size
+                if hasattr(image, "size")
+                else None
+            ),
+
+            "source": "live_screen",
+
+        })
+
+        print(
+            "[SCREEN CONTEXT] Updated."
+        )
+
+    except Exception as e:
+
+        # Context storage must never break
+        # the existing screen vision feature.
+
+        print(
+            f"[SCREEN CONTEXT ERROR] {e}"
+        )
+
+    # -----------------------------------------------------
     # Return natural response
     # -----------------------------------------------------
 
-    return response.text.strip()
+    return analysis
 
 
 # =========================================================
@@ -148,4 +203,6 @@ register(
     category="screen",
 )
 
-print("[SCREEN VISION SKILL] Registered.")
+print(
+    "[SCREEN VISION SKILL] Registered."
+)

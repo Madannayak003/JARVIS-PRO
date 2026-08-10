@@ -15,6 +15,8 @@ from typing import Optional
 
 from .context_types import AIContext
 
+from brain.screen_context import screen_context
+
 
 class ContextBuilder:
 
@@ -125,6 +127,31 @@ class ContextBuilder:
             except Exception:
 
                 context.planner = {}
+                
+        # ----------------------------------------------------
+        # Live Screen Context
+        # ----------------------------------------------------
+
+        context.screen = {}
+
+        try:
+
+            if screen_context.has_context():
+
+                screen_data = screen_context.get_context()
+
+                if screen_data:
+
+                    context.screen = screen_data
+
+        except Exception as e:
+
+            print(
+                f"[ContextBuilder] Screen context unavailable: {e}"
+            )
+
+            context.screen = {}        
+                
 
         # ----------------------------------------------------
         # Active project

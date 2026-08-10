@@ -31,13 +31,17 @@ Rules:
 - Continue conversations naturally.
 - Use previous conversation when relevant.
 - Use user profile when appropriate.
+- Use current screen context when it is relevant to the user's request.
 - Never invent facts.
 - If information is missing, ask.
 """.strip()
 
     # --------------------------------------------------
 
-    def _profile_section(self, context: AIContext) -> str:
+    def _profile_section(
+        self,
+        context: AIContext
+    ) -> str:
 
         profile = context.profile
 
@@ -59,7 +63,77 @@ Response Style: {profile.get("response_style","")}
 
     # --------------------------------------------------
 
-    def _conversation_section(self, context: AIContext) -> str:
+    def _project_section(
+        self,
+        context: AIContext
+    ) -> str:
+
+        return f"""
+========== CURRENT PROJECT ==========
+
+Project:
+{context.project.get("name","")}
+""".strip()
+
+    # --------------------------------------------------
+
+    def _screen_section(
+        self,
+        context: AIContext
+    ) -> str:
+        """
+        Add the latest live screen understanding.
+
+        This section only reads existing screen context.
+        It does NOT capture or analyze the screen.
+        """
+
+        if not context.screen:
+
+            return ""
+
+        screen = context.screen
+
+        analysis = screen.get(
+            "analysis",
+            ""
+        )
+
+        if not analysis:
+
+            return ""
+
+        return f"""
+========== CURRENT SCREEN CONTEXT ==========
+
+The following is the latest understanding of the user's
+computer screen from live screen vision.
+
+Analysis:
+{analysis}
+
+Provider:
+{screen.get("provider", "")}
+
+Model:
+{screen.get("model", "")}
+
+Resolution:
+{screen.get("resolution", "")}
+
+Source:
+{screen.get("source", "")}
+
+Analyzed At:
+{screen.get("analyzed_at", "")}
+""".strip()
+
+    # --------------------------------------------------
+
+    def _conversation_section(
+        self,
+        context: AIContext
+    ) -> str:
 
         if not context.conversation:
 
@@ -67,7 +141,9 @@ Response Style: {profile.get("response_style","")}
 
         lines: List[str] = []
 
-        lines.append("========== RECENT CONVERSATION ==========")
+        lines.append(
+            "========== RECENT CONVERSATION =========="
+        )
 
         for msg in context.conversation:
 
@@ -75,13 +151,18 @@ Response Style: {profile.get("response_style","")}
 
             content = msg["content"]
 
-            lines.append(f"{role}: {content}")
+            lines.append(
+                f"{role}: {content}"
+            )
 
         return "\n".join(lines)
 
     # --------------------------------------------------
 
-    def _memory_section(self, context: AIContext) -> str:
+    def _memory_section(
+        self,
+        context: AIContext
+    ) -> str:
 
         if not context.memories:
 
@@ -89,17 +170,24 @@ Response Style: {profile.get("response_style","")}
 
         lines = []
 
-        lines.append("========== RELEVANT MEMORIES ==========")
+        lines.append(
+            "========== RELEVANT MEMORIES =========="
+        )
 
         for memory in context.memories:
 
-            lines.append(str(memory))
+            lines.append(
+                str(memory)
+            )
 
         return "\n".join(lines)
 
     # --------------------------------------------------
 
-    def _planner_section(self, context: AIContext) -> str:
+    def _planner_section(
+        self,
+        context: AIContext
+    ) -> str:
 
         if not context.planner:
 
@@ -112,18 +200,10 @@ Response Style: {profile.get("response_style","")}
 
     # --------------------------------------------------
 
-    def _project_section(self, context: AIContext) -> str:
-
-        return f"""
-========== CURRENT PROJECT ==========
-
-Project:
-{context.project.get("name","")}
-""".strip()
-
-    # --------------------------------------------------
-
-    def _user_input_section(self, context: AIContext) -> str:
+    def _user_input_section(
+        self,
+        context: AIContext
+    ) -> str:
 
         return f"""
 ========== CURRENT REQUEST ==========
@@ -133,23 +213,42 @@ Project:
 
     # --------------------------------------------------
 
-    def build(self, context: AIContext) -> str:
+    def build(
+        self,
+        context: AIContext
+    ) -> str:
 
         sections = [
 
             self.system_prompt,
 
-            self._profile_section(context),
+            self._profile_section(
+                context
+            ),
 
-            self._project_section(context),
+            self._project_section(
+                context
+            ),
 
-            self._conversation_section(context),
+            self._screen_section(
+                context
+            ),
 
-            self._memory_section(context),
+            self._conversation_section(
+                context
+            ),
 
-            self._planner_section(context),
+            self._memory_section(
+                context
+            ),
 
-            self._user_input_section(context)
+            self._planner_section(
+                context
+            ),
+
+            self._user_input_section(
+                context
+            )
 
         ]
 
@@ -163,4 +262,6 @@ Project:
 
         ]
 
-        return "\n\n".join(sections)
+        return "\n\n".join(
+            sections
+        )
