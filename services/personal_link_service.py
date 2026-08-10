@@ -10,7 +10,7 @@ No command routing.
 """
 
 from config.personal_links import get_link
-from services.web_launcher import open_url
+from skills.browser.browser_controller import browser
 
 def open_personal_link(name):
     """
@@ -46,4 +46,4 @@ def open_personal_link(name):
         f"{link_name} -> {url}"
     )
 
-    return open_url(url)
+    return browser.open(url)

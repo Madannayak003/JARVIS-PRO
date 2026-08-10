@@ -198,24 +198,45 @@ class BrowserController:
         
     def open(self, url):
 
-        self.start()
+        if not url:
+            return False
 
-        try:
+        print(
+            f"[Browser OPEN THREAD] "
+            f"{threading.current_thread().name} | "
+            f"{threading.get_ident()}"
+        )
 
-            self.page.goto(url)
+        with _browser_lock:
 
-        except:
+            try:
 
-            print("[Browser] Reopening...")
+                self.start()
 
-            self.browser = None
-            self.page = None
+                if not self.browser or not self.page:
+                    print("[Browser] Browser not connected")
+                    return False
 
-            self.start()
+                print(f"[Browser] Opening: {url}")
 
-            self.page.goto(url)
+                self.page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=15000
+                )
+
+                self.page.bring_to_front()
+
+                print("[Browser] Page opened in JARVIS Chrome")
+
+                return True
+
+            except Exception as e:
+
+                print(f"[Browser ERROR] Open failed: {e}")
+
+                return False
         
-
     def search_google(self, query):
 
         print(

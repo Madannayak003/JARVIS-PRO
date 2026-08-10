@@ -1,5 +1,6 @@
-import webbrowser
 import urllib.parse
+
+from skills.browser.browser_controller import browser
 
 
 class NavigationEngine:
@@ -16,7 +17,14 @@ class NavigationEngine:
 
         print(f"[NAVIGATION] {url}")
 
-        return webbrowser.open(url)
+        try:
+            browser.open(url)
+            return True
+
+        except Exception as e:
+            print(f"[NAVIGATION ERROR] {e}")
+            return False
+
 
     def google(self, query):
 
@@ -30,6 +38,7 @@ class NavigationEngine:
 
         return self.open(url)
 
+
     def youtube(self, query):
 
         if not query:
@@ -42,6 +51,7 @@ class NavigationEngine:
 
         return self.open(url)
 
+
     def github(self, query):
 
         if not query:
@@ -53,6 +63,7 @@ class NavigationEngine:
         )
 
         return self.open(url)
+
 
     def chatgpt(self, query):
 
