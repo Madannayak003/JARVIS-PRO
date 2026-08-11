@@ -17,25 +17,45 @@ from voice.state import (
 # =========================================================
 # PRO TTS PIPELINE
 #
-# Stage 1:
-#     Sentence Queue
+# AI Stream
+#     ↓
+# Sentence Queue
+#     ↓
+# Parallel TTS Generation Workers
+#     ↓
+# Ordered Audio Buffer
+#     ↓
+# Playback Worker
 #
-# Stage 2:
-#     TTS Prefetch Worker
+# Example:
 #
-# Stage 3:
-#     Audio Queue
+# Sentence 1 ──┐
+# Sentence 2 ──┼── generate in parallel
+# Sentence 3 ──┘
+#                ↓
+#        ordered audio buffer
+#                ↓
+#        Sentence 1 → play
+#        Sentence 2 → play
+#        Sentence 3 → play
 #
-# Stage 4:
-#     Playback Worker
+# IMPORTANT:
 #
-# This allows:
-#
-# Sentence 1 → play
-# Sentence 2 → generate while #1 plays
-# Sentence 3 → generate while #2 plays
+# Generation may happen in parallel.
+# Playback ALWAYS remains sequential.
 #
 # =========================================================
+
+
+# =========================================================
+# Configuration
+# =========================================================
+
+TTS_WORKERS = 2
+
+SENTENCE_QUEUE_SIZE = 4
+
+AUDIO_QUEUE_SIZE = 3
 
 
 class TTSPipeline:
@@ -55,34 +75,89 @@ class TTSPipeline:
         # -------------------------------------------------
 
         self.sentence_queue = queue.Queue(
-            maxsize=4
+            maxsize=SENTENCE_QUEUE_SIZE
         )
 
         # -------------------------------------------------
-        # Prepared audio files
+        # Generated audio
         #
-        # Small buffer prevents excessive generation.
+        # IMPORTANT:
+        #
+        # This queue contains ordered items.
+        #
+        # Each item:
+        #
+        # (
+        #     sentence_index,
+        #     audio_file,
+        #     sentence
+        # )
+        #
         # -------------------------------------------------
 
         self.audio_queue = queue.Queue(
-            maxsize=2
+            maxsize=AUDIO_QUEUE_SIZE
         )
 
         # -------------------------------------------------
-        # Worker threads
+        # Generated results waiting for ordered playback
+        #
+        # Example:
+        #
+        # {
+        #     2: (file2, sentence2),
+        #     0: (file0, sentence0),
+        #     1: (file1, sentence1),
+        # }
+        #
+        # Playback waits for the next required index.
         # -------------------------------------------------
 
-        self.prefetch_thread = None
+        self.pending_audio = {}
+
+        self.pending_lock = threading.Lock()
+
+        self.pending_condition = threading.Condition(
+            self.pending_lock
+        )
+
+        # -------------------------------------------------
+        # Workers
+        # -------------------------------------------------
+
+        self.prefetch_threads = []
 
         self.playback_thread = None
 
         # -------------------------------------------------
-        # Running state
+        # State
         # -------------------------------------------------
 
         self.started = False
 
         self.finished = False
+
+        self.worker_done_count = 0
+
+        self.worker_done_lock = threading.Lock()
+
+        # -------------------------------------------------
+        # Sentence ordering
+        # -------------------------------------------------
+
+        self.next_sentence_index = 0
+
+        self.next_play_index = 0
+
+        self.index_lock = threading.Lock()
+
+        # -------------------------------------------------
+        # Number of sentences submitted
+        # -------------------------------------------------
+
+        self.total_sentences = 0
+
+        self.total_lock = threading.Lock()
 
     # =====================================================
     # Cancellation
@@ -109,15 +184,45 @@ class TTSPipeline:
 
         self.started = True
 
-        self.prefetch_thread = threading.Thread(
-
-            target=self._prefetch_worker,
-
-            daemon=True,
-
-            name="JARVIS-TTS-Prefetch",
-
+        print(
+            "[TTS PIPELINE] Starting"
         )
+
+        # -------------------------------------------------
+        # Start parallel TTS generation workers
+        # -------------------------------------------------
+
+        for worker_number in range(
+            TTS_WORKERS
+        ):
+
+            thread = threading.Thread(
+
+                target=self._prefetch_worker,
+
+                args=(worker_number,),
+
+                daemon=True,
+
+                name=(
+                    f"JARVIS-TTS-Prefetch-"
+                    f"{worker_number + 1}"
+                ),
+
+            )
+
+            self.prefetch_threads.append(
+                thread
+            )
+
+            thread.start()
+
+        # -------------------------------------------------
+        # Start ONE playback worker
+        #
+        # Only one thread is allowed to control audio
+        # playback.
+        # -------------------------------------------------
 
         self.playback_thread = threading.Thread(
 
@@ -129,12 +234,11 @@ class TTSPipeline:
 
         )
 
-        self.prefetch_thread.start()
-
         self.playback_thread.start()
 
         print(
-            "[TTS PIPELINE] Started"
+            "[TTS PIPELINE] Started "
+            f"with {TTS_WORKERS} TTS workers"
         )
 
     # =====================================================
@@ -151,10 +255,38 @@ class TTSPipeline:
 
             return False
 
+        sentence = sentence.strip()
+
+        if not sentence:
+
+            return False
+
         # -------------------------------------------------
-        # Wait until there is room.
+        # Assign an ordering index.
         #
-        # This naturally creates back-pressure.
+        # This happens BEFORE placing the sentence into
+        # the queue.
+        # -------------------------------------------------
+
+        with self.index_lock:
+
+            sentence_index = (
+                self.next_sentence_index
+            )
+
+            self.next_sentence_index += 1
+
+        # -------------------------------------------------
+        # Store indexed sentence.
+        # -------------------------------------------------
+
+        item = (
+            sentence_index,
+            sentence,
+        )
+
+        # -------------------------------------------------
+        # Back-pressure
         # -------------------------------------------------
 
         while not self.cancelled():
@@ -162,9 +294,13 @@ class TTSPipeline:
             try:
 
                 self.sentence_queue.put(
-                    sentence,
+                    item,
                     timeout=0.05
                 )
+
+                with self.total_lock:
+
+                    self.total_sentences += 1
 
                 return True
 
@@ -187,44 +323,59 @@ class TTSPipeline:
         self.finished = True
 
         # -------------------------------------------------
-        # Tell prefetch worker that no more sentences
-        # will arrive.
+        # One sentinel per generation worker.
+        #
+        # Every worker must receive its own sentinel.
         # -------------------------------------------------
 
-        while not self.cancelled():
+        for _ in range(
+            TTS_WORKERS
+        ):
 
-            try:
+            while not self.cancelled():
 
-                self.sentence_queue.put(
-                    None,
-                    timeout=0.05
-                )
+                try:
 
-                return
+                    self.sentence_queue.put(
+                        None,
+                        timeout=0.05
+                    )
 
-            except queue.Full:
+                    break
 
-                continue
+                except queue.Full:
+
+                    continue
 
     # =====================================================
     # Prefetch Worker
     #
-    # Generates audio ahead of playback.
+    # Multiple workers generate audio simultaneously.
     # =====================================================
 
-    def _prefetch_worker(self):
+    def _prefetch_worker(
+        self,
+        worker_number,
+    ):
+
+        worker_name = (
+            f"TTS-{worker_number + 1}"
+        )
+
+        print(
+            f"[TTS PIPELINE] "
+            f"{worker_name} started"
+        )
 
         while True:
 
             if self.cancelled():
 
-                self._cleanup_audio_queue()
-
                 return
 
             try:
 
-                sentence = self.sentence_queue.get(
+                item = self.sentence_queue.get(
                     timeout=0.05
                 )
 
@@ -233,33 +384,25 @@ class TTSPipeline:
                 continue
 
             # -------------------------------------------------
-            # End of sentence stream
+            # Worker shutdown
             # -------------------------------------------------
 
-            if sentence is None:
+            if item is None:
 
                 self.sentence_queue.task_done()
 
-                # -------------------------------------------------
-                # Tell playback worker that generation is finished.
-                # -------------------------------------------------
+                with self.worker_done_lock:
 
-                while not self.cancelled():
+                    self.worker_done_count += 1
 
-                    try:
-
-                        self.audio_queue.put(
-                            None,
-                            timeout=0.05
-                        )
-
-                        return
-
-                    except queue.Full:
-
-                        continue
+                print(
+                    f"[TTS PIPELINE] "
+                    f"{worker_name} finished"
+                )
 
                 return
+
+            sentence_index, sentence = item
 
             try:
 
@@ -277,35 +420,47 @@ class TTSPipeline:
 
                     continue
 
-                # -------------------------------------------------
-                # Generate audio BEFORE playback.
-                #
-                # This is the key PRO optimization.
-                # -------------------------------------------------
-
-                audio_file = prepare_speech(
-                    sentence,
-                    self.session,
+                print(
+                    "[TTS PIPELINE] "
+                    f"{worker_name} preparing "
+                    f"sentence {sentence_index}"
                 )
 
                 # -------------------------------------------------
-                # If Edge TTS isn't available, use fallback.
+                # Generate audio.
                 #
-                # None means no prepared audio.
+                # IMPORTANT:
+                #
+                # This only generates.
+                #
+                # It does NOT play.
+                # -------------------------------------------------
+
+                audio_file = prepare_speech(
+
+                    sentence,
+
+                    self.session,
+
+                )
+
+                # -------------------------------------------------
+                # Offline / fallback
                 # -------------------------------------------------
 
                 if audio_file is None:
 
                     if not self.cancelled():
 
-                        self._play_fallback(
-                            sentence
+                        self._store_fallback(
+                            sentence_index,
+                            sentence,
                         )
 
                     continue
 
                 # -------------------------------------------------
-                # Session could have changed while generating.
+                # Check cancellation after generation.
                 # -------------------------------------------------
 
                 if self.cancelled():
@@ -317,47 +472,28 @@ class TTSPipeline:
                     return
 
                 # -------------------------------------------------
-                # Put prepared audio into playback queue.
+                # Store generated audio using its index.
+                #
+                # It doesn't matter which worker finishes first.
+                # Playback will wait for the correct index.
                 # -------------------------------------------------
 
-                while not self.cancelled():
+                with self.pending_condition:
 
-                    try:
-
-                        self.audio_queue.put(
-                            (
-                                audio_file,
-                                sentence,
-                            ),
-                            timeout=0.05
-                        )
-
-                        audio_file = None
-
-                        break
-
-                    except queue.Full:
-
-                        continue
-
-                # -------------------------------------------------
-                # If cancellation happened before the file was
-                # handed to playback, clean it up.
-                # -------------------------------------------------
-
-                if audio_file is not None:
-
-                    self._delete_audio(
-                        audio_file
+                    self.pending_audio[
+                        sentence_index
+                    ] = (
+                        audio_file,
+                        sentence,
                     )
 
-                    return
+                    self.pending_condition.notify_all()
 
             except Exception as e:
 
                 print(
-                    "[TTS PREFETCH ERROR]",
-                    e
+                    "[TTS PREFETCH ERROR] "
+                    f"{worker_name}: {e}"
                 )
 
             finally:
@@ -365,62 +501,157 @@ class TTSPipeline:
                 self.sentence_queue.task_done()
 
     # =====================================================
+    # Store Fallback
+    #
+    # If Edge TTS isn't available, keep the sentence
+    # in the ordered playback system.
+    # =====================================================
+
+    def _store_fallback(
+        self,
+        sentence_index,
+        sentence,
+    ):
+
+        with self.pending_condition:
+
+            self.pending_audio[
+                sentence_index
+            ] = (
+                None,
+                sentence,
+            )
+
+            self.pending_condition.notify_all()
+
+    # =====================================================
     # Playback Worker
+    #
+    # ONLY this worker controls playback.
+    #
+    # Playback order:
+    #
+    # 0 → 1 → 2 → 3 ...
+    #
+    # Never based on generation completion order.
     # =====================================================
 
     def _playback_worker(self):
+
+        print(
+            "[TTS PIPELINE] "
+            "Playback worker started"
+        )
 
         while True:
 
             if self.cancelled():
 
-                self._cleanup_audio_queue()
+                self._cleanup_pending_audio()
 
                 return
 
-            try:
+            # -------------------------------------------------
+            # Wait for the next sentence's audio.
+            # -------------------------------------------------
 
-                item = self.audio_queue.get(
-                    timeout=0.05
+            with self.pending_condition:
+
+                while (
+
+                    self.next_play_index
+                    not in self.pending_audio
+
+                    and not self.cancelled()
+
+                ):
+
+                    # -------------------------------------------------
+                    # If all generation workers have finished and
+                    # there is no audio for the next sentence, there
+                    # is nothing more to play.
+                    # -------------------------------------------------
+
+                    if self._generation_finished():
+
+                        self._cleanup_pending_audio()
+
+                        return
+
+                    self.pending_condition.wait(
+                        timeout=0.05
+                    )
+
+                if self.cancelled():
+
+                    self._cleanup_pending_audio()
+
+                    return
+
+                if (
+                    self.next_play_index
+                    not in self.pending_audio
+                ):
+
+                    continue
+
+                audio_file, sentence = (
+                    self.pending_audio.pop(
+                        self.next_play_index
+                    )
                 )
 
-            except queue.Empty:
+                current_index = (
+                    self.next_play_index
+                )
 
-                continue
+                self.next_play_index += 1
 
             # -------------------------------------------------
-            # Generation finished
+            # Play prepared audio.
             # -------------------------------------------------
-
-            if item is None:
-
-                self.audio_queue.task_done()
-
-                return
-
-            audio_file, sentence = item
 
             try:
 
                 if self.cancelled():
 
-                    self._delete_audio(
-                        audio_file
-                    )
+                    if audio_file:
+
+                        self._delete_audio(
+                            audio_file
+                        )
 
                     return
 
+                print(
+                    "[TTS PIPELINE] "
+                    f"Playing sentence "
+                    f"{current_index}"
+                )
+
                 # -------------------------------------------------
-                # PLAY PREPARED AUDIO
-                #
-                # While this is playing, the prefetch worker is
-                # already generating the next sentence.
+                # Edge TTS prepared audio
                 # -------------------------------------------------
 
-                play_prepared_speech(
-                    audio_file,
-                    self.session,
-                )
+                if audio_file:
+
+                    play_prepared_speech(
+
+                        audio_file,
+
+                        self.session,
+
+                    )
+
+                # -------------------------------------------------
+                # Offline / fallback
+                # -------------------------------------------------
+
+                else:
+
+                    self._play_fallback(
+                        sentence
+                    )
 
             except Exception as e:
 
@@ -429,19 +660,43 @@ class TTSPipeline:
                     e
                 )
 
-                self._delete_audio(
-                    audio_file
-                )
+                if audio_file:
 
-            finally:
-
-                self.audio_queue.task_done()
+                    self._delete_audio(
+                        audio_file
+                    )
 
     # =====================================================
-    # Offline / fallback
+    # Generation Finished
     # =====================================================
 
-    def _play_fallback(self, sentence):
+    def _generation_finished(self):
+
+        with self.worker_done_lock:
+
+            workers_finished = (
+                self.worker_done_count
+                >= TTS_WORKERS
+            )
+
+        with self.total_lock:
+
+            total = self.total_sentences
+
+        return (
+            workers_finished
+            and self.next_play_index
+            >= total
+        )
+
+    # =====================================================
+    # Offline / Fallback
+    # =====================================================
+
+    def _play_fallback(
+        self,
+        sentence,
+    ):
 
         if self.cancelled():
 
@@ -449,10 +704,19 @@ class TTSPipeline:
 
         try:
 
+            print(
+                "[TTS PIPELINE] "
+                "Using fallback speech"
+            )
+
             speak(
+
                 sentence,
+
                 wait=True,
+
                 session=self.session,
+
             )
 
         except Exception as e:
@@ -468,15 +732,37 @@ class TTSPipeline:
 
     def wait(self):
 
-        if self.prefetch_thread:
+        # -------------------------------------------------
+        # Wait for generation workers.
+        # -------------------------------------------------
 
-            self.prefetch_thread.join()
+        for thread in self.prefetch_threads:
+
+            if thread:
+
+                thread.join()
+
+        # -------------------------------------------------
+        # Wake playback worker after generation is done.
+        # -------------------------------------------------
+
+        with self.pending_condition:
+
+            self.pending_condition.notify_all()
+
+        # -------------------------------------------------
+        # Wait for playback.
+        # -------------------------------------------------
 
         if self.playback_thread:
 
             self.playback_thread.join()
 
-        self._cleanup_audio_queue()
+        # -------------------------------------------------
+        # Final cleanup.
+        # -------------------------------------------------
+
+        self._cleanup_pending_audio()
 
         print(
             "[TTS PIPELINE] Finished"
@@ -486,7 +772,10 @@ class TTSPipeline:
     # Delete Audio
     # =====================================================
 
-    def _delete_audio(self, audio_file):
+    def _delete_audio(
+        self,
+        audio_file,
+    ):
 
         if not audio_file:
 
@@ -515,31 +804,36 @@ class TTSPipeline:
 
             print(
                 "[TTS PIPELINE] "
-                f"Could not delete audio: {e}"
+                f"Could not delete "
+                f"{Path(audio_file).name}: {e}"
             )
 
     # =====================================================
-    # Cleanup queued audio
+    # Cleanup Pending Audio
+    #
+    # Called when:
+    #
+    # - user interrupts
+    # - session becomes invalid
+    # - pipeline finishes
     # =====================================================
 
-    def _cleanup_audio_queue(self):
+    def _cleanup_pending_audio(self):
 
-        while True:
+        with self.pending_condition:
 
-            try:
+            items = list(
+                self.pending_audio.values()
+            )
 
-                item = self.audio_queue.get_nowait()
+            self.pending_audio.clear()
 
-            except queue.Empty:
+            self.pending_condition.notify_all()
 
-                break
+        for audio_file, _ in items:
 
-            if item is not None:
-
-                audio_file = item[0]
+            if audio_file:
 
                 self._delete_audio(
                     audio_file
                 )
-
-            self.audio_queue.task_done()
