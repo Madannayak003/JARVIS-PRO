@@ -2,95 +2,84 @@
 JARVIS PRO
 Completely Isolated Offline Voice Mode
 
-STT  -> Faster-Whisper
-AI   -> Ollama
-TTS  -> Piper
+Pipeline:
 
-This module does NOT import or use:
+Microphone
+    ↓
+Faster-Whisper
+    ↓
+Offline Stage-4 AI
+    ↓
+Ollama
+    ↓
+Piper
+    ↓
+Speaker
+
+IMPORTANT:
+This module NEVER imports or uses:
 - voice.manager
 - voice.online_edge
+- voice.speech_state
 - core.listener
-- online STT
+- Google STT
+- Gemini
+- OpenAI
 - Edge TTS
 """
-
-import time
 
 from voice.offline.offline_stt import (
     calibrate,
     listen_once,
 )
 
+from voice.offline.offline_ai import (
+    get_ai,
+)
+
 from voice.offline.offline_tts import (
     speak,
 )
 
-# =========================================================
-# Ollama
-# =========================================================
-
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-
-OLLAMA_MODEL = "jarvis"
-
-
-def ask_ollama(prompt):
-    """
-    Completely local Ollama request.
-    """
-
-    import requests
-
-    try:
-
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-            },
-            timeout=120,
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        return data.get(
-            "response",
-            ""
-        ).strip()
-
-    except Exception as e:
-
-        print(
-            "[OFFLINE AI ERROR]",
-            e
-        )
-
-        return None
-
 
 # =========================================================
-# Offline Voice Mode
+# Banner
 # =========================================================
 
-def run():
+def print_banner():
 
     print()
-    print("=" * 42)
+    print("==========================================")
     print("       JARVIS OFFLINE VOICE MODE")
-    print("=" * 42)
+    print("==========================================")
     print("[OFFLINE VOICE] STT  : Faster-Whisper")
     print("[OFFLINE VOICE] AI   : Ollama")
     print("[OFFLINE VOICE] TTS  : Piper")
     print("[OFFLINE VOICE] NET  : Not required")
-    print("=" * 42)
+    print("==========================================")
     print()
 
+
+# =========================================================
+# Main Offline Voice Loop
+# =========================================================
+
+def run():
+
+    print_banner()
+
     # -----------------------------------------------------
-    # Calibrate microphone ONLY ONCE
+    # Load offline AI
+    # -----------------------------------------------------
+
+    print(
+        "[OFFLINE VOICE] Initializing AI..."
+    )
+
+    ai = get_ai()
+
+    # -----------------------------------------------------
+    # Calibrate microphone
     # -----------------------------------------------------
 
     mic = calibrate()
@@ -99,16 +88,19 @@ def run():
     print(
         "[OFFLINE VOICE] Ready."
     )
+
     print(
         "[OFFLINE VOICE] Speak a command."
     )
+
     print(
         "[OFFLINE VOICE] Press Ctrl+C to exit."
     )
+
     print()
 
     # =====================================================
-    # Continuous Offline Loop
+    # Continuous Offline Conversation
     # =====================================================
 
     while True:
@@ -116,18 +108,14 @@ def run():
         try:
 
             # -------------------------------------------------
-            # Listen
+            # STT
             # -------------------------------------------------
 
             text = listen_once(
                 mic,
-                timeout=3,
-                phrase_time_limit=8,
+                timeout=None,
+                phrase_time_limit=15,
             )
-
-            # -------------------------------------------------
-            # Nothing recognized
-            # -------------------------------------------------
 
             if not text:
 
@@ -146,68 +134,44 @@ def run():
             )
 
             # -------------------------------------------------
-            # Exit commands
+            # AI
             # -------------------------------------------------
 
-            command = text.lower().strip()
-
-            if command in [
-                "exit",
-                "quit",
-                "stop offline mode",
-                "shutdown offline mode",
-            ]:
-
-                print(
-                    "[OFFLINE VOICE] Shutting down."
-                )
-
-                break
-
-            # -------------------------------------------------
-            # Local AI
-            # -------------------------------------------------
-
-            print(
-                "[OFFLINE AI] Thinking..."
-            )
-
-            response = ask_ollama(
+            response = ai.ask(
                 text
             )
 
             if not response:
 
                 print(
-                    "[OFFLINE AI] "
-                    "No response."
+                    "[OFFLINE VOICE] "
+                    "No response from Ollama."
                 )
 
                 continue
 
-            # -------------------------------------------------
-            # Print response
-            # -------------------------------------------------
-
+            print()
             print(
-                "[OFFLINE AI] Response:",
+                "[OFFLINE VOICE] JARVIS:",
                 response
             )
 
             # -------------------------------------------------
-            # Piper
+            # Piper TTS
             # -------------------------------------------------
 
-            speak(
+            result = speak(
                 response
             )
 
-            # -------------------------------------------------
-            # Small protection against immediately
-            # capturing residual audio.
-            # -------------------------------------------------
+            if not result:
 
-            time.sleep(0.15)
+                print(
+                    "[OFFLINE VOICE] "
+                    "TTS failed."
+                )
+
+            print()
 
         except KeyboardInterrupt:
 
@@ -224,8 +188,6 @@ def run():
                 "[OFFLINE VOICE ERROR]",
                 e
             )
-
-            time.sleep(0.2)
 
 
 # =========================================================

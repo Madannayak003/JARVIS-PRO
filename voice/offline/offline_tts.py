@@ -5,16 +5,20 @@ Offline Piper TTS
 Completely isolated offline TTS engine.
 
 DO NOT import:
-    voice.manager
-    voice.online_edge
-    voice.player
+voice.manager
+voice.online_edge
+voice.player
+voice.speech_state
+voice.tts_pipeline
+
+This module belongs only to the offline voice system.
 """
 
 import re
 import subprocess
 import tempfile
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from voice.offline.offline_player import play
 
@@ -31,7 +35,17 @@ PIPER_MODEL = (
     / "en_US-lessac-medium.onnx"
 )
 
+# Number of Piper generation workers.
 PIPER_WORKERS = 2
+
+# Number of sentences to prepare ahead of playback.
+# 2 gives us:
+#
+# sentence currently playing
+# +
+# next sentence already preparing
+#
+PREFETCH = 2
 
 
 # =========================================================
@@ -207,6 +221,14 @@ def split_sentences(text):
 
 # =========================================================
 # Prepare Multiple Sentences
+#
+# Kept for compatibility.
+#
+# This function still prepares all sentences and returns
+# them in the original order.
+#
+# The main speak() function below uses the new streaming
+# pipeline instead.
 # =========================================================
 
 def prepare(text):
@@ -214,6 +236,7 @@ def prepare(text):
     sentences = split_sentences(text)
 
     if not sentences:
+
         return []
 
     prepared = [None] * len(sentences)
@@ -228,6 +251,7 @@ def prepare(text):
     ) as executor:
 
         futures = {
+
             executor.submit(
                 generate,
                 sentence
@@ -235,9 +259,10 @@ def prepare(text):
 
             for index, sentence
             in enumerate(sentences)
+
         }
 
-        for future in as_completed(futures):
+        for future in futures:
 
             index = futures[future]
 
@@ -263,6 +288,7 @@ def prepare(text):
 def play_prepared(prepared):
 
     if not prepared:
+
         return False
 
     success = True
@@ -325,17 +351,210 @@ def play_prepared(prepared):
 
 
 # =========================================================
-# Speak Full Response
+# STREAMING OFFLINE TTS
+#
+# IMPORTANT:
+#
+# This is the main improvement.
+#
+# Piper prepares only a small number of sentences ahead.
+# Playback starts as soon as the first sentence is ready.
+#
+# We DO NOT wait for the entire response.
 # =========================================================
 
 def speak(text):
 
-    prepared = prepare(text)
+    sentences = split_sentences(text)
 
-    if not prepared:
+    if not sentences:
 
         return False
 
-    return play_prepared(
-        prepared
+    print(
+        f"[OFFLINE TTS] "
+        f"Streaming {len(sentences)} sentences..."
     )
+
+    success = True
+
+    # -----------------------------------------------------
+    # Executor remains alive for the entire response.
+    # -----------------------------------------------------
+
+    executor = ThreadPoolExecutor(
+        max_workers=PIPER_WORKERS
+    )
+
+    futures = {}
+
+    try:
+
+        # -------------------------------------------------
+        # Initial prefetch
+        #
+        # Generate only the first 2 sentences.
+        # -------------------------------------------------
+
+        initial_count = min(
+            PREFETCH,
+            len(sentences)
+        )
+
+        for index in range(initial_count):
+
+            futures[index] = executor.submit(
+                generate,
+                sentences[index]
+            )
+
+        # -------------------------------------------------
+        # Playback in original order
+        # -------------------------------------------------
+
+        for index in range(len(sentences)):
+
+            # ---------------------------------------------
+            # Make sure this sentence has been submitted.
+            #
+            # After the initial prefetch, submit one new
+            # sentence as we move forward.
+            # ---------------------------------------------
+
+            if index not in futures:
+
+                futures[index] = executor.submit(
+                    generate,
+                    sentences[index]
+                )
+
+            future = futures[index]
+
+            # ---------------------------------------------
+            # Wait ONLY for the current sentence.
+            #
+            # NOT for the entire response.
+            # ---------------------------------------------
+
+            try:
+
+                wav_file = future.result()
+
+            except Exception as e:
+
+                print(
+                    "[OFFLINE TTS] "
+                    f"Generation error {index}:",
+                    e
+                )
+
+                wav_file = None
+
+            # ---------------------------------------------
+            # Immediately submit another sentence ahead.
+            # ---------------------------------------------
+
+            next_index = index + PREFETCH
+
+            if next_index < len(sentences):
+
+                if next_index not in futures:
+
+                    futures[next_index] = (
+                        executor.submit(
+                            generate,
+                            sentences[next_index]
+                        )
+                    )
+
+            # ---------------------------------------------
+            # Play current sentence
+            # ---------------------------------------------
+
+            if not wav_file:
+
+                success = False
+
+                continue
+
+            try:
+
+                print(
+                    f"[OFFLINE TTS] "
+                    f"Playing sentence {index}"
+                )
+
+                result = play(
+                    wav_file
+                )
+
+                if not result:
+
+                    success = False
+
+            except Exception as e:
+
+                print(
+                    "[OFFLINE TTS] "
+                    f"Playback error {index}:",
+                    e
+                )
+
+                success = False
+
+            finally:
+
+                # -----------------------------------------
+                # Delete after playback.
+                # -----------------------------------------
+
+                try:
+
+                    wav_file.unlink(
+                        missing_ok=True
+                    )
+
+                    print(
+                        "[OFFLINE TTS] Deleted:",
+                        wav_file.name
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "[OFFLINE TTS] "
+                        "Cleanup error:",
+                        e
+                    )
+
+            # ---------------------------------------------
+            # Remove completed future.
+            # ---------------------------------------------
+
+            futures.pop(
+                index,
+                None
+            )
+
+    finally:
+
+        # -------------------------------------------------
+        # Cancel anything that hasn't started.
+        # -------------------------------------------------
+
+        for future in futures.values():
+
+            if not future.done():
+
+                future.cancel()
+
+        executor.shutdown(
+            wait=True
+        )
+
+    return success
+
+
+# =========================================================
+# End
+# =========================================================
