@@ -1,11 +1,30 @@
 import re
 
 
-VISION = {
+# =========================================================
+# JARVIS PRO
+# Vision Router
+#
+# Three independent domains:
+#
+#   1. CAMERA
+#   2. YOLO VISION
+#   3. SCREEN VISION
+#
+# This router ONLY decides which action to execute.
+# It does NOT start/stop engines directly.
+# =========================================================
 
-    # =================================================
-    # Camera
-    # =================================================
+
+# =========================================================
+# CAMERA COMMANDS
+# =========================================================
+
+CAMERA_COMMANDS = {
+
+    # -----------------------------------------------------
+    # Photo
+    # -----------------------------------------------------
 
     "take photo": {
         "action": "capture"
@@ -27,6 +46,14 @@ VISION = {
         "action": "capture"
     },
 
+    "capture photo": {
+        "action": "capture"
+    },
+
+    # -----------------------------------------------------
+    # Camera Preview
+    # -----------------------------------------------------
+
     "open camera": {
         "action": "camera_preview"
     },
@@ -34,6 +61,18 @@ VISION = {
     "start camera": {
         "action": "camera_preview"
     },
+
+    "show camera": {
+        "action": "camera_preview"
+    },
+
+    "camera preview": {
+        "action": "camera_preview"
+    },
+
+    # -----------------------------------------------------
+    # Camera Close
+    # -----------------------------------------------------
 
     "close camera": {
         "action": "camera_close"
@@ -43,9 +82,13 @@ VISION = {
         "action": "camera_close"
     },
 
-    # =================================================
+    "turn off camera": {
+        "action": "camera_close"
+    },
+
+    # -----------------------------------------------------
     # Recording
-    # =================================================
+    # -----------------------------------------------------
 
     "start recording": {
         "action": "start_recording"
@@ -59,6 +102,10 @@ VISION = {
         "action": "start_recording"
     },
 
+    "start video recording": {
+        "action": "start_recording"
+    },
+
     "stop recording": {
         "action": "stop_recording"
     },
@@ -67,9 +114,13 @@ VISION = {
         "action": "stop_recording"
     },
 
-    # =================================================
+    "stop video recording": {
+        "action": "stop_recording"
+    },
+
+    # -----------------------------------------------------
     # Camera Status
-    # =================================================
+    # -----------------------------------------------------
 
     "camera status": {
         "action": "camera_status"
@@ -79,37 +130,22 @@ VISION = {
         "action": "camera_status"
     },
 
-    # =================================================
-    # Vision Start / Stop
-    # =================================================
-
-    "start vision": {
-        "action": "vision_start"
+    "is the camera open": {
+        "action": "camera_status"
     },
 
-    "start computer vision": {
-        "action": "vision_start"
-    },
+}
 
-    "enable vision": {
-        "action": "vision_start"
-    },
 
-    "stop vision": {
-        "action": "vision_stop"
-    },
+# =========================================================
+# YOLO VISION COMMANDS
+# =========================================================
 
-    "stop computer vision": {
-        "action": "vision_stop"
-    },
+YOLO_VISION_COMMANDS = {
 
-    "disable vision": {
-        "action": "vision_stop"
-    },
-
-    # =================================================
-    # Vision Description
-    # =================================================
+    # -----------------------------------------------------
+    # Scene Description
+    # -----------------------------------------------------
 
     "what do you see": {
         "action": "vision_describe"
@@ -138,10 +174,62 @@ VISION = {
     "what is in front of me": {
         "action": "vision_describe"
     },
-    
-    # =================================================
-    # Screen Vision
-    # =================================================
+
+    "look around": {
+        "action": "vision_describe"
+    },
+
+    "analyze the scene": {
+        "action": "vision_describe"
+    },
+
+    # -----------------------------------------------------
+    # Position
+    # -----------------------------------------------------
+
+    "what is in the center": {
+        "action": "vision_position",
+        "position": "center"
+    },
+
+    "what is in center": {
+        "action": "vision_position",
+        "position": "center"
+    },
+
+    "what is in the middle": {
+        "action": "vision_position",
+        "position": "center"
+    },
+
+    "what is on the left": {
+        "action": "vision_position",
+        "position": "left"
+    },
+
+    "what is on my left": {
+        "action": "vision_position",
+        "position": "left"
+    },
+
+    "what is on the right": {
+        "action": "vision_position",
+        "position": "right"
+    },
+
+    "what is on my right": {
+        "action": "vision_position",
+        "position": "right"
+    },
+
+}
+
+
+# =========================================================
+# SCREEN VISION COMMANDS
+# =========================================================
+
+SCREEN_VISION_COMMANDS = {
 
     "what am i looking at": {
         "action": "screen_vision_analyze"
@@ -187,71 +275,105 @@ VISION = {
         "action": "screen_vision_analyze"
     },
 
-    # =================================================
-    # Vision Position
-    # =================================================
-
-    "what is in the center": {
-        "action": "vision_position",
-        "position": "center"
-    },
-
-    "what is in center": {
-        "action": "vision_position",
-        "position": "center"
-    },
-
-    "what is in the middle": {
-        "action": "vision_position",
-        "position": "center"
-    },
-
-    "what is on the left": {
-        "action": "vision_position",
-        "position": "left"
-    },
-
-    "what is on my left": {
-        "action": "vision_position",
-        "position": "left"
-    },
-
-    "what is on the right": {
-        "action": "vision_position",
-        "position": "right"
-    },
-
-    "what is on my right": {
-        "action": "vision_position",
-        "position": "right"
+    "read my screen": {
+        "action": "screen_vision_analyze"
     },
 
 }
 
 
-def vision_route(command):
+# =========================================================
+# YOLO OBJECT ALIASES
+# =========================================================
 
-    command = command.lower().strip()
+OBJECT_ALIASES = {
 
-    # =================================================
-    # 1. Exact static match
-    # =================================================
+    "people": "person",
+    "persons": "person",
 
-    if command in VISION:
+    "phones": "cell phone",
+    "phone": "cell phone",
+    "cellphone": "cell phone",
+    "cellphones": "cell phone",
+    "cell phones": "cell phone",
+    "mobile": "cell phone",
+    "mobiles": "cell phone",
+    "mobile phone": "cell phone",
+    "mobile phones": "cell phone",
 
-        return [
-            VISION[command]
-        ]
+    "cars": "car",
 
-    # =================================================
-    # 2. Dynamic object count
-    #
-    # Examples:
-    # "how many people are there"
-    # "how many persons"
-    # "how many cars"
-    # "how many bottles do you see"
-    # =================================================
+    "bikes": "bicycle",
+    "bike": "bicycle",
+    "bicycles": "bicycle",
+
+    "dogs": "dog",
+    "cats": "cat",
+}
+
+
+# =========================================================
+# POSITION PATTERNS
+# =========================================================
+
+POSITION_PATTERNS = {
+
+    "left": [
+        "what is on the left",
+        "what is on my left",
+        "what's on the left",
+        "what's on my left",
+        "what do you see on the left",
+        "what do you see on my left",
+    ],
+
+    "center": [
+        "what is in the center",
+        "what is in center",
+        "what is in the middle",
+        "what's in the center",
+        "what's in center",
+        "what's in the middle",
+        "what do you see in the center",
+        "what do you see in the middle",
+    ],
+
+    "right": [
+        "what is on the right",
+        "what is on my right",
+        "what's on the right",
+        "what's on my right",
+        "what do you see on the right",
+        "what do you see on my right",
+    ],
+}
+
+
+# =========================================================
+# NORMALIZE OBJECT
+# =========================================================
+
+def _normalize_object(object_name):
+
+    object_name = object_name.strip().lower()
+
+    return OBJECT_ALIASES.get(
+        object_name,
+        object_name
+    )
+
+
+# =========================================================
+# YOLO OBJECT COUNT
+#
+# Examples:
+#
+#   how many people
+#   how many cars are there
+#   how many bottles do you see
+# =========================================================
+
+def _match_object_count(command):
 
     match = re.fullmatch(
         r"how many (.+?)(?: are there| do you see| can you see)?",
@@ -259,158 +381,214 @@ def vision_route(command):
         re.IGNORECASE,
     )
 
-    if match:
+    if not match:
 
-        object_name = match.group(1).strip()
+        return None
 
-        if object_name:
+    object_name = match.group(1).strip()
 
-            # Normalize common object names
-            aliases = {
-                "people": "person",
-                "persons": "person",
-                "phones": "cell phone",
-                "cellphones": "cell phone",
-                "cell phones": "cell phone",
-                "mobile": "cell phone",
-                "mobiles": "cell phone",
-                "mobile phones": "cell phone",
-                "cars": "car",
-                "bikes": "bicycle",
-                "bicycles": "bicycle",
-                "dogs": "dog",
-                "cats": "cat",
-            }
+    if not object_name:
 
-            object_name = aliases.get(
-                object_name,
-                object_name
-            )
+        return None
 
-            return [
-                {
-                    "action": "vision_count",
-                    "object": object_name,
-                }
-            ]
+    object_name = _normalize_object(
+        object_name
+    )
 
-    # =================================================
-    # 3. Dynamic object existence
-    #
-    # Examples:
-    # "is there a phone"
-    # "is there a person"
-    # "do you see a phone"
-    # "can you see a car"
-    # =================================================
+    return {
+        "action": "vision_count",
+        "object": object_name,
+    }
+
+
+# =========================================================
+# YOLO OBJECT EXISTENCE
+#
+# Examples:
+#
+#   is there a person
+#   do you see a phone
+#   can you see a car
+# =========================================================
+
+def _match_object_existence(command):
 
     match = re.fullmatch(
-        r"(?:is there|do you see|can you see)\s+(?:a|an|the)?\s*(.+?)(?:\?|)?",
+        r"(?:is there|do you see|can you see)"
+        r"\s+(?:a|an|the)?\s*(.+?)(?:\?)?",
         command,
         re.IGNORECASE,
     )
 
-    if match:
+    if not match:
 
-        object_name = match.group(1).strip()
+        return None
 
-        if object_name:
+    object_name = match.group(1).strip()
 
-            aliases = {
-                "people": "person",
-                "persons": "person",
-                "phone": "cell phone",
-                "phones": "cell phone",
-                "cellphone": "cell phone",
-                "cellphones": "cell phone",
-                "mobile": "cell phone",
-                "mobile phone": "cell phone",
-                "mobiles": "cell phone",
-                "car": "car",
-                "cars": "car",
-                "bike": "bicycle",
-                "bikes": "bicycle",
-            }
+    if not object_name:
 
-            object_name = aliases.get(
-                object_name,
-                object_name
-            )
+        return None
 
-            return [
-                {
-                    "action": "vision_check",
-                    "object": object_name,
-                }
-            ]
+    object_name = _normalize_object(
+        object_name
+    )
 
-    # =================================================
-    # 4. Dynamic position
-    # =================================================
-
-    position_patterns = {
-
-        "left": [
-            "what is on the left",
-            "what is on my left",
-            "what's on the left",
-            "what's on my left",
-            "what do you see on the left",
-            "what do you see on my left",
-        ],
-
-        "center": [
-            "what is in the center",
-            "what is in center",
-            "what is in the middle",
-            "what's in the center",
-            "what's in center",
-            "what's in the middle",
-            "what do you see in the center",
-            "what do you see in the middle",
-        ],
-
-        "right": [
-            "what is on the right",
-            "what is on my right",
-            "what's on the right",
-            "what's on my right",
-            "what do you see on the right",
-            "what do you see on my right",
-        ],
+    return {
+        "action": "vision_check",
+        "object": object_name,
     }
 
-    for position, phrases in position_patterns.items():
+
+# =========================================================
+# YOLO POSITION
+# =========================================================
+
+def _match_position(command):
+
+    for position, phrases in POSITION_PATTERNS.items():
 
         for phrase in phrases:
 
             if command == phrase:
 
-                return [
-                    {
-                        "action": "vision_position",
-                        "position": position,
-                    }
-                ]
+                return {
+                    "action": "vision_position",
+                    "position": position,
+                }
 
-    # =================================================
-    # 5. Phrase matching for static commands
-    # =================================================
+    return None
+
+
+# =========================================================
+# STATIC COMMAND MATCHER
+# =========================================================
+
+def _match_static(command, commands):
+
+    # Exact match first.
+
+    if command in commands:
+
+        return commands[command]
+
+    # Longer phrases first.
+    # Prevents a shorter phrase from winning
+    # when a more specific phrase exists.
 
     for key in sorted(
-        VISION.keys(),
+        commands.keys(),
         key=len,
         reverse=True
     ):
 
         if key in command:
 
-            return [
-                VISION[key]
-            ]
+            return commands[key]
 
-    # =================================================
-    # No Vision match
-    # =================================================
+    return None
+
+
+# =========================================================
+# MAIN VISION ROUTER
+# =========================================================
+
+def vision_route(command):
+
+    if not command:
+
+        return None
+
+    command = command.lower().strip()
+
+    # =====================================================
+    # 1. CAMERA
+    # =====================================================
+
+    plan = _match_static(
+        command,
+        CAMERA_COMMANDS
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # 2. SCREEN VISION
+    #
+    # IMPORTANT:
+    # Check screen vision BEFORE generic YOLO phrases.
+    #
+    # Example:
+    #
+    # "what do you see on my screen"
+    #
+    # must never become:
+    #
+    # vision_describe
+    # =====================================================
+
+    plan = _match_static(
+        command,
+        SCREEN_VISION_COMMANDS
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # 3. YOLO OBJECT COUNT
+    # =====================================================
+
+    plan = _match_object_count(
+        command
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # 4. YOLO OBJECT EXISTENCE
+    # =====================================================
+
+    plan = _match_object_existence(
+        command
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # 5. YOLO POSITION
+    # =====================================================
+
+    plan = _match_position(
+        command
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # 6. YOLO SCENE DESCRIPTION
+    # =====================================================
+
+    plan = _match_static(
+        command,
+        YOLO_VISION_COMMANDS
+    )
+
+    if plan:
+
+        return [plan]
+
+    # =====================================================
+    # No Vision Match
+    # =====================================================
 
     return None
