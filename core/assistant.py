@@ -46,6 +46,7 @@ from core.busy_manager import (
 )
 
 from ai.intent import detect
+from core.fast_router import fast_route
 
 def run():
 
@@ -241,12 +242,55 @@ def run():
 
         if is_busy():
 
-            mode = detect(query)
+            # =================================================
+            # FAST ACTION PREEMPTION
+            #
+            # Deterministic commands such as:
+            #
+            # - reminders
+            # - volume
+            # - brightness
+            # - screenshot
+            # - Spotify controls
+            # - WhatsApp actions
+            # - system commands
+            #
+            # should execute immediately even when another
+            # conversation/task is running.
+            # =================================================
 
-            # -------------------------------------------------
-            # Normal conversation immediately replaces
-            # the previous conversation.
-            # -------------------------------------------------
+            fast_plan = fast_route(query)
+
+            if fast_plan:
+
+                print(
+                    "[FAST PREEMPT] "
+                    "Immediate deterministic command detected."
+                )
+
+                print(
+                    "[FAST PREEMPT PLAN]",
+                    fast_plan
+                )
+
+                # Stop current speech/task.
+                interrupt()
+
+                # Execute the new command through the normal
+                # dispatcher. The dispatcher will run fast_route()
+                # again and execute it.
+                dispatch(query)
+
+                continue
+
+            # =================================================
+            # CHAT PREEMPTION
+            #
+            # Normal conversational requests also replace an
+            # active chat immediately.
+            # =================================================
+
+            mode = detect(query)
 
             if mode == "chat":
 
@@ -261,10 +305,12 @@ def run():
 
                 continue
 
-            # -------------------------------------------------
-            # Non-chat long-running task
-            # keeps confirmation behavior.
-            # -------------------------------------------------
+            # =================================================
+            # LONG-RUNNING TASK
+            #
+            # Non-chat / non-fast tasks still require
+            # confirmation before replacing the current task.
+            # =================================================
 
             ask_switch(query)
 

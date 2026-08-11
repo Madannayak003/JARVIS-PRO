@@ -250,7 +250,7 @@ def speak(
         return
 
     # -----------------------------------------------------
-    # Use supplied session
+    # Resolve speech session
     # -----------------------------------------------------
 
     if session is None:
@@ -258,10 +258,28 @@ def speak(
         session = current_session()
 
     # -----------------------------------------------------
-    # If no session exists, create one.
+    # Current session may already be cancelled/invalid.
+    #
+    # This can happen when:
+    #
+    # old AI response
+    #       ↓
+    # user gives new command
+    #       ↓
+    # stop_speaking()
+    #       ↓
+    # old session cancelled
+    #       ↓
+    # new command wants to speak
+    #
+    # Create a fresh session for the new independent speech.
     # -----------------------------------------------------
 
-    if session is None:
+    if (
+        session is None
+        or is_cancelled(session)
+        or not is_current(session)
+    ):
 
         session = start_speech_session()
 
