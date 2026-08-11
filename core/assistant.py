@@ -279,7 +279,10 @@ def run():
                 # Execute the new command through the normal
                 # dispatcher. The dispatcher will run fast_route()
                 # again and execute it.
-                dispatch(query)
+                dispatch(
+                    query,
+                    fast_plan=fast_plan
+                )
 
                 continue
 
@@ -301,7 +304,10 @@ def run():
 
                 interrupt()
 
-                dispatch(query)
+                dispatch(
+                    query,
+                    fast_plan=fast_plan
+                )
 
                 continue
 

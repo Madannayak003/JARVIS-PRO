@@ -5,10 +5,13 @@ from ai.intent import detect
 from core.task_manager import task_manager
 from core.workers import chat_worker
 from core.planner_worker import planner_worker
-from core.action_memory import get_memory
+
+from core.action_memory import (
+    get_memory,
+    set_memory,
+)
+
 from core.executor import execute_ai_plan
-from core.action_memory import get_memory
-from core.action_memory import set_memory
 
 from ai.memory_pipeline import learn
 from ai.memory_view import show_all
@@ -17,12 +20,12 @@ from ai.memory_profile import profile_summary
 
 from core.context import (
     get_value,
-    set_value
+    set_value,
 )
 
 from ai.memory_stats import (
     total,
-    by_category
+    by_category,
 )
 
 from brain.brain_router import BrainRouter
@@ -35,103 +38,16 @@ from core.registry import execute
 
 from brain.screen_followup import is_screen_followup
 
-def dispatch(command):
-    
-    command = command.lower().strip()
-    
-    # ---------------------------------
-    # Clarification Context
-    # ---------------------------------
 
-    clarify = get_memory("clarify_context")
+# =========================================================
+# DISPATCHER
+# =========================================================
 
-    if clarify:
-
-        subject = clarify.get("subject")
-
-        ctype = clarify.get("type")
-
-        if ctype == "generic_action":
-
-            cmd = command.lower()
-
-            if cmd in [
-                "google",
-                "search google",
-                "search on google",
-                "on google"
-            ]:
-
-                set_memory("clarify_context", None)
-
-                execute_ai_plan(
-                    [{
-                        "action": "google_search",
-                        "query": subject
-                    }],
-                    task_manager.event("planner")
-                )
-
-                return
-
-            elif cmd in [
-                "youtube",
-                "search youtube",
-                "search on youtube",
-                "on youtube"
-            ]:
-
-                set_memory("clarify_context", None)
-
-                execute_ai_plan(
-                    [{
-                        "action": "youtube_search",
-                        "query": subject
-                    }],
-                    task_manager.event("planner")
-                )
-
-                return
-
-            elif cmd in [
-                "github",
-                "search github"
-            ]:
-
-                set_memory("clarify_context", None)
-
-                execute_ai_plan(
-                    [{
-                        "action": "github_search",
-                        "query": subject
-                    }],
-                    task_manager.event("planner")
-                )
-
-                return
-
-            elif cmd in [
-                "chatgpt",
-                "search chatgpt"
-            ]:
-
-                set_memory("clarify_context", None)
-
-                execute_ai_plan(
-                    [{
-                        "action": "chatgpt_search",
-                        "query": subject
-                    }],
-                    task_manager.event("planner")
-                )
-
-                return
-            
-# ===========================================================
-# 
-# ===========================================================            
-
-def dispatch(command):
+def dispatch(
+    command,
+    skip_fast=False,
+    fast_plan=None,
+):
 
     command = command.strip()
 
@@ -139,79 +55,289 @@ def dispatch(command):
         return
 
     # =====================================================
-    # HARD FAST ROUTE
-    #
-    # Deterministic commands NEVER go to AI.
+    # CLARIFICATION CONTEXT
     # =====================================================
 
-    fast_plan = fast_route(command)
+    clarify = get_memory(
+        "clarify_context"
+    )
 
-    if fast_plan:
+    if clarify:
 
-        print(
-            "[DISPATCHER] Fast route handled command:",
-            fast_plan,
+        subject = clarify.get(
+            "subject"
         )
 
-        for action in fast_plan:
+        ctype = clarify.get(
+            "type"
+        )
 
-            action_name = action.get("action")
+        if ctype == "generic_action":
 
-            if not action_name:
-                continue
+            cmd = command.lower()
 
-            result = execute(
-                action_name,
-                action,
+            # -------------------------------------------------
+            # Google
+            # -------------------------------------------------
+
+            if cmd in [
+                "google",
+                "search google",
+                "search on google",
+                "on google",
+            ]:
+
+                set_memory(
+                    "clarify_context",
+                    None,
+                )
+
+                execute_ai_plan(
+                    [
+                        {
+                            "action": "google_search",
+                            "query": subject,
+                        }
+                    ],
+                    task_manager.event(
+                        "planner"
+                    ),
+                )
+
+                return
+
+            # -------------------------------------------------
+            # YouTube
+            # -------------------------------------------------
+
+            elif cmd in [
+                "youtube",
+                "search youtube",
+                "search on youtube",
+                "on youtube",
+            ]:
+
+                set_memory(
+                    "clarify_context",
+                    None,
+                )
+
+                execute_ai_plan(
+                    [
+                        {
+                            "action": "youtube_search",
+                            "query": subject,
+                        }
+                    ],
+                    task_manager.event(
+                        "planner"
+                    ),
+                )
+
+                return
+
+            # -------------------------------------------------
+            # GitHub
+            # -------------------------------------------------
+
+            elif cmd in [
+                "github",
+                "search github",
+            ]:
+
+                set_memory(
+                    "clarify_context",
+                    None,
+                )
+
+                execute_ai_plan(
+                    [
+                        {
+                            "action": "github_search",
+                            "query": subject,
+                        }
+                    ],
+                    task_manager.event(
+                        "planner"
+                    ),
+                )
+
+                return
+
+            # -------------------------------------------------
+            # ChatGPT
+            # -------------------------------------------------
+
+            elif cmd in [
+                "chatgpt",
+                "search chatgpt",
+            ]:
+
+                set_memory(
+                    "clarify_context",
+                    None,
+                )
+
+                execute_ai_plan(
+                    [
+                        {
+                            "action": "chatgpt_search",
+                            "query": subject,
+                        }
+                    ],
+                    task_manager.event(
+                        "planner"
+                    ),
+                )
+
+                return
+
+    # =====================================================
+    # FAST ROUTE
+    # =====================================================
+    #
+    # There are now TWO possible ways to reach here:
+    #
+    # 1. Normal dispatch:
+    #
+    #       dispatch(command)
+    #
+    #       → dispatcher calculates fast_plan
+    #
+    # 2. FAST PREEMPTION:
+    #
+    #       assistant.py calculates fast_plan
+    #
+    #       → interrupt()
+    #
+    #       → dispatch(
+    #             command,
+    #             fast_plan=fast_plan
+    #         )
+    #
+    # In case #2 we reuse the existing plan.
+    #
+    # This prevents:
+    #
+    #       fast_route()
+    #       fast_route()
+    #
+    # for the same command.
+    # =====================================================
+
+    if not skip_fast:
+
+        # -------------------------------------------------
+        # Reuse existing plan if assistant already
+        # calculated it.
+        # -------------------------------------------------
+
+        if fast_plan is None:
+
+            fast_plan = fast_route(
+                command
             )
+
+        # -------------------------------------------------
+        # Execute FAST plan
+        # -------------------------------------------------
+
+        if fast_plan:
 
             print(
-                "[DISPATCHER RESULT]",
-                repr(result)
+                "[DISPATCHER] "
+                "Fast route handled command:",
+                fast_plan,
             )
 
-            # -----------------------------------------
-            # Speak skill result
-            # -----------------------------------------
+            for action in fast_plan:
 
-            if result is not None:
+                action_name = action.get(
+                    "action"
+                )
 
-                from voice.manager import speak
+                if not action_name:
+                    continue
 
-                # Boolean results are handled separately
-                if isinstance(result, bool):
+                result = execute(
+                    action_name,
+                    action,
+                )
 
-                    if action_name == "vision_check":
+                print(
+                    "[DISPATCHER RESULT]",
+                    repr(result),
+                )
 
-                        message = (
-                            "Yes, I can see it."
-                            if result
-                            else "No, I don't see it."
-                        )
+                # -----------------------------------------
+                # Speak skill result
+                # -----------------------------------------
 
-                        speak(message)
+                if result is not None:
 
-                elif isinstance(result, dict):
+                    from voice.manager import speak
 
-                    if "error" in result:
+                    # -------------------------------------
+                    # Boolean result
+                    # -------------------------------------
 
-                        speak(result["error"])
+                    if isinstance(
+                        result,
+                        bool,
+                    ):
+
+                        if action_name == "vision_check":
+
+                            message = (
+                                "Yes, I can see it."
+                                if result
+                                else "No, I don't see it."
+                            )
+
+                            speak(
+                                message
+                            )
+
+                    # -------------------------------------
+                    # Dictionary result
+                    # -------------------------------------
+
+                    elif isinstance(
+                        result,
+                        dict,
+                    ):
+
+                        if "error" in result:
+
+                            speak(
+                                result["error"]
+                            )
+
+                        else:
+
+                            speak(
+                                str(result)
+                            )
+
+                    # -------------------------------------
+                    # Normal result
+                    # -------------------------------------
 
                     else:
 
-                        speak(str(result))
+                        speak(
+                            str(result)
+                        )
 
-                else:
+            return
 
-                    speak(str(result))
+    # =====================================================
+    # SCREEN CONTEXT FOLLOW-UP
+    # =====================================================
 
-        return
-    
-    # -------------------------------------------------
-    # Screen Context Follow-up
-    # -------------------------------------------------
-
-    if is_screen_followup(command):
+    if is_screen_followup(
+        command
+    ):
 
         from voice.manager import speak
 
@@ -223,16 +349,18 @@ def dispatch(command):
         task_manager.start(
             "chat",
             chat_worker,
-            command
+            command,
         )
 
         return
 
-    # -------------------------------------------------
-    # Developer Intent
-    # -------------------------------------------------
+    # =====================================================
+    # DEVELOPER INTENT
+    # =====================================================
 
-    mode = detect(command)
+    mode = detect(
+        command
+    )
 
     if mode == "developer":
 
@@ -246,9 +374,9 @@ def dispatch(command):
             "Developer request received."
         )
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # Send directly to Brain Router
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         brain_result = brain_router.route(
             command
@@ -262,13 +390,18 @@ def dispatch(command):
                 "module handled request."
             )
 
-            # -----------------------------------------
+            # ---------------------------------------------
             # Developer Result
-            # -----------------------------------------
+            # ---------------------------------------------
 
-            if brain_result.module == "developer":
+            if (
+                brain_result.module
+                == "developer"
+            ):
 
-                result = brain_result.result
+                result = (
+                    brain_result.result
+                )
 
                 if result is None:
 
@@ -280,16 +413,14 @@ def dispatch(command):
 
                 if result.success:
 
-                    # -----------------------------------------
+                    # -------------------------------------
                     # Developer CREATE result
-                    # -----------------------------------------
-                    #
-                    # CREATE returns WorkspaceResult.
-                    # It contains generated files instead
-                    # of editor patches.
-                    #
+                    # -------------------------------------
 
-                    if hasattr(result, "files"):
+                    if hasattr(
+                        result,
+                        "files",
+                    ):
 
                         files = []
 
@@ -301,32 +432,38 @@ def dispatch(command):
                                 "",
                             )
 
-                            if path and path not in files:
+                            if (
+                                path
+                                and path not in files
+                            ):
 
-                                files.append(path)
+                                files.append(
+                                    path
+                                )
 
                         if files:
 
                             message = (
-                                "Developer project created successfully. "
+                                "Developer project "
+                                "created successfully. "
                                 f"Created {len(files)} files."
                             )
 
                         else:
 
                             message = (
-                                "Developer project created successfully."
+                                "Developer project "
+                                "created successfully."
                             )
 
-                    # -----------------------------------------
+                    # -------------------------------------
                     # Developer EDIT result
-                    # -----------------------------------------
-                    #
-                    # EDIT returns an Editor result containing
-                    # patches.
-                    #
+                    # -------------------------------------
 
-                    elif hasattr(result, "patches"):
+                    elif hasattr(
+                        result,
+                        "patches",
+                    ):
 
                         files = []
 
@@ -338,41 +475,49 @@ def dispatch(command):
                                 "",
                             )
 
-                            if path and path not in files:
+                            if (
+                                path
+                                and path not in files
+                            ):
 
-                                files.append(path)
+                                files.append(
+                                    path
+                                )
 
                         if files:
 
                             if len(files) == 1:
 
                                 message = (
-                                    "Developer edit completed. "
+                                    "Developer edit "
+                                    "completed. "
                                     f"Modified {files[0]}."
                                 )
 
                             else:
 
                                 message = (
-                                    "Developer edit completed. "
+                                    "Developer edit "
+                                    "completed. "
                                     f"Modified {len(files)} files."
                                 )
 
                         else:
 
                             message = (
-                                "Developer edit completed "
-                                "successfully."
+                                "Developer edit "
+                                "completed successfully."
                             )
 
-                    # -----------------------------------------
+                    # -------------------------------------
                     # Unknown Developer result
-                    # -----------------------------------------
+                    # -------------------------------------
 
                     else:
 
                         message = (
-                            "Developer request completed successfully."
+                            "Developer request "
+                            "completed successfully."
                         )
 
                     print(
@@ -416,7 +561,8 @@ def dispatch(command):
         # ---------------------------------------------
 
         print(
-            "[DEVELOPER] Request was not handled."
+            "[DEVELOPER] "
+            "Request was not handled."
         )
 
         speak(
@@ -426,17 +572,21 @@ def dispatch(command):
 
         return
 
-    # -----------------------------
-    # Fast search using Action Memory
-    # -----------------------------
-    
-    memory_result = learn(command)
+    # =====================================================
+    # ACTION MEMORY
+    # =====================================================
 
-    # ---------------------------------
-    # Memory Saved
-    # ---------------------------------
+    memory_result = learn(
+        command
+    )
 
-    if memory_result.get("saved"):
+    # =====================================================
+    # MEMORY SAVED
+    # =====================================================
+
+    if memory_result.get(
+        "saved"
+    ):
 
         print(
             f"[MEMORY] Saved -> "
@@ -444,54 +594,56 @@ def dispatch(command):
             f"{memory_result['value']}"
         )
 
-        if memory_result.get("updated"):
+        from voice.manager import speak
 
-            from voice.manager import speak
+        if memory_result.get(
+            "updated"
+        ):
 
             speak(
-                f"I've updated your {memory_result['key']}."
+                f"I've updated your "
+                f"{memory_result['key']}."
             )
 
         else:
 
-            from voice.manager import speak
-
             speak(
-                f"I'll remember that."
+                "I'll remember that."
             )
 
         return
 
-    # ---------------------------------
-    # Already Known
-    # ---------------------------------
+    # =====================================================
+    # ALREADY KNOWN
+    # =====================================================
 
-    if memory_result.get("already_known"):
+    if memory_result.get(
+        "already_known"
+    ):
 
         from voice.manager import speak
 
-        print("[MEMORY] Already known.")
+        print(
+            "[MEMORY] Already known."
+        )
 
-        speak("I already knew that.")
+        speak(
+            "I already knew that."
+        )
 
         return
-    
-    
-    # ---------------------------------
-    # Show Stored Memories
-    # ---------------------------------
+
+    # =====================================================
+    # SHOW STORED MEMORIES
+    # =====================================================
 
     MEMORY_VIEW_COMMANDS = (
 
         "show my memories",
-
         "list my memories",
-
         "show all memories",
-
         "what do you know about me",
-
-        "show everything you know"
+        "show everything you know",
 
     )
 
@@ -501,31 +653,32 @@ def dispatch(command):
 
         result = show_all()
 
-        print("\n[MEMORY VIEW]\n")
+        print(
+            "\n[MEMORY VIEW]\n"
+        )
 
-        print(result)
+        print(
+            result
+        )
 
-        speak(result)
+        speak(
+            result
+        )
 
         return
-    
-    # ---------------------------------
-    # User Profile
-    # ---------------------------------
+
+    # =====================================================
+    # USER PROFILE
+    # =====================================================
 
     PROFILE_COMMANDS = (
 
         "show my profile",
-
         "my profile",
-
         "user profile",
-
         "profile",
-
         "summarize me",
-
-        "summarize my profile"
+        "summarize my profile",
 
     )
 
@@ -535,29 +688,31 @@ def dispatch(command):
 
         profile = profile_summary()
 
-        print("\n[USER PROFILE]\n")
+        print(
+            "\n[USER PROFILE]\n"
+        )
 
-        print(profile)
+        print(
+            profile
+        )
 
-        speak(profile)
+        speak(
+            profile
+        )
 
         return
-    
-    # ---------------------------------
-    # Memory Statistics
-    # ---------------------------------
+
+    # =====================================================
+    # MEMORY STATISTICS
+    # =====================================================
 
     MEMORY_STATS_COMMANDS = (
 
         "memory statistics",
-
         "memory stats",
-
         "show memory statistics",
-
         "how many memories do you have",
-
-        "how many things do you remember"
+        "how many things do you remember",
 
     )
 
@@ -569,7 +724,10 @@ def dispatch(command):
 
         categories = by_category()
 
-        text = f"I currently remember {count} thing"
+        text = (
+            f"I currently remember "
+            f"{count} thing"
+        )
 
         if count != 1:
 
@@ -579,127 +737,181 @@ def dispatch(command):
 
         for category, value in categories.items():
 
-            text += f"\n{category.title()} : {value}"
+            text += (
+                f"\n{category.title()} : {value}"
+            )
 
-        print("\n[MEMORY STATS]\n")
+        print(
+            "\n[MEMORY STATS]\n"
+        )
 
-        print(text)
+        print(
+            text
+        )
 
-        speak(text)
+        speak(
+            text
+        )
 
         return
-    
-    # ---------------------------------
-    # Forget Memory
-    # ---------------------------------
 
-    forget_result = memory_forget(command)
+    # =====================================================
+    # FORGET MEMORY
+    # =====================================================
+
+    forget_result = memory_forget(
+        command
+    )
 
     if forget_result:
 
         from voice.manager import speak
 
-        print("\n[MEMORY FORGET]\n")
+        print(
+            "\n[MEMORY FORGET]\n"
+        )
 
-        print(forget_result)
+        print(
+            forget_result
+        )
 
-        if forget_result["type"] == "key":
+        if (
+            forget_result["type"]
+            == "key"
+        ):
 
             message = (
                 f"I forgot your "
                 f"{forget_result['key']}."
             )
 
-        elif forget_result["type"] == "category":
+        elif (
+            forget_result["type"]
+            == "category"
+        ):
 
             deleted = len(
-
                 forget_result["deleted"]
-
             )
 
             message = (
-
                 f"I forgot "
-
                 f"{deleted} "
-
                 f"memories from "
-
                 f"{forget_result['category']}."
-
             )
 
         else:
 
             deleted = len(
-
                 forget_result["deleted"]
-
             )
 
             message = (
-
                 f"I forgot "
-
                 f"{deleted} memories."
-
             )
 
-        speak(message)
+        speak(
+            message
+        )
 
         return
 
+    # =====================================================
+    # PENDING SEARCH SUBJECT
+    # =====================================================
 
-    pending = get_memory("pending_subject")
+    pending = get_memory(
+        "pending_subject"
+    )
 
-    if pending and command.startswith("search on"):
+    if (
+        pending
+        and command.startswith("search on")
+    ):
 
-        platform = command.replace("search on", "").strip()
+        platform = (
+            command
+            .replace(
+                "search on",
+                "",
+                1,
+            )
+            .strip()
+        )
 
-        print("[PENDING SUBJECT]", pending)
+        print(
+            "[PENDING SUBJECT]",
+            pending,
+        )
 
         if platform == "youtube":
 
             execute_ai_plan(
-                [{
-                    "action":"youtube_search",
-                    "query": pending
-                }],
-                task_manager.event("planner")
+                [
+                    {
+                        "action": "youtube_search",
+                        "query": pending,
+                    }
+                ],
+                task_manager.event(
+                    "planner"
+                ),
             )
 
-            set_memory("pending_subject", None)
+            set_memory(
+                "pending_subject",
+                None,
+            )
 
             return
 
         elif platform == "google":
 
             execute_ai_plan(
-                [{
-                    "action":"google_search",
-                    "query": pending
-                }],
-                task_manager.event("planner")
+                [
+                    {
+                        "action": "google_search",
+                        "query": pending,
+                    }
+                ],
+                task_manager.event(
+                    "planner"
+                ),
             )
 
-            set_memory("pending_subject", None)
+            set_memory(
+                "pending_subject",
+                None,
+            )
 
             return
 
         elif platform == "github":
 
             execute_ai_plan(
-                [{
-                    "action":"github_search",
-                    "query": pending
-                }],
-                task_manager.event("planner")
+                [
+                    {
+                        "action": "github_search",
+                        "query": pending,
+                    }
+                ],
+                task_manager.event(
+                    "planner"
+                ),
             )
 
-            set_memory("pending_subject", None)
+            set_memory(
+                "pending_subject",
+                None,
+            )
 
             return
+
+    # =====================================================
+    # GENERIC SEARCH USING ACTION MEMORY
+    # =====================================================
 
     if (
         command.startswith("search ")
@@ -709,71 +921,106 @@ def dispatch(command):
         and "chatgpt" not in command
     ):
 
-        current_site = get_memory("site")
+        current_site = get_memory(
+            "site"
+        )
 
-        query = command.replace("search", "", 1).strip()
+        query = (
+            command
+            .replace(
+                "search",
+                "",
+                1,
+            )
+            .strip()
+        )
+
+        # -------------------------------------------------
+        # YouTube
+        # -------------------------------------------------
 
         if current_site == "youtube":
 
-            print("[ACTION MEMORY] YouTube Search")
+            print(
+                "[ACTION MEMORY] "
+                "YouTube Search"
+            )
 
             task_manager.start(
                 "executor",
                 execute_ai_plan,
-                [{
-                    "action": "youtube_search",
-                    "query": query
-                }]
+                [
+                    {
+                        "action": "youtube_search",
+                        "query": query,
+                    }
+                ],
             )
 
             return
+
+        # -------------------------------------------------
+        # Google
+        # -------------------------------------------------
 
         if current_site == "google":
 
-            print("[ACTION MEMORY] Google Search")
+            print(
+                "[ACTION MEMORY] "
+                "Google Search"
+            )
 
             task_manager.start(
                 "executor",
                 execute_ai_plan,
-                [{
-                    "action": "google_search",
-                    "query": query
-                }]
+                [
+                    {
+                        "action": "google_search",
+                        "query": query,
+                    }
+                ],
             )
 
             return
-        
-    # -------------------------------------------------
-    # Existing Chat / Planner
-    # -------------------------------------------------
 
-    mode = detect(command)
+    # =====================================================
+    # EXISTING CHAT / PLANNER
+    # =====================================================
 
+    mode = detect(
+        command
+    )
+
+    # -----------------------------------------------------
     # Continue conversation
+    # -----------------------------------------------------
 
-    if get_value("chat_mode"):
+    if get_value(
+        "chat_mode"
+    ):
+
         mode = "chat"
+
+    # -----------------------------------------------------
+    # Chat
+    # -----------------------------------------------------
 
     if mode == "chat":
 
         task_manager.start(
-
             "chat",
-
             chat_worker,
-
-            command
-
+            command,
         )
+
+    # -----------------------------------------------------
+    # Planner
+    # -----------------------------------------------------
 
     else:
 
         task_manager.start(
-
             "planner",
-
             planner_worker,
-
-            command
-
+            command,
         )
