@@ -33,6 +33,8 @@ from core.fast_router import fast_route
 
 from core.registry import execute
 
+from brain.screen_followup import is_screen_followup
+
 def dispatch(command):
     
     command = command.lower().strip()
@@ -202,6 +204,27 @@ def dispatch(command):
                 else:
 
                     speak(str(result))
+
+        return
+    
+    # -------------------------------------------------
+    # Screen Context Follow-up
+    # -------------------------------------------------
+
+    if is_screen_followup(command):
+
+        from voice.manager import speak
+
+        print(
+            "[SCREEN FOLLOWUP] "
+            "Routing request through conversational context."
+        )
+
+        task_manager.start(
+            "chat",
+            chat_worker,
+            command
+        )
 
         return
 

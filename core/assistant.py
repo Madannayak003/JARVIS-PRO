@@ -1,5 +1,5 @@
 import time
-from voice.manager import speak
+from voice.manager import speak, stop_speaking
 from config.settings import WAKE_WORDS
 
 from core.confirmation import waiting
@@ -60,7 +60,13 @@ def run():
             time.sleep(0.05)
 
             continue
-        
+
+        # ---------------------------------
+        # New user input preempts TTS
+        # ---------------------------------
+
+        stop_speaking()
+
         if handle_priority(query):
             
             time.sleep(0.05)

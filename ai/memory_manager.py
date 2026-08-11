@@ -28,7 +28,7 @@ from ai.memory_store import (
 RULES = [
 
     (
-        r"my name is (.+)",
+        r"^my name is (.+)$",
         "name",
         "identity",
         "name,user,identity",
@@ -36,7 +36,7 @@ RULES = [
     ),
 
     (
-        r"i am (.+)",
+        r"^i am ([A-Za-z][A-Za-z .'-]{0,58})$",
         "name",
         "identity",
         "name,user,identity",
@@ -143,7 +143,7 @@ def learn(text):
 
     for pattern, key, category, keywords, importance in RULES:
 
-        match = re.search(
+        match = re.fullmatch(
             pattern,
             original_text,
             re.IGNORECASE
