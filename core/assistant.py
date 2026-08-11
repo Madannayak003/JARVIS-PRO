@@ -45,6 +45,8 @@ from core.busy_manager import (
     ask_switch
 )
 
+from ai.intent import detect
+
 def run():
 
     speak(startup_greeting())
@@ -101,11 +103,168 @@ def run():
 
             continue        
         
-        # ----------------------------
-        # Busy Manager
-        # ----------------------------
+        # =====================================================
+        # EXISTING CONFIRMATION
+        # =====================================================
 
-        if is_busy() and not waiting():
+        if waiting():
+
+            q = query.lower()
+
+            pending = get()
+
+            # ----------------------------
+            # Busy Manager Confirmation
+            # ----------------------------
+
+            if pending and pending.get("action") == "switch_task":
+
+                if q in [
+                    "yes",
+                    "sure",
+                    "okay",
+                    "ok",
+                    "go ahead",
+                    "continue",
+                    "yes please",
+                    "yes continue",
+                    "yes do it",
+                    "yes switch"
+                ]:
+
+                    new_command = pending["new_command"]
+
+                    interrupt()
+
+                    clear()
+
+                    dispatch(new_command)
+
+                    continue
+
+                elif q in [
+                    "no",
+                    "no thanks",
+                    "never mind",
+                    "stay",
+                    "keep going"
+                ]:
+
+                    speak("Okay. I'll ignore the new request.")
+
+                    clear()
+
+                    continue
+
+            # ----------------------------
+            # Search platform clarification
+            # ----------------------------
+
+            if pending and "context" in pending:
+
+                ctx = pending["context"]
+
+                if "pending_search" in ctx:
+
+                    platforms = {
+                        "google": "google_search",
+                        "youtube": "youtube_search",
+                        "github": "github_search",
+                        "chatgpt": "chatgpt_search"
+                    }
+
+                    for platform, action in platforms.items():
+
+                        if platform in q:
+
+                            set_memory(
+                                "search_platform",
+                                platform
+                            )
+
+                            execute(
+                                action,
+                                {
+                                    "query": ctx["pending_search"]
+                                }
+                            )
+
+                            clear()
+
+                            break
+
+                    if not waiting():
+                        continue
+
+                    pending = get()
+
+            if q in [
+                "yes",
+                "yes sir",
+                "confirm",
+                "do it",
+                "okay",
+                "ok"
+            ]:
+
+                pending = get()
+
+                execute(
+                    pending["action"],
+                    pending["data"]
+                )
+
+                clear()
+
+                continue
+
+            elif q in [
+                "no",
+                "cancel",
+                "stop",
+                "don't",
+                "dont"
+            ]:
+
+                speak("Cancelled.")
+
+                set_value("chat_mode", False)
+
+                clear()
+
+                continue
+
+
+        # =====================================================
+        # ACTIVE TASK / CONVERSATION PREEMPTION
+        # =====================================================
+
+        if is_busy():
+
+            mode = detect(query)
+
+            # -------------------------------------------------
+            # Normal conversation immediately replaces
+            # the previous conversation.
+            # -------------------------------------------------
+
+            if mode == "chat":
+
+                print(
+                    "[CHAT PREEMPT] "
+                    "New conversational request detected."
+                )
+
+                interrupt()
+
+                dispatch(query)
+
+                continue
+
+            # -------------------------------------------------
+            # Non-chat long-running task
+            # keeps confirmation behavior.
+            # -------------------------------------------------
 
             ask_switch(query)
 
@@ -160,134 +319,6 @@ def run():
 
             shutdown()
             continue
-        
-        if waiting():
-
-            q = query.lower()
-            
-            pending = get()
-            
-            # ----------------------------
-            # Busy Manager Confirmation
-            # ----------------------------
-
-            if pending and pending.get("action") == "switch_task":
-
-                if q in [
-                    "yes",
-                    "sure",
-                    "okay",
-                    "ok",
-                    "go ahead",
-                    "continue",
-                    "yes please",
-                    "yes continue",
-                    "yes do it",
-                    "yes switch"
-                ]:
-                    new_command = pending["new_command"]
-
-                    interrupt()
-
-                    clear()
-
-                    dispatch(new_command)
-
-                    continue
-
-                elif q in [
-                    "no",
-                    "no thanks",
-                    "never mind",
-                    "stay",
-                    "keep going"
-                ]:
-                    speak("Okay. I'll ignore the new request.")
-                    clear()
-                    continue
-
-            # ----------------------------
-            # Search platform clarification
-            # ----------------------------
-
-            if pending and "context" in pending:
-
-                ctx = pending["context"]
-
-                if "pending_search" in ctx:
-
-                    platforms = {
-
-                                "google": "google_search",
-
-                                "youtube": "youtube_search",
-
-                                "github": "github_search",
-
-                                "chatgpt": "chatgpt_search"
-
-                            }
-    
-                    for platform, action in platforms.items():
-
-                                if platform in q:
-
-                                    from core.action_memory import set_memory
-
-                                    set_memory("search_platform", platform)
-
-                                    execute(
-                                        action,
-                                        {
-                                            "query": ctx["pending_search"]
-                                        }
-                                    )
-
-                                    clear()
-
-                                    break
-
-                    if not waiting():
-
-                     continue
-                            
-                    pending = get()
-                            
-            if q in [
-                "yes",
-                "yes sir",
-                "confirm",
-                "do it",
-                "okay",
-                "ok"
-            ]:
-
-                pending = get()
-
-                execute(
-                    pending["action"],
-                    pending["data"]
-                )
-
-                clear()
-
-                continue
-
-            elif q in [
-                "no",
-                "cancel",
-                "stop",
-                "don't",
-                "dont"
-            ]:
-
-                speak("Cancelled.")
-
-                set_value("chat_mode", False)
-
-                clear()
-
-                continue
                     
         add_message("user", query)
 

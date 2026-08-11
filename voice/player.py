@@ -2,7 +2,6 @@ import pygame
 import threading
 import time
 
-from voice.state import STOP_EVENT
 
 pygame.mixer.init()
 
@@ -13,15 +12,22 @@ _lock = threading.Lock()
 # Play
 # =========================================================
 
-def play(file):
+def play(
+    file,
+    cancel_event=None,
+):
 
     with _lock:
 
         # -------------------------------------------------
-        # If stop was requested, don't start audio
+        # Cancel before playback
         # -------------------------------------------------
 
-        if STOP_EVENT.is_set():
+        if (
+            cancel_event
+            and cancel_event.is_set()
+        ):
+
             return False
 
         # -------------------------------------------------
@@ -31,8 +37,11 @@ def play(file):
         pygame.mixer.music.stop()
 
         try:
+
             pygame.mixer.music.unload()
+
         except Exception:
+
             pass
 
         # -------------------------------------------------
@@ -43,7 +52,11 @@ def play(file):
 
             pygame.mixer.music.load(file)
 
-            if STOP_EVENT.is_set():
+            if (
+                cancel_event
+                and cancel_event.is_set()
+            ):
+
                 return False
 
             pygame.mixer.music.play()
@@ -51,41 +64,56 @@ def play(file):
         except Exception as e:
 
             print(
-                f"[PLAYER ERROR] Could not play audio: {e}"
+                "[PLAYER ERROR] "
+                f"Could not play audio: {e}"
             )
 
             return False
 
         # -------------------------------------------------
-        # Wait
+        # Monitor playback
         # -------------------------------------------------
 
         while pygame.mixer.music.get_busy():
 
-            if STOP_EVENT.is_set():
+            if (
+                cancel_event
+                and cancel_event.is_set()
+            ):
 
                 pygame.mixer.music.stop()
 
                 try:
+
                     pygame.mixer.music.unload()
+
                 except Exception:
+
                     pass
+
+                print(
+                    "[PLAYER] Playback interrupted"
+                )
 
                 return False
 
-            time.sleep(0.05)
+            time.sleep(0.02)
 
         # -------------------------------------------------
-        # Release pygame resource
+        # Release resource
         # -------------------------------------------------
 
         pygame.mixer.music.stop()
 
         try:
+
             pygame.mixer.music.unload()
+
         except Exception as e:
+
             print(
-                f"[PLAYER] Could not unload audio: {e}"
+                "[PLAYER] Could not unload audio:",
+                e
             )
 
         return True
@@ -97,15 +125,16 @@ def play(file):
 
 def stop():
 
-    STOP_EVENT.set()
-
     with _lock:
 
         pygame.mixer.music.stop()
 
         try:
+
             pygame.mixer.music.unload()
+
         except Exception:
+
             pass
 
 

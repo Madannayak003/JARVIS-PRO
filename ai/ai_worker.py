@@ -1,12 +1,18 @@
 import time
 import re
-import threading
-import queue
 
 from ai.chat import ask_chat
 from ai.memory_manager import learn
-from voice.manager import speak
+
 from core.context import add_message
+
+from voice.manager import (
+    start_speech_session,
+)
+
+from voice.tts_pipeline import (
+    TTSPipeline,
+)
 
 
 # =========================================================
@@ -18,13 +24,17 @@ def clean_for_speech(text):
     Clean AI response for TTS only.
 
     The original AI response remains unchanged for:
+
     - chat history
-    - screen context
     - memory
-    - UI/logs
+    - UI
+    - screen context
+
+    Only the spoken version is cleaned.
     """
 
     if not text:
+
         return ""
 
     text = str(text)
@@ -39,10 +49,13 @@ def clean_for_speech(text):
         text
     )
 
-    text = text.replace("```", "")
+    text = text.replace(
+        "```",
+        ""
+    )
 
     # -----------------------------------------------------
-    # Remove Markdown bold / italic
+    # Remove Markdown bold
     # -----------------------------------------------------
 
     text = re.sub(
@@ -51,11 +64,19 @@ def clean_for_speech(text):
         text
     )
 
+    # -----------------------------------------------------
+    # Remove Markdown underline
+    # -----------------------------------------------------
+
     text = re.sub(
         r"__(.*?)__",
         r"\1",
         text
     )
+
+    # -----------------------------------------------------
+    # Remove Markdown italic
+    # -----------------------------------------------------
 
     text = re.sub(
         r"(?<!\*)\*(?!\s)(.*?)(?<!\s)\*(?!\*)",
@@ -64,7 +85,7 @@ def clean_for_speech(text):
     )
 
     text = re.sub(
-        r"(?<!_)_(?!\s)(.*?)(?<!\s)_(?!_)",
+        r"(?<!_)_(?!\s)(.*?)(?<!_)_",
         r"\1",
         text
     )
@@ -92,7 +113,7 @@ def clean_for_speech(text):
     )
 
     # -----------------------------------------------------
-    # Remove numbered Markdown list markers
+    # Remove numbered list markers
     # -----------------------------------------------------
 
     text = re.sub(
@@ -122,107 +143,45 @@ def clean_for_speech(text):
 
 
 # =========================================================
-# Speech Queue Worker
-# =========================================================
-
-def _speech_worker(
-    speech_queue,
-    stop_event,
-):
-    """
-    Speaks sentences sequentially.
-
-    Only one sentence is sent to TTS at a time.
-    """
-
-    while True:
-
-        if stop_event.is_set():
-            return
-
-        try:
-
-            sentence = speech_queue.get(
-                timeout=0.05
-            )
-
-        except queue.Empty:
-
-            continue
-
-        if sentence is None:
-
-            speech_queue.task_done()
-
-            return
-
-        # -------------------------------------------------
-        # Stop before speaking
-        # -------------------------------------------------
-
-        if stop_event.is_set():
-
-            speech_queue.task_done()
-
-            return
-
-        sentence = clean_for_speech(
-            sentence
-        )
-
-        if not sentence:
-
-            speech_queue.task_done()
-
-            continue
-
-        try:
-
-            # wait=True ensures sentences are spoken
-            # one after another.
-            speak(
-                sentence,
-                wait=True
-            )
-
-        except Exception as e:
-
-            print(
-                "[AI WORKER] Speech error:",
-                e
-            )
-
-        finally:
-
-            speech_queue.task_done()
-
-
-# =========================================================
 # Run Chat
 # =========================================================
 
-def run_chat(question, stop_event):
+def run_chat(
+    question,
+    stop_event
+):
 
-    print("[AI WORKER] Thinking...")
-    # ---------------------------------------
-    # Learn New Memory
-    # ---------------------------------------
+    print(
+        "[AI WORKER] Thinking..."
+    )
 
-    memory_result = learn(question)
+    # =====================================================
+    # Memory
+    # =====================================================
+
+    memory_result = learn(
+        question
+    )
 
     if memory_result["saved"]:
 
         print(
-            f"[MEMORY] Saved -> "
+            "[MEMORY] Saved -> "
             f"{memory_result['key']} = "
             f"{memory_result['value']}"
         )
 
-    elif memory_result.get("already_known"):
+    elif memory_result.get(
+        "already_known"
+    ):
 
         print(
             "[MEMORY] Already known."
         )
+
+    # =====================================================
+    # Start AI Request
+    # =====================================================
 
     t0 = time.perf_counter()
 
@@ -232,43 +191,69 @@ def run_chat(question, stop_event):
     )
 
     stream = session.stream
-    is_developer = session.is_developer
+
+    is_developer = (
+        session.is_developer
+    )
 
     print(
         "Request sent:",
         time.perf_counter() - t0
     )
 
+    # =====================================================
+    # Response State
+    # =====================================================
+
     answer = ""
+
     sentence_buffer = ""
 
-    # -----------------------------------------------------
-    # One speech queue for this response
-    # -----------------------------------------------------
+    # =====================================================
+    # TTS Pipeline
+    # =====================================================
 
-    speech_queue = queue.Queue()
+    voice_session = None
 
-    speech_thread = None
+    tts_pipeline = None
 
     if not is_developer:
 
-        speech_thread = threading.Thread(
-            target=_speech_worker,
-            args=(
-                speech_queue,
-                stop_event,
-            ),
-            daemon=True,
-            name="JARVIS-SpeechWorker",
+        # -------------------------------------------------
+        # Create a NEW voice session for this response.
+        # -------------------------------------------------
+
+        voice_session = (
+            start_speech_session()
         )
 
-        speech_thread.start()
+        # -------------------------------------------------
+        # Create PRO TTS pipeline.
+        #
+        # Sentence generation and playback are now
+        # separated so the next sentence can be prepared
+        # while the current sentence is playing.
+        # -------------------------------------------------
 
-    # -----------------------------------------------------
-    # Developer Mode
-    # -----------------------------------------------------
+        tts_pipeline = TTSPipeline(
+
+            stop_event=stop_event,
+
+            session=voice_session,
+
+        )
+
+        tts_pipeline.start()
+
+    # =====================================================
+    # Developer Response Buffer
+    # =====================================================
 
     developer_answer = ""
+
+    # =====================================================
+    # Stream AI Response
+    # =====================================================
 
     try:
 
@@ -276,13 +261,18 @@ def run_chat(question, stop_event):
 
         for data in stream:
 
+            # -------------------------------------------------
+            # Task interruption
+            # -------------------------------------------------
+
             if stop_event.is_set():
 
                 if first:
 
                     print(
                         "First token:",
-                        time.perf_counter() - t0
+                        time.perf_counter()
+                        - t0
                     )
 
                     first = False
@@ -293,6 +283,10 @@ def run_chat(question, stop_event):
 
                 return
 
+            # -------------------------------------------------
+            # Extract token
+            # -------------------------------------------------
+
             token = data.get(
                 "response",
                 ""
@@ -302,17 +296,25 @@ def run_chat(question, stop_event):
 
                 continue
 
+            # -------------------------------------------------
+            # Terminal output
+            # -------------------------------------------------
+
             print(
                 token,
                 end="",
                 flush=True
             )
 
+            # -------------------------------------------------
+            # Store complete answer
+            # -------------------------------------------------
+
             answer += token
 
-            # --------------------------------------------
+            # =================================================
             # Developer Mode
-            # --------------------------------------------
+            # =================================================
 
             if is_developer:
 
@@ -320,68 +322,88 @@ def run_chat(question, stop_event):
 
                 continue
 
-            # --------------------------------------------
+            # =================================================
             # Normal Chat
-            # --------------------------------------------
+            # =================================================
 
             sentence_buffer += token
 
-            # --------------------------------------------
-            # Sentence extraction
+            # -------------------------------------------------
+            # Extract complete sentences
             #
-            # Important:
-            #
-            # Don't split decimal numbers such as:
+            # Decimal-safe:
             #
             # 1084.80
             # 2.44%
             #
-            # --------------------------------------------
+            # will not be incorrectly split.
+            # -------------------------------------------------
 
             while True:
 
                 match = re.search(
+
                     r"""
                     (?<!\d)
                     [^.!?]+
                     [.!?]+
                     (?=\s|$)
                     """,
+
                     sentence_buffer,
+
                     re.VERBOSE
+
                 )
 
                 if not match:
 
                     break
 
-                sentence = match.group(
-                    0
-                ).strip()
+                # -------------------------------------------------
+                # Extract sentence
+                # -------------------------------------------------
 
-                remaining_start = (
-                    match.end()
+                sentence = (
+                    match.group(0)
+                    .strip()
                 )
+
+                # -------------------------------------------------
+                # Remove extracted sentence
+                # -------------------------------------------------
 
                 sentence_buffer = (
                     sentence_buffer[
-                        remaining_start:
+                        match.end():
                     ]
                 )
 
+                # -------------------------------------------------
+                # Send to TTS pipeline
+                # -------------------------------------------------
+
                 if sentence:
 
-                    speech_queue.put(
-                        sentence
+                    cleaned = (
+                        clean_for_speech(
+                            sentence
+                        )
                     )
+
+                    if cleaned:
+
+                        tts_pipeline.put(
+                            cleaned
+                        )
 
     finally:
 
         print()
 
-    # -----------------------------------------------------
-    # Don't speak if interrupted
-    # -----------------------------------------------------
+    # =====================================================
+    # Check Cancellation
+    # =====================================================
 
     if stop_event.is_set():
 
@@ -391,35 +413,69 @@ def run_chat(question, stop_event):
 
         return
 
-    # -----------------------------------------------------
-    # Speak remaining text
-    # -----------------------------------------------------
+    if (
+        voice_session
+        and voice_session.cancel_event.is_set()
+    ):
+
+        print(
+            "[CHAT] Voice session cancelled"
+        )
+
+        return
+
+    # =====================================================
+    # Remaining Text
+    # =====================================================
 
     remaining = (
         sentence_buffer.strip()
     )
 
-    if remaining and not is_developer:
+    if (
+        remaining
+        and not is_developer
+    ):
 
-        speech_queue.put(
-            remaining
+        cleaned = (
+            clean_for_speech(
+                remaining
+            )
         )
 
-    # -----------------------------------------------------
-    # Finish speech queue
-    # -----------------------------------------------------
+        if cleaned:
+
+            tts_pipeline.put(
+                cleaned
+            )
+
+    # =====================================================
+    # Finish TTS Pipeline
+    # =====================================================
 
     if not is_developer:
 
-        speech_queue.put(None)
+        # -------------------------------------------------
+        # Tell pipeline no more sentences are coming.
+        # -------------------------------------------------
 
-        if speech_thread:
+        tts_pipeline.finish()
 
-            speech_thread.join()
+        # -------------------------------------------------
+        # Wait until:
+        #
+        # - remaining TTS is generated
+        # - queued audio is played
+        # - files are cleaned
+        #
+        # OR cancellation occurs.
+        # -------------------------------------------------
 
-    # -----------------------------------------------------
-    # Save conversation
-    # -----------------------------------------------------
+        tts_pipeline.wait()
+
+    # =====================================================
+    # Save Conversation
+    # =====================================================
 
     if not answer.strip():
 

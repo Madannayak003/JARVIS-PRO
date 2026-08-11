@@ -1,9 +1,21 @@
 import threading
 import requests
 
-from voice.online_edge import speak_online
+from voice.online_edge import (
+    speak_online,
+    generate_audio,
+    play_audio,
+)
+
 from voice.offline_piper import speak_offline
-from voice.state import STOP_EVENT
+
+from voice.state import (
+    create_session,
+    current_session,
+    cancel_current,
+    is_current,
+    is_cancelled,
+)
 
 
 ONLINE = False
@@ -37,10 +49,53 @@ check_internet()
 
 
 # =========================================================
+# Start New Speech Session
+# =========================================================
+
+def start_speech_session():
+
+    """
+    Start a completely new voice response.
+
+    Any previous response becomes permanently invalid.
+    """
+
+    # Stop old audio first.
+    from voice.player import stop as stop_audio
+
+    stop_audio()
+
+    session = create_session()
+
+    print(
+        f"[VOICE] New speech session started: "
+        f"{session.session_id}"
+    )
+
+    return session
+
+
+# =========================================================
 # Voice Worker
 # =========================================================
 
-def _worker(text):
+def _worker(text, session):
+
+    if not text:
+
+        return False
+
+    # -----------------------------------------------------
+    # Never speak cancelled session
+    # -----------------------------------------------------
+
+    if is_cancelled(session):
+
+        print(
+            "[VOICE] Speech cancelled before TTS"
+        )
+
+        return False
 
     # -----------------------------------------------------
     # Online Edge TTS
@@ -50,12 +105,11 @@ def _worker(text):
 
         try:
 
-            speak_online(
+            return speak_online(
                 text,
-                wait=True
+                wait=True,
+                session=session,
             )
-
-            return
 
         except Exception as e:
 
@@ -68,9 +122,15 @@ def _worker(text):
     # Offline Piper
     # -----------------------------------------------------
 
+    if is_cancelled(session):
+
+        return False
+
     try:
 
         speak_offline(text)
+
+        return True
 
     except Exception as e:
 
@@ -79,7 +139,100 @@ def _worker(text):
             e
         )
 
+        return False
 
+# =========================================================
+# PRO TTS PREPARE
+# =========================================================
+
+def prepare_speech(
+    text,
+    session,
+):
+
+    if not text:
+
+        return None
+
+    if not is_current(session):
+
+        return None
+
+    if is_cancelled(session):
+
+        return None
+
+    # -----------------------------------------------------
+    # Online Edge TTS
+    # -----------------------------------------------------
+
+    if ONLINE:
+
+        try:
+
+            return generate_audio(
+                text,
+                session,
+            )
+
+        except Exception as e:
+
+            print(
+                "[VOICE] "
+                "Speech preparation failed:",
+                e
+            )
+
+            return None
+
+    # -----------------------------------------------------
+    # Offline mode
+    #
+    # Returning None tells the pipeline to use the
+    # normal synchronous fallback.
+    # -----------------------------------------------------
+
+    return None
+
+
+# =========================================================
+# PRO TTS PLAY PREPARED AUDIO
+# =========================================================
+
+def play_prepared_speech(
+    audio_file,
+    session,
+):
+
+    if not audio_file:
+
+        return False
+
+    if not is_current(session):
+
+        return False
+
+    if is_cancelled(session):
+
+        return False
+
+    try:
+
+        return play_audio(
+            audio_file,
+            session,
+        )
+
+    except Exception as e:
+
+        print(
+            "[VOICE] "
+            "Prepared playback failed:",
+            e
+        )
+
+        return False
+    
 # =========================================================
 # Speak
 # =========================================================
@@ -87,55 +240,83 @@ def _worker(text):
 def speak(
     text,
     wait=False,
+    session=None,
 ):
 
     global VOICE_THREAD
 
     if not text:
+
         return
 
     # -----------------------------------------------------
-    # IMPORTANT:
-    #
-    # If the previous conversation was stopped,
-    # allow the next voice request to speak again.
+    # Use supplied session
     # -----------------------------------------------------
 
-    if STOP_EVENT.is_set():
+    if session is None:
+
+        session = current_session()
+
+    # -----------------------------------------------------
+    # If no session exists, create one.
+    # -----------------------------------------------------
+
+    if session is None:
+
+        session = start_speech_session()
+
+    # -----------------------------------------------------
+    # Old / cancelled session
+    # -----------------------------------------------------
+
+    if not is_current(session):
 
         print(
-            "[VOICE] Resetting stop state for new speech"
+            "[VOICE] Speech rejected: "
+            f"old session {session.session_id}"
         )
 
-        STOP_EVENT.clear()
+        return
 
     print(
         f"[VOICE] {text}"
     )
 
     # -----------------------------------------------------
-    # Start immediately
+    # Synchronous mode
     #
-    # DO NOT wait for previous voice thread here.
-    #
-    # This is important for streaming AI responses.
-    # -----------------------------------------------------
-
-    VOICE_THREAD = threading.Thread(
-        target=_worker,
-        args=(text,),
-        daemon=True,
-    )
-
-    VOICE_THREAD.start()
-
-    # -----------------------------------------------------
-    # Optional synchronous mode
+    # Used by AI speech queue.
     # -----------------------------------------------------
 
     if wait:
 
-        VOICE_THREAD.join()
+        _worker(
+            text,
+            session
+        )
+
+        return
+
+    # -----------------------------------------------------
+    # Async mode
+    # -----------------------------------------------------
+
+    VOICE_THREAD = threading.Thread(
+
+        target=_worker,
+
+        args=(
+            text,
+            session,
+        ),
+
+        daemon=True,
+
+        name="JARVIS-VoiceWorker",
+
+    )
+
+    VOICE_THREAD.start()
 
 
 # =========================================================
@@ -166,6 +347,8 @@ def stop_speaking():
         "[VOICE] Stopping speech"
     )
 
-    STOP_EVENT.set()
+    # Cancel current response.
+    cancel_current()
 
+    # Stop actual audio.
     stop_audio()
