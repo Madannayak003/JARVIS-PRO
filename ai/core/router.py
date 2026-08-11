@@ -11,7 +11,13 @@ Responsibilities:
 - Fallback when a provider is unavailable
 - Fallback when generation fails
 - Support streaming
+- Detect temporary model quota failures
+- Temporarily skip models that return 429 RESOURCE_EXHAUSTED
 """
+
+import re
+import threading
+import time
 
 from typing import Dict, Optional
 
@@ -29,7 +35,31 @@ from ai.providers.base import AIProvider
 class AIRouter:
     """
     Central AI runtime router.
+
+    Includes temporary model cooldown protection.
+
+    Example:
+
+        Gemini 3.6
+            ↓
+        429 RESOURCE_EXHAUSTED
+            ↓
+        model cooldown
+            ↓
+        Gemini 3.5 Flash Lite
     """
+
+    # ======================================================
+    # Configuration
+    # ======================================================
+
+    # How long a model remains temporarily skipped after
+    # a quota/rate-limit failure.
+    #
+    # 15 minutes is intentionally long enough to prevent
+    # repeated useless requests while still allowing the
+    # model to recover during the same JARVIS session.
+    MODEL_COOLDOWN_SECONDS = 15 * 60
 
     def __init__(
         self,
@@ -46,6 +76,18 @@ class AIRouter:
             str,
             AIProvider
         ] = {}
+
+        # --------------------------------------------------
+        # Temporary model cooldowns
+        #
+        # {
+        #     "gemini:gemini-3.6-flash": expiry_timestamp
+        # }
+        # --------------------------------------------------
+
+        self._model_cooldowns = {}
+
+        self._cooldown_lock = threading.Lock()
 
     # ======================================================
     # Provider Registration
@@ -75,6 +117,241 @@ class AIRouter:
         return self.providers.get(
             provider_name.lower()
         )
+
+    # ======================================================
+    # Model Cooldown Key
+    # ======================================================
+
+    def _cooldown_key(
+        self,
+        provider_name: str,
+        model_name: str,
+    ) -> str:
+
+        return (
+            f"{provider_name.lower()}:"
+            f"{model_name.lower()}"
+        )
+
+    # ======================================================
+    # Detect Quota / Rate Limit Error
+    # ======================================================
+
+    def _is_quota_error(
+        self,
+        error,
+    ) -> bool:
+        """
+        Detect temporary quota/rate-limit failures.
+
+        Handles errors such as:
+
+        429
+        RESOURCE_EXHAUSTED
+        quota exceeded
+        rate limit
+        too many requests
+        """
+
+        if error is None:
+            return False
+
+        text = str(error).lower()
+
+        patterns = (
+            "429",
+            "resource_exhausted",
+            "quota exceeded",
+            "quotaexceeded",
+            "rate limit",
+            "rate_limit",
+            "too many requests",
+        )
+
+        return any(
+            pattern in text
+            for pattern in patterns
+        )
+
+    # ======================================================
+    # Put Model On Cooldown
+    # ======================================================
+
+    def _cooldown_model(
+        self,
+        provider_name: str,
+        model_name: str,
+        error=None,
+    ) -> None:
+        """
+        Temporarily disable a model after a quota/rate-limit
+        failure.
+
+        This does NOT disable the provider permanently.
+
+        It only affects this AIRouter instance.
+        """
+
+        key = self._cooldown_key(
+            provider_name,
+            model_name,
+        )
+
+        cooldown_seconds = (
+            self.MODEL_COOLDOWN_SECONDS
+        )
+
+        # --------------------------------------------------
+        # Try to extract a server-provided retry delay.
+        #
+        # Example:
+        #
+        # retryDelay: '17s'
+        #
+        # We do NOT blindly trust very small retry values
+        # for daily quota errors.
+        #
+        # Minimum cooldown remains configurable.
+        # --------------------------------------------------
+
+        if error:
+
+            text = str(error)
+
+            match = re.search(
+                r"retryDelay['\"]?\s*:\s*['\"]?"
+                r"(\d+)"
+                r"\s*s",
+                text,
+                re.IGNORECASE,
+            )
+
+            if match:
+
+                try:
+
+                    retry_seconds = int(
+                        match.group(1)
+                    )
+
+                    # Only extend the cooldown if the
+                    # provider asks for a longer delay.
+                    cooldown_seconds = max(
+                        cooldown_seconds,
+                        retry_seconds,
+                    )
+
+                except Exception:
+                    pass
+
+        expires_at = (
+            time.monotonic()
+            + cooldown_seconds
+        )
+
+        with self._cooldown_lock:
+
+            self._model_cooldowns[
+                key
+            ] = expires_at
+
+        print(
+            "[AI ROUTER] Model cooldown:",
+            provider_name,
+            model_name,
+            f"({cooldown_seconds}s)",
+        )
+
+    # ======================================================
+    # Check Model Cooldown
+    # ======================================================
+
+    def _is_model_on_cooldown(
+        self,
+        provider_name: str,
+        model_name: str,
+    ) -> bool:
+
+        key = self._cooldown_key(
+            provider_name,
+            model_name,
+        )
+
+        now = time.monotonic()
+
+        with self._cooldown_lock:
+
+            expires_at = (
+                self._model_cooldowns.get(key)
+            )
+
+            if expires_at is None:
+
+                return False
+
+            # --------------------------------------------------
+            # Cooldown expired
+            # --------------------------------------------------
+
+            if now >= expires_at:
+
+                self._model_cooldowns.pop(
+                    key,
+                    None,
+                )
+
+                print(
+                    "[AI ROUTER] Model cooldown expired:",
+                    provider_name,
+                    model_name,
+                )
+
+                return False
+
+            return True
+
+    # ======================================================
+    # Remaining Cooldown
+    # ======================================================
+
+    def _cooldown_remaining(
+        self,
+        provider_name: str,
+        model_name: str,
+    ) -> int:
+
+        key = self._cooldown_key(
+            provider_name,
+            model_name,
+        )
+
+        now = time.monotonic()
+
+        with self._cooldown_lock:
+
+            expires_at = (
+                self._model_cooldowns.get(key)
+            )
+
+            if expires_at is None:
+                return 0
+
+            remaining = (
+                expires_at - now
+            )
+
+            if remaining <= 0:
+
+                self._model_cooldowns.pop(
+                    key,
+                    None,
+                )
+
+                return 0
+
+            return int(
+                remaining
+            )
 
     # ======================================================
     # Candidate Models
@@ -155,10 +432,35 @@ class AIRouter:
             )
 
         # --------------------------------------------------
-        # Find first available provider
+        # Find first available provider/model
         # --------------------------------------------------
 
         for model in candidates:
+
+            # ----------------------------------------------
+            # Temporary cooldown
+            # ----------------------------------------------
+
+            if self._is_model_on_cooldown(
+                model.provider,
+                model.name,
+            ):
+
+                remaining = (
+                    self._cooldown_remaining(
+                        model.provider,
+                        model.name,
+                    )
+                )
+
+                print(
+                    "[AI ROUTER] Model on cooldown:",
+                    model.provider,
+                    model.name,
+                    f"({remaining}s remaining)",
+                )
+
+                continue
 
             provider = self.get_provider(
                 model.provider
@@ -196,7 +498,7 @@ class AIRouter:
             return provider
 
         raise RuntimeError(
-            "No available AI provider for "
+            "No available AI provider/model for "
             f"capability: {request.capability}"
         )
 
@@ -238,6 +540,31 @@ class AIRouter:
         # --------------------------------------------------
 
         for model in candidates:
+
+            # ----------------------------------------------
+            # Temporary cooldown
+            # ----------------------------------------------
+
+            if self._is_model_on_cooldown(
+                model.provider,
+                model.name,
+            ):
+
+                remaining = (
+                    self._cooldown_remaining(
+                        model.provider,
+                        model.name,
+                    )
+                )
+
+                print(
+                    "[AI ROUTER] Skipping model on cooldown:",
+                    model.provider,
+                    model.name,
+                    f"({remaining}s)",
+                )
+
+                continue
 
             provider = self.get_provider(
                 model.provider
@@ -304,6 +631,18 @@ class AIRouter:
                     e,
                 )
 
+                # ------------------------------------------
+                # Quota/rate-limit protection
+                # ------------------------------------------
+
+                if self._is_quota_error(e):
+
+                    self._cooldown_model(
+                        model.provider,
+                        model.name,
+                        e,
+                    )
+
                 continue
 
             # ----------------------------------------------
@@ -338,7 +677,21 @@ class AIRouter:
             )
 
             # ----------------------------------------------
-            # Continue to next provider
+            # Quota/rate-limit protection
+            # ----------------------------------------------
+
+            if self._is_quota_error(
+                response.error
+            ):
+
+                self._cooldown_model(
+                    model.provider,
+                    model.name,
+                    response.error,
+                )
+
+            # ----------------------------------------------
+            # Continue to next model
             # ----------------------------------------------
 
             continue
@@ -397,6 +750,31 @@ class AIRouter:
             # ----------------------------------------------
 
             for model in candidates:
+
+                # ------------------------------------------
+                # Temporary cooldown
+                # ------------------------------------------
+
+                if self._is_model_on_cooldown(
+                    model.provider,
+                    model.name,
+                ):
+
+                    remaining = (
+                        self._cooldown_remaining(
+                            model.provider,
+                            model.name,
+                        )
+                    )
+
+                    print(
+                        "[AI ROUTER] Streaming skip:",
+                        model.provider,
+                        model.name,
+                        f"(cooldown {remaining}s)",
+                    )
+
+                    continue
 
                 provider = self.get_provider(
                     model.provider
@@ -505,6 +883,20 @@ class AIRouter:
                             )
 
                             # ----------------------------------
+                            # Quota/rate-limit protection
+                            # ----------------------------------
+
+                            if self._is_quota_error(
+                                last_error
+                            ):
+
+                                self._cooldown_model(
+                                    model.provider,
+                                    model.name,
+                                    last_error,
+                                )
+
+                            # ----------------------------------
                             # If no text was produced, safely
                             # try the next provider.
                             # ----------------------------------
@@ -559,6 +951,18 @@ class AIRouter:
                         model.provider,
                         e,
                     )
+
+                    # --------------------------------------
+                    # Quota/rate-limit protection
+                    # --------------------------------------
+
+                    if self._is_quota_error(e):
+
+                        self._cooldown_model(
+                            model.provider,
+                            model.name,
+                            e,
+                        )
 
                     continue
 
