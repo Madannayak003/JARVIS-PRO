@@ -17,6 +17,8 @@ ROUTERS = [
     memory_route,
     
     web_route,
+    
+    spotify_route,
 
     browser_route,
     
@@ -27,8 +29,6 @@ ROUTERS = [
     network_route,
 
     media_route,
-    
-    spotify_route,
 
     file_route,
     

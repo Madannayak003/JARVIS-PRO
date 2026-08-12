@@ -48,7 +48,13 @@ from core.busy_manager import (
 from ai.intent import detect
 from core.fast_router import fast_route
 
+from brain.conversation_coordinator import (
+    ConversationCoordinator
+)
+
 def run():
+    
+    conversation_coordinator = ConversationCoordinator()
 
     speak(startup_greeting())
 
@@ -63,6 +69,28 @@ def run():
             time.sleep(0.05)
 
             continue
+
+        # =====================================================
+        # NATURAL CONVERSATION — OBSERVATION ONLY
+        # =====================================================
+
+        conversation_analysis = (
+            conversation_coordinator.observe(
+                query
+            )
+        )
+
+        print(
+            "[CONVERSATION]",
+            conversation_analysis.understanding
+        )
+
+        if conversation_analysis.follow_up:
+
+            print(
+                "[CONVERSATION FOLLOW-UP]",
+                conversation_analysis.follow_up
+            )
 
         # ---------------------------------
         # New user input preempts TTS
