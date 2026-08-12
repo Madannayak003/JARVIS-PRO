@@ -1,0 +1,146 @@
+"""
+JARVIS PRO
+HUD Event Emitter
+
+One-way communication:
+
+JARVIS
+   ↓
+HUDEmitter
+   ↓
+HUDAdapter
+   ↓
+HUDManager
+   ↓
+HUD UI
+
+The HUD never sends commands back to JARVIS.
+"""
+
+from .adapter import HUDAdapter
+from .event_contract import HUDEvent
+
+
+class HUDEmitter:
+
+    @staticmethod
+    def emit(event, data=None):
+
+        data = data or {}
+
+        # -----------------------------------------
+        # Voice
+        # -----------------------------------------
+
+        if event == HUDEvent.LISTENING:
+
+            HUDAdapter.listening()
+            return
+
+        if event == HUDEvent.SPEAKING:
+
+            HUDAdapter.speaking()
+            return
+
+        # -----------------------------------------
+        # AI
+        # -----------------------------------------
+
+        if event == HUDEvent.THINKING:
+
+            HUDAdapter.thinking()
+            return
+
+        if event == HUDEvent.AI_MODEL_CHANGED:
+
+            HUDAdapter.ai_model(
+                data.get("provider", ""),
+                data.get("model", "")
+            )
+            return
+
+        # -----------------------------------------
+        # Tasks
+        # -----------------------------------------
+
+        if event == HUDEvent.TASK_STARTED:
+
+            HUDAdapter.task_started(
+                data.get("task", "")
+            )
+            return
+
+        if event == HUDEvent.EXECUTING:
+
+            HUDAdapter.executing(
+                data.get("task", "")
+            )
+            return
+
+        if event == HUDEvent.TASK_FINISHED:
+
+            HUDAdapter.task_finished(
+                data.get("task", "")
+            )
+            return
+
+        if event == HUDEvent.TASK_FAILED:
+
+            HUDAdapter.task_failed(
+                data.get("task", ""),
+                data.get("error", "")
+            )
+            return
+
+        # -----------------------------------------
+        # Voice mode
+        # -----------------------------------------
+
+        if event == HUDEvent.VOICE_MODE_CHANGED:
+
+            HUDAdapter.voice_mode(
+                data.get("mode", "")
+            )
+            return
+
+        # -----------------------------------------
+        # System
+        # -----------------------------------------
+
+        if event == HUDEvent.SYSTEM_UPDATE:
+
+            HUDAdapter.system_update(
+                data
+            )
+            return
+
+        # -----------------------------------------
+        # Notifications
+        # -----------------------------------------
+
+        if event == HUDEvent.NOTIFICATION:
+
+            HUDAdapter.notify(
+                data.get("message", "")
+            )
+            return
+
+        if event == HUDEvent.ERROR:
+
+            HUDAdapter.error(
+                data.get("message", "")
+            )
+            return
+
+        # -----------------------------------------
+        # Idle
+        # -----------------------------------------
+
+        if event == HUDEvent.IDLE:
+
+            HUDAdapter.idle()
+            return
+
+        print(
+            f"[HUD EMITTER] Unknown event: {event}"
+        )

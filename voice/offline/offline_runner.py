@@ -5,15 +5,15 @@ Offline Voice Runner
 Completely isolated offline voice runtime.
 
 Uses ONLY:
-    offline_stt
-    offline_ai
-    offline_tts
+offline_stt
+offline_ai
+offline_tts
 
 DO NOT import:
-    voice.manager
-    voice.online_edge
-    core.listener
-    core.assistant
+voice.manager
+voice.online_edge
+core.listener
+core.assistant
 """
 
 from voice.offline.offline_stt import (
@@ -28,6 +28,9 @@ from voice.offline.offline_ai import (
 from voice.offline.offline_tts import (
     speak,
 )
+
+from hud.adapter import HUDAdapter
+from voice.mode import get_mode
 
 
 def run():
@@ -52,10 +55,23 @@ def run():
     ai = get_ai()
 
     # -----------------------------------------
+    # Initialize HUD
+    # -----------------------------------------
+
+    HUDAdapter.voice_mode(
+        get_mode()
+    )
+
+    HUDAdapter.idle()
+
+    # -----------------------------------------
     # Calibrate microphone
     # -----------------------------------------
-    
-    print("[OFFLINE VOICE] Preparing microphone...")
+
+    print(
+        "[OFFLINE VOICE] Preparing microphone..."
+    )
+
     mic = calibrate()
 
     print()
@@ -72,13 +88,26 @@ def run():
 
         while True:
 
+            # =================================
+            # LISTENING
+            # =================================
+
+            HUDAdapter.listening()
+
             text = listen_once(
                 mic,
                 timeout=None,
                 phrase_time_limit=10,
             )
 
+            # ---------------------------------
+            # No speech recognized
+            # ---------------------------------
+
             if not text:
+
+                HUDAdapter.idle()
+
                 continue
 
             print()
@@ -87,17 +116,28 @@ def run():
                 text
             )
 
-            # ---------------------------------
-            # Offline AI
-            # ---------------------------------
+            # =================================
+            # THINKING
+            # =================================
 
             print(
                 "[OFFLINE AI] Thinking..."
             )
 
-            response = ai.ask(text)
+            HUDAdapter.thinking()
+
+            response = ai.ask(
+                text
+            )
+
+            # ---------------------------------
+            # AI failed / no response
+            # ---------------------------------
 
             if not response:
+
+                HUDAdapter.idle()
+
                 continue
 
             print()
@@ -106,18 +146,37 @@ def run():
                 response
             )
 
-            # ---------------------------------
-            # Offline Piper
-            # ---------------------------------
+            # =================================
+            # SPEAKING
+            # =================================
 
-            speak(response)
+            HUDAdapter.speaking()
+
+            speak(
+                response
+            )
+
+            # =================================
+            # SPEECH FINISHED
+            # =================================
+
+            HUDAdapter.idle()
 
             print()
 
     except KeyboardInterrupt:
 
+        # -------------------------------------
+        # Always return HUD to idle
+        # -------------------------------------
+
+        HUDAdapter.idle()
+
         print()
-        print("[OFFLINE VOICE] Stopped.")
-        
+        print(
+            "[OFFLINE VOICE] Stopped."
+        )
+
+
 if __name__ == "__main__":
     run()
