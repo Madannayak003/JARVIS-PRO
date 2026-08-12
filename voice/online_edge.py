@@ -19,7 +19,7 @@ CACHE.mkdir(
     exist_ok=True
 )
 
-VOICE = "en-US-GuyNeural"
+VOICE = "en-GB-RyanNeural"
 
 CACHE_MAX_AGE = 24 * 60 * 60
 
