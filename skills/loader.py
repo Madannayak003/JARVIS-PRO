@@ -36,16 +36,12 @@ SKILLS = [
     "network.weather",
     "system.process",
     "system.taskmanager",
-    "screen.screenshot_ai",
-    "screen.screen_vision_skill",
     "files.files",
     "files.file_info",
     "files.recent",
     "files.recycle",
     "utilities.search",
     "files.zip_manager",
-    "camera.camera",
-    "camera.vision_skill",
     "utilities.time_skill",
     "web.personal_links",
     "communication.github",
@@ -54,6 +50,10 @@ SKILLS = [
     "assistant.greetings",
     "communication.whatsapp",
     "communication.contact",
+    "screen.screenshot_ai",
+    "screen.screen_vision_skill",
+    "camera.camera",
+    "camera.vision_skill",
 ]
 
 
