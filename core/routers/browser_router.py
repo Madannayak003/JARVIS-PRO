@@ -279,6 +279,7 @@ def browser_route(command):
     # -----------------------------------------------------
 
     if command in [
+        "next",
         "next youtube",
         "next youtube video",
         "next video",
@@ -298,6 +299,7 @@ def browser_route(command):
     # -----------------------------------------------------
 
     if command in [
+        "previous",
         "previous youtube",
         "previous youtube video",
         "previous video",

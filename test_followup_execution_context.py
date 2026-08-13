@@ -1,94 +1,127 @@
-from brain.conversation_context import ConversationContextManager
-from brain.conversation_understanding import (
-    ConversationUnderstandingEngine,
-)
-from brain.reference_resolver import ReferenceResolver
 from brain.followup_resolver import FollowUpResolver
-
-
-# ============================================================
-# Create context
-# ============================================================
-
-context = ConversationContextManager()
-
-
-# ============================================================
-# Simulate previous executed command
-# ============================================================
-
-context.update(
-    topic="music",
-    task="play music",
-    application="spotify",
-    skill="spotify",
-    intent="spotify_play",
-    action="spotify_play",
-    object="music",
+from brain.conversation_understanding import (
+    ConversationUnderstanding,
+    ConversationRelation,
 )
-
-
-print("\n[CONTEXT]")
-print(context.snapshot())
-
-
-# ============================================================
-# Create engines
-# ============================================================
-
-understanding_engine = (
-    ConversationUnderstandingEngine()
-)
-
-reference_resolver = ReferenceResolver()
-
-followup_resolver = FollowUpResolver(
-    reference_resolver
+from brain.conversation_context import (
+    ConversationContextManager,
 )
 
 
 # ============================================================
-# Understand follow-up
+# Helpers
 # ============================================================
 
-user_input = "make it louder"
+def test_followup(
+    *,
+    name,
+    application,
+    skill,
+    topic,
+    task,
+    intent,
+    action,
+    object,
+    command,
+    references,
+):
 
-understanding = (
-    understanding_engine.understand(
-        user_input=user_input,
-        previous_messages=None,
-        state=None,
+    context = ConversationContextManager()
+
+    context.update(
+        application=application,
+        skill=skill,
+        topic=topic,
+        task=task,
+        intent=intent,
+        action=action,
+        object=object,
     )
+
+    resolver = FollowUpResolver()
+
+    understanding = ConversationUnderstanding(
+        relation=ConversationRelation.FOLLOW_UP,
+        confidence=0.8,
+        reason="test follow-up",
+        raw_input=command,
+        references=references,
+    )
+
+    result = resolver.resolve(
+        understanding,
+        context,
+    )
+
+    print()
+    print("=" * 70)
+    print(name)
+    print("=" * 70)
+    print("Command:")
+    print(command)
+    print()
+    print("Result:")
+    print(result)
+
+
+# ============================================================
+# TEST 1
+# Notepad
+# ============================================================
+
+test_followup(
+    name="NOTEPAD → CLOSE IT",
+
+    application="notepad",
+    skill="system",
+    topic="application",
+    task="open notepad",
+    intent="open",
+    action="open",
+    object="notepad",
+
+    command="close it",
+    references=["it"],
 )
 
 
-print("\n[UNDERSTANDING]")
-print(understanding)
-
-
 # ============================================================
-# Resolve follow-up
+# TEST 2
+# Calculator
 # ============================================================
 
-result = followup_resolver.resolve(
-    understanding,
-    context,
+test_followup(
+    name="CALCULATOR → CLOSE IT",
+
+    application="calculator",
+    skill="system",
+    topic="application",
+    task="open calculator",
+    intent="open",
+    action="open",
+    object="calculator",
+
+    command="close it",
+    references=["it"],
 )
 
 
-print("\n[FOLLOW-UP RESULT]")
-print(result)
-
-
 # ============================================================
-# Explicit reference check
+# TEST 3
+# System volume
 # ============================================================
 
-print("\n[REFERENCE CHECK]")
+test_followup(
+    name="SYSTEM VOLUME → MAKE IT QUIETER",
 
-reference = reference_resolver.resolve(
-    "it",
-    context,
+    application="system",
+    skill="system",
+    topic="system",
+    task="increase volume",
+    intent="volume",
+    action="increase_volume",
+    object="system volume",
+
+    command="make it quieter",
+    references=["it"],
 )
-
-print(reference)

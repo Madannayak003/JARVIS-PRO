@@ -320,14 +320,81 @@ class FollowUpResolver:
         reason = self._build_reason(
             relation=relation,
             references=references,
-            resolved_references=(
-                resolved_references
+            resolved_references=resolved_references,
+            unresolved_references=unresolved_references,
+            context_values=(
+                context_values
+                if is_follow_up
+                else {}
             ),
-            unresolved_references=(
-                unresolved_references
-            ),
-            context_values=context_values,
         )
+
+        # ----------------------------------------------------
+        # Context inheritance
+        #
+        # Existing conversational context should only be
+        # inherited when this request is actually a follow-up.
+        #
+        # A NEW_REQUEST must NOT inherit the previous
+        # application's context.
+        # ----------------------------------------------------
+
+        if is_follow_up:
+
+            active_application = (
+                context_values.get(
+                    "application"
+                )
+            )
+
+            active_skill = (
+                context_values.get(
+                    "skill"
+                )
+            )
+
+            active_topic = (
+                context_values.get(
+                    "topic"
+                )
+            )
+
+            active_task = (
+                context_values.get(
+                    "task"
+                )
+            )
+
+            active_intent = (
+                context_values.get(
+                    "intent"
+                )
+            )
+
+            active_action = (
+                context_values.get(
+                    "action"
+                )
+            )
+
+            active_object = resolved_object
+
+        else:
+
+            active_application = None
+
+            active_skill = None
+
+            active_topic = None
+
+            active_task = None
+
+            active_intent = None
+
+            active_action = None
+
+            active_object = None
+
 
         return FollowUpResolution(
 
@@ -337,43 +404,19 @@ class FollowUpResolver:
 
             relation=relation.value,
 
-            application=(
-                context_values.get(
-                    "application"
-                )
-            ),
+            application=active_application,
 
-            skill=(
-                context_values.get(
-                    "skill"
-                )
-            ),
+            skill=active_skill,
 
-            topic=(
-                context_values.get(
-                    "topic"
-                )
-            ),
+            topic=active_topic,
 
-            task=(
-                context_values.get(
-                    "task"
-                )
-            ),
+            task=active_task,
 
-            intent=(
-                context_values.get(
-                    "intent"
-                )
-            ),
+            intent=active_intent,
 
-            action=(
-                context_values.get(
-                    "action"
-                )
-            ),
+            action=active_action,
 
-            object=resolved_object,
+            object=active_object,
 
             references=references,
 

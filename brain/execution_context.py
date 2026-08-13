@@ -395,6 +395,110 @@ class ExecutionContextResolver:
                 definition[key] = value
 
         # ----------------------------------------------------
+        # Generic application metadata
+        #
+        # Existing routers use:
+        #
+        #     {"action": "open", "app": "notepad"}
+        #
+        # Natural Conversation needs the application/object
+        # information preserved in conversational context.
+        # ----------------------------------------------------
+
+        if action_name == "open":
+
+            app = action_data.get("app")
+
+            if app:
+
+                app = str(app).strip().lower()
+
+                definition["application"] = app
+                definition["object"] = app
+
+                # Windows applications
+                if app in [
+                    "notepad",
+                    "calculator",
+                    "calc",
+                    "paint",
+                    "cmd",
+                    "command prompt",
+                    "powershell",
+                    "explorer",
+                    "file explorer",
+                    "task manager",
+                    "registry editor",
+                    "device manager",
+                    "control panel",
+                    "settings",
+                ]:
+
+                    definition["skill"] = "system"
+                    definition["topic"] = "application"
+                    definition["task"] = (
+                        f"open {app}"
+                    )
+                    definition["intent"] = "open"
+
+                # Browser applications / websites
+                elif app in [
+                    "google",
+                    "youtube",
+                    "chrome",
+                    "gmail",
+                    "github",
+                    "chatgpt",
+                ]:
+
+                    definition["skill"] = "browser"
+                    definition["topic"] = "application"
+                    definition["task"] = (
+                        f"open {app}"
+                    )
+                    definition["intent"] = "open"
+
+                else:
+
+                    definition["topic"] = "application"
+                    definition["task"] = (
+                        f"open {app}"
+                    )
+                    definition["intent"] = "open"
+
+        # ----------------------------------------------------
+        # Generic close_process metadata
+        #
+        # Used by Natural Conversation:
+        #
+        #     "close it"
+        #
+        # -> close_process(notepad)
+        # ----------------------------------------------------
+
+        if action_name == "close_process":
+
+            process = action_data.get("process")
+
+            if process:
+
+                process = str(
+                    process
+                ).strip().lower()
+
+                definition["application"] = process
+                definition["skill"] = "system"
+                definition["topic"] = "application"
+                definition["task"] = (
+                    f"close {process}"
+                )
+                definition["intent"] = "close"
+                definition["action"] = (
+                    "close"
+                )
+                definition["object"] = process
+
+        # ----------------------------------------------------
         # Action itself is always authoritative
         # ----------------------------------------------------
 
