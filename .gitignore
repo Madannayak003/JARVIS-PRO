@@ -70,7 +70,7 @@ workspace/General/
 workspace/Html/
 workspace/Javascript/
 workspace/Web/
-workspace/jarvis/
+workspace/.jarvis/
 
 tools/scaffold.py
 
@@ -215,6 +215,12 @@ voice/cache/
 yolo11n.pt
 
 # ----------------------------------------------------------
+# test folder
+# ----------------------------------------------------------
+
+test/
+
+# ----------------------------------------------------------
 # extr files
 # ----------------------------------------------------------
 
@@ -227,3 +233,5 @@ DEVELOPER_ROADMAP.md
 test_ollama.py
 
 main_online_backup.py
+
+yolo11n.pt
