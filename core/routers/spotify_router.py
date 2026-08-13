@@ -110,18 +110,32 @@ def spotify_route(command):
 
     # =====================================================
     # IMPORTANT:
-    # YouTube commands must NOT be captured here.
+    # YouTube commands must NOT be captured by Spotify.
     # =====================================================
 
     if command in [
 
+        # First video
         "play first video",
+        "play the first video",
         "play first youtube video",
+        "play the first youtube video",
+
+        # YouTube video
         "play youtube video",
+        "play the youtube video",
+
+        # Next
         "play next video",
         "play the next video",
+        "play next youtube video",
+        "play the next youtube video",
+
+        # Previous
         "play previous video",
         "play the previous video",
+        "play previous youtube video",
+        "play the previous youtube video",
 
     ]:
         return None

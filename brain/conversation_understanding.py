@@ -473,6 +473,47 @@ class ConversationUnderstandingEngine:
                 raw_input=raw_input,
                 references=references,
             )
+            
+        # ====================================================
+        # CONTEXTUAL ACTION
+        #
+        # Some commands are valid standalone commands but
+        # become conversational continuations when the active
+        # context matches the application.
+        #
+        # Example:
+        #
+        #     search ESP32 on YouTube
+        #     play the first video
+        #
+        # The second command remains a normal command at the
+        # router level, but Natural Conversation understands
+        # that it continues the active YouTube task.
+        # ====================================================
+
+        contextual_relation = (
+            self._contextual_action_relation(
+                text,
+                state,
+            )
+        )
+
+        if contextual_relation:
+
+            return self._result(
+                relation=contextual_relation,
+                confidence=0.92,
+                reason=(
+                    "Input matches a contextual action "
+                    "for the active application."
+                ),
+                raw_input=raw_input,
+                references=references,
+            )
+
+        # ====================================================
+        # NEW REQUEST
+        # ====================================================    
 
         # ====================================================
         # NEW REQUEST
@@ -654,6 +695,190 @@ class ConversationUnderstandingEngine:
         words = text.split()
 
         return len(words) <= 6
+    
+    # ========================================================
+    # Contextual Action Detection
+    #
+    # Some commands are valid standalone NEW_REQUEST commands
+    # but become conversational continuations when an active
+    # application/task already exists.
+    #
+    # Example:
+    #
+    #   search ESP32 on YouTube
+    #   play the first video
+    #
+    # "play the first video" is a valid standalone command,
+    # so it must NOT globally become FOLLOW_UP.
+    #
+    # It becomes CONTINUATION only when the active context
+    # indicates YouTube.
+    # ========================================================
+
+    @staticmethod
+    def _contextual_action_relation(
+        text: str,
+        state,
+    ):
+        """
+        Detect commands that should be treated as
+        conversational continuations only when the
+        active context supports them.
+
+        Returns:
+            ConversationRelation | None
+        """
+
+        if state is None:
+            return None
+
+        # ----------------------------------------------------
+        # Read active context safely
+        # ----------------------------------------------------
+
+        application = None
+        skill = None
+        topic = None
+
+        try:
+
+            # ConversationContextManager
+            if hasattr(
+                state,
+                "application"
+            ):
+                application = state.application
+
+            if hasattr(
+                state,
+                "skill"
+            ):
+                skill = state.skill
+
+            if hasattr(
+                state,
+                "topic"
+            ):
+                topic = state.topic
+
+            # Snapshot fallback
+            if hasattr(
+                state,
+                "snapshot"
+            ):
+
+                snapshot = state.snapshot()
+
+                if isinstance(snapshot, dict):
+
+                    application = (
+                        application
+                        or snapshot.get("application")
+                    )
+
+                    skill = (
+                        skill
+                        or snapshot.get("skill")
+                    )
+
+                    topic = (
+                        topic
+                        or snapshot.get("topic")
+                    )
+
+        except Exception:
+
+            # Natural conversation must never break
+            # normal JARVIS execution.
+            return None
+
+        application = str(
+            application or ""
+        ).strip().lower()
+
+        skill = str(
+            skill or ""
+        ).strip().lower()
+
+        topic = str(
+            topic or ""
+        ).strip().lower()
+
+        # ====================================================
+        # YouTube contextual actions
+        # ====================================================
+
+        youtube_context = (
+            application == "youtube"
+            or skill == "youtube"
+            or topic == "video"
+        )
+
+        if youtube_context:
+
+            youtube_continuations = {
+
+                "play first video",
+
+                "play the first video",
+
+                "play first youtube video",
+
+                "play the first youtube video",
+
+                "play next video",
+
+                "play the next video",
+
+                "next video",
+
+                "previous video",
+
+                "play previous video",
+
+                "play the previous video",
+            }
+
+            if text in youtube_continuations:
+
+                return (
+                    ConversationRelation.CONTINUATION
+                )
+
+        # ====================================================
+        # Spotify contextual actions
+        # ====================================================
+
+        spotify_context = (
+            application == "spotify"
+            or skill == "spotify"
+            or topic == "music"
+        )
+
+        if spotify_context:
+
+            spotify_continuations = {
+
+                "play next song",
+
+                "play the next song",
+
+                "next song",
+
+                "previous song",
+
+                "play previous song",
+
+                "play the previous song",
+            }
+
+            if text in spotify_continuations:
+
+                return (
+                    ConversationRelation.CONTINUATION
+                )
+
+        return None
 
     # ========================================================
     # Result Builder

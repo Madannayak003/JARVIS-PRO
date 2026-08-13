@@ -279,14 +279,14 @@ def browser_route(command):
     # -----------------------------------------------------
 
     if command in [
-        "next",
         "next youtube",
         "next youtube video",
         "next video",
         "play next video",
         "play the next video",
+        "play next youtube video",
+        "play the next youtube video",
     ]:
-
         return [
             {
                 "action": "youtube_next"
@@ -299,19 +299,19 @@ def browser_route(command):
     # -----------------------------------------------------
 
     if command in [
-        "previous",
         "previous youtube",
         "previous youtube video",
         "previous video",
         "play previous video",
         "play the previous video",
+        "play previous youtube video",
+        "play the previous youtube video",
     ]:
-
         return [
             {
                 "action": "youtube_previous"
             }
-        ]    
+        ]
 
     # -----------------------------------------------------
     # Windows Applications
