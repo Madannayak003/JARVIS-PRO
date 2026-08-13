@@ -38,6 +38,7 @@ from core.registry import execute
 
 from brain.screen_followup import is_screen_followup
 
+from brain.conversation_coordinator import conversation_coordinator
 
 # =========================================================
 # DISPATCHER
@@ -268,6 +269,74 @@ def dispatch(
                     "[DISPATCHER RESULT]",
                     repr(result),
                 )
+
+                # =========================================
+                # NATURAL CONVERSATION
+                # Record successful execution AFTER the
+                # existing skill has executed.
+                #
+                # IMPORTANT:
+                # This ONLY records context.
+                # It does NOT execute anything.
+                # =========================================
+
+                try:
+
+                    conversation_coordinator.record_execution(
+
+                        topic=action.get(
+                            "topic"
+                        ),
+
+                        task=action.get(
+                            "task"
+                        ),
+
+                        application=action.get(
+                            "app"
+                            or action.get("application")
+                        ),
+
+                        skill=action.get(
+                            "skill"
+                        ),
+
+                        intent=action.get(
+                            "intent"
+                        ),
+
+                        action=action_name,
+
+                        object=action.get(
+                            "object"
+                        ),
+
+                        objects=action.get(
+                            "objects"
+                        ),
+
+                        result=result,
+
+                    )
+
+                    print(
+                        "[CONVERSATION EXECUTION]",
+                        conversation_coordinator.context.snapshot(),
+                    )
+
+                except Exception as e:
+
+                    # -------------------------------------
+                    # CRITICAL SAFETY RULE
+                    #
+                    # Natural Conversation must NEVER
+                    # break the existing dispatcher.
+                    # -------------------------------------
+
+                    print(
+                        "[CONVERSATION] "
+                        f"Execution context update failed: {e}"
+                    )
 
                 # -----------------------------------------
                 # Speak skill result
