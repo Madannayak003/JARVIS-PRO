@@ -48,13 +48,12 @@ from core.busy_manager import (
 from ai.intent import detect
 from core.fast_router import fast_route
 
+
 from brain.conversation_coordinator import (
-    ConversationCoordinator
+    conversation_coordinator,
 )
 
 def run():
-    
-    conversation_coordinator = ConversationCoordinator()
 
     speak(startup_greeting())
 

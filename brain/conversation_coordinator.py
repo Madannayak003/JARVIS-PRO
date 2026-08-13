@@ -41,7 +41,9 @@ from brain.conversation_understanding import (
 
 from brain.conversation_context import (
     ConversationContextManager,
+    conversation_context,
 )
+
 
 from brain.reference_resolver import (
     ReferenceResolver,
@@ -147,7 +149,8 @@ class ConversationCoordinator:
 
         self.context = (
             context_manager
-            or ConversationContextManager()
+            if context_manager is not None
+            else conversation_context
         )
 
         # ----------------------------------------------------
@@ -198,6 +201,16 @@ class ConversationCoordinator:
     ) -> ConversationAnalysis:
 
         raw_input = user_input or ""
+        
+        print(
+            "[CONVERSATION DEBUG] analyze context:",
+            id(self.context)
+        )
+
+        print(
+            "[CONVERSATION DEBUG] analyze context snapshot:",
+            self.context.snapshot()
+        )
 
         # ----------------------------------------------------
         # Update last input
@@ -504,6 +517,16 @@ class ConversationCoordinator:
 
             last_result=result,
 
+        )
+        
+        print(
+            "[CONVERSATION DEBUG] record_execution context:",
+            id(self.context)
+        )
+
+        print(
+            "[CONVERSATION DEBUG] context after execution:",
+            self.context.snapshot()
         )
 
     # ========================================================

@@ -39,6 +39,7 @@ from core.registry import execute
 from brain.screen_followup import is_screen_followup
 
 from brain.conversation_coordinator import conversation_coordinator
+from brain.execution_context import execution_context_resolver
 
 # =========================================================
 # DISPATCHER
@@ -272,48 +273,46 @@ def dispatch(
 
                 # =========================================
                 # NATURAL CONVERSATION
-                # Record successful execution AFTER the
-                # existing skill has executed.
                 #
-                # IMPORTANT:
-                # This ONLY records context.
-                # It does NOT execute anything.
+                # Convert the already-executed action into
+                # semantic conversational context.
+                #
+                # This does NOT execute anything.
                 # =========================================
 
                 try:
 
+                    execution_context = (
+                        execution_context_resolver.resolve(
+
+                            action_name=action_name,
+
+                            action_data=action,
+
+                            result=result,
+
+                        )
+                    )
+
                     conversation_coordinator.record_execution(
 
-                        topic=action.get(
-                            "topic"
+                        topic=execution_context.topic,
+
+                        task=execution_context.task,
+
+                        application=(
+                            execution_context.application
                         ),
 
-                        task=action.get(
-                            "task"
-                        ),
+                        skill=execution_context.skill,
 
-                        application=action.get(
-                            "app"
-                            or action.get("application")
-                        ),
+                        intent=execution_context.intent,
 
-                        skill=action.get(
-                            "skill"
-                        ),
+                        action=execution_context.action,
 
-                        intent=action.get(
-                            "intent"
-                        ),
+                        object=execution_context.object,
 
-                        action=action_name,
-
-                        object=action.get(
-                            "object"
-                        ),
-
-                        objects=action.get(
-                            "objects"
-                        ),
+                        objects=execution_context.objects,
 
                         result=result,
 
@@ -327,10 +326,8 @@ def dispatch(
                 except Exception as e:
 
                     # -------------------------------------
-                    # CRITICAL SAFETY RULE
-                    #
                     # Natural Conversation must NEVER
-                    # break the existing dispatcher.
+                    # break existing JARVIS execution.
                     # -------------------------------------
 
                     print(
