@@ -41,6 +41,10 @@ from brain.screen_followup import is_screen_followup
 from brain.conversation_coordinator import conversation_coordinator
 from brain.execution_context import execution_context_resolver
 
+from brain.followup_execution_bridge import (
+    followup_execution_bridge,
+)
+
 # =========================================================
 # DISPATCHER
 # =========================================================
@@ -396,6 +400,153 @@ def dispatch(
                         )
 
             return
+
+    # =====================================================
+    # NATURAL CONVERSATION FOLLOW-UP EXECUTION
+    # =====================================================
+    #
+    # Fast routing has already been given priority.
+    #
+    # If the command was not a direct fast command,
+    # check whether Natural Conversation can resolve it
+    # using the active conversational context.
+    #
+    # Example:
+    #
+    #     play music
+    #     make it louder
+    #
+    # The FollowUpResolver understands:
+    #
+    #     "it" -> music
+    #
+    # The FollowUpExecutionBridge converts the semantic
+    # follow-up into an existing JARVIS action.
+    #
+    # Natural Conversation does NOT execute directly.
+    # The normal registry executor remains authoritative.
+    # =====================================================
+
+    try:
+
+        conversation_analysis = (
+            conversation_coordinator.analyze(
+                command
+            )
+        )
+
+        follow_up = (
+            conversation_analysis.follow_up
+        )
+
+        follow_up_plan = (
+            followup_execution_bridge.resolve(
+
+                raw_input=command,
+
+                follow_up=follow_up,
+
+            )
+        )
+
+        if follow_up_plan:
+
+            print(
+                "[CONVERSATION FOLLOW-UP] "
+                "Execution plan:",
+                follow_up_plan,
+            )
+
+            for action in follow_up_plan:
+
+                action_name = action.get(
+                    "action"
+                )
+
+                if not action_name:
+                    continue
+
+                print(
+                    "[CONVERSATION FOLLOW-UP] "
+                    f"Executing {action_name}"
+                )
+
+                result = execute(
+                    action_name,
+                    action,
+                )
+
+                print(
+                    "[CONVERSATION FOLLOW-UP RESULT]",
+                    repr(result),
+                )
+
+                # -----------------------------------------
+                # Update conversational context
+                # -----------------------------------------
+
+                try:
+
+                    execution_context = (
+                        execution_context_resolver.resolve(
+
+                            action_name=action_name,
+
+                            action_data=action,
+
+                            result=result,
+
+                        )
+                    )
+
+                    conversation_coordinator.record_execution(
+
+                        topic=execution_context.topic,
+
+                        task=execution_context.task,
+
+                        application=(
+                            execution_context.application
+                        ),
+
+                        skill=execution_context.skill,
+
+                        intent=execution_context.intent,
+
+                        action=execution_context.action,
+
+                        object=execution_context.object,
+
+                        objects=execution_context.objects,
+
+                        result=result,
+
+                    )
+
+                    print(
+                        "[CONVERSATION EXECUTION]",
+                        conversation_coordinator.context.snapshot(),
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "[CONVERSATION] "
+                        f"Follow-up context update failed: {e}"
+                    )
+
+            return
+
+    except Exception as e:
+
+        # -------------------------------------------------
+        # Natural Conversation must NEVER break JARVIS.
+        # -------------------------------------------------
+
+        print(
+            "[CONVERSATION] "
+            f"Follow-up execution failed safely: {e}"
+        )
 
     # =====================================================
     # SCREEN CONTEXT FOLLOW-UP
