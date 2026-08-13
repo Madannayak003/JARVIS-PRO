@@ -145,6 +145,24 @@ def browser_route(command):
         ]
         
     # -----------------------------------------------------
+    # Search <query> on YouTube
+    # -----------------------------------------------------
+
+    if command.startswith("search ") and command.endswith(" on youtube"):
+
+        query = command[
+            len("search "):-len(" on youtube")
+        ].strip()
+
+        if query:
+            return [
+                {
+                    "action": "youtube_search",
+                    "query": query
+                }
+            ]
+        
+    # -----------------------------------------------------
     # YouTube Controls
     # -----------------------------------------------------
 
@@ -305,7 +323,7 @@ def browser_route(command):
             1
         ).strip()
 
-        if app in WINDOWS_APPS:
+        if app in WINDOWS_APPS: 
 
             return [
                 {
