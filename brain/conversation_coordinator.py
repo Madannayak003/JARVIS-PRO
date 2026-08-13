@@ -59,7 +59,6 @@ from brain.clarification_manager import (
     ClarificationManager,
 )
 
-
 # ============================================================
 # Coordinator Result
 # ============================================================

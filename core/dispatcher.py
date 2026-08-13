@@ -197,6 +197,37 @@ def dispatch(
                 )
 
                 return
+            
+    # =====================================================
+    # NATURAL CONVERSATION ANALYSIS
+    # =====================================================
+    #
+    # Analyze the command ONCE.
+    #
+    # This is observation only.
+    # It does not execute anything.
+    #
+    # The same analysis will later be reused by the
+    # Follow-Up Execution Bridge if FAST ROUTE does
+    # not handle the command.
+    # =====================================================
+
+    conversation_analysis = None
+
+    try:
+
+        conversation_analysis = (
+            conversation_coordinator.analyze(
+                command
+            )
+        )
+
+    except Exception as e:
+
+        print(
+            "[CONVERSATION] "
+            f"Analysis failed safely: {e}"
+        )        
 
     # =====================================================
     # FAST ROUTE
@@ -407,21 +438,10 @@ def dispatch(
     #
     # Fast routing has already been given priority.
     #
-    # If the command was not a direct fast command,
-    # check whether Natural Conversation can resolve it
-    # using the active conversational context.
+    # The conversation analysis was already performed
+    # BEFORE FAST ROUTE.
     #
-    # Example:
-    #
-    #     play music
-    #     make it louder
-    #
-    # The FollowUpResolver understands:
-    #
-    #     "it" -> music
-    #
-    # The FollowUpExecutionBridge converts the semantic
-    # follow-up into an existing JARVIS action.
+    # We reuse that analysis here.
     #
     # Natural Conversation does NOT execute directly.
     # The normal registry executor remains authoritative.
@@ -429,25 +449,33 @@ def dispatch(
 
     try:
 
-        conversation_analysis = (
-            conversation_coordinator.analyze(
-                command
+        # -------------------------------------------------
+        # Reuse existing conversation analysis
+        # -------------------------------------------------
+
+        if conversation_analysis is not None:
+
+            follow_up = (
+                conversation_analysis.follow_up
             )
-        )
 
-        follow_up = (
-            conversation_analysis.follow_up
-        )
+            follow_up_plan = (
+                followup_execution_bridge.resolve(
 
-        follow_up_plan = (
-            followup_execution_bridge.resolve(
+                    raw_input=command,
 
-                raw_input=command,
+                    follow_up=follow_up,
 
-                follow_up=follow_up,
-
+                )
             )
-        )
+
+        else:
+
+            follow_up_plan = None
+
+        # -------------------------------------------------
+        # Execute resolved follow-up
+        # -------------------------------------------------
 
         if follow_up_plan:
 

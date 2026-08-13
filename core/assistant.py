@@ -73,23 +73,23 @@ def run():
         # NATURAL CONVERSATION — OBSERVATION ONLY
         # =====================================================
 
-        conversation_analysis = (
-            conversation_coordinator.observe(
-                query
-            )
-        )
+        # conversation_analysis = (
+        #     conversation_coordinator.observe(
+        #         query
+        #     )
+        # )
 
-        print(
-            "[CONVERSATION]",
-            conversation_analysis.understanding
-        )
+        # print(
+        #     "[CONVERSATION]",
+        #     conversation_analysis.understanding
+        # )
 
-        if conversation_analysis.follow_up:
+        # if conversation_analysis.follow_up:
 
-            print(
-                "[CONVERSATION FOLLOW-UP]",
-                conversation_analysis.follow_up
-            )
+        #     print(
+        #         "[CONVERSATION FOLLOW-UP]",
+        #         conversation_analysis.follow_up
+        #     )
 
         # ---------------------------------
         # New user input preempts TTS
