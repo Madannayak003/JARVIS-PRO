@@ -3,7 +3,8 @@ JARVIS PRO
 Stage 4 - Context Builder
 
 Builds a unified AIContext object by collecting data from
-Conversation Manager, Profile Manager and Memory Manager.
+Conversation Manager, Profile Manager, Memory Manager,
+Planner and Natural Conversation Intelligence.
 
 Author: Madan
 """
@@ -11,7 +12,6 @@ Author: Madan
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from .context_types import AIContext
 
@@ -30,7 +30,8 @@ class ContextBuilder:
         conversation_manager,
         memory_manager=None,
         planner=None,
-        conversation_context=None
+        conversation_context=None,
+        state_manager=None,
     ):
         """
         Parameters
@@ -46,16 +47,32 @@ class ContextBuilder:
 
         planner
             Planner instance (optional)
+
+        conversation_context
+            ConversationContextManager instance (optional)
+
+        state_manager
+            ConversationStateManager instance (optional)
         """
 
         self.profile = profile_manager
+
         self.conversation = conversation_manager
+
         self.memory = memory_manager
+
         self.planner = planner
+
         self.conversation_context = (
             conversation_context
         )
 
+        self.state_manager = (
+            state_manager
+        )
+
+    # --------------------------------------------------------
+    # Build Context
     # --------------------------------------------------------
 
     def build(
@@ -74,112 +91,8 @@ class ContextBuilder:
         context.user_input = user_input
 
         # ----------------------------------------------------
-        # User profile
-        # ----------------------------------------------------
-
-        context.profile = self.profile.as_dict()
-
-        # ----------------------------------------------------
-        # Recent conversation
-        # ----------------------------------------------------
-
-        messages = self.conversation.get_recent_messages(
-            conversation_limit
-        )
-
-        context.conversation = [
-            {
-                "role": m.role,
-                "content": m.content,
-                "timestamp": m.timestamp
-            }
-            for m in messages
-        ]
-
-        # ----------------------------------------------------
-        # Long-term memory
-        # ----------------------------------------------------
-
-        context.memories = []
-
-        if self.memory is not None:
-
-            try:
-
-                memories = self.memory.search(
-                    user_input,
-                    limit=memory_limit
-                )
-
-                context.memories = memories
-
-            except Exception:
-
-                # Keep JARVIS running even if memory fails
-                context.memories = []
-
-        # ----------------------------------------------------
-        # Planner state
-        # ----------------------------------------------------
-
-        context.planner = {}
-
-        if self.planner is not None:
-
-            try:
-
-                if hasattr(self.planner, "get_state"):
-
-                    context.planner = self.planner.get_state()
-
-            except Exception:
-
-                context.planner = {}
-                
-        # ----------------------------------------------------
-        # Live Screen Context
-        # ----------------------------------------------------
-
-        context.screen = {}
-
-        try:
-
-            if screen_context.has_context():
-
-                screen_data = screen_context.get_context()
-
-                if screen_data:
-
-                    context.screen = screen_data
-
-        except Exception as e:
-
-            print(
-                f"[ContextBuilder] Screen context unavailable: {e}"
-            )
-
-            context.screen = {}        
-                
-
-        # ----------------------------------------------------
-        # Active project
-        # ----------------------------------------------------
-
-        context.project = {
-
-            "name": context.profile.get(
-                "current_project",
-                ""
-            ),
-
-            "timestamp": datetime.now().isoformat(
-                timespec="seconds"
-            )
-        }
-        
-        # --------------------------------------------------------
         # Natural Conversation Intelligence
-        # --------------------------------------------------------
+        # ----------------------------------------------------
 
         context.natural = {}
 
@@ -202,10 +115,11 @@ class ContextBuilder:
                         self.profile
                     ),
 
-                    state_manager=None,
+                    state_manager=(
+                        self.state_manager
+                    ),
 
                     ai_context=context,
-
                 )
             )
 
@@ -255,7 +169,6 @@ class ContextBuilder:
 
                 "metadata":
                     natural_request.metadata,
-
             }
 
         except Exception as e:
@@ -266,6 +179,122 @@ class ContextBuilder:
             )
 
             context.natural = {}
+
+        # ----------------------------------------------------
+        # User profile
+        # ----------------------------------------------------
+
+        context.profile = (
+            self.profile.as_dict()
+        )
+
+        # ----------------------------------------------------
+        # Recent conversation
+        # ----------------------------------------------------
+
+        messages = (
+            self.conversation.get_recent_messages(
+                conversation_limit
+            )
+        )
+
+        context.conversation = [
+
+            {
+                "role": m.role,
+                "content": m.content,
+                "timestamp": m.timestamp
+            }
+
+            for m in messages
+        ]
+
+        # ----------------------------------------------------
+        # Long-term memory
+        # ----------------------------------------------------
+
+        context.memories = []
+
+        if self.memory is not None:
+
+            try:
+
+                memories = self.memory.search(
+                    user_input,
+                    limit=memory_limit
+                )
+
+                context.memories = memories
+
+            except Exception:
+
+                context.memories = []
+
+        # ----------------------------------------------------
+        # Planner state
+        # ----------------------------------------------------
+
+        context.planner = {}
+
+        if self.planner is not None:
+
+            try:
+
+                if hasattr(
+                    self.planner,
+                    "get_state"
+                ):
+
+                    context.planner = (
+                        self.planner.get_state()
+                    )
+
+            except Exception:
+
+                context.planner = {}
+
+        # ----------------------------------------------------
+        # Live Screen Context
+        # ----------------------------------------------------
+
+        context.screen = {}
+
+        try:
+
+            if screen_context.has_context():
+
+                screen_data = (
+                    screen_context.get_context()
+                )
+
+                if screen_data:
+
+                    context.screen = screen_data
+
+        except Exception as e:
+
+            print(
+                f"[ContextBuilder] "
+                f"Screen context unavailable: {e}"
+            )
+
+            context.screen = {}
+
+        # ----------------------------------------------------
+        # Active project
+        # ----------------------------------------------------
+
+        context.project = {
+
+            "name": context.profile.get(
+                "current_project",
+                ""
+            ),
+
+            "timestamp": datetime.now().isoformat(
+                timespec="seconds"
+            )
+        }
 
         # ----------------------------------------------------
         # Tool information
@@ -279,9 +308,11 @@ class ContextBuilder:
 
         context.metadata = {
 
-            "builder": "ContextBuilder",
+            "builder":
+                "ContextBuilder",
 
-            "version": "1.0",
+            "version":
+                "1.0",
 
             "conversation_messages":
                 len(context.conversation),

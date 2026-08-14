@@ -14,7 +14,9 @@ from .brain import (
 
     profile,
 
-    state
+    state,
+
+    conversation_context
 
 )
 
@@ -28,6 +30,8 @@ __all__ = [
 
     "profile",
 
-    "state"
+    "state",
+
+    "conversation_context"
 
 ]

@@ -46,11 +46,12 @@ class NaturalConversationBridge:
     ):
         """
         Build the real NaturalContext from JARVIS
-        and run NCI-3 → NCI-7.
+        and run NCI-3 -> NCI-7.
         """
 
         # ====================================================
         # NCI-2
+        # Build unified natural context
         # ====================================================
 
         natural_context = (
@@ -81,7 +82,8 @@ class NaturalConversationBridge:
         )
 
         # ====================================================
-        # NCI-3 → NCI-7
+        # NCI-3 -> NCI-7
+        # Run natural conversation pipeline
         # ====================================================
 
         request = (
