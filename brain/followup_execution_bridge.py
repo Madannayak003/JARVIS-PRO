@@ -198,11 +198,29 @@ class FollowUpExecutionBridge:
                     }
                 ]
 
-        # ====================================================
+                # ====================================================
         # YOUTUBE
         # ====================================================
 
         if domain == "youtube":
+
+            # ------------------------------------------------
+            # Play First Video
+            # ------------------------------------------------
+
+            if command in [
+                "play the first one",
+                "play first one",
+                "play the first video",
+                "play first video",
+            ]:
+
+                return [
+                    {
+                        "action":
+                            "youtube_play_first"
+                    }
+                ]
 
             # ------------------------------------------------
             # Pause
@@ -212,7 +230,7 @@ class FollowUpExecutionBridge:
                 "pause it",
                 "pause that",
                 "pause the video",
-                "stop the video",
+                "pause",
             ]:
 
                 return [
@@ -229,6 +247,7 @@ class FollowUpExecutionBridge:
             if command in [
                 "resume it",
                 "resume that",
+                "resume the video",
                 "continue it",
                 "continue the video",
                 "play it again",
@@ -247,10 +266,10 @@ class FollowUpExecutionBridge:
 
             if command in [
                 "next",
+                "next video",
                 "next one",
+                "play the next video",
                 "play the next one",
-                "skip it",
-                "skip this",
             ]:
 
                 return [
@@ -266,8 +285,10 @@ class FollowUpExecutionBridge:
 
             if command in [
                 "previous",
+                "previous video",
                 "previous one",
                 "go back",
+                "play the previous video",
                 "play the previous one",
             ]:
 
