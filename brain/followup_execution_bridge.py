@@ -304,8 +304,7 @@ class FollowUpExecutionBridge:
 
                     return [
                         {
-                            "action": "close_process",
-                            "process": application,
+                            "action": "close"
                         }
                     ]
         
