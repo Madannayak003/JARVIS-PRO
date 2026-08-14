@@ -211,6 +211,69 @@ Analyzed At:
 {context.user_input}
 """.strip()
 
+
+    # --------------------------------------------------
+    # Natural Conversation Intelligence
+    # --------------------------------------------------
+
+    def _natural_section(
+        self,
+        context: AIContext
+    ) -> str:
+        """
+        Add the result of Natural Conversation Intelligence.
+
+        This section tells the LLM what JARVIS understood
+        about the user's request.
+
+        It does NOT execute actions.
+        """
+
+        natural = getattr(
+            context,
+            "natural",
+            {}
+        )
+
+        if not natural:
+            return ""
+
+        lines = [
+            "========== NATURAL CONVERSATION INTELLIGENCE ==========",
+
+            f"Intent: {natural.get('intent', '')}",
+            f"Mode: {natural.get('mode', '')}",
+            f"Confidence: {natural.get('confidence', '')}",
+            f"Topic: {natural.get('topic', '')}",
+            f"Task: {natural.get('task', '')}",
+            f"Subject: {natural.get('object', '')}",
+            f"Reference: {natural.get('reference', '')}",
+            f"Application: {natural.get('application', '')}",
+            f"Skill: {natural.get('skill', '')}",
+            f"Needs AI: {natural.get('needs_ai', False)}",
+            f"Needs Action: {natural.get('needs_action', False)}",
+            (
+                "Needs Clarification: "
+                f"{natural.get('needs_clarification', False)}"
+            ),
+        ]
+
+        instructions = natural.get(
+            "instructions",
+            ""
+        )
+
+        if instructions:
+
+            lines.extend([
+                "",
+                "Natural handling instructions:",
+                instructions,
+            ])
+
+        return "\n".join(lines)
+    
+
     # --------------------------------------------------
 
     def build(
@@ -227,6 +290,10 @@ Analyzed At:
             ),
 
             self._project_section(
+                context
+            ),
+
+            self._natural_section(
                 context
             ),
 

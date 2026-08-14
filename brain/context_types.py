@@ -49,6 +49,11 @@ class AIContext:
     tools: Dict[str, Any] = field(
         default_factory=dict
     )
+    
+    # Natural Conversation Intelligence
+    natural: Dict[str, Any] = field(
+        default_factory=dict
+    )
 
     # Metadata
     metadata: Dict[str, Any] = field(

@@ -17,6 +17,10 @@ from .context_types import AIContext
 
 from brain.screen_context import screen_context
 
+from brain.natural.natural_bridge import (
+    natural_conversation_bridge,
+)
+
 
 class ContextBuilder:
 
@@ -25,7 +29,8 @@ class ContextBuilder:
         profile_manager,
         conversation_manager,
         memory_manager=None,
-        planner=None
+        planner=None,
+        conversation_context=None
     ):
         """
         Parameters
@@ -47,6 +52,9 @@ class ContextBuilder:
         self.conversation = conversation_manager
         self.memory = memory_manager
         self.planner = planner
+        self.conversation_context = (
+            conversation_context
+        )
 
     # --------------------------------------------------------
 
@@ -168,6 +176,96 @@ class ContextBuilder:
                 timespec="seconds"
             )
         }
+        
+        # --------------------------------------------------------
+        # Natural Conversation Intelligence
+        # --------------------------------------------------------
+
+        context.natural = {}
+
+        try:
+
+            natural_request = (
+                natural_conversation_bridge.process(
+
+                    user_input=user_input,
+
+                    conversation_context=(
+                        self.conversation_context
+                    ),
+
+                    conversation_manager=(
+                        self.conversation
+                    ),
+
+                    profile_manager=(
+                        self.profile
+                    ),
+
+                    state_manager=None,
+
+                    ai_context=context,
+
+                )
+            )
+
+            context.natural = {
+
+                "user_input":
+                    natural_request.user_input,
+
+                "intent":
+                    natural_request.intent,
+
+                "mode":
+                    natural_request.mode,
+
+                "confidence":
+                    natural_request.confidence,
+
+                "topic":
+                    natural_request.topic,
+
+                "task":
+                    natural_request.task,
+
+                "object":
+                    natural_request.object,
+
+                "reference":
+                    natural_request.reference,
+
+                "application":
+                    natural_request.application,
+
+                "skill":
+                    natural_request.skill,
+
+                "needs_ai":
+                    natural_request.needs_ai,
+
+                "needs_action":
+                    natural_request.needs_action,
+
+                "needs_clarification":
+                    natural_request.needs_clarification,
+
+                "instructions":
+                    natural_request.instructions,
+
+                "metadata":
+                    natural_request.metadata,
+
+            }
+
+        except Exception as e:
+
+            print(
+                f"[ContextBuilder] "
+                f"Natural context unavailable: {e}"
+            )
+
+            context.natural = {}
 
         # ----------------------------------------------------
         # Tool information
