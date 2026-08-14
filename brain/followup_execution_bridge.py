@@ -278,7 +278,37 @@ class FollowUpExecutionBridge:
                     }
                 ]
 
-        # ====
+        # ====================================================
+        # BROWSER / APPLICATION
+        # ====================================================
+
+        if domain == "browser":
+
+            if command in [
+                "close it",
+                "close that",
+                "close this",
+                "exit it",
+                "exit that",
+            ]:
+
+                browser_applications = {
+                    "chrome",
+                    "edge",
+                    "firefox",
+                    "brave",
+                    "opera",
+                }
+
+                if application in browser_applications:
+
+                    return [
+                        {
+                            "action": "close_process",
+                            "process": application,
+                        }
+                    ]
+        
         # ================================================
         # SYSTEM
         # ====================================================

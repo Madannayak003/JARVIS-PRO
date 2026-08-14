@@ -628,6 +628,22 @@ class ConversationCoordinator:
 # Shared Coordinator
 # ============================================================
 
+from brain.brain import brain
+
+
 conversation_coordinator = (
-    ConversationCoordinator()
+    ConversationCoordinator(
+
+        conversation_manager=(
+            brain.conversation
+        ),
+
+        state_manager=(
+            brain.state
+        ),
+
+        context_manager=(
+            brain.conversation_context
+        ),
+    )
 )
