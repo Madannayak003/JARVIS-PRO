@@ -289,28 +289,63 @@ class BrowserController:
         
         
     def search_youtube(self, query):
-        
+
         print(
             f"[Browser SEARCH THREAD] "
             f"{threading.current_thread().name} | "
             f"{threading.get_ident()}"
         )
 
-        with _browser_lock:
+        if not query:
+            return False
 
-            self.start()
+        with _browser_lock:
 
             try:
 
+                self.start()
+
+                if not self.browser or not self.page:
+                    print(
+                        "[YouTube] Browser not connected"
+                    )
+                    return False
+
+                import urllib.parse
+
+                encoded_query = (
+                    urllib.parse.quote(str(query))
+                )
+
+                url = (
+                    "https://www.youtube.com/results"
+                    "?search_query="
+                    + encoded_query
+                )
+
+                print(
+                    f"[YouTube] Searching: {query}"
+                )
+
                 self.page.goto(
-                    f"https://www.youtube.com/results?search_query={query}"
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=15000
+                )
+
+                self.page.bring_to_front()
+
+                print(
+                    "[YouTube] Search opened in JARVIS Chrome"
                 )
 
                 return True
 
             except Exception as e:
 
-                print(f"[YouTube ERROR] Search failed: {e}")
+                print(
+                    f"[YouTube ERROR] Search failed: {e}"
+                )
 
                 return False
     
