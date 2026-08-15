@@ -85,18 +85,14 @@ def youtube_pause(data):
 
     speak("Pausing YouTube")
 
-    browser.pause_video()
-
-    return True
+    return browser.pause_video()
 
 
 def youtube_resume(data):
 
     speak("Resuming YouTube")
 
-    browser.resume_video()
-
-    return True
+    return browser.resume_video()
 
 
 def youtube_next(data):

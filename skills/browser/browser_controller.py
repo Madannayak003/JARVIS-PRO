@@ -500,23 +500,63 @@ class BrowserController:
                 return False
 
             # Find the actual YouTube page
+            # -------------------------------------------------
+            # Prefer the page already tracked by the controller
+            # -------------------------------------------------
+
             youtube_page = None
 
-            for context in self.browser.contexts:
+            try:
 
-                for page in context.pages:
+                if (
+                    self.page
+                    and not self.page.is_closed()
+                    and "youtube.com" in self.page.url
+                ):
 
-                    if "youtube.com/watch" in page.url:
+                    youtube_page = self.page
 
-                        youtube_page = page
-                        break
+            except Exception:
 
-                if youtube_page:
-                    break
+                youtube_page = None
+
+
+            # -------------------------------------------------
+            # Fallback: find a YouTube video page
+            # -------------------------------------------------
 
             if not youtube_page:
-                print("[YouTube] YouTube video page not found")
+
+                for context in self.browser.contexts:
+
+                    for page in context.pages:
+
+                        try:
+
+                            if (
+                                "youtube.com/watch" in page.url
+                                and not page.is_closed()
+                            ):
+
+                                youtube_page = page
+                                break
+
+                        except Exception:
+
+                            continue
+
+                    if youtube_page:
+                        break
+
+
+            if not youtube_page:
+
+                print(
+                    "[YouTube] YouTube video page not found"
+                )
+
                 return False
+
 
             self.page = youtube_page
 
