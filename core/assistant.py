@@ -178,7 +178,9 @@ def run():
                     "keep going"
                 ]:
 
-                    speak("Okay. I'll ignore the new request.")
+                    speak(
+                        "Okay. I'll ignore the new request."
+                    )
 
                     clear()
 
@@ -226,6 +228,10 @@ def run():
 
                     pending = get()
 
+            # ----------------------------
+            # Normal confirmation
+            # ----------------------------
+
             if q in [
                 "yes",
                 "yes sir",
@@ -256,112 +262,108 @@ def run():
 
                 speak("Cancelled.")
 
-                set_value("chat_mode", False)
+                set_value(
+                    "chat_mode",
+                    False
+                )
 
                 clear()
 
                 continue
 
-            # =================================================
-            # NATURAL CONVERSATION FOLLOW-UP PREEMPTION
-            #
-            # NCI must get the first opportunity when a command
-            # can be interpreted as a continuation of the
-            # currently active application/task.
-            #
-            # Example:
-            #
-            #   YouTube → play first video
-            #   YouTube → pause it
-            #   YouTube → resume
-            #
-            # Without this check, FAST ROUTE can steal generic
-            # commands such as "resume" and route them to Spotify.
-            #
-            # IMPORTANT:
-            # We do NOT remove generic commands from FAST ROUTE.
-            # NCI only takes priority when an active contextual
-            # relationship actually exists.
-            # =================================================
+
+        # =====================================================
+        # NATURAL CONVERSATION FOLLOW-UP PREEMPTION
+        #
+        # IMPORTANT:
+        # This MUST be OUTSIDE "if waiting()".
+        #
+        # NCI must be able to recognize contextual commands
+        # even when JARVIS is not waiting for confirmation.
+        #
+        # Example:
+        #
+        #   YouTube -> play first video
+        #   YouTube -> resume
+        #
+        # Without this priority, FAST ROUTE can interpret
+        # generic "resume" as Spotify.
+        # =====================================================
+
+        nci_follow_up = False
+
+        try:
+
+            conversation_analysis = (
+                conversation_coordinator.analyze(
+                    query
+                )
+            )
+
+            if (
+                conversation_analysis
+                and
+                conversation_analysis.follow_up
+                and
+                conversation_analysis.follow_up.is_follow_up
+            ):
+
+                nci_follow_up = True
+
+                print(
+                    "[NCI PREEMPT] "
+                    "Contextual follow-up detected."
+                )
+
+                print(
+                    "[NCI PREEMPT RELATION]",
+                    conversation_analysis.understanding.relation
+                )
+
+                print(
+                    "[NCI PREEMPT FOLLOW-UP]",
+                    conversation_analysis.follow_up
+                )
+
+        except Exception as e:
+
+            print(
+                "[NCI PREEMPT] "
+                f"Analysis failed safely: {e}"
+            )
 
             nci_follow_up = False
 
-            try:
 
-                conversation_analysis = (
-                    conversation_coordinator.analyze(
-                        query
-                    )
-                )
+        # =====================================================
+        # NCI FOLLOW-UP
+        #
+        # Do NOT call fast_route() here.
+        #
+        # Send the original command to dispatcher.
+        #
+        # dispatcher.py already contains:
+        #
+        #   NCI Follow-Up Priority
+        #
+        # which resolves the contextual action.
+        # =====================================================
 
-                if (
-                    conversation_analysis
-                    and
-                    conversation_analysis.follow_up
-                    and
-                    conversation_analysis.follow_up.is_follow_up
-                ):
+        if nci_follow_up:
 
-                    nci_follow_up = True
+            print(
+                "[NCI PREEMPT] "
+                "Sending command to dispatcher."
+            )
 
-                    print(
-                        "[NCI PREEMPT] "
-                        "Contextual follow-up detected."
-                    )
+            interrupt()
 
-                    print(
-                        "[NCI PREEMPT RELATION]",
-                        conversation_analysis.understanding.relation
-                    )
+            dispatch(
+                query
+            )
 
-                    print(
-                        "[NCI PREEMPT FOLLOW-UP]",
-                        conversation_analysis.follow_up
-                    )
+            continue
 
-            except Exception as e:
-
-                print(
-                    "[NCI PREEMPT] "
-                    f"Analysis failed safely: {e}"
-                )
-
-                nci_follow_up = False
-
-
-            # =================================================
-            # NCI FOLLOW-UP
-            # =================================================
-            #
-            # Do NOT calculate/use fast_plan here.
-            #
-            # dispatcher.py already contains the correct
-            # Natural Conversation Follow-Up Priority logic.
-            #
-            # Sending the command normally allows dispatcher
-            # to resolve:
-            #
-            #   YouTube → youtube_pause
-            #   YouTube → youtube_resume
-            #   YouTube → youtube_next
-            #   Spotify → spotify_play
-            #   etc.
-            # =================================================
-
-            if nci_follow_up:
-
-                print(
-                    "[NCI PREEMPT] "
-                    "Sending command to dispatcher."
-                )
-
-                interrupt()
-
-                dispatch(
-                    query
-                )
-
-                continue
 
         # =====================================================
         # ACTIVE TASK / CONVERSATION PREEMPTION
