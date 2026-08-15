@@ -227,7 +227,73 @@ def dispatch(
         print(
             "[CONVERSATION] "
             f"Analysis failed safely: {e}"
-        )        
+        )
+        
+        # =====================================================
+    # NATURAL CONVERSATION FOLLOW-UP PRIORITY
+    # =====================================================
+    #
+    # If NCI has a valid contextual follow-up, let the
+    # Follow-Up Execution Bridge handle it before FAST ROUTE.
+    #
+    # This prevents generic fast commands from stealing
+    # context-sensitive commands such as:
+    #
+    #     YouTube → "play the next one"
+    #     YouTube → "play the first one"
+    #
+    # Normal commands still continue to FAST ROUTE.
+    # =====================================================
+
+    if (
+        not skip_fast
+        and conversation_analysis is not None
+        and conversation_analysis.follow_up is not None
+        and conversation_analysis.follow_up.is_follow_up
+    ):
+
+        follow_up_plan = (
+            followup_execution_bridge.resolve(
+                raw_input=command,
+                follow_up=(
+                    conversation_analysis.follow_up
+                ),
+            )
+        )
+
+        if follow_up_plan:
+
+            print(
+                "[CONVERSATION PRIORITY] "
+                "Contextual follow-up takes priority:",
+                follow_up_plan,
+            )
+
+            for action in follow_up_plan:
+
+                action_name = action.get(
+                    "action"
+                )
+
+                if not action_name:
+                    continue
+
+                print(
+                    "[CONVERSATION PRIORITY] "
+                    f"Executing {action_name}"
+                )
+
+                result = execute(
+                    action_name,
+                    action,
+                )
+
+                print(
+                    "[CONVERSATION PRIORITY RESULT]",
+                    repr(result),
+                )
+
+            return            
 
     # =====================================================
     # FAST ROUTE

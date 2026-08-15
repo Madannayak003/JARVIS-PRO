@@ -825,12 +825,24 @@ class ConversationUnderstandingEngine:
                 "play first youtube video",
 
                 "play the first youtube video",
+                
+                "play next one",
+
+                "play the next one",
 
                 "play next video",
 
                 "play the next video",
 
                 "next video",
+                
+                "resume",
+
+                "resume video",
+                
+                "continue video",
+                
+                "continue youtube",
 
                 "previous video",
 

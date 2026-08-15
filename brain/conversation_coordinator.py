@@ -265,7 +265,7 @@ class ConversationCoordinator:
         # for clarification.
         # ----------------------------------------------------
 
-        understanding_state = self.state
+        understanding_state = self.context
 
         try:
 
