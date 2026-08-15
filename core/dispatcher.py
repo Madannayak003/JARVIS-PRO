@@ -1257,15 +1257,17 @@ def dispatch(
                 "YouTube Search"
             )
 
-            task_manager.start(
-                "executor",
-                execute_ai_plan,
-                [
-                    {
-                        "action": "youtube_search",
-                        "query": query,
-                    }
-                ],
+            result = execute(
+                "youtube_search",
+                {
+                    "action": "youtube_search",
+                    "query": query,
+                },
+            )
+
+            print(
+                "[ACTION MEMORY RESULT]",
+                repr(result),
             )
 
             return

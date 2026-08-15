@@ -262,6 +262,106 @@ def run():
 
                 continue
 
+            # =================================================
+            # NATURAL CONVERSATION FOLLOW-UP PREEMPTION
+            #
+            # NCI must get the first opportunity when a command
+            # can be interpreted as a continuation of the
+            # currently active application/task.
+            #
+            # Example:
+            #
+            #   YouTube → play first video
+            #   YouTube → pause it
+            #   YouTube → resume
+            #
+            # Without this check, FAST ROUTE can steal generic
+            # commands such as "resume" and route them to Spotify.
+            #
+            # IMPORTANT:
+            # We do NOT remove generic commands from FAST ROUTE.
+            # NCI only takes priority when an active contextual
+            # relationship actually exists.
+            # =================================================
+
+            nci_follow_up = False
+
+            try:
+
+                conversation_analysis = (
+                    conversation_coordinator.analyze(
+                        query
+                    )
+                )
+
+                if (
+                    conversation_analysis
+                    and
+                    conversation_analysis.follow_up
+                    and
+                    conversation_analysis.follow_up.is_follow_up
+                ):
+
+                    nci_follow_up = True
+
+                    print(
+                        "[NCI PREEMPT] "
+                        "Contextual follow-up detected."
+                    )
+
+                    print(
+                        "[NCI PREEMPT RELATION]",
+                        conversation_analysis.understanding.relation
+                    )
+
+                    print(
+                        "[NCI PREEMPT FOLLOW-UP]",
+                        conversation_analysis.follow_up
+                    )
+
+            except Exception as e:
+
+                print(
+                    "[NCI PREEMPT] "
+                    f"Analysis failed safely: {e}"
+                )
+
+                nci_follow_up = False
+
+
+            # =================================================
+            # NCI FOLLOW-UP
+            # =================================================
+            #
+            # Do NOT calculate/use fast_plan here.
+            #
+            # dispatcher.py already contains the correct
+            # Natural Conversation Follow-Up Priority logic.
+            #
+            # Sending the command normally allows dispatcher
+            # to resolve:
+            #
+            #   YouTube → youtube_pause
+            #   YouTube → youtube_resume
+            #   YouTube → youtube_next
+            #   Spotify → spotify_play
+            #   etc.
+            # =================================================
+
+            if nci_follow_up:
+
+                print(
+                    "[NCI PREEMPT] "
+                    "Sending command to dispatcher."
+                )
+
+                interrupt()
+
+                dispatch(
+                    query
+                )
+
+                continue
 
         # =====================================================
         # ACTIVE TASK / CONVERSATION PREEMPTION
@@ -284,8 +384,8 @@ def run():
             #
             # should execute immediately even when another
             # conversation/task is running.
-            # =================================================
-
+            # ================================================
+            
             fast_plan = fast_route(query)
 
             if fast_plan:
@@ -304,8 +404,7 @@ def run():
                 interrupt()
 
                 # Execute the new command through the normal
-                # dispatcher. The dispatcher will run fast_route()
-                # again and execute it.
+                # dispatcher.
                 dispatch(
                     query,
                     fast_plan=fast_plan
