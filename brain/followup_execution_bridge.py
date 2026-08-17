@@ -198,7 +198,7 @@ class FollowUpExecutionBridge:
                     }
                 ]
 
-                # ====================================================
+        # ====================================================
         # YOUTUBE
         # ====================================================
 
@@ -245,11 +245,15 @@ class FollowUpExecutionBridge:
             # ------------------------------------------------
 
             if command in [
+                "resume",
                 "resume it",
                 "resume that",
                 "resume the video",
+                "resume youtube",
+                "resume youtube video",
                 "continue it",
                 "continue the video",
+                "continue youtube",
                 "play it again",
             ]:
 

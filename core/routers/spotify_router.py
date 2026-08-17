@@ -21,7 +21,6 @@ def spotify_route(command):
         "play spotify",
         "play music",
         "play song",
-        "resume",
         "resume spotify",
         "resume music",
         "continue music",
