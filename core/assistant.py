@@ -1,11 +1,12 @@
 import time
+
 from voice.manager import speak, stop_speaking
 from config.settings import WAKE_WORDS
 
 from core.confirmation import waiting
 from core.confirmation import get
-
 from core.confirmation import clear
+
 from core.registry import execute
 
 from core.listener import start_listener
@@ -31,27 +32,43 @@ from core.whatsapp_memory import (
 from core.context import (
     add_message,
     get_value,
-    set_value
+    set_value,
 )
 
 from core.power import (
     sleep,
     wake,
-    shutdown
+    shutdown,
 )
 
 from core.busy_manager import (
     is_busy,
-    ask_switch
+    ask_switch,
 )
 
 from ai.intent import detect
 from core.fast_router import fast_route
 
 
-from brain.conversation_coordinator import (
-    conversation_coordinator,
+# ============================================================
+# NATURAL CONVERSATION / BRAIN
+# ============================================================
+
+from brain.natural.natural_bridge import (
+    natural_conversation_bridge,
 )
+
+from brain import (
+    conversation,
+    profile,
+    state as brain_state,
+    conversation_context,
+)
+
+
+# ============================================================
+# RUN
+# ============================================================
 
 def run():
 
@@ -70,67 +87,60 @@ def run():
             continue
 
         # =====================================================
-        # NATURAL CONVERSATION — OBSERVATION ONLY
-        # =====================================================
-
-        # conversation_analysis = (
-        #     conversation_coordinator.observe(
-        #         query
-        #     )
-        # )
-
-        # print(
-        #     "[CONVERSATION]",
-        #     conversation_analysis.understanding
-        # )
-
-        # if conversation_analysis.follow_up:
-
-        #     print(
-        #         "[CONVERSATION FOLLOW-UP]",
-        #         conversation_analysis.follow_up
-        #     )
-
-        # ---------------------------------
         # New user input preempts TTS
-        # ---------------------------------
+        # =====================================================
 
         stop_speaking()
 
+        # =====================================================
+        # HIGH PRIORITY RUNTIME EVENTS
+        # =====================================================
+
         if handle_priority(query):
-            
+
             time.sleep(0.05)
-            
+
             continue
-        
+
         query = query.strip()
-        
-        # ---------------------------------
-        # Waiting for WhatsApp message?
-        # ---------------------------------
-        
+
+        # =====================================================
+        # WAITING FOR WHATSAPP MESSAGE
+        # =====================================================
+
         pending = get_pending_message()
 
         if pending is not None:
 
             clear_pending_message()
 
-            dispatch(f"message {query}")
+            dispatch(
+                f"message {query}"
+            )
 
             continue
-            
+
+        # =====================================================
+        # WAITING FOR WHATSAPP CONTACT
+        # =====================================================
+
         contact = get_contact()
-        
-        print("[WA] Pending contact:", contact)
+
+        print(
+            "[WA] Pending contact:",
+            contact
+        )
 
         if contact:
 
             clear_contact()
 
-            dispatch(f"message {contact} {query}")
+            dispatch(
+                f"message {contact} {query}"
+            )
 
-            continue        
-        
+            continue
+
         # =====================================================
         # EXISTING CONFIRMATION
         # =====================================================
@@ -141,11 +151,15 @@ def run():
 
             pending = get()
 
-            # ----------------------------
+            # -------------------------------------------------
             # Busy Manager Confirmation
-            # ----------------------------
+            # -------------------------------------------------
 
-            if pending and pending.get("action") == "switch_task":
+            if (
+                pending
+                and
+                pending.get("action") == "switch_task"
+            ):
 
                 if q in [
                     "yes",
@@ -157,16 +171,20 @@ def run():
                     "yes please",
                     "yes continue",
                     "yes do it",
-                    "yes switch"
+                    "yes switch",
                 ]:
 
-                    new_command = pending["new_command"]
+                    new_command = (
+                        pending["new_command"]
+                    )
 
                     interrupt()
 
                     clear()
 
-                    dispatch(new_command)
+                    dispatch(
+                        new_command
+                    )
 
                     continue
 
@@ -175,7 +193,7 @@ def run():
                     "no thanks",
                     "never mind",
                     "stay",
-                    "keep going"
+                    "keep going",
                 ]:
 
                     speak(
@@ -186,11 +204,15 @@ def run():
 
                     continue
 
-            # ----------------------------
-            # Search platform clarification
-            # ----------------------------
+            # -------------------------------------------------
+            # Search Platform Clarification
+            # -------------------------------------------------
 
-            if pending and "context" in pending:
+            if (
+                pending
+                and
+                "context" in pending
+            ):
 
                 ctx = pending["context"]
 
@@ -200,7 +222,7 @@ def run():
                         "google": "google_search",
                         "youtube": "youtube_search",
                         "github": "github_search",
-                        "chatgpt": "chatgpt_search"
+                        "chatgpt": "chatgpt_search",
                     }
 
                     for platform, action in platforms.items():
@@ -209,14 +231,17 @@ def run():
 
                             set_memory(
                                 "search_platform",
-                                platform
+                                platform,
                             )
 
                             execute(
                                 action,
                                 {
-                                    "query": ctx["pending_search"]
-                                }
+                                    "query":
+                                        ctx[
+                                            "pending_search"
+                                        ]
+                                },
                             )
 
                             clear()
@@ -224,13 +249,14 @@ def run():
                             break
 
                     if not waiting():
+
                         continue
 
                     pending = get()
 
-            # ----------------------------
-            # Normal confirmation
-            # ----------------------------
+            # -------------------------------------------------
+            # Normal Confirmation
+            # -------------------------------------------------
 
             if q in [
                 "yes",
@@ -238,14 +264,14 @@ def run():
                 "confirm",
                 "do it",
                 "okay",
-                "ok"
+                "ok",
             ]:
 
                 pending = get()
 
                 execute(
                     pending["action"],
-                    pending["data"]
+                    pending["data"],
                 )
 
                 clear()
@@ -257,99 +283,112 @@ def run():
                 "cancel",
                 "stop",
                 "don't",
-                "dont"
+                "dont",
             ]:
 
                 speak("Cancelled.")
 
                 set_value(
                     "chat_mode",
-                    False
+                    False,
                 )
 
                 clear()
 
                 continue
 
-
         # =====================================================
-        # NATURAL CONVERSATION FOLLOW-UP PREEMPTION
+        # NATURAL CONVERSATION
         #
-        # IMPORTANT:
-        # This MUST be OUTSIDE "if waiting()".
+        # ConversationRequest is now the common NCI interface.
         #
-        # NCI must be able to recognize contextual commands
-        # even when JARVIS is not waiting for confirmation.
-        #
-        # Example:
-        #
-        #   YouTube -> play first video
-        #   YouTube -> resume
-        #
-        # Without this priority, FAST ROUTE can interpret
-        # generic "resume" as Spotify.
+        # NCI only understands the request here.
+        # It does NOT execute anything.
         # =====================================================
 
-        nci_follow_up = False
+        conversation_request = None
 
         try:
 
-            conversation_analysis = (
-                conversation_coordinator.analyze(
-                    query
+            conversation_request = (
+                natural_conversation_bridge.process(
+
+                    user_input=query,
+
+                    conversation_context=(
+                        conversation_context
+                    ),
+
+                    conversation_manager=(
+                        conversation
+                    ),
+
+                    profile_manager=(
+                        profile
+                    ),
+
+                    state_manager=(
+                        brain_state
+                    ),
+
+                    ai_context=None,
                 )
             )
 
-            if (
-                conversation_analysis
-                and
-                conversation_analysis.follow_up
-                and
-                conversation_analysis.follow_up.is_follow_up
-            ):
-
-                nci_follow_up = True
-
-                print(
-                    "[NCI PREEMPT] "
-                    "Contextual follow-up detected."
-                )
-
-                print(
-                    "[NCI PREEMPT RELATION]",
-                    conversation_analysis.understanding.relation
-                )
-
-                print(
-                    "[NCI PREEMPT FOLLOW-UP]",
-                    conversation_analysis.follow_up
-                )
+            print(
+                "[NCI REQUEST]",
+                conversation_request,
+            )
 
         except Exception as e:
 
             print(
-                "[NCI PREEMPT] "
+                "[NCI REQUEST] "
                 f"Analysis failed safely: {e}"
             )
 
-            nci_follow_up = False
-
+            conversation_request = None
 
         # =====================================================
-        # NCI FOLLOW-UP
+        # NCI FOLLOW-UP PREEMPTION
         #
-        # Do NOT call fast_route() here.
+        # ConversationRequest is authoritative for the
+        # semantic understanding of the current request.
         #
-        # Send the original command to dispatcher.
-        #
-        # dispatcher.py already contains:
-        #
-        #   NCI Follow-Up Priority
-        #
-        # which resolves the contextual action.
+        # Dispatcher remains responsible for execution.
         # =====================================================
+
+        nci_follow_up = (
+
+            conversation_request is not None
+
+            and
+
+            conversation_request.relation
+            in {
+                "follow_up",
+                "continuation",
+                "correction",
+                "reference",
+            }
+        )
 
         if nci_follow_up:
+
+            print(
+                "[NCI PREEMPT] "
+                "Contextual follow-up detected."
+            )
+
+            print(
+                "[NCI PREEMPT RELATION]",
+                conversation_request.relation,
+            )
+
+            print(
+                "[NCI PREEMPT REQUEST]",
+                conversation_request,
+            )
 
             print(
                 "[NCI PREEMPT] "
@@ -364,7 +403,6 @@ def run():
 
             continue
 
-
         # =====================================================
         # ACTIVE TASK / CONVERSATION PREEMPTION
         # =====================================================
@@ -373,22 +411,11 @@ def run():
 
             # =================================================
             # FAST ACTION PREEMPTION
-            #
-            # Deterministic commands such as:
-            #
-            # - reminders
-            # - volume
-            # - brightness
-            # - screenshot
-            # - Spotify controls
-            # - WhatsApp actions
-            # - system commands
-            #
-            # should execute immediately even when another
-            # conversation/task is running.
-            # ================================================
-            
-            fast_plan = fast_route(query)
+            # =================================================
+
+            fast_plan = fast_route(
+                query
+            )
 
             if fast_plan:
 
@@ -399,29 +426,25 @@ def run():
 
                 print(
                     "[FAST PREEMPT PLAN]",
-                    fast_plan
+                    fast_plan,
                 )
 
-                # Stop current speech/task.
                 interrupt()
 
-                # Execute the new command through the normal
-                # dispatcher.
                 dispatch(
                     query,
-                    fast_plan=fast_plan
+                    fast_plan=fast_plan,
                 )
 
                 continue
 
             # =================================================
             # CHAT PREEMPTION
-            #
-            # Normal conversational requests also replace an
-            # active chat immediately.
             # =================================================
 
-            mode = detect(query)
+            mode = detect(
+                query
+            )
 
             if mode == "chat":
 
@@ -434,19 +457,18 @@ def run():
 
                 dispatch(
                     query,
-                    fast_plan=fast_plan
+                    fast_plan=fast_plan,
                 )
 
                 continue
 
             # =================================================
             # LONG-RUNNING TASK
-            #
-            # Non-chat / non-fast tasks still require
-            # confirmation before replacing the current task.
             # =================================================
 
-            ask_switch(query)
+            ask_switch(
+                query
+            )
 
             speak(
                 f"I'm still working on your previous request.\n"
@@ -454,56 +476,78 @@ def run():
             )
 
             continue
-        
-        state = get_value("state")
-        
-        if state == "sleep":
 
-            if query.startswith("jarvis"):
+        # =====================================================
+        # POWER STATE
+        # =====================================================
+
+        power_state = get_value(
+            "state"
+        )
+
+        if power_state == "sleep":
+
+            if query.startswith(
+                "jarvis"
+            ):
 
                 wake()
 
             continue
-        
+
+        # =====================================================
+        # SLEEP
+        # =====================================================
+
         if query.lower() in [
 
             "go offline",
-
             "jarvis go offline",
-
             "sleep",
-
             "jarvis sleep",
-            
-            "jarvis sleep mode"
+            "jarvis sleep mode",
 
         ]:
 
             sleep()
 
             continue
-        
+
+        # =====================================================
+        # SHUTDOWN
+        # =====================================================
+
         if query.lower() in [
 
             "shutdown",
-
             "terminate",
-
             "power off",
-
             "jarvis shutdown",
-
-            "jarvis terminate"
+            "jarvis terminate",
 
         ]:
 
             shutdown()
-            continue
-                    
-        add_message("user", query)
 
-        # Wake words
-        if any(query.startswith(word) for word in WAKE_WORDS):
+            continue
+
+        # =====================================================
+        # EXISTING CONTEXT MESSAGE
+        # =====================================================
+
+        add_message(
+            "user",
+            query
+        )
+
+        # =====================================================
+        # WAKE WORDS
+        # =====================================================
+
+        if any(
+            query.startswith(word)
+            for word in WAKE_WORDS
+        ):
 
             remaining = query
 
@@ -511,23 +555,46 @@ def run():
 
                 if remaining.startswith(word):
 
-                    remaining = remaining.replace(word, "", 1).strip()
+                    remaining = (
+                        remaining
+                        .replace(
+                            word,
+                            "",
+                            1,
+                        )
+                        .strip()
+                    )
 
                     break
 
             if remaining == "":
 
-                if state == "sleep":
+                if power_state == "sleep":
+
                     wake()
+
                 else:
-                    speak("Yes Sir.")
+
+                    speak(
+                        "Yes Sir."
+                    )
 
                 continue
 
-            speak("Yes Sir.")
+            speak(
+                "Yes Sir."
+            )
 
-            dispatch(remaining)
-            
+            dispatch(
+                remaining
+            )
+
             continue
-        
-        dispatch(query)
+
+        # =====================================================
+        # NORMAL DISPATCH
+        # =====================================================
+
+        dispatch(
+            query
+        )

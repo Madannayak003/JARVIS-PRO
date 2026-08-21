@@ -7,7 +7,8 @@ NCI-6: Conversation Request Builder
 Purpose
 -------
 Converts the output of NCI-2, NCI-4 and NCI-5 into a
-structured request that the existing AI pipeline can use.
+structured request that the existing JARVIS AI/runtime
+can use as a common conversational interface.
 
 IMPORTANT:
     This module does NOT:
@@ -23,7 +24,7 @@ It only prepares the meaning of the request.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 # ============================================================
@@ -40,14 +41,31 @@ class ConversationRequest:
     user_input: str
 
     # --------------------------------------------------------
+    # Conversational relationship
+    #
+    # Examples:
+    #
+    #   new_request
+    #   follow_up
+    #   continuation
+    #   reference
+    #   correction
+    #
+    # This allows the common interface to preserve
+    # conversational context without executing anything.
+    # --------------------------------------------------------
+
+    relation: Optional[str] = None
+
+    # --------------------------------------------------------
     # NCI meaning
     # --------------------------------------------------------
 
-    intent: str
+    intent: str = "unknown"
 
-    mode: str
+    mode: str = "conversation"
 
-    confidence: float
+    confidence: float = 0.0
 
     # --------------------------------------------------------
     # Context
@@ -59,11 +77,80 @@ class ConversationRequest:
 
     object: Optional[str] = None
 
+    # --------------------------------------------------------
+    # Reference
+    #
+    # Single primary reference retained for compatibility
+    # with the existing NCI representation.
+    # --------------------------------------------------------
+
     reference: Optional[str] = None
+
+    # --------------------------------------------------------
+    # References
+    #
+    # Example:
+    #
+    #   ["it"]
+    #
+    # This preserves multiple detected references.
+    # --------------------------------------------------------
+
+    references: List[str] = field(
+        default_factory=list
+    )
+
+    # --------------------------------------------------------
+    # Resolved references
+    #
+    # Example:
+    #
+    #   {
+    #       "it": "video"
+    #   }
+    # --------------------------------------------------------
+
+    resolved_references: Dict[str, Any] = field(
+        default_factory=dict
+    )
+
+    # --------------------------------------------------------
+    # Unresolved references
+    # --------------------------------------------------------
+
+    unresolved_references: List[str] = field(
+        default_factory=list
+    )
+
+    # --------------------------------------------------------
+    # Application
+    # --------------------------------------------------------
 
     application: Optional[str] = None
 
+    # --------------------------------------------------------
+    # Skill
+    # --------------------------------------------------------
+
     skill: Optional[str] = None
+
+    # --------------------------------------------------------
+    # Action
+    #
+    # This is optional because NCI does not necessarily
+    # determine the final executable action.
+    #
+    # Example:
+    #
+    #   youtube_pause
+    #   youtube_resume
+    #   youtube_next
+    #
+    # If NCI does not provide one, the existing execution
+    # architecture remains responsible for resolving it.
+    # --------------------------------------------------------
+
+    action: Optional[str] = None
 
     # --------------------------------------------------------
     # Strategy
@@ -108,6 +195,10 @@ class ConversationRequestBuilder:
     and produces:
 
         ConversationRequest
+
+    The resulting ConversationRequest is the common
+    conversational representation used by later JARVIS
+    integration layers.
     """
 
     # --------------------------------------------------------
@@ -131,6 +222,62 @@ class ConversationRequestBuilder:
             name,
             default
         )
+
+    # --------------------------------------------------------
+
+    @staticmethod
+    def _list_value(
+        source,
+        name: str
+    ) -> List[Any]:
+        """
+        Safely read a list-like attribute.
+
+        Always returns a new list so the immutable
+        ConversationRequest does not share mutable state
+        with upstream NCI objects.
+        """
+
+        value = getattr(
+            source,
+            name,
+            None
+        ) if source is not None else None
+
+        if value is None:
+
+            return []
+
+        if isinstance(value, (list, tuple, set)):
+
+            return list(value)
+
+        return [value]
+
+    # --------------------------------------------------------
+
+    @staticmethod
+    def _dict_value(
+        source,
+        name: str
+    ) -> Dict[str, Any]:
+        """
+        Safely read a dictionary-like attribute.
+
+        Always returns a new dictionary.
+        """
+
+        value = getattr(
+            source,
+            name,
+            None
+        ) if source is not None else None
+
+        if isinstance(value, dict):
+
+            return dict(value)
+
+        return {}
 
     # --------------------------------------------------------
 
@@ -160,6 +307,86 @@ class ConversationRequestBuilder:
                 0.0
             )
         )
+
+        # ====================================================
+        # Relationship
+        # ====================================================
+
+        relation = self._value(
+            meaning,
+            "relation",
+            None
+        )
+
+        # Support enum-style relations safely.
+        if hasattr(relation, "value"):
+
+            relation = relation.value
+
+        if relation is not None:
+
+            relation = str(
+                relation
+            )
+
+        # ====================================================
+        # Action
+        # ====================================================
+
+        action = self._value(
+            meaning,
+            "action",
+            None
+        )
+
+        if action is not None:
+
+            action = str(
+                action
+            )
+
+        # ====================================================
+        # References
+        # ====================================================
+
+        references = self._list_value(
+            meaning,
+            "references"
+        )
+
+        resolved_references = (
+            self._dict_value(
+                meaning,
+                "resolved_references"
+            )
+        )
+
+        unresolved_references = (
+            self._list_value(
+                meaning,
+                "unresolved_references"
+            )
+        )
+
+        # ----------------------------------------------------
+        # Backward-compatible single reference
+        #
+        # If NCI provides a single "reference" field,
+        # preserve it.
+        #
+        # Otherwise derive it from the first detected
+        # reference when possible.
+        # ----------------------------------------------------
+
+        reference = self._value(
+            meaning,
+            "reference",
+            None
+        )
+
+        if reference is None and references:
+
+            reference = references[0]
 
         # ====================================================
         # Strategy
@@ -222,11 +449,6 @@ class ConversationRequestBuilder:
         object_value = self._value(
             meaning,
             "object"
-        )
-
-        reference = self._value(
-            meaning,
-            "reference"
         )
 
         application = self._value(
@@ -303,7 +525,9 @@ class ConversationRequestBuilder:
                 object_value=object_value,
                 reference=reference,
                 application=application,
-                skill=skill
+                skill=skill,
+                action=action,
+                relation=relation,
             )
         )
 
@@ -317,7 +541,7 @@ class ConversationRequestBuilder:
                 "ConversationRequestBuilder",
 
             "version":
-                "1.0",
+                "1.1",
 
             "nci_stage":
                 "NCI-6",
@@ -327,6 +551,8 @@ class ConversationRequestBuilder:
         return ConversationRequest(
 
             user_input=user_input,
+
+            relation=relation,
 
             intent=intent,
 
@@ -342,9 +568,21 @@ class ConversationRequestBuilder:
 
             reference=reference,
 
+            references=references,
+
+            resolved_references=(
+                resolved_references
+            ),
+
+            unresolved_references=(
+                unresolved_references
+            ),
+
             application=application,
 
             skill=skill,
+
+            action=action,
 
             needs_ai=needs_ai,
 
@@ -376,10 +614,22 @@ class ConversationRequestBuilder:
         object_value,
         reference,
         application,
-        skill
+        skill,
+        action,
+        relation,
     ) -> str:
 
         instructions = []
+
+        # ----------------------------------------------------
+        # Relationship
+        # ----------------------------------------------------
+
+        if relation:
+
+            instructions.append(
+                f"Conversation relation: {relation}."
+            )
 
         # ----------------------------------------------------
         # Conversation
@@ -485,6 +735,16 @@ class ConversationRequestBuilder:
             )
 
         # ----------------------------------------------------
+        # Action
+        # ----------------------------------------------------
+
+        if action:
+
+            instructions.append(
+                f"Resolved action: {action}."
+            )
+
+        # ----------------------------------------------------
         # AI requirement
         # ----------------------------------------------------
 
@@ -498,6 +758,26 @@ class ConversationRequestBuilder:
 
             instructions.append(
                 "AI reasoning is not required."
+            )
+
+        # ----------------------------------------------------
+        # Action requirement
+        # ----------------------------------------------------
+
+        if needs_action:
+
+            instructions.append(
+                "An executable action is required."
+            )
+
+        # ----------------------------------------------------
+        # Clarification requirement
+        # ----------------------------------------------------
+
+        if needs_clarification:
+
+            instructions.append(
+                "Additional clarification is required."
             )
 
         return " ".join(
