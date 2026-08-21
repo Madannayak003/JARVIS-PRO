@@ -53,6 +53,7 @@ def dispatch(
     command,
     skip_fast=False,
     fast_plan=None,
+    conversation_request=None,
 ):
 
     command = command.strip()
@@ -202,25 +203,139 @@ def dispatch(
     # NATURAL CONVERSATION ANALYSIS
     # =====================================================
     #
-    # Analyze the command ONCE.
+    # ConversationRequest is now the preferred common
+    # conversational interface.
     #
-    # This is observation only.
+    # During migration, the existing ConversationCoordinator
+    # remains as a compatibility fallback.
+    #
+    # IMPORTANT:
+    # This section only prepares conversational information.
     # It does not execute anything.
-    #
-    # The same analysis will later be reused by the
-    # Follow-Up Execution Bridge if FAST ROUTE does
-    # not handle the command.
     # =====================================================
 
     conversation_analysis = None
 
     try:
 
-        conversation_analysis = (
-            conversation_coordinator.analyze(
-                command
+        if conversation_request is not None:
+
+            from brain.followup_resolver import (
+                FollowUpResolution,
             )
-        )
+
+            # -------------------------------------------------
+            # Adapt the new common ConversationRequest into
+            # the existing FollowUpResolution interface.
+            #
+            # This allows the existing FollowUpExecutionBridge
+            # to remain unchanged during the migration.
+            # -------------------------------------------------
+
+            conversation_analysis = type(
+                "ConversationAnalysisAdapter",
+                (),
+                {}
+            )()
+
+            conversation_analysis.follow_up = (
+                FollowUpResolution(
+
+                    is_follow_up=(
+                        conversation_request.relation
+                        in {
+                            "follow_up",
+                            "continuation",
+                            "correction",
+                            "reference",
+                        }
+                    ),
+
+                    raw_input=(
+                        conversation_request.user_input
+                        or command
+                    ),
+
+                    relation=(
+                        conversation_request.relation
+                    ),
+
+                    application=(
+                        conversation_request.application
+                    ),
+
+                    skill=(
+                        conversation_request.skill
+                    ),
+
+                    topic=(
+                        conversation_request.topic
+                    ),
+
+                    task=(
+                        conversation_request.task
+                    ),
+
+                    intent=(
+                        conversation_request.intent
+                    ),
+
+                    action=(
+                        conversation_request.action
+                    ),
+
+                    object=(
+                        conversation_request.object
+                    ),
+
+                    references=list(
+                        conversation_request.references
+                        or []
+                    ),
+
+                    resolved_references=dict(
+                        conversation_request
+                        .resolved_references
+                        or {}
+                    ),
+
+                    unresolved_references=list(
+                        conversation_request
+                        .unresolved_references
+                        or []
+                    ),
+
+                    confidence=(
+                        conversation_request.confidence
+                    ),
+
+                    reason=(
+                        "Adapted from ConversationRequest."
+                    ),
+                )
+            )
+
+            print(
+                "[CONVERSATION] "
+                "Using ConversationRequest."
+            )
+
+        else:
+
+            # -------------------------------------------------
+            # Compatibility fallback
+            # -------------------------------------------------
+
+            conversation_analysis = (
+                conversation_coordinator.analyze(
+                    command
+                )
+            )
+
+            print(
+                "[CONVERSATION] "
+                "Using ConversationCoordinator fallback."
+            )
 
     except Exception as e:
 
@@ -229,7 +344,7 @@ def dispatch(
             f"Analysis failed safely: {e}"
         )
         
-        # =====================================================
+    # =====================================================
     # NATURAL CONVERSATION FOLLOW-UP PRIORITY
     # =====================================================
     #

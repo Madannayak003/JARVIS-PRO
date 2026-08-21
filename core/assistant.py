@@ -398,7 +398,8 @@ def run():
             interrupt()
 
             dispatch(
-                query
+                query,
+                conversation_request=conversation_request,
             )
 
             continue
@@ -596,5 +597,6 @@ def run():
         # =====================================================
 
         dispatch(
-            query
+            query,
+            conversation_request=conversation_request,
         )
