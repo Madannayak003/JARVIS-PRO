@@ -248,6 +248,7 @@ def dispatch(
                             "continuation",
                             "correction",
                             "reference",
+                            "contextual_reference",
                         }
                     ),
 

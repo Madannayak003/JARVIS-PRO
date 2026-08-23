@@ -66,7 +66,7 @@ recognizer = sr.Recognizer()
 recognizer.energy_threshold = 300
 recognizer.dynamic_energy_threshold = True
 
-recognizer.pause_threshold = 2.0
+recognizer.pause_threshold = 1.5
 recognizer.phrase_threshold = 0.5
 recognizer.non_speaking_duration = 1.0
 
@@ -112,7 +112,7 @@ def _callback(recognizer, audio):
 
             _timer = threading.Timer(
 
-                0.5,
+                0.15,
 
                 _dispatch
 
