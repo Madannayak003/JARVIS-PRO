@@ -69,8 +69,8 @@ class FollowUpExecutionBridge:
         # ====================================================
 
         domain = (
-            skill
-            or application
+            application
+            or skill
             or ""
         ).lower().strip()
 
@@ -219,6 +219,50 @@ class FollowUpExecutionBridge:
                     {
                         "action":
                             "youtube_play_first"
+                    }
+                ]
+                
+            # ------------------------------------------------
+            # Volume Up
+            # ------------------------------------------------
+
+            if command in [
+                "make it louder",
+                "make that louder",
+                "increase the volume",
+                "turn it up",
+                "turn that up",
+                "louder",
+                "volume up",
+                "increase volume",
+            ]:
+
+                return [
+                    {
+                        "action": "volume",
+                        "direction": "up",
+                    }
+                ]
+
+            # ------------------------------------------------
+            # Volume Down
+            # ------------------------------------------------
+
+            if command in [
+                "make it quieter",
+                "make that quieter",
+                "decrease the volume",
+                "turn it down",
+                "turn that down",
+                "quieter",
+                "volume down",
+                "decrease volume",
+            ]:
+
+                return [
+                    {
+                        "action": "volume",
+                        "direction": "down",
                     }
                 ]
 

@@ -250,6 +250,8 @@ def dispatch(
                             "reference",
                             "contextual_reference",
                         }
+                        or conversation_request.intent
+                        == "contextual_reference"
                     ),
 
                     raw_input=(
@@ -998,6 +1000,82 @@ def dispatch(
         )
 
         return
+    
+    # =====================================================
+    # GENERIC SEARCH USING ACTION MEMORY
+    # =====================================================
+
+    if (
+        command.startswith("search ")
+        and "youtube" not in command
+        and "google" not in command
+        and "github" not in command
+        and "chatgpt" not in command
+    ):
+
+        current_site = get_memory(
+            "site"
+        )
+
+        query = (
+            command
+            .replace(
+                "search",
+                "",
+                1,
+            )
+            .strip()
+        )
+
+        # -------------------------------------------------
+        # YouTube
+        # -------------------------------------------------
+
+        if current_site == "youtube":
+
+            print(
+                "[ACTION MEMORY] "
+                "YouTube Search"
+            )
+
+            result = execute(
+                "youtube_search",
+                {
+                    "action": "youtube_search",
+                    "query": query,
+                },
+            )
+
+            print(
+                "[ACTION MEMORY RESULT]",
+                repr(result),
+            )
+
+            return
+
+        # -------------------------------------------------
+        # Google
+        # -------------------------------------------------
+
+        if current_site == "google":
+
+            print(
+                "[ACTION MEMORY] "
+                "Google Search"
+            )
+
+            task_manager.start(
+                "executor",
+                execute_ai_plan,
+                [
+                    {
+                        "action": "google_search",
+                        "query": query,
+                    }
+                ],
+            )
+
+            return
 
     # =====================================================
     # ACTION MEMORY
@@ -1336,82 +1414,7 @@ def dispatch(
 
             return
 
-    # =====================================================
-    # GENERIC SEARCH USING ACTION MEMORY
-    # =====================================================
-
-    if (
-        command.startswith("search ")
-        and "youtube" not in command
-        and "google" not in command
-        and "github" not in command
-        and "chatgpt" not in command
-    ):
-
-        current_site = get_memory(
-            "site"
-        )
-
-        query = (
-            command
-            .replace(
-                "search",
-                "",
-                1,
-            )
-            .strip()
-        )
-
-        # -------------------------------------------------
-        # YouTube
-        # -------------------------------------------------
-
-        if current_site == "youtube":
-
-            print(
-                "[ACTION MEMORY] "
-                "YouTube Search"
-            )
-
-            result = execute(
-                "youtube_search",
-                {
-                    "action": "youtube_search",
-                    "query": query,
-                },
-            )
-
-            print(
-                "[ACTION MEMORY RESULT]",
-                repr(result),
-            )
-
-            return
-
-        # -------------------------------------------------
-        # Google
-        # -------------------------------------------------
-
-        if current_site == "google":
-
-            print(
-                "[ACTION MEMORY] "
-                "Google Search"
-            )
-
-            task_manager.start(
-                "executor",
-                execute_ai_plan,
-                [
-                    {
-                        "action": "google_search",
-                        "query": query,
-                    }
-                ],
-            )
-
-            return
-
+    
     # =====================================================
     # EXISTING CHAT / PLANNER
     # =====================================================
