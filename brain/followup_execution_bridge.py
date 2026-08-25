@@ -298,6 +298,7 @@ class FollowUpExecutionBridge:
                 "continue it",
                 "continue the video",
                 "continue youtube",
+                "play it",
                 "play it again",
             ]:
 

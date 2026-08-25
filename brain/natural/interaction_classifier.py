@@ -256,6 +256,42 @@ class InteractionClassifier:
                     "No user input available."
                 ),
             )
+            
+        # ----------------------------------------------------
+        # Existing Conversation Relation
+        # ----------------------------------------------------
+        # Preserve semantic relations already detected by
+        # ConversationUnderstandingEngine.
+        # ----------------------------------------------------
+
+        relation = str(
+            context.conversation.get(
+                "relation",
+                "",
+            )
+        ).lower().strip()
+
+        if relation == "correction":
+
+            return InteractionDecision(
+
+                mode=(
+                    InteractionMode.ACTION
+                ),
+
+                raw_input=command,
+
+                intent="correction",
+
+                confidence=0.95,
+
+                requires_action=True,
+
+                reason=(
+                    "Input was identified as "
+                    "a correction to the previous interaction."
+                ),
+            )
 
         # ----------------------------------------------------
         # Hybrid must be checked before action.
