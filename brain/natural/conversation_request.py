@@ -317,6 +317,19 @@ class ConversationRequestBuilder:
             "relation",
             None
         )
+        
+        # ----------------------------------------------------
+        # If meaning doesn't contain the relation,
+        # use the relation already established by the
+        # Conversation Coordinator.
+        # ----------------------------------------------------
+
+        if relation is None and context is not None:
+
+            relation = self._value(
+                context,
+                "relation"
+            )
 
         # Support enum-style relations safely.
         if hasattr(relation, "value"):
