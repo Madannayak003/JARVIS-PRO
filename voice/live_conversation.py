@@ -24,6 +24,11 @@ import threading
 import time
 from pathlib import Path
 
+from core.listener import (
+    pause_listener,
+    resume_listener,
+)
+
 import sounddevice as sd
 
 try:
@@ -120,35 +125,65 @@ class LiveConversation:
         return self._running
 
     def start(self):
+
         if self._running:
+
             return
 
         if not _api_key():
+
             raise RuntimeError(
                 "GEMINI_API_KEY is not configured."
             )
 
+        # Give the Gemini Live microphone exclusive
+        # ownership while Live Conversation is active.
+
+        pause_listener()
+
         self._stop_event.clear()
+
         self._thread = threading.Thread(
             target=self._thread_main,
             daemon=True,
             name="JARVIS-LiveConversation",
         )
+
         self._thread.start()
 
     def stop(self):
+
         self._stop_event.set()
+
         self._running = False
 
+        # Give the normal JARVIS microphone back
+        # after Gemini Live releases its microphone.
+
+        resume_listener()
+
     def _thread_main(self):
+
         try:
-            asyncio.run(self._run())
+
+            asyncio.run(
+                self._run()
+            )
+
         except Exception as exc:
+
             print(
                 f"[LIVE] Conversation stopped: {exc}"
             )
+
         finally:
+
             self._running = False
+
+            # Always return microphone ownership
+            # to normal JARVIS.
+
+            resume_listener()
 
     async def _run(self):
         self._running = True
