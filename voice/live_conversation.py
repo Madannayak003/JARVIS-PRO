@@ -295,7 +295,7 @@ class LiveConversation:
                                 and sc.output_transcription.text
                             ):
                                 print(
-                                    "[JARVIS]",
+                                    "[JARVIS LIVE]",
                                     sc.output_transcription.text,
                                 )
 
