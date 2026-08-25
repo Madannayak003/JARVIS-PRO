@@ -49,6 +49,7 @@ SKILLS = [
     "communication.chatgpt",
     "media.spotify",
     "assistant.greetings",
+    "automation.home_automation",
     "communication.whatsapp",
     "communication.contact",
     "screen.screenshot_ai",

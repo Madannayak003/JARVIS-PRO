@@ -220,6 +220,8 @@ from voice.mode import get_mode
 
 from hud.integration import HUDIntegration
 
+from services.remote_control import RemoteControlServer
+
 def main():
 
     mode = get_mode()
@@ -266,6 +268,66 @@ def main():
     init_memory()
 
     start_all()
+    
+    # =====================================================
+    # LIVE CONVERSATION
+    # =====================================================
+
+    from core.registry import register
+
+    from voice.live_conversation import (
+        start_live_conversation,
+        stop_live_conversation,
+        live_conversation_status,
+    )
+
+    register(
+        "start_live_conversation",
+        start_live_conversation,
+        category="voice",
+    )
+
+    register(
+        "stop_live_conversation",
+        stop_live_conversation,
+        category="voice",
+    )
+
+    register(
+        "live_conversation_status",
+        live_conversation_status,
+        category="voice",
+    )
+    
+    # =====================================================
+    # REMOTE CONTROL
+    # =====================================================
+
+    from core.dispatcher import dispatch
+
+    remote_server = RemoteControlServer(
+        command_handler=dispatch
+    )
+
+    remote_server.new_pairing_pin()
+
+    if remote_server.start():
+
+        print(
+            "[REMOTE] JARVIS Remote:"
+        )
+
+        print(
+            f"[REMOTE] {remote_server.url()}"
+        )
+
+        print(
+            "[REMOTE] Pairing PIN:"
+        )
+
+        print(
+            remote_server._pin
+        )
 
     from voice.online_runner import run
 

@@ -60,6 +60,44 @@ def dispatch(
 
     if not command:
         return
+    
+    
+    # =====================================================
+    # LIVE CONVERSATION CONTROL
+    # =====================================================
+
+    live_command = command.lower().strip()
+
+    if live_command in {
+        "start live conversation",
+        "start live mode",
+        "enter live conversation",
+        "start natural live conversation",
+    }:
+
+        return execute(
+            "start_live_conversation"
+        )
+
+    if live_command in {
+        "stop live conversation",
+        "stop live mode",
+        "exit live conversation",
+        "end live conversation",
+    }:
+
+        return execute(
+            "stop_live_conversation"
+        )
+
+    if live_command in {
+        "live conversation status",
+        "live mode status",
+    }:
+
+        return execute(
+            "live_conversation_status"
+        )
 
     # =====================================================
     # CLARIFICATION CONTEXT
@@ -617,6 +655,145 @@ def dispatch(
             return
 
     # =====================================================
+    # CONTEXT-AWARE GENERIC SEARCH
+    # =====================================================
+    #
+    # If the user previously selected a search platform,
+    # a natural "search ..." continuation should inherit
+    # that platform.
+    #
+    # Example:
+    #
+    #   Open YouTube
+    #   Search ESP32 weather station
+    #
+    # becomes:
+    #
+    #   youtube_search("ESP32 weather station")
+    #
+    # This is shared by voice and Remote Control because
+    # both use the same dispatcher and action memory.
+    # =====================================================
+
+    if (
+        not skip_fast
+        and command.lower().startswith("search ")
+        and "youtube" not in command.lower()
+        and "google" not in command.lower()
+        and "github" not in command.lower()
+        and "chatgpt" not in command.lower()
+    ):
+
+        current_site = get_memory(
+            "site"
+        )
+
+        query = command[
+            len("search "):
+        ].strip()
+
+        if query:
+
+            # -------------------------------------------------
+            # YouTube context
+            # -------------------------------------------------
+
+            if current_site == "youtube":
+
+                print(
+                    "[ACTION MEMORY] "
+                    "Context resolved: YouTube"
+                )
+
+                print(
+                    "[ACTION MEMORY] "
+                    f"YouTube Search: {query}"
+                )
+
+                result = execute(
+                    "youtube_search",
+                    {
+                        "action":
+                            "youtube_search",
+                        "query":
+                            query,
+                    },
+                )
+
+                print(
+                    "[ACTION MEMORY RESULT]",
+                    repr(result),
+                )
+
+                return
+
+            # -------------------------------------------------
+            # Google context
+            # -------------------------------------------------
+
+            if current_site == "google":
+
+                print(
+                    "[ACTION MEMORY] "
+                    "Context resolved: Google"
+                )
+
+                print(
+                    "[ACTION MEMORY] "
+                    f"Google Search: {query}"
+                )
+
+                result = execute(
+                    "google_search",
+                    {
+                        "action":
+                            "google_search",
+                        "query":
+                            query,
+                    },
+                )
+
+                print(
+                    "[ACTION MEMORY RESULT]",
+                    repr(result),
+                )
+
+                return
+
+            # -------------------------------------------------
+            # GitHub context
+            # -------------------------------------------------
+
+            if current_site == "github":
+
+                print(
+                    "[ACTION MEMORY] "
+                    "Context resolved: GitHub"
+                )
+
+                print(
+                    "[ACTION MEMORY] "
+                    f"GitHub Search: {query}"
+                )
+
+                result = execute(
+                    "github_search",
+                    {
+                        "action":
+                            "github_search",
+                        "query":
+                            query,
+                    },
+                )
+
+                print(
+                    "[ACTION MEMORY RESULT]",
+                    repr(result),
+                )
+
+                return
+
+    # =====================================================
     # NATURAL CONVERSATION FOLLOW-UP EXECUTION
     # =====================================================
     #
@@ -1001,81 +1178,81 @@ def dispatch(
 
         return
     
-    # =====================================================
-    # GENERIC SEARCH USING ACTION MEMORY
-    # =====================================================
+    # # =====================================================
+    # # GENERIC SEARCH USING ACTION MEMORY
+    # # =====================================================
 
-    if (
-        command.startswith("search ")
-        and "youtube" not in command
-        and "google" not in command
-        and "github" not in command
-        and "chatgpt" not in command
-    ):
+    # if (
+    #     command.startswith("search ")
+    #     and "youtube" not in command
+    #     and "google" not in command
+    #     and "github" not in command
+    #     and "chatgpt" not in command
+    # ):
 
-        current_site = get_memory(
-            "site"
-        )
+    #     current_site = get_memory(
+    #         "site"
+    #     )
 
-        query = (
-            command
-            .replace(
-                "search",
-                "",
-                1,
-            )
-            .strip()
-        )
+    #     query = (
+    #         command
+    #         .replace(
+    #             "search",
+    #             "",
+    #             1,
+    #         )
+    #         .strip()
+    #     )
 
-        # -------------------------------------------------
-        # YouTube
-        # -------------------------------------------------
+    #     # -------------------------------------------------
+    #     # YouTube
+    #     # -------------------------------------------------
 
-        if current_site == "youtube":
+    #     if current_site == "youtube":
 
-            print(
-                "[ACTION MEMORY] "
-                "YouTube Search"
-            )
+    #         print(
+    #             "[ACTION MEMORY] "
+    #             "YouTube Search"
+    #         )
 
-            result = execute(
-                "youtube_search",
-                {
-                    "action": "youtube_search",
-                    "query": query,
-                },
-            )
+    #         result = execute(
+    #             "youtube_search",
+    #             {
+    #                 "action": "youtube_search",
+    #                 "query": query,
+    #             },
+    #         )
 
-            print(
-                "[ACTION MEMORY RESULT]",
-                repr(result),
-            )
+    #         print(
+    #             "[ACTION MEMORY RESULT]",
+    #             repr(result),
+    #         )
 
-            return
+    #         return
 
-        # -------------------------------------------------
-        # Google
-        # -------------------------------------------------
+    #     # -------------------------------------------------
+    #     # Google
+    #     # -------------------------------------------------
 
-        if current_site == "google":
+    #     if current_site == "google":
 
-            print(
-                "[ACTION MEMORY] "
-                "Google Search"
-            )
+    #         print(
+    #             "[ACTION MEMORY] "
+    #             "Google Search"
+    #         )
 
-            task_manager.start(
-                "executor",
-                execute_ai_plan,
-                [
-                    {
-                        "action": "google_search",
-                        "query": query,
-                    }
-                ],
-            )
+    #         task_manager.start(
+    #             "executor",
+    #             execute_ai_plan,
+    #             [
+    #                 {
+    #                     "action": "google_search",
+    #                     "query": query,
+    #                 }
+    #             ],
+    #         )
 
-            return
+    #         return
 
     # =====================================================
     # ACTION MEMORY
