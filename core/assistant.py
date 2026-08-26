@@ -503,10 +503,8 @@ def run():
         if query.lower() in [
 
             "go offline",
-            "jarvis go offline",
             "sleep",
-            "jarvis sleep",
-            "jarvis sleep mode",
+            "go sleep mode",
 
         ]:
 
@@ -522,9 +520,8 @@ def run():
 
             "shutdown",
             "terminate",
+            "go terminate"
             "power off",
-            "jarvis shutdown",
-            "jarvis terminate",
 
         ]:
 
