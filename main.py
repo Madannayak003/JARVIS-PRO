@@ -3,6 +3,7 @@
 JARVIS PRO — MAIN APPLICATION ENTRY POINT
 =============================================================
 """
+
 from skills.loader import load_all
 from ai.memory import init_memory
 from core.services import start_all
@@ -13,11 +14,14 @@ from hud.integration import HUDIntegration
 
 from services.remote_control import RemoteControlServer
 
+
 def main():
 
     mode = get_mode()
 
-    print(f"[MAIN] Voice mode: {mode}")
+    print(
+        f"[MAIN] Voice mode: {mode}"
+    )
 
     # =====================================================
     # HUD — Report current voice mode
@@ -26,7 +30,7 @@ def main():
     HUDIntegration.voice_mode(
         mode
     )
-    
+
     print(
         "[MAIN HUD] Voice mode sent to HUD:",
         mode
@@ -59,7 +63,7 @@ def main():
     init_memory()
 
     start_all()
-    
+
     # =====================================================
     # LIVE CONVERSATION
     # =====================================================
@@ -89,7 +93,11 @@ def main():
         live_conversation_status,
         category="voice",
     )
-    
+
+    print(
+        "[LIVE] Live Conversation actions registered."
+    )
+
     # =====================================================
     # REMOTE CONTROL
     # =====================================================
@@ -97,7 +105,8 @@ def main():
     from core.dispatcher import dispatch
 
     remote_server = RemoteControlServer(
-        command_handler=dispatch
+        command_handler=dispatch,
+        live_stop_handler=stop_live_conversation,
     )
 
     remote_server.new_pairing_pin()
@@ -120,10 +129,19 @@ def main():
             remote_server._pin
         )
 
+        print(
+            "[REMOTE] Live Conversation stop control: READY"
+        )
+
+    # =====================================================
+    # EXISTING ONLINE VOICE
+    # =====================================================
+
     from voice.online_runner import run
 
     return run()
 
 
 if __name__ == "__main__":
+
     main()
