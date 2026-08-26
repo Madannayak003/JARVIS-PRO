@@ -121,6 +121,16 @@ class BrowserController:
         self.playwright = None
         self.browser = None
         self.page = None
+        
+        # -------------------------------------------------
+        # Previous browser page
+        # -------------------------------------------------
+        #
+        # Used when JARVIS opens a new tab and the user says
+        # "go back". A newly-created tab has no history, so
+        # JARVIS should return to the previous tab.
+        #
+        self.previous_page = None
 
     # =====================================================
     # INTERNAL EXECUTION
@@ -1224,15 +1234,58 @@ class BrowserController:
 
                 return False
 
-            context = (
-                self.browser.contexts[0]
-            )
+            if not self.browser:
 
-            self.page = (
-                context.new_page()
-            )
+                return False
+
+            context = self.browser.contexts[0]
+
+            # -------------------------------------------------
+            # Remember current tab
+            # -------------------------------------------------
+
+            old_page = self.page
+
+            if (
+                old_page
+                and not old_page.is_closed()
+            ):
+
+                self.previous_page = old_page
+
+            # -------------------------------------------------
+            # Create new tab
+            # -------------------------------------------------
+
+            new_page = context.new_page()
+
+            self.page = new_page
 
             self.page.bring_to_front()
+
+            # -------------------------------------------------
+            # Load Chrome's normal new-tab page
+            # -------------------------------------------------
+
+            try:
+
+                self.page.goto(
+                    "https://www.google.com",
+                    wait_until="domcontentloaded",
+                    timeout=10000,
+                )
+
+            except Exception as e:
+
+                print(
+                    f"[Browser NEW TAB] "
+                    f"New-tab navigation notice: {e}"
+                )
+
+            print(
+                "[Browser] "
+                "New tab opened"
+            )
 
             return True
 
@@ -1262,9 +1315,32 @@ class BrowserController:
 
                 return False
 
-            self.page.close()
+            closing_page = self.page
 
-            self.page = None
+            closing_page.close()
+
+            # -------------------------------------------------
+            # Restore previous tab if available
+            # -------------------------------------------------
+
+            if (
+                self.previous_page
+                and not self.previous_page.is_closed()
+            ):
+
+                self.page = self.previous_page
+                self.previous_page = None
+
+                self.page.bring_to_front()
+
+                print(
+                    "[Browser] "
+                    "Returned to previous tab"
+                )
+
+            else:
+
+                self.page = None
 
             return True
 
@@ -1324,9 +1400,78 @@ class BrowserController:
 
                 return False
 
-            self.page.go_back()
+            # -------------------------------------------------
+            # First: normal browser history
+            # -------------------------------------------------
 
-            return True
+            response = self.page.go_back(
+                wait_until="domcontentloaded",
+                timeout=10000,
+            )
+
+            if response is not None:
+
+                self.page.bring_to_front()
+
+                print(
+                    "[Browser] Navigated back"
+                )
+
+                return True
+
+            # -------------------------------------------------
+            # No history.
+            #
+            # This commonly happens when the current page is
+            # a newly-created blank tab.
+            #
+            # Return to the previous JARVIS tab.
+            # -------------------------------------------------
+
+            if (
+                self.previous_page
+                and not self.previous_page.is_closed()
+            ):
+
+                current_page = self.page
+
+                self.page = self.previous_page
+
+                self.previous_page = None
+
+                self.page.bring_to_front()
+
+                print(
+                    "[Browser] "
+                    "Returned to previous tab"
+                )
+
+                # -------------------------------------------------
+                # Close the temporary blank/new tab.
+                # -------------------------------------------------
+
+                try:
+
+                    if (
+                        current_page
+                        and not current_page.is_closed()
+                        and current_page != self.page
+                    ):
+
+                        current_page.close()
+
+                except Exception:
+
+                    pass
+
+                return True
+
+            print(
+                "[Browser] "
+                "No browser history or previous tab"
+            )
+
+            return False
 
         except Exception as e:
 
@@ -1479,6 +1624,7 @@ class BrowserController:
         finally:
 
             self.page = None
+            self.previous_page = None
             self.browser = None
             self.playwright = None
 

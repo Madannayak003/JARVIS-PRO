@@ -17,10 +17,10 @@ ROUTERS = [
     memory_route,
     
     web_route,
-    
-    spotify_route,
 
     browser_route,
+    
+    spotify_route,
     
     greeting_route,
 

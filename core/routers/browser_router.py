@@ -137,6 +137,12 @@ def browser_route(command):
             1
         ).strip()
 
+        if query.startswith("for "):
+            query = query[4:].strip()
+
+        if not query:
+            return None
+
         return [
             {
                 "action": "youtube_search",
@@ -247,6 +253,8 @@ def browser_route(command):
         "pause youtube",
         "pause youtube video",
         "pause video",
+        "pause the video",
+        "pause",
     ]:
 
         return [
@@ -263,8 +271,14 @@ def browser_route(command):
     if command in [
         "resume youtube",
         "resume youtube video",
+        "resume the youtube video",
         "resume video",
+        "resume the video",
         "continue youtube",
+        "continue the youtube video",
+        "continue video",
+        "continue the video",
+        "continue playing",
     ]:
 
         return [
@@ -281,7 +295,9 @@ def browser_route(command):
     if command in [
         "next youtube",
         "next youtube video",
+        "next the youtube video",
         "next video",
+        "next the video",
         "play next video",
         "play the next video",
         "play next youtube video",
@@ -301,7 +317,9 @@ def browser_route(command):
     if command in [
         "previous youtube",
         "previous youtube video",
+        "previous the youtube video",
         "previous video",
+        "previous the video",
         "play previous video",
         "play the previous video",
         "play previous youtube video",
@@ -310,6 +328,66 @@ def browser_route(command):
         return [
             {
                 "action": "youtube_previous"
+            }
+        ]
+        
+    # -----------------------------------------------------
+    # Browser Navigation Controls
+    # -----------------------------------------------------
+
+    # New Tab
+    if command in [
+        "new tab",
+        "open new tab",
+        "open a new tab",
+        "create new tab",
+    ]:
+        return [
+            {
+                "action": "new_tab"
+            }
+        ]
+
+    # Back
+    if command in [
+        "back",
+        "go back",
+        "go backward",
+        "go to previous page",
+        "previous page",
+    ]:
+        return [
+            {
+                "action": "back"
+            }
+        ]
+
+    # Forward
+    if command in [
+        "forward",
+        "go forward",
+        "go forwards",
+        "go to next page",
+        "next page",
+    ]:
+        return [
+            {
+                "action": "forward"
+            }
+        ]
+
+    # Refresh
+    if command in [
+        "refresh",
+        "refresh page",
+        "refresh the page",
+        "reload",
+        "reload page",
+        "reload the page",
+    ]:
+        return [
+            {
+                "action": "refresh"
             }
         ]
 
