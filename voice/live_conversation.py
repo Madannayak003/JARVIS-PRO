@@ -58,6 +58,9 @@ import sounddevice as sd
 from google import genai
 from google.genai import types
 
+from core.dispatcher import dispatch
+from core.live_execution import live_execution
+
 
 # =============================================================
 # CONFIGURATION
@@ -74,11 +77,9 @@ INPUT_RATE = 16000
 OUTPUT_RATE = 24000
 
 CHANNELS = 1
-
 DTYPE = "int16"
 
-# 1024 samples at 16 kHz ~= 64 ms
-# This gives a good latency/CPU balance.
+# 1024 samples at 16 kHz ~= 64 ms.
 BLOCK_SIZE = 1024
 
 INPUT_QUEUE_SIZE = 64
@@ -138,7 +139,8 @@ def _api_key() -> str:
 
 def _system_prompt() -> str:
     """
-    Reuse the existing JARVIS prompt.
+    Load the existing JARVIS prompt and add only the
+    Live Conversation behavior rules.
     """
 
     prompt_path = (
@@ -159,20 +161,137 @@ def _system_prompt() -> str:
             "You are JARVIS, a helpful personal AI assistant."
         )
 
+    live_rules = """
+=============================================================
+LIVE CONVERSATION BEHAVIOR
+=============================================================
+
+You are JARVIS in a natural realtime spoken conversation.
+
+GENERAL BEHAVIOR
+- Speak naturally, calmly, and conversationally.
+- Do not require a wake word between turns.
+- Treat every clearly new user utterance as a new turn.
+- Preserve conversation context when the user is clearly
+  continuing the previous topic.
+- Do not invent a connection between unrelated short inputs.
+- If the user's new request is clear, answer it directly.
+
+RESPONSE STYLE
+- Keep spoken answers concise unless the user asks for detail.
+- Usually answer in one or a few natural sentences.
+- Do not repeatedly say:
+  "Anything else?"
+  "How can I help you today?"
+  "What else can I do for you?"
+- Do not append a generic question after every answer.
+- After answering, naturally stop and wait for the next turn.
+- Do not repeat information that was already given.
+- Do not continue speaking after the answer is complete.
+
+SHORT INPUTS
+- Short inputs such as numbers, names, or brief phrases may be
+  follow-up answers, but do not automatically assume they are.
+- Use the current conversational context to interpret them.
+- If a short input does not clearly continue the previous topic,
+  respond naturally rather than repeating the previous answer.
+
+INTERRUPTION
+- Allow the user to speak naturally between responses.
+- Never require the user to wait for a wake word.
+
+REALTIME LIMITATIONS
+- Do not claim to have live web/news access unless such access
+  is actually available in this Live session.
+- If the user asks for information requiring real-time data,
+  clearly say that Live Conversation does not currently have
+  that external data source instead of pretending.
+
+STOP COMMAND
+- If the user says "stop live conversation", stop the Live
+  conversation immediately.
+- Equivalent commands such as "end live conversation" or
+  "exit live conversation" should also be understood.
+
+IMPORTANT:
+This is a spoken conversation. Favor natural short answers
+over long assistant-style paragraphs.
+
+JARVIS COMPUTER COMMANDS
+
+You are connected to the JARVIS computer-control system.
+
+When the user asks you to perform an action on the computer,
+use the jarvis_command tool instead of pretending that you
+performed the action yourself.
+
+Examples:
+
+- "Open YouTube"
+- "Take a screenshot"
+- "Open Spotify"
+- "Turn the volume down"
+- "Search YouTube for Python tutorials"
+- "Show my battery"
+- "Open Chrome"
+
+For ordinary questions such as:
+
+- "What is 2 + 2?"
+- "What is the capital of India?"
+- "Tell me something interesting."
+
+answer normally without calling the tool.
+
+Never claim that a computer action was completed unless the
+jarvis_command tool was actually executed successfully.
+
+After a command is executed, briefly tell the user the result
+naturally.
+
+"""
+
     return (
         prompt
         + "\n\n"
-        "LIVE CONVERSATION MODE:\n"
-        "You are JARVIS in a natural realtime spoken conversation.\n"
-        "Do not require a wake word between turns.\n"
-        "Listen for the user's next request continuously.\n"
-        "Keep spoken responses concise and natural.\n"
-        "Do not repeatedly say 'How can I help you today?'.\n"
-        "Do not unnecessarily repeat yourself.\n"
-        "Allow the user to interrupt you naturally.\n"
-        "Treat each new user utterance as the next conversational turn.\n"
-        "If the user says 'stop live conversation', end the live conversation."
+        + live_rules
     )
+
+
+# =============================================================
+# JARVIS COMMAND TOOL
+# =============================================================
+
+JARVIS_COMMAND_TOOL = {
+    "function_declarations": [
+        {
+            "name": "jarvis_command",
+            "description": (
+                "Execute a command using the existing JARVIS "
+                "command system. Use this only when the user "
+                "is asking JARVIS to perform an action on the "
+                "computer or use one of its installed skills. "
+                "Do not use it for ordinary questions or casual "
+                "conversation."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": (
+                            "The user's intended JARVIS command "
+                            "in natural language."
+                        ),
+                    }
+                },
+                "required": [
+                    "command"
+                ],
+            },
+        }
+    ]
+}
 
 
 # =============================================================
@@ -192,6 +311,18 @@ class LiveConversation:
         self._state_lock = threading.Lock()
 
         self._running = False
+
+        # -----------------------------------------------------
+        # Prevent duplicate pause/resume operations.
+        #
+        # This is intentionally owned by LiveConversation so
+        # repeated calls cannot pause/resume the normal listener
+        # multiple times.
+        # -----------------------------------------------------
+
+        self._normal_mic_paused = False
+
+        self._normal_mic_lock = threading.Lock()
 
     # =========================================================
     # STATE
@@ -314,8 +445,7 @@ class LiveConversation:
         )
 
         # -----------------------------------------------------
-        # Pause the normal JARVIS listener BEFORE opening
-        # the Live microphone.
+        # Pause the normal JARVIS microphone exactly once.
         # -----------------------------------------------------
 
         self._pause_normal_microphone()
@@ -335,12 +465,9 @@ class LiveConversation:
             api_key=api_key
         )
 
-        # -----------------------------------------------------
-        # Gemini Live configuration
-        #
-        # Automatic VAD is intentionally left enabled.
-        # Gemini handles speech turn detection.
-        # -----------------------------------------------------
+        # =====================================================
+        # GEMINI LIVE CONFIGURATION
+        # =====================================================
 
         config = types.LiveConnectConfig(
 
@@ -363,6 +490,10 @@ class LiveConversation:
                     )
                 ]
             ),
+            
+            tools=[
+                JARVIS_COMMAND_TOOL
+            ],
 
             speech_config=types.SpeechConfig(
 
@@ -378,7 +509,7 @@ class LiveConversation:
 
             ),
 
-            # Keep thinking minimal for realtime response.
+            # Keep reasoning lightweight for realtime speech.
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal"
             ),
@@ -440,7 +571,7 @@ class LiveConversation:
                 )
 
                 # =============================================
-                # OPEN MICROPHONE
+                # MICROPHONE
                 # =============================================
 
                 microphone = sd.RawInputStream(
@@ -457,7 +588,7 @@ class LiveConversation:
                 )
 
                 # =============================================
-                # OPEN SPEAKER
+                # SPEAKER
                 # =============================================
 
                 speaker = sd.RawOutputStream(
@@ -484,7 +615,7 @@ class LiveConversation:
                 )
 
                 # =============================================
-                # START AUDIO SENDER
+                # AUDIO SENDER
                 # =============================================
 
                 sender_task = asyncio.create_task(
@@ -496,7 +627,7 @@ class LiveConversation:
                 )
 
                 # =============================================
-                # START STOP WATCHER
+                # STOP WATCHER
                 # =============================================
 
                 stop_task = asyncio.create_task(
@@ -507,13 +638,17 @@ class LiveConversation:
                 try:
 
                     # =========================================
-                    # IMPORTANT:
+                    # PERSISTENT RECEIVE LOOP
+                    # =========================================
                     #
-                    # session.receive() completes after ONE
-                    # model turn.
+                    # One Gemini session.
                     #
-                    # Therefore we call it AGAIN for the
-                    # next turn WITHOUT reconnecting.
+                    # receive() handles one model turn.
+                    #
+                    # When that turn finishes, we call
+                    # receive() again on the SAME session.
+                    #
+                    # There is NO reconnect here.
                     # =========================================
 
                     while not self._stop_event.is_set():
@@ -535,14 +670,16 @@ class LiveConversation:
                         )
 
                         # -------------------------------------
-                        # Stop requested
+                        # STOP REQUEST
                         # -------------------------------------
 
                         if stop_task in done:
 
                             self._stop_event.set()
 
-                            receive_task.cancel()
+                            if not receive_task.done():
+
+                                receive_task.cancel()
 
                             await asyncio.gather(
                                 receive_task,
@@ -552,12 +689,7 @@ class LiveConversation:
                             break
 
                         # -------------------------------------
-                        # One Gemini turn completed.
-                        #
-                        # DO NOT CLOSE SESSION.
-                        #
-                        # Simply loop and call receive()
-                        # again.
+                        # GEMINI TURN FINISHED
                         # -------------------------------------
 
                         if receive_task in done:
@@ -568,13 +700,23 @@ class LiveConversation:
                                     receive_task.result()
                                 )
 
-                                if result == "session_closed":
-
-                                    print(
-                                        "[LIVE] Gemini session closed."
-                                    )
+                                if result in (
+                                    "session_closed",
+                                    "stop_requested",
+                                    "stopped",
+                                ):
 
                                     break
+
+                                # --------------------------------
+                                # "turn_complete" is expected.
+                                #
+                                # DO NOT close the session.
+                                # --------------------------------
+
+                                if result == "turn_complete":
+
+                                    continue
 
                             except asyncio.CancelledError:
 
@@ -648,7 +790,7 @@ class LiveConversation:
             )
 
             # =================================================
-            # RESUME NORMAL JARVIS LISTENER
+            # RESUME NORMAL JARVIS MICROPHONE
             # =================================================
 
             self._resume_normal_microphone()
@@ -675,7 +817,7 @@ class LiveConversation:
 
         except asyncio.QueueFull:
 
-            # Drop the oldest chunk to keep latency bounded.
+            # Drop oldest audio chunk to keep latency bounded.
 
             try:
 
@@ -719,11 +861,9 @@ class LiveConversation:
                     continue
 
                 # ------------------------------------------------
-                # IMPORTANT:
+                # DO NOT send audio_stream_end after each phrase.
                 #
-                # Do NOT send audio_stream_end after each phrase.
-                #
-                # Gemini's automatic VAD handles the turns.
+                # Gemini's automatic VAD handles speech turns.
                 # ------------------------------------------------
 
                 await session.send_realtime_input(
@@ -766,15 +906,134 @@ class LiveConversation:
 
         IMPORTANT:
 
-        This function ending does NOT mean Live Conversation
-        should end.
+        Returning from this function does NOT terminate
+        Live Conversation.
 
-        The caller invokes it again using the SAME session.
+        The SAME Gemini session remains alive.
+
+        The caller invokes this method again.
         """
 
         try:
 
             async for response in session.receive():
+                
+                # =============================================
+                # JARVIS TOOL CALL
+                # =============================================
+
+                if response.tool_call:
+
+                    function_responses = []
+
+                    for function_call in (
+                        response.tool_call.function_calls
+                    ):
+
+                        function_name = (
+                            function_call.name
+                        )
+
+                        print(
+                            "[LIVE TOOL]",
+                            function_name,
+                        )
+
+                        # -----------------------------------------
+                        # JARVIS COMMAND
+                        # -----------------------------------------
+
+                        if function_name == "jarvis_command":
+
+                            args = (
+                                function_call.args
+                                or {}
+                            )
+
+                            command = str(
+                                args.get(
+                                    "command",
+                                    "",
+                                )
+                            ).strip()
+
+                            print(
+                                "[LIVE TOOL COMMAND]",
+                                command,
+                            )
+
+                            if not command:
+
+                                result = {
+                                    "success": False,
+                                    "message": (
+                                        "No JARVIS command was provided."
+                                    ),
+                                }
+
+                            else:
+
+                                try:
+
+                                    # ---------------------------------
+                                    # Existing JARVIS dispatcher
+                                    # remains authoritative.
+                                    # ---------------------------------
+
+                                    with live_execution():
+
+                                        dispatch(
+                                            command
+                                        )
+
+                                    result = {
+                                        "success": True,
+                                        "message": (
+                                            f"JARVIS executed: {command}"
+                                        ),
+                                    }
+
+                                except Exception as exc:
+
+                                    print(
+                                        "[LIVE TOOL ERROR]",
+                                        exc,
+                                    )
+
+                                    result = {
+                                        "success": False,
+                                        "message": str(
+                                            exc
+                                        ),
+                                    }
+
+                        else:
+
+                            result = {
+                                "success": False,
+                                "message": (
+                                    f"Unknown JARVIS tool: "
+                                    f"{function_name}"
+                                ),
+                            }
+
+                        function_responses.append(
+                            types.FunctionResponse(
+                                id=function_call.id,
+                                name=function_name,
+                                response=result,
+                            )
+                        )
+
+                    # ---------------------------------------------
+                    # Send result back to Gemini.
+                    # ---------------------------------------------
+
+                    await session.send_tool_response(
+                        function_responses=function_responses
+                    )
+
+                    continue
 
                 if self._stop_event.is_set():
 
@@ -828,11 +1087,7 @@ class LiveConversation:
                         )
 
                         # -------------------------------------
-                        # LOCAL LIVE-MODE STOP COMMAND
-                        #
-                        # Normal JARVIS microphone is paused,
-                        # so Live mode itself must be capable
-                        # of stopping.
+                        # LOCAL STOP COMMAND
                         # -------------------------------------
 
                         if self._is_stop_command(
@@ -888,17 +1143,14 @@ class LiveConversation:
                     # -----------------------------------------
                     # CRITICAL:
                     #
-                    # Return from this function only.
+                    # Only this receive operation ends.
                     #
-                    # The Gemini SESSION remains open.
+                    # Gemini session remains alive.
                     #
-                    # _run() immediately calls
-                    # _receive_one_turn() again.
+                    # _run() calls receive() again.
                     # -----------------------------------------
 
                     return "turn_complete"
-
-            # async generator ended without a normal turn.
 
             return "session_closed"
 
@@ -937,6 +1189,10 @@ class LiveConversation:
                 "!",
                 "",
             )
+            .replace(
+                "?",
+                "",
+            )
         )
 
         stop_commands = (
@@ -951,7 +1207,7 @@ class LiveConversation:
         )
 
         return any(
-            command in normalized
+            command == normalized
             for command in stop_commands
         )
 
@@ -973,61 +1229,85 @@ class LiveConversation:
     # NORMAL JARVIS MICROPHONE
     # =========================================================
 
-    @staticmethod
-    def _pause_normal_microphone():
+    def _pause_normal_microphone(self):
+        """
+        Pause the normal JARVIS listener exactly once.
 
-        try:
+        This prevents duplicate calls if the Live action is
+        triggered while another part of JARVIS has already
+        initiated the pause.
+        """
 
-            from core.listener import (
-                pause_listener,
-            )
+        with self._normal_mic_lock:
 
-            pause_listener()
+            if self._normal_mic_paused:
 
-            print(
-                "[MIC] Background listener paused"
-            )
+                print(
+                    "[MIC] Background listener already paused"
+                )
 
-        except ImportError:
+                return
 
-            print(
-                "[MIC] Background listener pause API unavailable."
-            )
+            try:
 
-        except Exception as exc:
+                from core.listener import (
+                    pause_listener,
+                )
 
-            print(
-                "[MIC] Could not pause listener:",
-                exc,
-            )
+                pause_listener()
 
-    @staticmethod
-    def _resume_normal_microphone():
+                self._normal_mic_paused = True
 
-        try:
+            except ImportError:
 
-            from core.listener import (
-                resume_listener,
-            )
+                print(
+                    "[MIC] Background listener pause API unavailable."
+                )
 
-            resume_listener()
+            except Exception as exc:
 
-            print(
-                "[MIC] Background listener resumed"
-            )
+                print(
+                    "[MIC] Could not pause listener:",
+                    exc,
+                )
 
-        except ImportError:
+    def _resume_normal_microphone(self):
+        """
+        Resume the normal JARVIS listener exactly once.
+        """
 
-            print(
-                "[MIC] Background listener resume API unavailable."
-            )
+        with self._normal_mic_lock:
 
-        except Exception as exc:
+            if not self._normal_mic_paused:
 
-            print(
-                "[MIC] Could not resume listener:",
-                exc,
-            )
+                print(
+                    "[MIC] Background listener already resumed"
+                )
+
+                return
+
+            try:
+
+                from core.listener import (
+                    resume_listener,
+                )
+
+                resume_listener()
+
+                self._normal_mic_paused = False
+
+            except ImportError:
+
+                print(
+                    "[MIC] Background listener resume API unavailable."
+                )
+
+            except Exception as exc:
+
+                print(
+                    "[MIC] Could not resume listener:",
+                    exc,
+                )
 
 
 # =============================================================

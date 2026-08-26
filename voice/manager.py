@@ -1,6 +1,8 @@
 import threading
 import requests
 
+from core.live_execution import is_live_execution
+
 from voice.online_edge import (
     speak_online,
     generate_audio,
@@ -151,6 +153,18 @@ def prepare_speech(
 ):
 
     if not text:
+        return None
+
+    # -----------------------------------------------------
+    # LIVE CONVERSATION SPEECH GATE
+    # -----------------------------------------------------
+
+    if is_live_execution():
+
+        print(
+            "[VOICE] Live execution active - "
+            "suppressing speech preparation."
+        )
 
         return None
 
@@ -203,6 +217,14 @@ def play_prepared_speech(
     audio_file,
     session,
 ):
+    if is_live_execution():
+
+        print(
+            "[VOICE] Live execution active - "
+            "suppressing prepared TTS playback."
+        )
+
+        return False
 
     if not audio_file:
 
@@ -246,6 +268,23 @@ def speak(
     global VOICE_THREAD
 
     if not text:
+
+        return
+    
+    # -----------------------------------------------------
+    # LIVE CONVERSATION SPEECH GATE
+    #
+    # Gemini Live is already the active speaker.
+    # Prevent normal Edge/Piper TTS from speaking at the
+    # same time when a skill executes through Live mode.
+    # -----------------------------------------------------
+
+    if is_live_execution():
+
+        print(
+            "[VOICE] Live execution active - "
+            "suppressing normal TTS."
+        )
 
         return
 

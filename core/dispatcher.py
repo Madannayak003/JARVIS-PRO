@@ -45,6 +45,8 @@ from brain.followup_execution_bridge import (
     followup_execution_bridge,
 )
 
+from core.live_execution import is_live_execution
+
 # =========================================================
 # DISPATCHER
 # =========================================================
@@ -595,62 +597,91 @@ def dispatch(
                 # -----------------------------------------
                 # Speak skill result
                 # -----------------------------------------
+                #
+                # Normal JARVIS:
+                #     Skill result -> Edge TTS
+                #
+                # Live JARVIS:
+                #     Skill result -> Gemini Live
+                #
+                # Gemini Live must remain the only speaker
+                # while a command is being executed through
+                # the Live tool bridge.
+                # -----------------------------------------
 
                 if result is not None:
 
-                    from voice.manager import speak
+                    # =====================================
+                    # LIVE EXECUTION
+                    # =====================================
 
-                    # -------------------------------------
-                    # Boolean result
-                    # -------------------------------------
+                    if is_live_execution():
 
-                    if isinstance(
-                        result,
-                        bool,
-                    ):
+                        print(
+                            "[DISPATCHER] "
+                            "Live execution detected - "
+                            "suppressing normal TTS."
+                        )
 
-                        if action_name == "vision_check":
+                    # =====================================
+                    # NORMAL JARVIS EXECUTION
+                    # =====================================
 
-                            message = (
-                                "Yes, I can see it."
-                                if result
-                                else "No, I don't see it."
-                            )
+                    else:
 
-                            speak(
-                                message
-                            )
+                        from voice.manager import speak
 
-                    # -------------------------------------
-                    # Dictionary result
-                    # -------------------------------------
+                        # ---------------------------------
+                        # Boolean result
+                        # ---------------------------------
 
-                    elif isinstance(
-                        result,
-                        dict,
-                    ):
+                        if isinstance(
+                            result,
+                            bool,
+                        ):
 
-                        if "error" in result:
+                            if action_name == "vision_check":
 
-                            speak(
-                                result["error"]
-                            )
+                                message = (
+                                    "Yes, I can see it."
+                                    if result
+                                    else "No, I don't see it."
+                                )
+
+                                speak(
+                                    message
+                                )
+
+                        # ---------------------------------
+                        # Dictionary result
+                        # ---------------------------------
+
+                        elif isinstance(
+                            result,
+                            dict,
+                        ):
+
+                            if "error" in result:
+
+                                speak(
+                                    result["error"]
+                                )
+
+                            else:
+
+                                speak(
+                                    str(result)
+                                )
+
+                        # ---------------------------------
+                        # Normal result
+                        # ---------------------------------
 
                         else:
 
                             speak(
                                 str(result)
                             )
-
-                    # -------------------------------------
-                    # Normal result
-                    # -------------------------------------
-
-                    else:
-
-                        speak(
-                            str(result)
-                        )
 
             return
 

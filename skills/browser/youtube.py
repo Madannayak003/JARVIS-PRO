@@ -1,6 +1,8 @@
 from core.registry import register
 from voice.manager import speak
 
+from core.live_execution import is_live_execution
+
 from skills.browser.browser_controller import browser
 from config.youtube import get_first_video
 from config.youtube import get_video_list
@@ -26,7 +28,8 @@ def ai_youtube(data):
 
     current_youtube_query = query
 
-    speak(f"Searching YouTube for {query}")
+    if not is_live_execution():
+        speak(f"Searching YouTube for {query}")
 
     browser.search_youtube(query)
 
@@ -57,7 +60,8 @@ def youtube_play_first(data):
         speak("What should I play on YouTube?")
         return False
 
-    speak(f"Finding YouTube videos for {query}")
+    if not is_live_execution():
+        speak(f"Finding YouTube videos for {query}")
 
     videos = get_video_list(query, 10)
 
@@ -76,7 +80,8 @@ def youtube_play_first(data):
     print(f"[YouTube API] Playing: {video['title']}")
     print(f"[YouTube API] Video ID: {video['video_id']}")
 
-    speak(f"Playing {video['title']}")
+    if not is_live_execution():
+        speak(f"Playing {video['title']}")
 
     return browser.play_video(video["video_id"])
 

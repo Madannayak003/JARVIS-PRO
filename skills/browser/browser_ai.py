@@ -5,6 +5,8 @@ from core.action_memory import set_memory
 from core.action_memory import dump
 from skills.browser.browser_controller import browser
 
+from core.live_execution import is_live_execution
+
 import os
 
 SITES = {
@@ -67,7 +69,8 @@ def ai_open(data):
 
     if app in SITES:
 
-        speak(f"Opening {app}")
+        if not is_live_execution():
+            speak(f"Opening {app}")
 
         navigation.open(SITES[app])
 
@@ -104,7 +107,8 @@ def ai_google(data):
     if not query:
         return False
 
-    speak(f"Searching Google for {query}")
+    if not is_live_execution():
+        speak(f"Searching Google for {query}")
 
     result = browser.search_google(query)
 
@@ -127,7 +131,8 @@ def ai_youtube(data):
 
     query = data.get("query", "")
 
-    speak(f"Searching YouTube for {query}")
+    if not is_live_execution():
+        speak(f"Searching YouTube for {query}")
 
     navigation.youtube(query)
     
