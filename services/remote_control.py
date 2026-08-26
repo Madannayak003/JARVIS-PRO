@@ -1,17 +1,23 @@
 """
+=============================================================
 JARVIS PRO - Remote Control Service
+=============================================================
 
 Mark-L-main remote/dashboard idea adapted as an optional
 JARVIS PRO service.
 
 The service:
+
 - creates a short-lived pairing PIN
 - serves a phone-friendly command page
 - accepts text commands
 - sends commands into the existing JARVIS dispatcher
 - provides useful diagnostics when authentication fails
+- can stop Live Conversation directly
+- does NOT replace the existing JARVIS brain/dispatcher
 
-It does NOT replace the existing JARVIS brain/dispatcher.
+Remote Control is intentionally a thin interface over the
+existing JARVIS system.
 """
 
 from __future__ import annotations
@@ -20,17 +26,34 @@ import secrets
 import socket
 import threading
 import time
+
 from typing import Callable, Optional
 
+
+# ==========================================================
+# Optional FastAPI / Uvicorn
+# ==========================================================
+
 try:
-    from fastapi import FastAPI, Request
-    from fastapi.responses import HTMLResponse, JSONResponse
+
+    from fastapi import (
+        FastAPI,
+        Request,
+    )
+
+    from fastapi.responses import (
+        HTMLResponse,
+        JSONResponse,
+    )
+
     import uvicorn
 
     FASTAPI_AVAILABLE = True
 
 except ImportError:
+
     FastAPI = None
+    Request = None
     HTMLResponse = None
     JSONResponse = None
     uvicorn = None
@@ -60,9 +83,10 @@ def _local_ip() -> str:
     """
     Best-effort LAN IP detection.
 
-    This does not send application data to the internet.
-    The UDP socket is only used to let Windows choose the
+    The UDP socket is only used by Windows to select the
     appropriate local network interface.
+
+    No application data is sent to the internet.
     """
 
     sock = socket.socket(
@@ -98,11 +122,24 @@ class RemoteControlServer:
         command_handler: Optional[
             Callable[[str], object]
         ] = None,
+        live_stop_handler: Optional[
+            Callable[[], object]
+        ] = None,
         port: int = PORT,
     ):
 
+        # Existing JARVIS dispatcher.
         self.command_handler = (
             command_handler
+        )
+
+        # Direct Live Conversation stop action.
+        #
+        # This is important because the normal JARVIS
+        # microphone is paused while Live Conversation
+        # owns the microphone.
+        self.live_stop_handler = (
+            live_stop_handler
         )
 
         self.port = int(port)
@@ -133,8 +170,6 @@ class RemoteControlServer:
     ) -> str:
         """
         Generate a new temporary pairing PIN.
-
-        The PIN expires automatically.
         """
 
         self._pin = "".join(
@@ -149,7 +184,7 @@ class RemoteControlServer:
             + int(expiry_seconds)
         )
 
-        # Invalidate any previous phone session.
+        # Invalidate old phone sessions.
 
         self._token = None
 
@@ -254,9 +289,9 @@ class RemoteControlServer:
             redoc_url=None,
         )
 
-        # --------------------------------------------------
+        # ==================================================
         # Main page
-        # --------------------------------------------------
+        # ==================================================
 
         @app.get(
             "/",
@@ -268,14 +303,16 @@ class RemoteControlServer:
                 _PAGE
             )
 
-        # --------------------------------------------------
+        # ==================================================
         # Login
-        # --------------------------------------------------
+        # ==================================================
 
         @app.post(
             "/api/login"
         )
-        async def login(request: "Request"):
+        async def login(
+            request: "Request",
+        ):
 
             client_ip = (
                 request.client.host
@@ -324,9 +361,9 @@ class RemoteControlServer:
                 f"{pin if pin else '(empty)'}"
             )
 
-            # --------------------------------------------------
-            # No PIN generated
-            # --------------------------------------------------
+            # ----------------------------------------------
+            # No active PIN
+            # ----------------------------------------------
 
             if not self._pin:
 
@@ -345,9 +382,9 @@ class RemoteControlServer:
                     status_code=401,
                 )
 
-            # --------------------------------------------------
-            # PIN expired
-            # --------------------------------------------------
+            # ----------------------------------------------
+            # Expired PIN
+            # ----------------------------------------------
 
             if (
                 time.time()
@@ -370,9 +407,9 @@ class RemoteControlServer:
                     status_code=401,
                 )
 
-            # --------------------------------------------------
+            # ----------------------------------------------
             # PIN mismatch
-            # --------------------------------------------------
+            # ----------------------------------------------
 
             if not secrets.compare_digest(
                 pin,
@@ -393,9 +430,9 @@ class RemoteControlServer:
                     status_code=401,
                 )
 
-            # --------------------------------------------------
+            # ----------------------------------------------
             # Successful authentication
-            # --------------------------------------------------
+            # ----------------------------------------------
 
             self._token = (
                 secrets.token_urlsafe(
@@ -412,8 +449,7 @@ class RemoteControlServer:
             )
 
             print(
-                "[REMOTE LOGIN] "
-                "SUCCESS."
+                "[REMOTE LOGIN] SUCCESS."
             )
 
             print(
@@ -434,14 +470,16 @@ class RemoteControlServer:
                     "Connected to JARVIS.",
             }
 
-        # --------------------------------------------------
-        # Command
-        # --------------------------------------------------
+        # ==================================================
+        # Normal JARVIS Command
+        # ==================================================
 
         @app.post(
             "/api/command"
         )
-        async def command(request: "Request"):
+        async def command(
+            request: "Request",
+        ):
 
             client_ip = (
                 request.client.host
@@ -513,9 +551,9 @@ class RemoteControlServer:
                 f"Received: {text}"
             )
 
-            # --------------------------------------------------
-            # Send into EXISTING JARVIS dispatcher
-            # --------------------------------------------------
+            # ----------------------------------------------
+            # Existing JARVIS dispatcher
+            # ----------------------------------------------
 
             if self.command_handler:
 
@@ -550,9 +588,121 @@ class RemoteControlServer:
                 status_code=503,
             )
 
-        # --------------------------------------------------
-        # Execute command safely
-        # --------------------------------------------------
+        # ==================================================
+        # DIRECT LIVE CONVERSATION STOP
+        # ==================================================
+
+        @app.post(
+            "/api/live/stop"
+        )
+        async def live_stop(
+            request: "Request",
+        ):
+
+            client_ip = (
+                request.client.host
+                if request.client
+                else "unknown"
+            )
+
+            # ----------------------------------------------
+            # Authentication
+            # ----------------------------------------------
+
+            if not self._authorize(
+                request
+            ):
+
+                print(
+                    "[REMOTE LIVE] "
+                    "Unauthorized stop request "
+                    f"from {client_ip}"
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error":
+                            "Unauthorized. "
+                            "Connect with the "
+                            "pairing PIN first.",
+                    },
+                    status_code=401,
+                )
+
+            # ----------------------------------------------
+            # Handler availability
+            # ----------------------------------------------
+
+            if not self.live_stop_handler:
+
+                print(
+                    "[REMOTE LIVE] "
+                    "ERROR: Live stop handler "
+                    "is not connected."
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error":
+                            "Live Conversation stop "
+                            "handler is not connected.",
+                    },
+                    status_code=503,
+                )
+
+            # ----------------------------------------------
+            # Stop Live Conversation
+            # ----------------------------------------------
+
+            try:
+
+                print(
+                    "[REMOTE LIVE] "
+                    "Stop requested from "
+                    f"{client_ip}"
+                )
+
+                result = (
+                    self.live_stop_handler()
+                )
+
+                print(
+                    "[REMOTE LIVE] "
+                    "Live Conversation stop "
+                    "requested successfully."
+                )
+
+                return {
+                    "ok": True,
+                    "message":
+                        "Live Conversation stopped.",
+                    "result":
+                        str(result),
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[REMOTE LIVE] "
+                    f"Stop error: {exc}"
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error":
+                            "Unable to stop "
+                            "Live Conversation: "
+                            f"{exc}",
+                    },
+                    status_code=500,
+                )
+
+        # ==================================================
+        # Server Information
+        # ==================================================
 
         @app.get(
             "/api/info"
@@ -561,16 +711,31 @@ class RemoteControlServer:
 
             return {
                 "ok": True,
-                "url": self.url(),
-                "pairing_active": (
-                    self._pin is not None
-                    and time.time()
-                    < self._pin_expiry
-                ),
-                "authenticated": (
-                    self._token is not None
-                ),
-                "server": "JARVIS Remote Control",
+
+                "url":
+                    self.url(),
+
+                "pairing_active":
+                    (
+                        self._pin is not None
+                        and
+                        time.time()
+                        < self._pin_expiry
+                    ),
+
+                "authenticated":
+                    (
+                        self._token is not None
+                    ),
+
+                "live_stop_available":
+                    (
+                        self.live_stop_handler
+                        is not None
+                    ),
+
+                "server":
+                    "JARVIS Remote Control",
             }
 
         return app
@@ -824,6 +989,18 @@ button:active {
         scale(0.98);
 }
 
+.live-button {
+
+    background:
+        #b91c1c;
+}
+
+.live-button:hover {
+
+    background:
+        #dc2626;
+}
+
 #status {
 
     margin:
@@ -861,6 +1038,18 @@ button:active {
 
     opacity:
         0.6;
+}
+
+.section {
+
+    margin-top:
+        22px;
+
+    padding-top:
+        10px;
+
+    border-top:
+        1px solid #252b38;
 }
 
 </style>
@@ -907,6 +1096,10 @@ button:active {
     id="controls"
 >
 
+    <!-- ================================================
+         NORMAL COMMANDS
+         ================================================ -->
+
     <div class="command-row">
 
         <input
@@ -932,9 +1125,36 @@ button:active {
     </button>
 
 
+    <!-- ================================================
+         LIVE CONVERSATION
+         ================================================ -->
+
+    <div class="section">
+
+        <p>
+            Live Conversation
+        </p>
+
+        <button
+            class="live-button"
+            onclick="stopLiveConversation()"
+        >
+            Stop Live Conversation
+        </button>
+
+    </div>
+
+
     <p class="small">
-        Commands are sent directly into
+
+        Normal commands are sent directly into
         your existing JARVIS dispatcher.
+
+        The Live Conversation stop button directly
+        controls the Gemini Live session because
+        the normal JARVIS microphone is paused
+        while Live Conversation is active.
+
     </p>
 
 </div>
@@ -975,11 +1195,16 @@ async function readResponse(response) {
         data =
             JSON.parse(raw);
 
-    } catch {
+    }
+
+    catch {
 
         data = {
+
             ok: false,
-            error: raw ||
+
+            error:
+                raw ||
                 (
                     "HTTP " +
                     response.status
@@ -1050,7 +1275,8 @@ async function login() {
 
         if (
             !response.ok
-            || !data.ok
+            ||
+            !data.ok
         ) {
 
             setStatus(
@@ -1175,7 +1401,8 @@ async function sendCommand() {
 
         if (
             !response.ok
-            || !data.ok
+            ||
+            !data.ok
         ) {
 
             setStatus(
@@ -1283,7 +1510,8 @@ async function sendCommandText(
 
         if (
             !response.ok
-            || !data.ok
+            ||
+            !data.ok
         ) {
 
             setStatus(
@@ -1317,6 +1545,103 @@ async function sendCommandText(
 
         setStatus(
             "Wake error: " +
+            error.message
+        );
+    }
+}
+
+
+/* ========================================================
+   STOP LIVE CONVERSATION
+   ======================================================== */
+
+async function stopLiveConversation() {
+
+    if (!token) {
+
+        setStatus(
+            "Please connect to JARVIS first."
+        );
+
+        return;
+    }
+
+
+    setStatus(
+        "Stopping Live Conversation..."
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/live/stop",
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            "Bearer " +
+                            token
+                    }
+                }
+            );
+
+
+        const data =
+            await readResponse(
+                response
+            );
+
+
+        if (
+            !response.ok
+            ||
+            !data.ok
+        ) {
+
+            setStatus(
+                "Live stop failed: " +
+                (
+                    data.error
+                    ||
+                    (
+                        "HTTP " +
+                        response.status
+                    )
+                )
+            );
+
+            return;
+        }
+
+
+        setStatus(
+            "Live Conversation stopped. "
+            +
+            "Normal JARVIS voice resumed."
+        );
+
+
+        console.log(
+            "[JARVIS REMOTE] "
+            + "Live Conversation stopped."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "[JARVIS REMOTE LIVE STOP ERROR]",
+            error
+        );
+
+        setStatus(
+            "Live stop error: " +
             error.message
         );
     }
