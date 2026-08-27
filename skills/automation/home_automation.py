@@ -10,13 +10,14 @@ Set JARVIS_ESP32_IP in the environment instead of hard-coding
 the ESP32 address.
 """
 
-import os
 import requests
 from core.registry import register
 
-HTTP_TIMEOUT = float(os.getenv("JARVIS_ESP32_TIMEOUT", "3"))
-ESP32_IP = os.getenv("JARVIS_ESP32_IP", "").strip()
-BASE_URL = f"http://{ESP32_IP}" if ESP32_IP else ""
+ESP32_IP = "192.168.31.226"
+
+BASE_URL = f"http://{ESP32_IP}"
+
+HTTP_TIMEOUT = 3.0
 
 
 def _endpoint(device: str, state: str) -> str:
@@ -79,40 +80,162 @@ def home_automation(data=None):
     Registry action.
 
     Examples:
-        {"device": "light", "action": "turn_on"}
-        {"device": "fan", "action": "OFF"}
-        {"action": "status"}
-    """
-    data = data if isinstance(data, dict) else {}
-
-    if str(data.get("action", "")).lower() == "status":
-        status = get_hardware_status()
-        return status if status is not None else {
-            "ok": False,
-            "error": "ESP32 is unreachable or not configured.",
+        {
+            "action": "home_automation",
+            "device": "light",
+            "command": "turn_on"
         }
 
-    device = str(data.get("device", "")).strip().lower()
-    action = str(data.get("action", "")).strip().lower()
+        {
+            "action": "home_automation",
+            "device": "fan",
+            "command": "turn_off"
+        }
+
+        {
+            "action": "home_automation",
+            "command": "status"
+        }
+    """
+
+    data = data if isinstance(data, dict) else {}
+
+    # -----------------------------------------------------
+    # Read command separately from registry action
+    # -----------------------------------------------------
+
+    command = str(
+        data.get(
+            "command",
+            ""
+        )
+    ).strip().lower()
+
+    # Backward compatibility:
+    # If somebody directly calls the skill using
+    # {"action": "turn_on"}, still support it.
+    if not command:
+
+        command = str(
+            data.get(
+                "action",
+                ""
+            )
+        ).strip().lower()
+
+    # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
+
+    if command == "status":
+
+        status = get_hardware_status()
+
+        return (
+            status
+            if status is not None
+            else {
+                "ok": False,
+                "error":
+                    "ESP32 is unreachable or not configured.",
+            }
+        )
+
+    # -----------------------------------------------------
+    # Device
+    # -----------------------------------------------------
+
+    device = str(
+        data.get(
+            "device",
+            ""
+        )
+    ).strip().lower()
 
     if not device:
-        return "Please specify a device, such as light or fan."
+        return (
+            "Please specify a device, "
+            "such as light, led, or fan."
+        )
 
-    if any(word in action for word in ("on", "enable", "start")):
+    # light and led are the same physical device
+    if device in ("light", "led"):
+        device = "light"
+
+    # -----------------------------------------------------
+    # State
+    # -----------------------------------------------------
+
+    if any(
+        word in command
+        for word in (
+            "on",
+            "enable",
+            "start",
+        )
+    ):
+
         state = "ON"
-    elif any(word in action for word in ("off", "disable", "stop")):
-        state = "OFF"
-    else:
-        return "Please specify ON or OFF."
 
-    ok = control_device(device, state)
+    elif any(
+        word in command
+        for word in (
+            "off",
+            "disable",
+            "stop",
+        )
+    ):
+
+        state = "OFF"
+
+    else:
+
+        return (
+            "Please specify ON or OFF."
+        )
+
+    # -----------------------------------------------------
+    # Execute hardware command
+    # -----------------------------------------------------
+
+    try:
+
+        ok = control_device(
+            device,
+            state,
+        )
+
+    except (
+        RuntimeError,
+        ValueError,
+    ) as exc:
+
+        print(
+            "[AUTOMATION ERROR]",
+            exc,
+        )
+
+        return str(exc)
+
+    # -----------------------------------------------------
+    # Success
+    # -----------------------------------------------------
 
     if ok:
-        return f"{device} turned {state.lower()}."
+
+        return (
+            f"{device} turned "
+            f"{state.lower()}."
+        )
+
+    # -----------------------------------------------------
+    # Failure
+    # -----------------------------------------------------
 
     return (
-        f"I could not reach the ESP32 to turn the "
-        f"{device} {state.lower()}."
+        f"I could not reach the ESP32 "
+        f"to turn the {device} "
+        f"{state.lower()}."
     )
 
 
