@@ -1,0 +1,1899 @@
+"""
+=============================================================
+JARVIS PRO — DASHBOARD SERVER
+=============================================================
+
+Mark Remote Dashboard adapted for JARVIS PRO.
+
+Architecture:
+
+    Phone
+       ↓
+    Dashboard
+       ↓
+    core.dispatcher.dispatch()
+       ↓
+    NCI / Fast Router / Skills
+
+This server does NOT create another JARVIS brain.
+
+Features:
+
+    - 6-character pairing PIN
+    - Multiple authenticated sessions
+    - Device auto-reconnect
+    - AES-256-CBC command encryption
+    - WebSocket dashboard
+    - Command/event history
+    - File upload
+    - File download
+    - Phone microphone WebSocket queue
+    - Direct Live Conversation stop
+"""
+
+from __future__ import annotations
+
+import asyncio
+import base64
+import hashlib
+import secrets
+import socket
+import threading
+import time
+
+from pathlib import Path
+from typing import Callable, Optional
+
+
+# =============================================================
+# FASTAPI
+# =============================================================
+
+try:
+
+    from fastapi import (
+        FastAPI,
+        File,
+        Request,
+        UploadFile,
+        WebSocket,
+        WebSocketDisconnect,
+    )
+
+    from fastapi.responses import (
+        FileResponse,
+        HTMLResponse,
+        JSONResponse,
+    )
+
+    from fastapi.staticfiles import StaticFiles
+
+    import uvicorn
+
+    FASTAPI_AVAILABLE = True
+
+except ImportError:
+
+    FastAPI = None
+    File = None
+    Request = None
+    UploadFile = None
+    WebSocket = None
+    WebSocketDisconnect = None
+
+    FileResponse = None
+    HTMLResponse = None
+    JSONResponse = None
+
+    StaticFiles = None
+    uvicorn = None
+
+    FASTAPI_AVAILABLE = False
+
+
+# =============================================================
+# MULTIPART
+# =============================================================
+
+try:
+
+    import multipart
+
+    MULTIPART_AVAILABLE = True
+
+except ImportError:
+
+    MULTIPART_AVAILABLE = False
+
+
+# =============================================================
+# PATHS / CONFIGURATION
+# =============================================================
+
+BASE_DIR = (
+    Path(__file__)
+    .resolve()
+    .parent
+    .parent
+)
+
+STATIC_DIR = (
+    Path(__file__)
+    .resolve()
+    .parent
+    / "static"
+)
+
+STATIC_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
+PORT = 8765
+
+PIN_EXPIRY_SECONDS = 600
+
+MAX_UPLOAD_MB = 500
+
+PIN_CHARS = (
+    "ABCDEFGHJKMNPQRSTUVWXYZ"
+    "23456789"
+)
+
+AES_SALT = (
+    b"JARVIS-DASHBOARD-v1"
+)
+
+
+# =============================================================
+# UPLOAD DIRECTORY
+# =============================================================
+
+def _make_uploads_dir() -> Path:
+
+    candidates = (
+
+        Path.home()
+        / "Downloads"
+        / "JARVIS Uploads",
+
+        Path.home()
+        / "Documents"
+        / "JARVIS Uploads",
+
+        BASE_DIR
+        / "uploads",
+    )
+
+    for candidate in candidates:
+
+        try:
+
+            candidate.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            return candidate
+
+        except Exception:
+
+            pass
+
+    fallback = (
+        BASE_DIR
+        / "uploads"
+    )
+
+    fallback.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    return fallback
+
+
+UPLOADS_DIR = (
+    _make_uploads_dir()
+)
+
+
+# =============================================================
+# LOCAL IP
+# =============================================================
+
+def _local_ip() -> str:
+    """
+    Find the LAN IP used by JARVIS.
+
+    This does not send application data.
+    It only asks Windows which local interface
+    would be used for the UDP route.
+    """
+
+    for probe in (
+        "8.8.8.8",
+        "1.1.1.1",
+        "192.168.1.1",
+    ):
+
+        sock = socket.socket(
+            socket.AF_INET,
+            socket.SOCK_DGRAM,
+        )
+
+        try:
+
+            sock.settimeout(0.5)
+
+            sock.connect(
+                (
+                    probe,
+                    80,
+                )
+            )
+
+            ip = (
+                sock
+                .getsockname()[0]
+            )
+
+            if not ip.startswith(
+                "127."
+            ):
+
+                return ip
+
+        except Exception:
+
+            pass
+
+        finally:
+
+            sock.close()
+
+    # ---------------------------------------------------------
+    # Fallback
+    # ---------------------------------------------------------
+
+    try:
+
+        ip = socket.gethostbyname(
+            socket.gethostname()
+        )
+
+        if not ip.startswith(
+            "127."
+        ):
+
+            return ip
+
+    except Exception:
+
+        pass
+
+    return "127.0.0.1"
+
+
+# =============================================================
+# STATIC FILES
+# =============================================================
+
+def _read_static(
+    filename: str,
+) -> str:
+
+    path = (
+        STATIC_DIR
+        / filename
+    )
+
+    return path.read_text(
+        encoding="utf-8"
+    )
+
+
+# =============================================================
+# AES-256
+# =============================================================
+
+def _derive_key(
+    session_key: str,
+) -> bytes:
+
+    return hashlib.sha256(
+        session_key.encode(
+            "utf-8"
+        )
+        + AES_SALT
+    ).digest()
+
+
+def _decrypt_cbc(
+    aes_key: bytes,
+    encrypted: str,
+) -> str:
+
+    from cryptography.hazmat.primitives.ciphers import (
+        Cipher,
+        algorithms,
+        modes,
+    )
+
+    from cryptography.hazmat.primitives import (
+        padding,
+    )
+
+    raw = base64.b64decode(
+        encrypted
+    )
+
+    if len(raw) < 32:
+
+        raise ValueError(
+            "Invalid encrypted payload."
+        )
+
+    iv = raw[:16]
+
+    ciphertext = raw[16:]
+
+    decryptor = Cipher(
+        algorithms.AES(
+            aes_key
+        ),
+        modes.CBC(
+            iv
+        ),
+    ).decryptor()
+
+    padded = (
+        decryptor.update(
+            ciphertext
+        )
+        + decryptor.finalize()
+    )
+
+    unpadder = (
+        padding.PKCS7(
+            128
+        ).unpadder()
+    )
+
+    plaintext = (
+        unpadder.update(
+            padded
+        )
+        + unpadder.finalize()
+    )
+
+    return plaintext.decode(
+        "utf-8"
+    )
+
+
+# =============================================================
+# DASHBOARD SERVER
+# =============================================================
+
+class DashboardServer:
+
+    def __init__(
+        self,
+        command_handler: Optional[
+            Callable[[str], object]
+        ] = None,
+
+        live_stop_handler: Optional[
+            Callable[..., object]
+        ] = None,
+
+        port: int = PORT,
+    ):
+
+        # -----------------------------------------------------
+        # Existing JARVIS dispatcher
+        # -----------------------------------------------------
+
+        self.command_handler = (
+            command_handler
+        )
+
+        # -----------------------------------------------------
+        # Direct Live Conversation stop
+        # -----------------------------------------------------
+
+        self.live_stop_handler = (
+            live_stop_handler
+        )
+
+        # -----------------------------------------------------
+        # Network
+        # -----------------------------------------------------
+
+        self.port = int(
+            port
+        )
+
+        self.ip = _local_ip()
+
+        # -----------------------------------------------------
+        # Pairing
+        # -----------------------------------------------------
+
+        self._pin = None
+
+        self._pin_expiry = 0.0
+
+        # -----------------------------------------------------
+        # Authentication
+        #
+        # token -> session key
+        # -----------------------------------------------------
+
+        self._tokens = set()
+
+        self._token_keys = {}
+
+        # -----------------------------------------------------
+        # Persistent device sessions
+        #
+        # device token -> session information
+        # -----------------------------------------------------
+
+        self._device_sessions = {}
+
+        # -----------------------------------------------------
+        # WebSocket clients
+        # -----------------------------------------------------
+
+        self._clients = set()
+
+        # -----------------------------------------------------
+        # Dashboard history
+        # -----------------------------------------------------
+
+        self._history = []
+
+        # -----------------------------------------------------
+        # Phone audio
+        #
+        # This queue will later be connected to the
+        # existing JARVIS Live Conversation engine.
+        # -----------------------------------------------------
+
+        self._phone_audio_queue = (
+            asyncio.Queue(
+                maxsize=200
+            )
+        )
+
+        # -----------------------------------------------------
+        # Async event loop
+        # -----------------------------------------------------
+
+        self._loop = None
+
+        # -----------------------------------------------------
+        # Server thread
+        # -----------------------------------------------------
+
+        self._thread = None
+
+        # -----------------------------------------------------
+        # HTML
+        # -----------------------------------------------------
+
+        self._login_html = (
+            _read_static(
+                "login.html"
+            )
+        )
+
+        self._app_html = (
+            _read_static(
+                "app.html"
+            )
+        )
+
+        # -----------------------------------------------------
+        # FastAPI
+        # -----------------------------------------------------
+
+        self.app = (
+
+            self._build_app()
+
+            if FASTAPI_AVAILABLE
+
+            else None
+        )
+
+    # =========================================================
+    # PAIRING PIN
+    # =========================================================
+
+    def new_pairing_pin(
+        self,
+        expiry_seconds: int = (
+            PIN_EXPIRY_SECONDS
+        ),
+    ) -> str:
+
+        self._pin = "".join(
+
+            secrets.choice(
+                PIN_CHARS
+            )
+
+            for _ in range(6)
+        )
+
+        self._pin_expiry = (
+            time.time()
+            + int(
+                expiry_seconds
+            )
+        )
+
+        # -----------------------------------------------------
+        # New pairing invalidates current sessions.
+        # -----------------------------------------------------
+
+        self._tokens.clear()
+
+        self._token_keys.clear()
+
+        print(
+            "[REMOTE] New pairing PIN generated."
+        )
+
+        return self._pin
+
+    # =========================================================
+    # URL
+    # =========================================================
+
+    def url(self) -> str:
+
+        return (
+            f"http://"
+            f"{self.ip}:"
+            f"{self.port}"
+        )
+
+    # =========================================================
+    # PAIRING URL
+    # =========================================================
+
+    def pairing_url(self) -> str:
+
+        return (
+            f"{self.url()}"
+            f"/login"
+            f"?pin={self._pin or ''}"
+        )
+
+    # =========================================================
+    # AUTH
+    # =========================================================
+
+    def _get_token(
+        self,
+        request: Request,
+    ) -> Optional[str]:
+
+        auth = request.headers.get(
+            "authorization",
+            "",
+        )
+
+        token = (
+            auth
+            .removeprefix(
+                "Bearer "
+            )
+            .strip()
+        )
+
+        if token in self._tokens:
+
+            return token
+
+        return None
+
+    def _authorize(
+        self,
+        request: Request,
+    ) -> bool:
+
+        return (
+            self._get_token(
+                request
+            )
+            is not None
+        )
+
+    # =========================================================
+    # BROADCAST
+    # =========================================================
+
+    async def broadcast(
+        self,
+        message: dict,
+    ):
+
+        self._history.append(
+            message
+        )
+
+        if len(
+            self._history
+        ) > 300:
+
+            self._history = (
+                self._history[-300:]
+            )
+
+        dead = set()
+
+        for client in list(
+            self._clients
+        ):
+
+            try:
+
+                await client.send_json(
+                    message
+                )
+
+            except Exception:
+
+                dead.add(
+                    client
+                )
+
+        self._clients.difference_update(
+            dead
+        )
+
+    # =========================================================
+    # THREADSAFE BROADCAST
+    # =========================================================
+
+    def _broadcast_threadsafe(
+        self,
+        message: dict,
+    ):
+
+        if self._loop is None:
+
+            return
+
+        try:
+
+            asyncio.run_coroutine_threadsafe(
+
+                self.broadcast(
+                    message
+                ),
+
+                self._loop,
+            )
+
+        except Exception:
+
+            pass
+
+    # =========================================================
+    # REMOTE COMMAND
+    # =========================================================
+
+    def _run_command(
+        self,
+        text: str,
+    ):
+
+        print(
+            "[REMOTE COMMAND] Received:",
+            text,
+        )
+
+        self._broadcast_threadsafe({
+            "type": "log",
+            "speaker": "user",
+            "text": text,
+        })
+
+        if not self.command_handler:
+
+            print(
+                "[REMOTE COMMAND] "
+                "ERROR: dispatcher not connected."
+            )
+
+            self._broadcast_threadsafe({
+                "type": "sys",
+                "text": (
+                    "JARVIS dispatcher "
+                    "is not connected."
+                ),
+            })
+
+            return
+
+        try:
+
+            result = (
+                self.command_handler(
+                    text
+                )
+            )
+
+            if result is not None:
+
+                result_text = str(
+                    result
+                ).strip()
+
+                if result_text:
+
+                    self._broadcast_threadsafe({
+                        "type": "log",
+                        "speaker": "jarvis",
+                        "text": result_text,
+                    })
+
+        except Exception as exc:
+
+            print(
+                "[REMOTE COMMAND ERROR]",
+                exc,
+            )
+
+            self._broadcast_threadsafe({
+                "type": "sys",
+                "text": (
+                    f"Command error: {exc}"
+                ),
+            })
+
+    # =========================================================
+    # BUILD FASTAPI
+    # =========================================================
+
+    def _build_app(
+        self,
+    ):
+
+        app = FastAPI(
+            docs_url=None,
+            redoc_url=None,
+        )
+
+        # -----------------------------------------------------
+        # Static files
+        # -----------------------------------------------------
+
+        if StaticFiles:
+
+            app.mount(
+                "/static",
+                StaticFiles(
+                    directory=str(
+                        STATIC_DIR
+                    )
+                ),
+                name="static",
+            )
+
+        # -----------------------------------------------------
+        # CryptoJS compatibility
+        #
+        # app.html expects:
+        #
+        #     /static/crypto.js
+        #
+        # Mark's folder contains:
+        #
+        #     crypto-js.min.js
+        #
+        # So expose the same file under crypto.js.
+        # -----------------------------------------------------
+
+        @app.get(
+            "/static/crypto.js"
+        )
+        async def crypto_js():
+
+            crypto_file = (
+                STATIC_DIR
+                / "crypto-js.min.js"
+            )
+
+            if not crypto_file.exists():
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "crypto-js.min.js "
+                            "is missing."
+                        ),
+                    },
+                    status_code=404,
+                )
+
+            return FileResponse(
+                str(
+                    crypto_file
+                ),
+                media_type=(
+                    "application/javascript"
+                ),
+            )
+
+        # =====================================================
+        # LOGIN PAGE
+        # =====================================================
+
+        @app.get(
+            "/login",
+            response_class=HTMLResponse,
+        )
+        async def login_page():
+
+            return HTMLResponse(
+                self._login_html
+            )
+
+        # =====================================================
+        # DASHBOARD
+        # =====================================================
+
+        @app.get(
+            "/",
+            response_class=HTMLResponse,
+        )
+        async def index():
+
+            html = (
+                self._app_html
+                .replace(
+                    "__IP__",
+                    self.ip,
+                )
+                .replace(
+                    "__PORT__",
+                    str(
+                        self.port
+                    ),
+                )
+            )
+
+            return HTMLResponse(
+                html
+            )
+
+        # =====================================================
+        # LOGIN
+        # =====================================================
+
+        @app.post(
+            "/login"
+        )
+        async def login(
+            request: Request,
+        ):
+
+            self._loop = (
+                asyncio.get_running_loop()
+            )
+
+            try:
+
+                body = (
+                    await request.json()
+                )
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Invalid request."
+                        ),
+                    },
+                    status_code=400,
+                )
+
+            entered = str(
+                body.get(
+                    "pin",
+                    "",
+                )
+            ).strip().upper()
+
+            # -------------------------------------------------
+            # Validate PIN
+            # -------------------------------------------------
+
+            if (
+                not self._pin
+                or time.time()
+                > self._pin_expiry
+                or entered
+                != self._pin
+            ):
+
+                print(
+                    "[REMOTE LOGIN] "
+                    "Invalid or expired PIN."
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Invalid or expired key."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            # -------------------------------------------------
+            # Create session
+            # -------------------------------------------------
+
+            session_key = (
+                secrets.token_urlsafe(
+                    32
+                )
+            )
+
+            token = (
+                secrets.token_urlsafe(
+                    32
+                )
+            )
+
+            device_token = (
+                secrets.token_urlsafe(
+                    32
+                )
+            )
+
+            self._tokens.add(
+                token
+            )
+
+            self._token_keys[
+                token
+            ] = session_key
+
+            self._device_sessions[
+                device_token
+            ] = {
+                "session_key":
+                    session_key,
+
+                "created_at":
+                    time.time(),
+            }
+
+            remaining = max(
+                0,
+                int(
+                    self._pin_expiry
+                    - time.time()
+                ),
+            )
+
+            print(
+                "[REMOTE LOGIN] SUCCESS."
+            )
+
+            print(
+                "[REMOTE LOGIN] "
+                "Remote device authenticated."
+            )
+
+            print(
+                "[REMOTE LOGIN] "
+                f"PIN remaining: {remaining}s"
+            )
+
+            await self.broadcast({
+                "type": "sys",
+                "text": (
+                    "Remote device connected."
+                ),
+            })
+
+            return {
+                "ok": True,
+                "token": token,
+                "key": session_key,
+                "device_token":
+                    device_token,
+            }
+
+        # =====================================================
+        # DEVICE AUTO LOGIN
+        # =====================================================
+
+        @app.post(
+            "/api/device-login"
+        )
+        async def device_login(
+            request: Request,
+        ):
+
+            self._loop = (
+                asyncio.get_running_loop()
+            )
+
+            try:
+
+                body = (
+                    await request.json()
+                )
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False
+                    },
+                    status_code=400,
+                )
+
+            device_token = str(
+                body.get(
+                    "device_token",
+                    "",
+                )
+            ).strip()
+
+            device = (
+                self._device_sessions.get(
+                    device_token
+                )
+            )
+
+            if not device:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Device session "
+                            "not found."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            session_key = (
+                device[
+                    "session_key"
+                ]
+            )
+
+            token = (
+                secrets.token_urlsafe(
+                    32
+                )
+            )
+
+            self._tokens.add(
+                token
+            )
+
+            self._token_keys[
+                token
+            ] = session_key
+
+            print(
+                "[REMOTE] "
+                "Known device reconnected."
+            )
+
+            await self.broadcast({
+                "type": "sys",
+                "text": (
+                    "Known device "
+                    "reconnected automatically."
+                ),
+            })
+
+            return {
+                "ok": True,
+                "token": token,
+                "key": session_key,
+            }
+
+        # =====================================================
+        # INFO
+        # =====================================================
+
+        @app.get(
+            "/api/info"
+        )
+        async def info():
+
+            return {
+                "ok": True,
+                "url": self.url(),
+                "pairing_active": (
+                    bool(self._pin)
+                    and
+                    time.time()
+                    < self._pin_expiry
+                ),
+                "clients": len(
+                    self._clients
+                ),
+            }
+
+        # =====================================================
+        # COMMAND
+        # =====================================================
+
+        @app.post(
+            "/api/command"
+        )
+        async def command(
+            request: Request,
+        ):
+
+            self._loop = (
+                asyncio.get_running_loop()
+            )
+
+            if not self._authorize(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            try:
+
+                body = (
+                    await request.json()
+                )
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Invalid request."
+                        ),
+                    },
+                    status_code=400,
+                )
+
+            token = (
+                self._get_token(
+                    request
+                )
+            )
+
+            encrypted = str(
+                body.get(
+                    "enc",
+                    "",
+                )
+            ).strip()
+
+            # -------------------------------------------------
+            # AES encrypted command
+            # -------------------------------------------------
+
+            if encrypted:
+
+                if not token:
+
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": (
+                                "Unauthorized."
+                            ),
+                        },
+                        status_code=401,
+                    )
+
+                session_key = (
+                    self._token_keys.get(
+                        token
+                    )
+                )
+
+                if not session_key:
+
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": (
+                                "Session expired."
+                            ),
+                        },
+                        status_code=401,
+                    )
+
+                try:
+
+                    text = (
+                        _decrypt_cbc(
+                            _derive_key(
+                                session_key
+                            ),
+                            encrypted,
+                        )
+                        .strip()
+                    )
+
+                except Exception:
+
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": (
+                                "Decryption failed."
+                            ),
+                        },
+                        status_code=400,
+                    )
+
+            # -------------------------------------------------
+            # Plaintext fallback
+            # -------------------------------------------------
+
+            else:
+
+                text = str(
+                    body.get(
+                        "text",
+                        "",
+                    )
+                ).strip()
+
+            if not text:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Command is empty."
+                        ),
+                    },
+                    status_code=400,
+                )
+
+            # -------------------------------------------------
+            # Execute through normal dispatcher
+            # -------------------------------------------------
+
+            threading.Thread(
+                target=self._run_command,
+                args=(text,),
+                daemon=True,
+                name=(
+                    "JARVIS-RemoteCommand"
+                ),
+            ).start()
+
+            return {
+                "ok": True,
+                "message": (
+                    "Command sent to JARVIS."
+                ),
+            }
+
+        # =====================================================
+        # WAKE
+        # =====================================================
+
+        @app.post(
+            "/api/wake"
+        )
+        async def wake(
+            request: Request,
+        ):
+
+            if not self._authorize(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            threading.Thread(
+                target=self._run_command,
+                args=(
+                    "hey jarvis",
+                ),
+                daemon=True,
+                name=(
+                    "JARVIS-RemoteWake"
+                ),
+            ).start()
+
+            return {
+                "ok": True
+            }
+
+        # =====================================================
+        # DIRECT LIVE STOP
+        # =====================================================
+
+        @app.post(
+            "/api/live/stop"
+        )
+        async def live_stop(
+            request: Request,
+        ):
+
+            if not self._authorize(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            if not self.live_stop_handler:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Live stop handler "
+                            "is not connected."
+                        ),
+                    },
+                    status_code=503,
+                )
+
+            try:
+
+                result = (
+                    self.live_stop_handler()
+                )
+
+                await self.broadcast({
+                    "type": "sys",
+                    "text": (
+                        "Live Conversation "
+                        "stop requested."
+                    ),
+                })
+
+                return {
+                    "ok": True,
+                    "result": str(
+                        result
+                    ),
+                }
+
+            except Exception as exc:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(
+                            exc
+                        ),
+                    },
+                    status_code=500,
+                )
+
+        # =====================================================
+        # FILE UPLOAD
+        # =====================================================
+
+        if (
+            MULTIPART_AVAILABLE
+            and UploadFile is not None
+        ):
+
+            @app.post(
+                "/api/upload"
+            )
+            async def upload(
+                request: Request,
+                file: UploadFile = File(...),
+            ):
+
+                if not self._authorize(
+                    request
+                ):
+
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": (
+                                "Unauthorized."
+                            ),
+                        },
+                        status_code=401,
+                    )
+
+                original_name = (
+                    file.filename
+                    or "upload"
+                )
+
+                safe_name = (
+                    Path(
+                        original_name
+                    ).name
+                )
+
+                if not safe_name:
+
+                    safe_name = "upload"
+
+                target = (
+                    self._unique_upload_path(
+                        safe_name
+                    )
+                )
+
+                total = 0
+
+                limit = (
+                    MAX_UPLOAD_MB
+                    * 1024
+                    * 1024
+                )
+
+                try:
+
+                    with target.open(
+                        "wb"
+                    ) as output:
+
+                        while True:
+
+                            chunk = (
+                                await file.read(
+                                    1024 * 1024
+                                )
+                            )
+
+                            if not chunk:
+
+                                break
+
+                            total += len(
+                                chunk
+                            )
+
+                            if total > limit:
+
+                                output.close()
+
+                                target.unlink(
+                                    missing_ok=True
+                                )
+
+                                return JSONResponse(
+                                    {
+                                        "ok": False,
+                                        "error": (
+                                            "File exceeds "
+                                            f"{MAX_UPLOAD_MB} MB."
+                                        ),
+                                    },
+                                    status_code=413,
+                                )
+
+                            output.write(
+                                chunk
+                            )
+
+                finally:
+
+                    await file.close()
+
+                print(
+                    "[REMOTE] File received:",
+                    target,
+                )
+
+                await self.broadcast({
+                    "type": "file_received",
+                    "name": target.name,
+                    "size": total,
+                })
+
+                return {
+                    "ok": True,
+                    "name": target.name,
+                    "size": total,
+                }
+
+        # =====================================================
+        # FILE DOWNLOAD
+        # =====================================================
+
+        @app.get(
+            "/uploads/{filename}"
+        )
+        async def download(
+            filename: str,
+            token: str = "",
+        ):
+
+            if token not in self._tokens:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            safe_name = (
+                Path(
+                    filename
+                ).name
+            )
+
+            path = (
+                UPLOADS_DIR
+                / safe_name
+            )
+
+            if not path.is_file():
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "File not found."
+                        ),
+                    },
+                    status_code=404,
+                )
+
+            return FileResponse(
+                str(path),
+                filename=safe_name,
+            )
+
+        # =====================================================
+        # DASHBOARD WEBSOCKET
+        # =====================================================
+
+        @app.websocket(
+            "/ws"
+        )
+        async def websocket(
+            websocket: WebSocket,
+            token: str = "",
+        ):
+
+            self._loop = (
+                asyncio.get_running_loop()
+            )
+
+            if token not in self._tokens:
+
+                await websocket.close(
+                    code=4001
+                )
+
+                return
+
+            await websocket.accept()
+
+            self._clients.add(
+                websocket
+            )
+
+            try:
+
+                # ---------------------------------------------
+                # Send history
+                # ---------------------------------------------
+
+                for message in (
+                    self._history[-100:]
+                ):
+
+                    await websocket.send_json(
+                        message
+                    )
+
+                # ---------------------------------------------
+                # Active status
+                # ---------------------------------------------
+
+                await websocket.send_json({
+                    "type": "status",
+                    "state": "active",
+                })
+
+                await websocket.send_json({
+                    "type": "sys",
+                    "text": (
+                        "Remote session active."
+                    ),
+                })
+
+                # ---------------------------------------------
+                # Keep connection alive
+                # ---------------------------------------------
+
+                while True:
+
+                    await websocket.receive_text()
+
+            except WebSocketDisconnect:
+
+                pass
+
+            except Exception as exc:
+
+                print(
+                    "[REMOTE WS ERROR]",
+                    exc,
+                )
+
+            finally:
+
+                self._clients.discard(
+                    websocket
+                )
+
+        # =====================================================
+        # PHONE AUDIO
+        # =====================================================
+
+        @app.websocket(
+            "/ws/phone-audio"
+        )
+        async def phone_audio(
+            websocket: WebSocket,
+            token: str = "",
+        ):
+
+            self._loop = (
+                asyncio.get_running_loop()
+            )
+
+            if token not in self._tokens:
+
+                await websocket.close(
+                    code=4001
+                )
+
+                return
+
+            await websocket.accept()
+
+            await self.broadcast({
+                "type": "sys",
+                "text": (
+                    "Phone microphone live."
+                ),
+            })
+
+            try:
+
+                while True:
+
+                    data = (
+                        await websocket.receive_bytes()
+                    )
+
+                    try:
+
+                        self._phone_audio_queue.put_nowait(
+                            data
+                        )
+
+                    except asyncio.QueueFull:
+
+                        # Drop oldest audio frame
+                        # rather than blocking.
+
+                        try:
+
+                            self._phone_audio_queue.get_nowait()
+
+                        except asyncio.QueueEmpty:
+
+                            pass
+
+                        try:
+
+                            self._phone_audio_queue.put_nowait(
+                                data
+                            )
+
+                        except asyncio.QueueFull:
+
+                            pass
+
+            except WebSocketDisconnect:
+
+                pass
+
+            finally:
+
+                await self.broadcast({
+                    "type": "sys",
+                    "text": (
+                        "Phone microphone stopped."
+                    ),
+                })
+
+        return app
+
+    # =========================================================
+    # UNIQUE UPLOAD PATH
+    # =========================================================
+
+    @staticmethod
+    def _unique_upload_path(
+        filename: str,
+    ) -> Path:
+
+        base = Path(
+            filename
+        )
+
+        stem = base.stem
+
+        suffix = base.suffix
+
+        candidate = (
+            UPLOADS_DIR
+            / filename
+        )
+
+        counter = 1
+
+        while candidate.exists():
+
+            candidate = (
+                UPLOADS_DIR
+                / (
+                    f"{stem}_"
+                    f"{counter}"
+                    f"{suffix}"
+                )
+            )
+
+            counter += 1
+
+        return candidate
+
+    # =========================================================
+    # PHONE AUDIO QUEUE
+    # =========================================================
+
+    def phone_audio_queue(self):
+
+        return (
+            self._phone_audio_queue
+        )
+
+    # =========================================================
+    # START
+    # =========================================================
+
+    def start(self) -> bool:
+
+        if not FASTAPI_AVAILABLE:
+
+            print(
+                "[REMOTE] Disabled."
+            )
+
+            print(
+                "[REMOTE] Install:"
+            )
+
+            print(
+                "pip install fastapi "
+                '"uvicorn[standard]" '
+                "cryptography"
+            )
+
+            return False
+
+        if (
+            self._thread
+            and self._thread.is_alive()
+        ):
+
+            return True
+
+        def run_server():
+
+            try:
+
+                uvicorn.run(
+                    self.app,
+                    host="0.0.0.0",
+                    port=self.port,
+                    log_level="warning",
+                )
+
+            except Exception as exc:
+
+                print(
+                    "[REMOTE] Server stopped:",
+                    exc,
+                )
+
+        self._thread = (
+            threading.Thread(
+                target=run_server,
+                daemon=True,
+                name=(
+                    "JARVIS-DashboardServer"
+                ),
+            )
+        )
+
+        self._thread.start()
+
+        print(
+            "[REMOTE] Dashboard Server:"
+        )
+
+        print(
+            f"[REMOTE] {self.url()}"
+        )
+
+        return True
+
+    # =========================================================
+    # STOP
+    # =========================================================
+
+    def stop(self):
+
+        self._tokens.clear()
+
+        self._token_keys.clear()
+
+        self._device_sessions.clear()
+
+        self._pin = None
+
+        self._pin_expiry = 0.0
