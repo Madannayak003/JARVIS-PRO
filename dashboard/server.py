@@ -44,6 +44,7 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
+from core.runtime import handle_priority
 
 # =============================================================
 # FASTAPI
@@ -509,6 +510,31 @@ class DashboardServer:
 
             else None
         )
+        
+        # -----------------------------------------------------
+        # Connect JARVIS voice output to Remote Dashboard
+        # -----------------------------------------------------
+
+        try:
+
+            from voice.manager import (
+                add_speech_listener
+            )
+
+            add_speech_listener(
+                self._on_voice_output
+            )
+
+            print(
+                "[REMOTE] Voice output bridge connected."
+            )
+
+        except Exception as e:
+
+            print(
+                "[REMOTE] Voice output bridge failed:",
+                e
+            )
 
     # =========================================================
     # PAIRING PIN
@@ -687,6 +713,36 @@ class DashboardServer:
             pass
 
     # =========================================================
+    # JARVIS VOICE OUTPUT → REMOTE DASHBOARD
+    # =========================================================
+
+    def _on_voice_output(
+        self,
+        text: str,
+    ):
+
+        if not text:
+
+            return
+
+        print(
+            "[REMOTE VOICE] Sending:",
+            text,
+        )
+
+        self._broadcast_threadsafe({
+
+            "type": "log",
+
+            "speaker": "jarvis",
+
+            "text": str(text),
+
+            "ts": time.time(),
+
+        })
+    
+    # =========================================================
     # REMOTE COMMAND
     # =========================================================
 
@@ -705,6 +761,47 @@ class DashboardServer:
             "speaker": "user",
             "text": text,
         })
+
+        # =====================================================
+        # PRIORITY INTERRUPT
+        #
+        # "stop conversation" means:
+        # stop the current response/task.
+        #
+        # It does NOT stop Live Conversation.
+        # =====================================================
+
+        try:
+
+            if handle_priority(text):
+
+                self._broadcast_threadsafe({
+                    "type": "log",
+                    "speaker": "jarvis",
+                    "text": "Stopped.",
+                })
+
+                return
+
+        except Exception as exc:
+
+            print(
+                "[REMOTE INTERRUPT ERROR]",
+                exc,
+            )
+
+            self._broadcast_threadsafe({
+                "type": "sys",
+                "text": (
+                    f"Interrupt error: {exc}"
+                ),
+            })
+
+            return
+
+        # =====================================================
+        # NORMAL COMMAND
+        # =====================================================
 
         if not self.command_handler:
 

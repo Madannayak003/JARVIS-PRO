@@ -24,6 +24,79 @@ ONLINE = False
 
 VOICE_THREAD = None
 
+# =========================================================
+# REMOTE SPEECH LISTENERS
+# =========================================================
+
+_SPEECH_LISTENERS = []
+
+_SPEECH_LISTENER_LOCK = threading.Lock()
+
+
+def add_speech_listener(listener):
+    """
+    Register a callback that receives every JARVIS
+    speech message.
+
+    The callback must accept one argument:
+
+        listener(text)
+    """
+
+    if not callable(listener):
+        return
+
+    with _SPEECH_LISTENER_LOCK:
+
+        if listener not in _SPEECH_LISTENERS:
+            _SPEECH_LISTENERS.append(
+                listener
+            )
+
+
+def remove_speech_listener(listener):
+
+    with _SPEECH_LISTENER_LOCK:
+
+        if listener in _SPEECH_LISTENERS:
+            _SPEECH_LISTENERS.remove(
+                listener
+            )
+
+
+def _notify_speech_listeners(text):
+
+    if not text:
+        return
+
+    with _SPEECH_LISTENER_LOCK:
+
+        listeners = list(
+            _SPEECH_LISTENERS
+        )
+
+    for listener in listeners:
+
+        try:
+
+            listener(text)
+
+        except Exception as exc:
+
+            print(
+                "[VOICE] Speech listener error:",
+                exc
+            )
+
+def notify_speech_output(text):
+    """
+    Send speech text to registered remote/dashboard
+    listeners without triggering TTS.
+    """
+
+    _notify_speech_listeners(
+        str(text)
+    )
 
 # =========================================================
 # Internet Detection
@@ -263,6 +336,7 @@ def speak(
     text,
     wait=False,
     session=None,
+    notify_remote=True,
 ):
 
     global VOICE_THREAD
@@ -270,6 +344,19 @@ def speak(
     if not text:
 
         return
+    
+    # -----------------------------------------------------
+    # Notify connected Remote Dashboard
+    #
+    # This sends the same text that JARVIS is about to
+    # speak to the remote chat.
+    # -----------------------------------------------------
+
+    if notify_remote:
+
+        _notify_speech_listeners(
+            str(text)
+        )
     
     # -----------------------------------------------------
     # LIVE CONVERSATION SPEECH GATE

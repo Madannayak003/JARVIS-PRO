@@ -6,6 +6,7 @@ from voice.manager import (
     speak,
     prepare_speech,
     play_prepared_speech,
+    notify_speech_output,
 )
 
 from voice.state import (
@@ -260,6 +261,20 @@ class TTSPipeline:
         if not sentence:
 
             return False
+        
+        # -------------------------------------------------
+        # Remote Dashboard
+        #
+        # AI streaming uses this pipeline directly instead
+        # of voice.manager.speak().
+        #
+        # Forward the sentence to the remote dashboard
+        # without triggering another TTS playback.
+        # -------------------------------------------------
+
+        notify_speech_output(
+            sentence
+        )
 
         # -------------------------------------------------
         # Assign an ordering index.
@@ -716,6 +731,8 @@ class TTSPipeline:
                 wait=True,
 
                 session=self.session,
+                
+                notify_remote=False,
 
             )
 
