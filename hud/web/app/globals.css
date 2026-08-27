@@ -1900,3 +1900,95 @@ body {
   }
 
 }
+
+/* =========================================================
+   REMOTE QR
+   ========================================================= */
+
+.remote-qr-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px auto;
+}
+
+.remote-qr {
+  padding: 10px;
+  background: #050505;
+  border: 1px solid rgba(255, 204, 102, 0.35);
+  box-shadow:
+    0 0 18px rgba(255, 170, 48, 0.12),
+    inset 0 0 18px rgba(255, 170, 48, 0.04);
+}
+
+.remote-qr-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #ffcc66;
+  opacity: 0.75;
+}
+
+
+/* =========================================================
+   REMOTE PIN
+   ========================================================= */
+
+.remote-pin-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 14px auto;
+  padding: 12px 22px;
+  border: 1px solid rgba(255, 204, 102, 0.25);
+  background: rgba(255, 170, 48, 0.035);
+}
+
+.remote-pin-label {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  opacity: 0.55;
+}
+
+.remote-pin {
+  font-size: 24px;
+  letter-spacing: 0.28em;
+  color: #ffcc66;
+  text-shadow: 0 0 12px rgba(255, 170, 48, 0.45);
+}
+
+
+/* =========================================================
+   REMOTE STATES
+   ========================================================= */
+
+.remote-loading,
+.remote-offline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 25px 0;
+  text-align: center;
+}
+
+.remote-loading {
+  color: #ffcc66;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.remote-offline strong {
+  color: #ffcc66;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.remote-offline span {
+  max-width: 280px;
+  font-size: 10px;
+  line-height: 1.6;
+  opacity: 0.55;
+}

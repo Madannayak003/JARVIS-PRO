@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no"
@@ -34,6 +36,7 @@
             height: 100%;
             background: var(--bg);
             color: var(--text);
+
             font-family:
                 -apple-system,
                 BlinkMacSystemFont,
@@ -48,16 +51,21 @@
         .card {
             width: 340px;
             padding: 44px 36px;
+
             background: var(--card);
+
             border: 1px solid var(--border);
             border-radius: 22px;
+
             text-align: center;
         }
 
         .logo {
             font-size: 28px;
             font-weight: 700;
+
             letter-spacing: 10px;
+
             margin-bottom: 6px;
         }
 
@@ -69,15 +77,19 @@
         .sub {
             font-size: 11px;
             color: var(--muted);
+
             letter-spacing: 3px;
             text-transform: uppercase;
+
             margin-bottom: 10px;
         }
 
         .hint {
             font-size: 12px;
             color: var(--muted);
+
             line-height: 1.55;
+
             margin-bottom: 28px;
         }
 
@@ -88,11 +100,15 @@
 
         .key-input {
             width: 100%;
+
             padding: 18px 14px;
 
-            background: rgba(255,255,255,0.05);
+            background:
+                rgba(255,255,255,0.05);
 
-            border: 1.5px solid var(--border);
+            border:
+                1.5px solid var(--border);
+
             border-radius: 14px;
 
             color: var(--text);
@@ -100,9 +116,12 @@
             font-size: 30px;
             font-weight: 700;
 
-            font-family: "Courier New", monospace;
+            font-family:
+                "Courier New",
+                monospace;
 
             text-align: center;
+
             letter-spacing: 10px;
             text-transform: uppercase;
 
@@ -117,14 +136,20 @@
         }
 
         .key-input::placeholder {
-            color: rgba(94,106,126,0.5);
+            color:
+                rgba(94,106,126,0.5);
+
             letter-spacing: 6px;
+
             font-size: 20px;
         }
 
         .key-input:focus {
-            border-color: var(--accent);
-            background: var(--adim);
+            border-color:
+                var(--accent);
+
+            background:
+                var(--adim);
 
             box-shadow:
                 0 0 0 3px
@@ -133,17 +158,22 @@
 
         .err {
             font-size: 12px;
+
             color: #f87171;
 
             min-height: 18px;
+
             margin-bottom: 14px;
         }
 
         .btn {
             width: 100%;
+
             padding: 14px;
 
-            background: var(--accent);
+            background:
+                var(--accent);
+
             color: #fff;
 
             font-size: 12px;
@@ -186,26 +216,34 @@
         }
 
         .shake {
-            animation: shake 0.35s ease;
+            animation:
+                shake 0.35s ease;
         }
 
         .voice-note {
             font-size: 10px;
+
             color: var(--muted);
 
             margin-top: 20px;
 
             line-height: 1.6;
+
             text-align: left;
         }
 
         .voice-note code {
-            background: rgba(255,255,255,0.07);
+            background:
+                rgba(255,255,255,0.07);
 
             padding: 1px 4px;
+
             border-radius: 3px;
 
-            font-family: "Courier New", monospace;
+            font-family:
+                "Courier New",
+                monospace;
+
             font-size: 9px;
         }
 
@@ -213,12 +251,32 @@
             display: none;
 
             color: var(--muted);
+
             font-size: 12px;
 
             margin-bottom: 16px;
         }
 
+        /* =====================================================
+           QR AUTO CONNECT STATUS
+           ===================================================== */
+
+        #qr-status {
+            display: none;
+
+            margin-bottom: 16px;
+
+            color: var(--accent);
+
+            font-size: 11px;
+
+            letter-spacing: 1px;
+
+            line-height: 1.5;
+        }
+
     </style>
+
 </head>
 
 <body>
@@ -233,18 +291,35 @@
         Remote Access
     </div>
 
+
     <p id="reconnecting">
         Reconnecting…
     </p>
 
+
+    <!-- =====================================================
+         QR AUTO CONNECT STATUS
+         ===================================================== -->
+
+    <p id="qr-status">
+        QR PAIRING DETECTED<br>
+        CONNECTING TO JARVIS…
+    </p>
+
+
     <p class="hint">
+
         Press
+
         <strong style="color:var(--text)">
             Remote Control
         </strong>
-        in the JARVIS desktop app to get a
-        QR code or session key.
+
+        in the JARVIS desktop app
+        to get a QR code or session key.
+
     </p>
+
 
     <div class="key-wrap">
 
@@ -261,21 +336,26 @@
 
     </div>
 
+
     <div
         class="err"
         id="err"
     ></div>
 
+
     <button
         class="btn"
+        id="connect-btn"
         onclick="doLogin()"
     >
         CONNECT
     </button>
 
+
     <p class="voice-note">
 
         🎤
+
         <strong style="color:var(--text)">
             Voice commands:
         </strong>
@@ -288,300 +368,441 @@
 
 </div>
 
+
 <script>
 
-    /*
-     * =========================================================
-     * JARVIS PRO DEVICE AUTO RECONNECT
-     * =========================================================
-     */
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
 
-    (async function () {
+const inp =
+    document.getElementById(
+        "key"
+    );
 
-        const devTok =
-            localStorage.getItem(
-                "jarvis_device_token"
-            );
+const errorBox =
+    document.getElementById(
+        "err"
+    );
 
-        if (!devTok) {
-            return;
-        }
+const qrStatus =
+    document.getElementById(
+        "qr-status"
+    );
 
-        document
-            .getElementById(
-                "reconnecting"
-            )
-            .style.display = "block";
+const connectButton =
+    document.getElementById(
+        "connect-btn"
+    );
 
-        try {
+const card =
+    document.getElementById(
+        "card"
+    );
 
-            const response =
-                await fetch(
-                    "/api/device-login",
-                    {
-                        method: "POST",
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+/* =========================================================
+   DEVICE AUTO RECONNECT
+   ========================================================= */
 
-                        body: JSON.stringify({
-                            device_token:
-                                devTok
-                        })
-                    }
-                );
+(async function () {
 
-            const data =
-                await response.json();
-
-            if (
-                data.ok &&
-                data.token &&
-                data.key
-            ) {
-
-                sessionStorage.setItem(
-                    "jarvis_key",
-                    data.key
-                );
-
-                sessionStorage.setItem(
-                    "jarvis_token",
-                    data.token
-                );
-
-                location.replace("/");
-
-                return;
-            }
-
-        } catch (error) {
-
-            console.log(
-                "Auto reconnect failed:",
-                error
-            );
-
-        }
-
-        localStorage.removeItem(
+    const devTok =
+        localStorage.getItem(
             "jarvis_device_token"
         );
 
-        document
-            .getElementById(
-                "reconnecting"
-            )
-            .style.display = "none";
+    if (!devTok) {
+        return;
+    }
 
-    })();
-
-
-    /*
-     * =========================================================
-     * INPUT
-     * =========================================================
-     */
-
-    const inp =
-        document.getElementById(
-            "key"
-        );
-
-    inp.focus();
+    document
+        .getElementById(
+            "reconnecting"
+        )
+        .style.display = "block";
 
 
-    inp.addEventListener(
-        "input",
-        () => {
+    try {
 
-            inp.value =
-                inp.value
-                    .toUpperCase()
-                    .replace(
-                        /[^A-Z2-9]/g,
-                        ""
-                    );
+        const response =
+            await fetch(
+                "/api/device-login",
+                {
+                    method: "POST",
 
-            if (
-                inp.value.length === 6
-            ) {
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                doLogin();
-
-            }
-
-        }
-    );
+                    body: JSON.stringify({
+                        device_token:
+                            devTok
+                    })
+                }
+            );
 
 
-    inp.addEventListener(
-        "keydown",
-        event => {
+        const data =
+            await response.json();
 
-            if (
-                event.key === "Enter"
-            ) {
-
-                doLogin();
-
-            }
-
-        }
-    );
-
-
-    /*
-     * =========================================================
-     * LOGIN
-     * =========================================================
-     */
-
-    async function doLogin() {
-
-        const key =
-            inp.value
-                .trim()
-                .toUpperCase();
 
         if (
-            key.length < 6
+            data.ok &&
+            data.token &&
+            data.key
         ) {
 
-            shake();
+            sessionStorage.setItem(
+                "jarvis_key",
+                data.key
+            );
+
+            sessionStorage.setItem(
+                "jarvis_token",
+                data.token
+            );
+
+
+            location.replace("/");
+
+            return;
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Auto reconnect failed:",
+            error
+        );
+
+    }
+
+
+    localStorage.removeItem(
+        "jarvis_device_token"
+    );
+
+
+    document
+        .getElementById(
+            "reconnecting"
+        )
+        .style.display = "none";
+
+})();
+
+
+/* =========================================================
+   NORMAL PIN INPUT
+   ========================================================= */
+
+inp.focus();
+
+
+inp.addEventListener(
+    "input",
+    () => {
+
+        inp.value =
+            inp.value
+                .toUpperCase()
+                .replace(
+                    /[^A-Z2-9]/g,
+                    ""
+                );
+
+
+        if (
+            inp.value.length === 6
+        ) {
+
+            doLogin();
+
+        }
+
+    }
+);
+
+
+inp.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            doLogin();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+async function doLogin() {
+
+    const key =
+        inp.value
+            .trim()
+            .toUpperCase();
+
+
+    if (
+        key.length < 6
+    ) {
+
+        shake();
+
+        return;
+
+    }
+
+
+    errorBox.textContent = "";
+
+
+    connectButton.disabled = true;
+
+    connectButton.textContent =
+        "CONNECTING…";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        pin: key
+                    })
+                }
+            );
+
+
+        let data;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            data = {
+                ok: false
+            };
+
+        }
+
+
+        if (
+            response.ok &&
+            data.ok &&
+            data.token
+        ) {
+
+            sessionStorage.setItem(
+                "jarvis_key",
+                data.key || key
+            );
+
+
+            sessionStorage.setItem(
+                "jarvis_token",
+                data.token
+            );
+
+
+            if (
+                data.device_token
+            ) {
+
+                localStorage.setItem(
+                    "jarvis_device_token",
+                    data.device_token
+                );
+
+            }
+
+
+            location.replace("/");
 
             return;
 
         }
 
-        const errorBox =
-            document.getElementById(
-                "err"
-            );
 
-        errorBox.textContent = "";
+        errorBox.textContent =
+            data.error ||
+            "Invalid or expired key";
 
 
-        try {
+        inp.value = "";
 
-            const response =
-                await fetch(
-                    "/login",
-                    {
-                        method: "POST",
+        inp.focus();
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+        connectButton.disabled = false;
 
-                        body: JSON.stringify({
-                            pin: key
-                        })
-                    }
-                );
+        connectButton.textContent =
+            "CONNECT";
 
+        shake();
 
-            let data;
+    } catch (error) {
 
-            try {
-
-                data =
-                    await response.json();
-
-            } catch {
-
-                data = {
-                    ok: false
-                };
-
-            }
+        console.error(
+            "Login error:",
+            error
+        );
 
 
-            if (
-                response.ok &&
-                data.ok &&
-                data.token
-            ) {
-
-                sessionStorage.setItem(
-                    "jarvis_key",
-                    data.key || key
-                );
-
-                sessionStorage.setItem(
-                    "jarvis_token",
-                    data.token
-                );
+        errorBox.textContent =
+            "Connection error";
 
 
-                if (
-                    data.device_token
-                ) {
+        connectButton.disabled = false;
 
-                    localStorage.setItem(
-                        "jarvis_device_token",
-                        data.device_token
-                    );
+        connectButton.textContent =
+            "CONNECT";
 
-                }
+        shake();
 
+    }
 
-                location.replace("/");
-
-                return;
-
-            }
+}
 
 
-            errorBox.textContent =
-                data.error ||
-                "Invalid or expired key";
+/* =========================================================
+   QR AUTO LOGIN
+   ========================================================= */
 
-            inp.value = "";
+(function detectQRPairing() {
 
-            inp.focus();
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-            shake();
 
-        } catch (error) {
+    const qrPin =
+        params.get(
+            "pin"
+        );
 
-            errorBox.textContent =
-                "Connection error";
 
-            shake();
+    /*
+     * No QR pin in URL.
+     * Normal manual login remains unchanged.
+     */
 
-        }
+    if (!qrPin) {
+        return;
+    }
+
+
+    const pin =
+        qrPin
+            .trim()
+            .toUpperCase();
+
+
+    /*
+     * JARVIS pairing PIN is exactly
+     * six characters.
+     */
+
+    if (
+        !/^[A-Z0-9]{6}$/.test(pin)
+    ) {
+
+        console.warn(
+            "Invalid QR pairing PIN."
+        );
+
+        return;
 
     }
 
 
     /*
-     * =========================================================
-     * SHAKE
-     * =========================================================
+     * Show QR connection state.
      */
 
-    function shake() {
+    qrStatus.style.display =
+        "block";
 
-        const card =
-            document.getElementById(
-                "card"
-            );
 
-        card.classList.remove(
-            "shake"
-        );
+    /*
+     * Put the scanned PIN
+     * into the existing login field.
+     */
 
-        void card.offsetWidth;
+    inp.value =
+        pin;
 
-        card.classList.add(
-            "shake"
-        );
 
-    }
+    /*
+     * Disable manual controls
+     * while QR login is running.
+     */
+
+    inp.disabled = true;
+
+
+    /*
+     * Automatically authenticate.
+     *
+     * Small delay gives the browser
+     * time to render the QR state.
+     */
+
+    setTimeout(
+        () => {
+
+            doLogin();
+
+        },
+        200
+    );
+
+})();
+
+
+/* =========================================================
+   SHAKE
+   ========================================================= */
+
+function shake() {
+
+    card.classList.remove(
+        "shake"
+    );
+
+
+    void card.offsetWidth;
+
+
+    card.classList.add(
+        "shake"
+    );
+
+}
 
 </script>
 

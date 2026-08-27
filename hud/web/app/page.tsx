@@ -7,6 +7,7 @@ import {
 
 import JarvisOrb from "@/components/JarvisOrb";
 import HudCockpit from "@/components/HudCockpit";
+import { QRCodeSVG } from "qrcode.react";
 
 import {
   HUDBridge,
@@ -53,6 +54,15 @@ type SettingsModal =
   | "customise"
   | null;
 
+
+  type RemoteInfo = {
+  ok: boolean;
+    url: string;
+    pairing_url: string;
+    pairing_pin: string;
+    pairing_active: boolean;
+    clients: number;
+  };
 
 export default function Home() {
 
@@ -127,6 +137,15 @@ export default function Home() {
     setAssistantColour,
   ] = useState("#ffaa30");
 
+  const [
+    remoteInfo,
+    setRemoteInfo,
+  ] = useState<RemoteInfo | null>(null);
+
+  const [
+    remoteLoading,
+    setRemoteLoading,
+  ] = useState(false);
 
   /* =========================================================
      LOAD SETTINGS
@@ -283,9 +302,52 @@ export default function Home() {
      REMOTE CONTROL
      ========================================================= */
 
-  const openRemoteControl = () => {
+  const openRemoteControl = async () => {
 
     setModal("remote");
+    setRemoteLoading(true);
+
+    try {
+
+      const bridgeUrl =
+        process.env
+          .NEXT_PUBLIC_JARVIS_DASHBOARD_URL
+        || (
+          typeof window !== "undefined"
+            ? `http://${window.location.hostname}:8765`
+            : "http://127.0.0.1:8765"
+        );
+
+      const response =
+        await fetch(
+          `${bridgeUrl}/api/info`,
+          {
+            cache: "no-store",
+          }
+        );
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Remote information unavailable"
+        );
+
+      }
+
+      const data =
+        await response.json() as RemoteInfo;
+
+      setRemoteInfo(data);
+
+    } catch {
+
+      setRemoteInfo(null);
+
+    } finally {
+
+      setRemoteLoading(false);
+
+    }
 
   };
 
@@ -772,40 +834,112 @@ export default function Home() {
 
             <div className="remote-modal-content">
 
-              <div className="remote-icon">
-                ◉
-              </div>
-
-
               <div className="remote-title">
                 JARVIS PRO REMOTE
               </div>
 
 
               <p className="remote-description">
-
-                Remote control integration
-
+                Scan to connect your device
               </p>
 
 
-              <div className="remote-status-box">
+              {remoteLoading ? (
 
-                <span>
-                  JARVIS DASHBOARD
-                </span>
+                <div className="remote-loading">
+                  CONNECTING TO JARVIS...
+                </div>
 
-                <strong>
-                  http://192.168.31.124:8765
-                </strong>
+              ) : remoteInfo?.pairing_active &&
+                remoteInfo.pairing_url ? (
 
-              </div>
+                <>
+                  {/* =========================================
+                      QR CODE
+                      ========================================= */}
+
+                  <div className="remote-qr-wrapper">
+
+                    <div className="remote-qr">
+
+                      <QRCodeSVG
+                        value={
+                          remoteInfo.pairing_url
+                        }
+                        size={220}
+                        bgColor="#050505"
+                        fgColor="#ffcc66"
+                        level="M"
+                        includeMargin
+                      />
+
+                    </div>
+
+                    <div className="remote-qr-label">
+                      SCAN TO CONNECT
+                    </div>
+
+                  </div>
+
+
+                  {/* =========================================
+                      PAIRING PIN
+                      ========================================= */}
+
+                  <div className="remote-pin-box">
+
+                    <span className="remote-pin-label">
+                      PAIRING PIN
+                    </span>
+
+                    <strong className="remote-pin">
+                      {remoteInfo.pairing_pin}
+                    </strong>
+
+                  </div>
+
+
+                  {/* =========================================
+                      DASHBOARD
+                      ========================================= */}
+
+                  <div className="remote-status-box">
+
+                    <span>
+                      JARVIS DASHBOARD
+                    </span>
+
+                    <strong>
+                      {remoteInfo.url}
+                    </strong>
+
+                  </div>
+
+                </>
+
+              ) : (
+
+                <div className="remote-offline">
+
+                  <strong>
+                    PAIRING NOT AVAILABLE
+                  </strong>
+
+                  <span>
+                    Start the JARVIS dashboard
+                    and open Remote Control again.
+                  </span>
+
+                </div>
+
+              )}
 
 
               <p className="remote-note">
 
-                The existing JARVIS remote dashboard
-                remains separate from the HUD bridge.
+                Scan the QR code with your phone.
+                Your device will open the JARVIS
+                remote pairing page.
 
               </p>
 
@@ -817,13 +951,22 @@ export default function Home() {
                   className="settings-modal-button settings-modal-button-primary"
                   onClick={() => {
 
+                    const url =
+                      remoteInfo?.pairing_url ||
+                      remoteInfo?.url;
+
+                    if (!url) {
+                      return;
+                    }
+
                     window.open(
-                      "http://192.168.31.124:8765",
+                      url,
                       "_blank",
                       "noopener,noreferrer"
                     );
 
                   }}
+                  disabled={!remoteInfo}
                 >
                   OPEN REMOTE
                 </button>

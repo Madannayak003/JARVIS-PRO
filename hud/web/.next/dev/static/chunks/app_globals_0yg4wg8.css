@@ -980,4 +980,79 @@ body {
   }
 }
 
+.remote-qr-wrapper {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 18px auto;
+  display: flex;
+}
+
+.remote-qr {
+  background: #050505;
+  border: 1px solid #ffcc6659;
+  padding: 10px;
+  box-shadow: 0 0 18px #ffaa301f, inset 0 0 18px #ffaa300a;
+}
+
+.remote-qr-label {
+  letter-spacing: .2em;
+  color: #fc6;
+  opacity: .75;
+  font-size: 9px;
+}
+
+.remote-pin-box {
+  background: #ffaa3009;
+  border: 1px solid #ffcc6640;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 14px auto;
+  padding: 12px 22px;
+  display: flex;
+}
+
+.remote-pin-label {
+  letter-spacing: .2em;
+  opacity: .55;
+  font-size: 8px;
+}
+
+.remote-pin {
+  letter-spacing: .28em;
+  color: #fc6;
+  text-shadow: 0 0 12px #ffaa3073;
+  font-size: 24px;
+}
+
+.remote-loading, .remote-offline {
+  text-align: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 25px 0;
+  display: flex;
+}
+
+.remote-loading {
+  color: #fc6;
+  letter-spacing: .18em;
+  font-size: 10px;
+}
+
+.remote-offline strong {
+  color: #fc6;
+  letter-spacing: .12em;
+  font-size: 11px;
+}
+
+.remote-offline span {
+  opacity: .55;
+  max-width: 280px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
 /*# sourceMappingURL=app_globals_0yg4wg8.css.map*/

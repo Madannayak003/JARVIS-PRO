@@ -63,6 +63,8 @@ try:
         WebSocketDisconnect,
     )
 
+    from fastapi.middleware.cors import CORSMiddleware
+
     from fastapi.responses import (
         FileResponse,
         HTMLResponse,
@@ -958,6 +960,27 @@ class DashboardServer:
         )
 
         # -----------------------------------------------------
+        # CORS
+        #
+        # The JARVIS PRO HUD runs on Next.js
+        # while the remote dashboard runs on Python.
+        # -----------------------------------------------------
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+
+                # JARVIS PRO HUD opened through the LAN address.
+                f"http://{self.ip}:3000",
+            ],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+        # -----------------------------------------------------
         # Static files
         # -----------------------------------------------------
 
@@ -1309,15 +1332,32 @@ class DashboardServer:
         )
         async def info():
 
+            pairing_active = (
+                bool(self._pin)
+                and
+                time.time()
+                < self._pin_expiry
+            )
+
             return {
                 "ok": True,
+
                 "url": self.url(),
-                "pairing_active": (
-                    bool(self._pin)
-                    and
-                    time.time()
-                    < self._pin_expiry
+
+                "pairing_url": (
+                    self.pairing_url()
+                    if pairing_active
+                    else ""
                 ),
+
+                "pairing_pin": (
+                    self._pin
+                    if pairing_active
+                    else ""
+                ),
+
+                "pairing_active": pairing_active,
+
                 "clients": len(
                     self._clients
                 ),
