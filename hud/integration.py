@@ -19,6 +19,8 @@ a no-op and the existing JARVIS runtime is unaffected.
 
 from .emitter import HUDEmitter
 from .event_contract import HUDEvent
+from .runtime import hud_runtime
+
 from config.hud_settings import HUD_ENABLED
 
 
@@ -169,6 +171,50 @@ class HUDIntegration:
                 "error": error
             }
         )
+        
+    # ========================================================
+    # Runtime
+    # ========================================================
+
+    @classmethod
+    def start(cls):
+
+        if not HUD_ENABLED:
+
+            return
+
+        try:
+
+            hud_runtime.start()
+
+            print(
+                "[MAIN HUD] HUD runtime started."
+            )
+
+        except Exception as e:
+
+            print(
+                "[HUD INTEGRATION] "
+                f"HUD runtime failed: {e}"
+            )
+
+    @classmethod
+    def stop(cls):
+
+        if not HUD_ENABLED:
+
+            return
+
+        try:
+
+            hud_runtime.stop()
+
+        except Exception as e:
+
+            print(
+                "[HUD INTEGRATION] "
+                f"HUD runtime stop failed: {e}"
+            )
 
     # ========================================================
     # Voice Mode

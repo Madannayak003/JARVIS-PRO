@@ -12,7 +12,7 @@ until real runtime integration is completed.
 # HUD Integration
 # ============================================================
 
-HUD_ENABLED = False
+HUD_ENABLED = True
 
 
 # ============================================================

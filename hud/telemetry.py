@@ -74,6 +74,12 @@ class HUDTelemetry:
         except Exception:
 
             return None
+        
+    # --------------------------------------------------
+
+    def available(self):
+
+        return psutil is not None
 
     # --------------------------------------------------
 
