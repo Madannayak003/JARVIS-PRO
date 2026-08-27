@@ -1,0 +1,665 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: "Courier New", monospace;
+}
+
+.orb-root {
+  position: fixed;
+  inset: 0;
+  cursor: grab;
+}
+
+.orb-root:active {
+  cursor: grabbing;
+}
+
+.orb-root canvas {
+  display: block;
+}
+
+/* Film grain overlay */
+.overlay-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 150px;
+  mix-blend-mode: screen;
+}
+
+/* Scanline overlay */
+.overlay-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 11;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  opacity: 0.3;
+}
+
+/* Vignette */
+.overlay-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+
+/* ——— HUD ——— */
+.hud {
+  position: fixed;
+  z-index: 20;
+  color: #ffaa30;
+  font-family: "Courier New", monospace;
+  user-select: none;
+}
+
+.hud-controls {
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.hud-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  background: rgba(20, 10, 0, 0.55);
+  border: 1px solid rgba(255, 170, 48, 0.45);
+  border-radius: 4px;
+  color: #ffaa30;
+  font-family: "Courier New", monospace;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  text-shadow: 0 0 6px rgba(255, 170, 48, 0.7);
+  box-shadow: 0 0 12px rgba(255, 140, 20, 0.12) inset;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hud-btn:hover {
+  background: rgba(60, 30, 0, 0.7);
+  border-color: rgba(255, 200, 100, 0.9);
+  box-shadow:
+    0 0 14px rgba(255, 150, 30, 0.35),
+    0 0 12px rgba(255, 140, 20, 0.2) inset;
+}
+
+.hud-btn:active {
+  background: rgba(90, 45, 0, 0.8);
+}
+
+.hud-btn[aria-pressed="true"] {
+  background: rgba(120, 60, 0, 0.6);
+  border-color: #ffcc66;
+  color: #ffcc66;
+}
+
+.hud-row {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-hint {
+  bottom: 24px;
+  left: 24px;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  text-shadow: 0 0 8px rgba(255, 170, 48, 0.6);
+  pointer-events: none;
+}
+
+.hud-hint .key {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 170, 48, 0.5);
+  border-radius: 3px;
+  margin-right: 4px;
+  font-size: 10px;
+}
+
+.hud-title {
+  top: 24px;
+  left: 24px;
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  opacity: 0.7;
+  text-shadow: 0 0 10px rgba(255, 170, 48, 0.8);
+  pointer-events: none;
+}
+
+.hud-title::after {
+  content: "";
+  display: block;
+  margin-top: 6px;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(255, 170, 48, 0.8), transparent);
+}
+
+.hud-error {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #ff5533;
+  text-shadow: 0 0 8px rgba(255, 60, 30, 0.7);
+}
+
+/* ——— Camera preview panel ——— */
+.camera-panel {
+  position: relative;
+  width: 208px;
+  height: 156px;
+  display: none;
+  border: 1px solid rgba(255, 170, 48, 0.45);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0a0500;
+  box-shadow: 0 0 16px rgba(255, 140, 20, 0.15);
+}
+
+.camera-panel.visible {
+  display: block;
+}
+
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror so it behaves like a mirror */
+  filter: sepia(1) hue-rotate(-15deg) saturate(2.2) brightness(0.75)
+    contrast(1.15);
+  opacity: 0.85;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.camera-status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3px 6px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: #ffcc66;
+  background: rgba(10, 5, 0, 0.65);
+  text-shadow: 0 0 6px rgba(255, 170, 48, 0.8);
+}
+
+@media (max-width: 600px) {
+  .hud-hint {
+    display: none;
+  }
+}
+
+/* JARVIS PRO identity layer around the original Ultron engine. */
+.hud-brand { top: 24px; left: 24px; display: flex; align-items: baseline; gap: 8px; }
+.brand-main { font-size: 17px; font-weight: 700; letter-spacing: 0.12em; color: #ffcc66; text-shadow: 0 0 12px rgba(255, 170, 48, 0.8); }
+.brand-sub { font-size: 10px; letter-spacing: 0.28em; opacity: .65; }
+.hud-top-center { top: 18px; left: 50%; transform: translateX(-50%); font-size: 22px; font-weight: 700; letter-spacing: .14em; color: #ffcc66; text-shadow: 0 0 12px rgba(255, 170, 48, .8); }
+.hud-top-right { top: 22px; right: 24px; display: flex; gap: 12px; font-size: 11px; letter-spacing: .12em; opacity: .75; }
+.hud-top-right strong { color: #ffcc66; }
+.hud-bottom-center { left: 50%; bottom: 26px; transform: translateX(-50%); text-align: center; }
+.core-name { font-size: 13px; font-weight: 700; letter-spacing: .18em; color: #ffaa30; }
+.core-status { margin-top: 8px; font-size: 13px; font-weight: 700; letter-spacing: .12em; color: #ffcc66; }
+.core-sub { margin-top: 8px; font-size: 9px; letter-spacing: .16em; opacity: .45; }
+
+/* =========================================================
+   JARVIS PRO
+   UI-2 — MARK COCKPIT
+   ========================================================= */
+
+.jarvis-hud {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #020303;
+  color: #ffb000;
+  font-family: "Courier New", monospace;
+}
+
+/* =========================================================
+   ULTRON ENGINE
+   ========================================================= */
+
+.ultron-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* =========================================================
+   COCKPIT
+   ========================================================= */
+
+.hud-cockpit {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.cockpit-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 24px;
+
+  border-bottom: 1px solid
+    rgba(255, 140, 0, 0.28);
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.38),
+      rgba(0, 0, 0, 0.08)
+    );
+}
+
+.cockpit-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  letter-spacing: 2px;
+}
+
+.brand-main {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.brand-pro {
+  font-size: 9px;
+  opacity: 0.55;
+}
+
+.cockpit-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: 4px;
+
+  text-shadow:
+    0 0 8px rgba(255, 170, 0, 0.65);
+}
+
+.cockpit-system-status {
+  display: flex;
+  gap: 14px;
+
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.status-label {
+  opacity: 0.55;
+}
+
+.status-value {
+  text-shadow:
+    0 0 7px rgba(255, 170, 0, 0.55);
+}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+
+.cockpit-panel {
+  position: absolute;
+
+  top: 98px;
+
+  width: 282px;
+  min-height: 245px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.38);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(7, 7, 6, 0.82),
+      rgba(0, 0, 0, 0.58)
+    );
+
+  box-shadow:
+    inset 0 0 30px rgba(255, 110, 0, 0.025),
+    0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.cockpit-left {
+  left: 24px;
+}
+
+.cockpit-right {
+  right: 24px;
+}
+
+.panel-heading {
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid
+    rgba(255, 140, 0, 0.25);
+
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.panel-marker {
+  margin-right: 8px;
+
+  font-size: 7px;
+
+  text-shadow:
+    0 0 8px rgba(255, 150, 0, 0.8);
+}
+
+.panel-body {
+  padding: 17px 16px;
+}
+
+/* =========================================================
+   SYSTEM
+   ========================================================= */
+
+.cockpit-system-row {
+  margin-bottom: 17px;
+}
+
+.cockpit-system-label {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 7px;
+
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.cockpit-bar {
+  width: 100%;
+  height: 5px;
+
+  background: rgba(255, 140, 0, 0.08);
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.16);
+}
+
+.cockpit-bar-fill {
+  height: 100%;
+
+  background: #ff9d00;
+
+  box-shadow:
+    0 0 8px rgba(255, 150, 0, 0.7);
+
+  transition:
+    width 300ms ease;
+}
+
+.cockpit-data-row {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 8px 0;
+
+  border-top: 1px solid
+    rgba(255, 140, 0, 0.1);
+
+  font-size: 10px;
+}
+
+.cockpit-data-row span:first-child {
+  opacity: 0.5;
+}
+
+/* =========================================================
+   ACTIVITY
+   ========================================================= */
+
+.activity-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  padding: 15px;
+
+  border-bottom: 1px solid
+    rgba(255, 140, 0, 0.09);
+}
+
+.activity-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  opacity: 0.45;
+}
+
+.activity-value {
+  font-size: 11px;
+
+  color: #ffc45b;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-error {
+  margin: 14px;
+
+  padding: 10px;
+
+  border: 1px solid
+    rgba(255, 50, 50, 0.35);
+
+  color: #ff5555;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   CORE LABEL
+   ========================================================= */
+
+.cockpit-core-label {
+  position: absolute;
+
+  left: 50%;
+  bottom: 48px;
+
+  transform: translateX(-50%);
+
+  text-align: center;
+
+  letter-spacing: 2px;
+}
+
+.core-name {
+  font-size: 13px;
+  font-weight: 700;
+
+  text-shadow:
+    0 0 10px rgba(255, 170, 0, 0.7);
+}
+
+.core-status {
+  margin-top: 8px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.core-subtitle {
+  margin-top: 7px;
+
+  font-size: 8px;
+  opacity: 0.4;
+
+  letter-spacing: 2px;
+}
+
+/* =========================================================
+   BOTTOM STATUS
+   ========================================================= */
+
+.cockpit-bottom {
+  position: absolute;
+
+  left: 50%;
+  bottom: 18px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  gap: 28px;
+}
+
+.voice-indicator {
+  font-size: 9px;
+  letter-spacing: 1px;
+
+  opacity: 0.2;
+
+  transition:
+    opacity 200ms ease,
+    text-shadow 200ms ease;
+}
+
+.voice-indicator.active {
+  opacity: 1;
+
+  text-shadow:
+    0 0 10px rgba(255, 170, 0, 0.8);
+}
+
+/* =========================================================
+   CONNECTION
+   ========================================================= */
+
+.hud-bridge-status {
+  position: absolute;
+
+  top: 76px;
+  right: 24px;
+
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 8px;
+  letter-spacing: 1px;
+
+  opacity: 0.55;
+}
+
+.hud-bridge-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #777;
+}
+
+.hud-bridge-dot.connected {
+  background: #ff9d00;
+
+  box-shadow:
+    0 0 8px rgba(255, 150, 0, 0.9);
+}
+
+.hud-bridge-dot.offline {
+  background: #d22;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .cockpit-panel {
+    width: 220px;
+  }
+
+}
+
+@media (max-width: 760px) {
+
+  .cockpit-panel {
+    display: none;
+  }
+
+  .cockpit-title {
+    font-size: 18px;
+  }
+
+}

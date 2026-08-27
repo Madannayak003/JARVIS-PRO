@@ -1,11 +1,6 @@
 """
-JARVIS PRO
-HUD Event Bus
-
-Lightweight event system connecting JARVIS
-to the future HUD.
-
-The bus contains no UI logic.
+JARVIS PRO HUD
+Event Bus
 """
 
 import threading
@@ -21,9 +16,7 @@ class HUDEventBus:
 
         self._lock = threading.Lock()
 
-    # =====================================================
-    # Subscribe
-    # =====================================================
+    # --------------------------------------------------
 
     def subscribe(self, callback):
 
@@ -38,9 +31,7 @@ class HUDEventBus:
                     callback
                 )
 
-    # =====================================================
-    # Unsubscribe
-    # =====================================================
+    # --------------------------------------------------
 
     def unsubscribe(self, callback):
 
@@ -52,9 +43,7 @@ class HUDEventBus:
                     callback
                 )
 
-    # =====================================================
-    # Publish
-    # =====================================================
+    # --------------------------------------------------
 
     def publish(self, event: HUDEvent):
 
@@ -70,14 +59,12 @@ class HUDEventBus:
 
                 callback(event)
 
-            except Exception as e:
+            except Exception as exc:
 
                 print(
                     "[HUD BUS] Listener error:",
-                    e
+                    exc
                 )
 
-
-# Global HUD event bus
 
 hud_bus = HUDEventBus()

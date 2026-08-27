@@ -1,16 +1,11 @@
 """
-JARVIS PRO
-HUD Events
-
-Defines events that can be displayed by the future HUD.
-
-These events contain information only.
-They do not execute JARVIS actions.
+JARVIS PRO HUD
+Event Definitions
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass
@@ -18,7 +13,7 @@ class HUDEvent:
 
     name: str
 
-    data: Dict[str, Any] = field(
+    data: dict[str, Any] = field(
         default_factory=dict
     )
 
@@ -29,10 +24,11 @@ class HUDEvent:
         )
     )
 
-    source: Optional[str] = None
-    
+    source: str | None = None
+
+
 # =========================================================
-# Standard HUD Events
+# Events
 # =========================================================
 
 HUD_IDLE = "idle"
@@ -60,3 +56,7 @@ HUD_SYSTEM_UPDATE = "system_update"
 HUD_NOTIFICATION = "notification"
 
 HUD_ERROR = "error"
+
+HUD_COMMAND = "command"
+
+HUD_RESPONSE = "response"

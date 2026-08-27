@@ -1,11 +1,6 @@
 """
-JARVIS PRO
+JARVIS PRO HUD
 HUD Manager
-
-Central interface for sending information
-from JARVIS to the HUD.
-
-The manager does NOT create the visual HUD.
 """
 
 from datetime import datetime
@@ -27,6 +22,8 @@ from .events import (
     HUD_SYSTEM_UPDATE,
     HUD_NOTIFICATION,
     HUD_ERROR,
+    HUD_COMMAND,
+    HUD_RESPONSE,
 )
 
 from .state import HUDState
@@ -46,11 +43,10 @@ class HUDManager:
         self,
         name,
         data=None,
-        source=None,
+        source="jarvis",
     ):
 
         if data is None:
-
             data = {}
 
         event = HUDEvent(
@@ -70,23 +66,7 @@ class HUDManager:
         hud_bus.publish(event)
 
     # =====================================================
-    # Status
-    # =====================================================
-
-    def set_status(self, status):
-
-        self.state.status = status
-
-        self._publish(
-            status,
-            {
-                "status": status
-            },
-            source="hud_manager",
-        )
-
-    # =====================================================
-    # Listening
+    # Voice
     # =====================================================
 
     def listening(self):
@@ -98,13 +78,9 @@ class HUDManager:
         self.state.thinking = False
         self.state.executing = False
 
-        self._publish(
-            HUD_LISTENING
-        )
+        self._publish(HUD_LISTENING)
 
-    # =====================================================
-    # Thinking
-    # =====================================================
+    # -----------------------------------------------------
 
     def thinking(self):
 
@@ -115,13 +91,9 @@ class HUDManager:
         self.state.thinking = True
         self.state.executing = False
 
-        self._publish(
-            HUD_THINKING
-        )
+        self._publish(HUD_THINKING)
 
-    # =====================================================
-    # Speaking
-    # =====================================================
+    # -----------------------------------------------------
 
     def speaking(self):
 
@@ -132,12 +104,23 @@ class HUDManager:
         self.state.thinking = False
         self.state.executing = False
 
-        self._publish(
-            HUD_SPEAKING
-        )
+        self._publish(HUD_SPEAKING)
+
+    # -----------------------------------------------------
+
+    def idle(self):
+
+        self.state.status = HUD_IDLE
+
+        self.state.listening = False
+        self.state.speaking = False
+        self.state.thinking = False
+        self.state.executing = False
+
+        self._publish(HUD_IDLE)
 
     # =====================================================
-    # Executing
+    # Tasks
     # =====================================================
 
     def executing(self, task=""):
@@ -145,11 +128,9 @@ class HUDManager:
         self.state.status = HUD_EXECUTING
 
         self.state.current_task = task
+
         self.state.task_status = "running"
 
-        self.state.listening = False
-        self.state.speaking = False
-        self.state.thinking = False
         self.state.executing = True
 
         self._publish(
@@ -159,13 +140,12 @@ class HUDManager:
             }
         )
 
-    # =====================================================
-    # Task Started
-    # =====================================================
+    # -----------------------------------------------------
 
     def task_started(self, task):
 
         self.state.current_task = task
+
         self.state.task_status = "running"
 
         self._publish(
@@ -175,13 +155,12 @@ class HUDManager:
             }
         )
 
-    # =====================================================
-    # Task Finished
-    # =====================================================
+    # -----------------------------------------------------
 
     def task_finished(self, task=""):
 
         self.state.task_status = "finished"
+
         self.state.executing = False
 
         self._publish(
@@ -191,9 +170,7 @@ class HUDManager:
             }
         )
 
-    # =====================================================
-    # Task Failed
-    # =====================================================
+    # -----------------------------------------------------
 
     def task_failed(
         self,
@@ -202,7 +179,9 @@ class HUDManager:
     ):
 
         self.state.task_status = "failed"
+
         self.state.executing = False
+
         self.state.error = error
 
         self._publish(
@@ -210,6 +189,28 @@ class HUDManager:
             {
                 "task": task,
                 "error": error,
+            }
+        )
+
+    # =====================================================
+    # AI
+    # =====================================================
+
+    def ai_model(
+        self,
+        provider,
+        model,
+    ):
+
+        self.state.ai_model = (
+            f"{provider} {model}"
+        )
+
+        self._publish(
+            HUD_AI_MODEL_CHANGED,
+            {
+                "provider": provider,
+                "model": model,
             }
         )
 
@@ -229,40 +230,49 @@ class HUDManager:
         )
 
     # =====================================================
-    # AI Model
-    # =====================================================
-
-    def ai_model(self, provider, model):
-
-        self.state.ai_model = (
-            f"{provider} {model}"
-        )
-
-        self._publish(
-            HUD_AI_MODEL_CHANGED,
-            {
-                "provider": provider,
-                "model": model,
-            }
-        )
-
-    # =====================================================
     # System
     # =====================================================
 
     def system_update(self, data):
 
         if not isinstance(data, dict):
-
             return
 
-        self.state.system.update(
-            data
-        )
+        self.state.system.update(data)
 
         self._publish(
             HUD_SYSTEM_UPDATE,
             data,
+        )
+
+    # =====================================================
+    # Command
+    # =====================================================
+
+    def command(self, text):
+
+        self.state.last_command = str(text)
+
+        self._publish(
+            HUD_COMMAND,
+            {
+                "text": str(text)
+            }
+        )
+
+    # =====================================================
+    # Response
+    # =====================================================
+
+    def response(self, text):
+
+        self.state.last_response = str(text)
+
+        self._publish(
+            HUD_RESPONSE,
+            {
+                "text": str(text)
+            }
         )
 
     # =====================================================
@@ -271,9 +281,7 @@ class HUDManager:
 
     def notify(self, message):
 
-        self.state.notification = (
-            str(message)
-        )
+        self.state.notification = str(message)
 
         self._publish(
             HUD_NOTIFICATION,
@@ -288,9 +296,7 @@ class HUDManager:
 
     def error(self, message):
 
-        self.state.error = (
-            str(message)
-        )
+        self.state.error = str(message)
 
         self._publish(
             HUD_ERROR,
@@ -299,24 +305,5 @@ class HUDManager:
             }
         )
 
-    # =====================================================
-    # Reset
-    # =====================================================
-
-    def idle(self):
-
-        self.state.status = HUD_IDLE
-
-        self.state.listening = False
-        self.state.speaking = False
-        self.state.thinking = False
-        self.state.executing = False
-
-        self._publish(
-            HUD_IDLE
-        )
-
-
-# Global manager
 
 hud = HUDManager()

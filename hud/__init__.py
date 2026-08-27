@@ -1,17 +1,14 @@
 """
-JARVIS PRO
-HUD Foundation
+JARVIS PRO HUD
 
-Presentation layer only.
+Visual interface for JARVIS PRO.
 
-The HUD must never control JARVIS core logic.
+The HUD is a display layer only.
+It does not contain JARVIS intelligence or command logic.
 """
 
-from .manager import HUDManager, hud
-from .adapter import HUDAdapter
+from .app import HUDApplication
 
 __all__ = [
-    "HUDManager",
-    "HUDAdapter",
-    "hud",
+    "HUDApplication",
 ]

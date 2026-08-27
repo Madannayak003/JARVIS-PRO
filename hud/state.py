@@ -1,14 +1,10 @@
 """
-JARVIS PRO
-HUD State
-
-Stores the latest state that the visual HUD will display.
-
-This module does not create any UI.
+JARVIS PRO HUD
+State Model
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -32,7 +28,7 @@ class HUDState:
 
     executing: bool = False
 
-    system: Dict[str, Any] = field(
+    system: dict[str, Any] = field(
         default_factory=dict
     )
 
@@ -41,5 +37,9 @@ class HUDState:
     error: str = ""
 
     last_event: str = ""
+
+    last_command: str = ""
+
+    last_response: str = ""
 
     last_update: str = ""

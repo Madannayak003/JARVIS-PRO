@@ -12,6 +12,8 @@ from voice.mode import get_mode
 
 from hud.integration import HUDIntegration
 
+from hud.web_bridge import hud_web
+
 from dashboard.server import DashboardServer
 
 
@@ -63,6 +65,16 @@ def main():
     init_memory()
 
     start_all()
+    
+    # =====================================================
+    # HUD WEB BRIDGE
+    # =====================================================
+
+    hud_web.start()
+
+    print(
+        "[MAIN HUD] Web HUD bridge started."
+    )
 
     # =====================================================
     # LIVE CONVERSATION
