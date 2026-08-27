@@ -12,7 +12,7 @@ from voice.mode import get_mode
 
 from hud.integration import HUDIntegration
 
-from services.remote_control import RemoteControlServer
+from dashboard.server import DashboardServer
 
 
 def main():
@@ -99,12 +99,12 @@ def main():
     )
 
     # =====================================================
-    # REMOTE CONTROL
+    # REMOTE DASHBOARD
     # =====================================================
 
     from core.dispatcher import dispatch
 
-    remote_server = RemoteControlServer(
+    remote_server = DashboardServer(
         command_handler=dispatch,
         live_stop_handler=stop_live_conversation,
     )
@@ -114,7 +114,7 @@ def main():
     if remote_server.start():
 
         print(
-            "[REMOTE] JARVIS Remote:"
+            "[REMOTE] JARVIS Dashboard:"
         )
 
         print(
@@ -130,7 +130,7 @@ def main():
         )
 
         print(
-            "[REMOTE] Live Conversation stop control: READY"
+            "[REMOTE] Dashboard Live stop control: READY"
         )
 
     # =====================================================
