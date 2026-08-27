@@ -34,13 +34,81 @@ const EMPTY_STATE = {
     last_update: ""
 };
 function Home() {
+    // =======================================================
+    // CURRENT HUD STATE
+    // =======================================================
     const [hudState, setHudState] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(EMPTY_STATE);
+    // =======================================================
+    // ACTIVITY HISTORY
+    // =======================================================
+    const [hudEvents, setHudEvents] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    // =======================================================
+    // CONNECTION
+    // =======================================================
     const [connection, setConnection] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("connecting");
+    // =======================================================
+    // HUD CONNECTION
+    // =======================================================
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        const bridge = new __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hudBridge$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["HUDBridge"](process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766", setHudState, undefined, setConnection);
+        const bridge = new __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hudBridge$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["HUDBridge"](process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766", // ===================================================
+        // STATE
+        // ===================================================
+        (state)=>{
+            setHudState(state);
+        }, // ===================================================
+        // EVENT
+        // ===================================================
+        (event)=>{
+            setHudEvents((previous)=>{
+                // ---------------------------------------------
+                // Never put telemetry updates into activity log.
+                // ---------------------------------------------
+                if (event.name === "system_update") {
+                    return previous;
+                }
+                // ---------------------------------------------
+                // Ignore repeated identical events.
+                //
+                // Example:
+                //
+                // LISTENING
+                // LISTENING
+                // LISTENING
+                //
+                // becomes:
+                //
+                // LISTENING
+                // ---------------------------------------------
+                const last = previous[previous.length - 1];
+                if (last && last.name === event.name) {
+                    return previous;
+                }
+                // ---------------------------------------------
+                // Add new event.
+                // ---------------------------------------------
+                const next = [
+                    ...previous,
+                    event
+                ];
+                // ---------------------------------------------
+                // Keep only latest 25 meaningful events.
+                // ---------------------------------------------
+                return next.slice(-25);
+            });
+        }, // ===================================================
+        // CONNECTION
+        // ===================================================
+        (status)=>{
+            setConnection(status);
+        });
         bridge.connect();
-        return ()=>bridge.disconnect();
+        return ()=>{
+            bridge.disconnect();
+        };
     }, []);
+    // =======================================================
+    // UI
+    // =======================================================
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
         className: "jarvis-hud",
         children: [
@@ -48,19 +116,20 @@ function Home() {
                 className: "ultron-layer",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$JarvisOrb$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 56,
+                    lineNumber: 235,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 55,
+                lineNumber: 233,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$HudCockpit$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                state: hudState
+                state: hudState,
+                events: hudEvents
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 63,
+                lineNumber: 244,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -71,7 +140,7 @@ function Home() {
                         "aria-hidden": "true"
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 73,
+                        lineNumber: 259,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -82,19 +151,19 @@ function Home() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 78,
+                        lineNumber: 264,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 71,
+                lineNumber: 257,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 49,
+        lineNumber: 226,
         columnNumber: 5
     }, this);
 }
@@ -109,12 +178,18 @@ __turbopack_context__.s([
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 "use client";
 ;
+// =========================================================
+// VALUE FORMATTER
+// =========================================================
 function formatValue(value, fallback = "--") {
     if (value === null || value === undefined || value === "") {
         return fallback;
     }
     return String(value);
 }
+// =========================================================
+// SYSTEM BAR
+// =========================================================
 function SystemBar({ label, value }) {
     const numeric = typeof value === "number" ? Math.max(0, Math.min(100, value)) : null;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -127,20 +202,20 @@ function SystemBar({ label, value }) {
                         children: label
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 32,
+                        lineNumber: 83,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: numeric !== null ? `${numeric}%` : formatValue(value)
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 33,
+                        lineNumber: 87,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 31,
+                lineNumber: 81,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -152,22 +227,80 @@ function SystemBar({ label, value }) {
                     }
                 }, void 0, false, {
                     fileName: "[project]/components/HudCockpit.tsx",
-                    lineNumber: 41,
+                    lineNumber: 104,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 40,
+                lineNumber: 102,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/HudCockpit.tsx",
-        lineNumber: 30,
+        lineNumber: 79,
         columnNumber: 5
     }, this);
 }
-function HudCockpit({ state }) {
+// =========================================================
+// EVENT MESSAGE
+// =========================================================
+function getEventMessage(event) {
+    const data = event.data || {};
+    // -------------------------------------------------------
+    // Notification
+    // -------------------------------------------------------
+    if (typeof data.message === "string" && data.message) {
+        return data.message;
+    }
+    // -------------------------------------------------------
+    // Error
+    // -------------------------------------------------------
+    if (typeof data.error === "string" && data.error) {
+        return data.error;
+    }
+    // -------------------------------------------------------
+    // Task
+    // -------------------------------------------------------
+    if (typeof data.task === "string" && data.task) {
+        return `${event.name} · ${data.task}`;
+    }
+    // -------------------------------------------------------
+    // Voice mode
+    // -------------------------------------------------------
+    if (typeof data.mode === "string" && data.mode) {
+        return `${event.name} · ${data.mode}`;
+    }
+    // -------------------------------------------------------
+    // AI model
+    // -------------------------------------------------------
+    if (typeof data.model === "string" && data.model) {
+        return `${event.name} · ${data.model}`;
+    }
+    // -------------------------------------------------------
+    // Normal event
+    // -------------------------------------------------------
+    return event.name.replaceAll("_", " ").toUpperCase();
+}
+// =========================================================
+// TIME
+// =========================================================
+function formatEventTime(timestamp) {
+    if (!timestamp) {
+        return "--:--:--";
+    }
+    try {
+        return new Date(timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        });
+    } catch  {
+        return "--:--:--";
+    }
+}
+function HudCockpit({ state, events }) {
     const system = state.system || {};
     const activeStatus = state.status?.toUpperCase() || "IDLE";
     const activity = state.current_task || state.notification || "No active task";
@@ -185,7 +318,7 @@ function HudCockpit({ state }) {
                                 children: "JARVIS"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 78,
+                                lineNumber: 304,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -193,13 +326,13 @@ function HudCockpit({ state }) {
                                 children: "PRO"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 82,
+                                lineNumber: 308,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 77,
+                        lineNumber: 302,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -207,7 +340,7 @@ function HudCockpit({ state }) {
                         children: "JARVIS"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 87,
+                        lineNumber: 315,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -218,7 +351,7 @@ function HudCockpit({ state }) {
                                 children: "SYSTEM"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 92,
+                                lineNumber: 322,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -226,19 +359,19 @@ function HudCockpit({ state }) {
                                 children: state.voice_mode?.toUpperCase() || "ONLINE"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 96,
+                                lineNumber: 326,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 91,
+                        lineNumber: 320,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 75,
+                lineNumber: 300,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -252,14 +385,14 @@ function HudCockpit({ state }) {
                                 children: "◆"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 110,
+                                lineNumber: 347,
                                 columnNumber: 11
                             }, this),
                             "SYSTEM MONITOR"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 109,
+                        lineNumber: 345,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -270,7 +403,7 @@ function HudCockpit({ state }) {
                                 value: system.cpu
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 116,
+                                lineNumber: 358,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SystemBar, {
@@ -278,7 +411,7 @@ function HudCockpit({ state }) {
                                 value: system.ram
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 121,
+                                lineNumber: 363,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SystemBar, {
@@ -286,7 +419,7 @@ function HudCockpit({ state }) {
                                 value: system.battery
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 126,
+                                lineNumber: 368,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -296,20 +429,20 @@ function HudCockpit({ state }) {
                                         children: "NET"
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 132,
+                                        lineNumber: 376,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: formatValue(system.network, "ONLINE")
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 133,
+                                        lineNumber: 380,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 131,
+                                lineNumber: 374,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -319,20 +452,20 @@ function HudCockpit({ state }) {
                                         children: "GPU"
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 142,
+                                        lineNumber: 394,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: formatValue(system.gpu, "N/A")
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 143,
+                                        lineNumber: 398,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 141,
+                                lineNumber: 392,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -342,32 +475,32 @@ function HudCockpit({ state }) {
                                         children: "MODE"
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 152,
+                                        lineNumber: 412,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: formatValue(state.voice_mode, "ONLINE").toUpperCase()
                                     }, void 0, false, {
                                         fileName: "[project]/components/HudCockpit.tsx",
-                                        lineNumber: 153,
+                                        lineNumber: 416,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 151,
+                                lineNumber: 410,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 114,
+                        lineNumber: 356,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 107,
+                lineNumber: 343,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -381,103 +514,59 @@ function HudCockpit({ state }) {
                                 children: "◆"
                             }, void 0, false, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 172,
+                                lineNumber: 440,
                                 columnNumber: 11
                             }, this),
                             "ACTIVITY LOG"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 171,
+                        lineNumber: 438,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "activity-section",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-label",
-                                children: "STATUS"
-                            }, void 0, false, {
+                        className: "activity-log",
+                        children: events.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "activity-empty",
+                            children: "SYSTEM READY"
+                        }, void 0, false, {
+                            fileName: "[project]/components/HudCockpit.tsx",
+                            lineNumber: 453,
+                            columnNumber: 13
+                        }, this) : events.slice().reverse().map((event, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "activity-log-entry",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "activity-time",
+                                        children: formatEventTime(event.timestamp)
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/HudCockpit.tsx",
+                                        lineNumber: 475,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "activity-event",
+                                        children: getEventMessage(event)
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/HudCockpit.tsx",
+                                        lineNumber: 484,
+                                        columnNumber: 21
+                                    }, this)
+                                ]
+                            }, `${event.timestamp}-${event.name}-${index}`, true, {
                                 fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 178,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-value",
-                                children: activeStatus
-                            }, void 0, false, {
-                                fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 182,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 176,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "activity-section",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-label",
-                                children: "TASK"
-                            }, void 0, false, {
-                                fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 190,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-value",
-                                children: activity
-                            }, void 0, false, {
-                                fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 194,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 188,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "activity-section",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-label",
-                                children: "AI MODEL"
-                            }, void 0, false, {
-                                fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 202,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "activity-value",
-                                children: state.ai_model || "JARVIS CORE"
-                            }, void 0, false, {
-                                fileName: "[project]/components/HudCockpit.tsx",
-                                lineNumber: 206,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 200,
-                        columnNumber: 9
-                    }, this),
-                    state.error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "activity-error",
-                        children: state.error
+                                lineNumber: 470,
+                                columnNumber: 19
+                            }, this))
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 213,
-                        columnNumber: 11
+                        lineNumber: 449,
+                        columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 169,
+                lineNumber: 436,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -488,7 +577,7 @@ function HudCockpit({ state }) {
                         children: "JARVIS"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 226,
+                        lineNumber: 510,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -496,7 +585,7 @@ function HudCockpit({ state }) {
                         children: activeStatus
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 230,
+                        lineNumber: 515,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -504,13 +593,13 @@ function HudCockpit({ state }) {
                         children: "ULTRON CORE // JARVIS PRO"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 234,
+                        lineNumber: 522,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 224,
+                lineNumber: 508,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -521,7 +610,7 @@ function HudCockpit({ state }) {
                         children: "LISTENING"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 246,
+                        lineNumber: 537,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -529,7 +618,7 @@ function HudCockpit({ state }) {
                         children: "THINKING"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 256,
+                        lineNumber: 548,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -537,7 +626,7 @@ function HudCockpit({ state }) {
                         children: "SPEAKING"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 266,
+                        lineNumber: 559,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -545,19 +634,19 @@ function HudCockpit({ state }) {
                         children: "EXECUTING"
                     }, void 0, false, {
                         fileName: "[project]/components/HudCockpit.tsx",
-                        lineNumber: 276,
+                        lineNumber: 570,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/HudCockpit.tsx",
-                lineNumber: 244,
+                lineNumber: 535,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/HudCockpit.tsx",
-        lineNumber: 69,
+        lineNumber: 293,
         columnNumber: 5
     }, this);
 }
@@ -1251,7 +1340,19 @@ function dist2d(a, b) {
  * JARVIS PRO
  * HUD Web Bridge
  *
- * UI-1.5: Browser client for the Python HUD SSE bridge.
+ * UI-1.6
+ *
+ * Browser client for the Python HUD SSE bridge.
+ *
+ * Python JARVIS
+ *      ↓
+ * HUD Web Bridge
+ *      ↓
+ * SSE
+ *      ↓
+ * HUDBridge
+ *      ↓
+ * Next.js HUD
  */ __turbopack_context__.s([
     "HUDBridge",
     ()=>HUDBridge
@@ -1270,38 +1371,60 @@ class HUDBridge {
         this.onConnection = onConnection;
         this.source = null;
     }
+    // =========================================================
+    // CONNECT
+    // =========================================================
     connect() {
         this.disconnect();
         this.onConnection?.("connecting");
         const source = new EventSource(`${this.baseUrl}/events`);
         this.source = source;
+        // =======================================================
+        // CONNECTION OPEN
+        // =======================================================
         source.onopen = ()=>{
             this.onConnection?.("connected");
         };
+        // =======================================================
+        // INITIAL STATE
+        // =======================================================
         source.addEventListener("state", (message)=>{
             try {
                 const state = JSON.parse(message.data);
                 this.onState?.(state);
             } catch  {
-            // Ignore malformed bridge messages.
+                console.warn("[HUD BRIDGE] Invalid state message.");
             }
         });
+        // =======================================================
+        // LIVE HUD EVENT
+        // =======================================================
         source.addEventListener("hud", (message)=>{
             try {
                 const event = JSON.parse(message.data);
+                // Update current state.
                 this.onState?.(event.state);
+                // Forward complete event.
                 this.onEvent?.(event);
             } catch  {
-            // Ignore malformed bridge messages.
+                console.warn("[HUD BRIDGE] Invalid HUD event.");
             }
         });
+        // =======================================================
+        // CONNECTION ERROR
+        // =======================================================
         source.onerror = ()=>{
             this.onConnection?.("offline");
         };
     }
+    // =========================================================
+    // DISCONNECT
+    // =========================================================
     disconnect() {
-        this.source?.close();
-        this.source = null;
+        if (this.source) {
+            this.source.close();
+            this.source = null;
+        }
     }
 }
 }),
