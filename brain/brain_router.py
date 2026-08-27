@@ -255,6 +255,48 @@ class BrainRouter:
                     result=None,
                 )
 
+            # --------------------------------------------------
+            # Configure newly created project as ACTIVE PROJECT
+            # --------------------------------------------------
+
+            project_path = getattr(
+                result,
+                "project_path",
+                "",
+            )
+
+            if project_path:
+
+                configured = self.project_resolver.configure(
+                    project_path,
+                )
+
+                if configured:
+
+                    print(
+                        "[BRAIN ROUTER] "
+                        "Active project configured:"
+                    )
+
+                    print(
+                        f"[BRAIN ROUTER] {project_path}"
+                    )
+
+                else:
+
+                    print(
+                        "[BRAIN ROUTER] "
+                        "WARNING: Could not configure "
+                        "created project."
+                    )
+
+            else:
+
+                print(
+                    "[BRAIN ROUTER] "
+                    "WARNING: CREATE result has no project path."
+                )
+
             return BrainResult(
                 handled=True,
                 module="developer",
@@ -425,6 +467,38 @@ class BrainRouter:
 
             "html",
             "css",
+            "login",
+            "signup",
+            "sign",
+            "page",
+            "card",
+            "button",
+            "form",
+            "input",
+            "border",
+            "style",
+            "styles",
+            "color",
+            "background",
+            "font",
+            "header",
+            "footer",
+            "navbar",
+            "navigation",
+            "menu",
+            "layout",
+            "design",
+            "theme",
+            "screen",
+            "element",
+            "section",
+            "link",
+            "image",
+            "icon",
+            "modal",
+            "popup",
+            "dashboard",
+            "website",
 
             "react",
 
@@ -468,6 +542,53 @@ class BrainRouter:
         has_context = bool(
             words & code_context
         )
+        
+        # --------------------------------------------------
+        # Natural UI / Web Edit Detection
+        # --------------------------------------------------
+
+        ui_edit_words = {
+
+            "login",
+            "signup",
+            "page",
+            "card",
+            "button",
+            "form",
+            "input",
+            "border",
+            "style",
+            "styles",
+            "color",
+            "background",
+            "font",
+            "header",
+            "footer",
+            "navbar",
+            "navigation",
+            "menu",
+            "layout",
+            "design",
+            "theme",
+            "screen",
+            "element",
+            "section",
+            "link",
+            "image",
+            "icon",
+            "modal",
+            "popup",
+            "dashboard",
+
+        }
+
+        has_ui_target = bool(
+            words & ui_edit_words
+        )
+
+        if has_action and has_ui_target:
+
+            return True
 
         # --------------------------------------------------
         # Developer request

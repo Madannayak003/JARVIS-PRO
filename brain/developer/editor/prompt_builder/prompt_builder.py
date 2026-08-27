@@ -91,15 +91,15 @@ class PromptBuilder:
 
             )
 
-            request.file_contents = self.extractor.extract(
+            # request.file_contents = self.extractor.extract(
 
-                request.user_request,
+            #     request.user_request,
 
-                request.edit_type,
+            #     request.edit_type,
 
-                request.file_contents,
+            #     request.file_contents,
 
-            )
+            # )
 
         # --------------------------------------
 

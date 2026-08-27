@@ -16,24 +16,83 @@ from brain.developer.editor.models.project_index import (
 class ProjectScanner:
     """
     Scans a project and builds a ProjectIndex.
+
+    Supports:
+        Python
+        Arduino
+        C / C++
+        HTML
+        CSS
+        JavaScript
+        TypeScript
+        JSON
+        XML
+        YAML
+        TOML
     """
 
     SUPPORTED_EXTENSIONS = {
 
+        # Python
         ".py",
 
+        # Arduino / C / C++
         ".ino",
-
         ".cpp",
-
         ".c",
-
         ".h",
-
         ".hpp",
 
+        # Web
+        ".html",
+        ".htm",
+        ".css",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+
+        # Data / configuration
+        ".json",
+        ".xml",
+        ".yaml",
+        ".yml",
+        ".toml",
     }
 
+    # Directories that should never become Developer targets.
+    IGNORED_DIRECTORIES = {
+
+        ".git",
+        ".svn",
+        ".hg",
+
+        "__pycache__",
+
+        "node_modules",
+
+        ".venv",
+        "venv",
+
+        "env",
+
+        "dist",
+        "build",
+
+        ".next",
+
+        "coverage",
+
+        ".pytest_cache",
+
+        ".mypy_cache",
+
+        ".idea",
+        ".vscode",
+    }
+
+    # --------------------------------------------------
+    # Scan
     # --------------------------------------------------
 
     def scan(
@@ -43,11 +102,21 @@ class ProjectScanner:
 
         index = ProjectIndex()
 
-        root = Path(project_path)
+        root = Path(
+            project_path,
+        )
 
         if not root.exists():
 
             return index
+
+        if not root.is_dir():
+
+            return index
+
+        # ----------------------------------------------
+        # Walk project
+        # ----------------------------------------------
 
         for file in root.rglob("*"):
 
@@ -55,9 +124,33 @@ class ProjectScanner:
 
                 continue
 
-            if file.suffix.lower() not in self.SUPPORTED_EXTENSIONS:
+            # ------------------------------------------
+            # Ignore generated / dependency directories
+            # ------------------------------------------
+
+            if any(
+
+                part in self.IGNORED_DIRECTORIES
+
+                for part in file.parts
+
+            ):
 
                 continue
+
+            # ------------------------------------------
+            # Extension
+            # ------------------------------------------
+
+            extension = file.suffix.lower()
+
+            if extension not in self.SUPPORTED_EXTENSIONS:
+
+                continue
+
+            # ------------------------------------------
+            # Relative path
+            # ------------------------------------------
 
             relative = str(
 
@@ -71,7 +164,11 @@ class ProjectScanner:
 
             )
 
-            if file.suffix.lower() == ".py":
+            # ------------------------------------------
+            # Python analysis
+            # ------------------------------------------
+
+            if extension == ".py":
 
                 self._scan_python(
 
@@ -83,32 +180,55 @@ class ProjectScanner:
 
                 )
 
+        # ----------------------------------------------
+        # Stable ordering
+        # ----------------------------------------------
+
+        index.files = sorted(
+
+            set(index.files),
+
+        )
+
         return index
 
     # --------------------------------------------------
+    # Python Scanner
+    # --------------------------------------------------
 
     def _scan_python(
-
         self,
-
         file: Path,
-
         relative: str,
-
         index: ProjectIndex,
-
     ):
 
         try:
 
-            tree = ast.parse(
+            source = file.read_text(
+                encoding="utf-8",
+            )
 
-                file.read_text(
+        except UnicodeDecodeError:
 
-                    encoding="utf-8",
+            try:
 
+                source = file.read_text(
+                    encoding="utf-8-sig",
                 )
 
+            except Exception:
+
+                return
+
+        except Exception:
+
+            return
+
+        try:
+
+            tree = ast.parse(
+                source,
             )
 
         except Exception:
@@ -117,14 +237,16 @@ class ProjectScanner:
 
         for node in ast.walk(tree):
 
-            # ----------------------
+            # ------------------------------------------
+            # Functions
+            # ------------------------------------------
 
             if isinstance(
-
                 node,
-
-                ast.FunctionDef,
-
+                (
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef,
+                ),
             ):
 
                 index.functions.setdefault(
@@ -139,14 +261,13 @@ class ProjectScanner:
 
                 )
 
-            # ----------------------
+            # ------------------------------------------
+            # Classes
+            # ------------------------------------------
 
             elif isinstance(
-
                 node,
-
                 ast.ClassDef,
-
             ):
 
                 index.classes.setdefault(
@@ -161,14 +282,13 @@ class ProjectScanner:
 
                 )
 
-            # ----------------------
+            # ------------------------------------------
+            # import x
+            # ------------------------------------------
 
             elif isinstance(
-
                 node,
-
                 ast.Import,
-
             ):
 
                 for alias in node.names:
@@ -185,26 +305,27 @@ class ProjectScanner:
 
                     )
 
-            # ----------------------
+            # ------------------------------------------
+            # from x import y
+            # ------------------------------------------
 
             elif isinstance(
-
                 node,
-
                 ast.ImportFrom,
-
             ):
 
                 module = node.module or ""
 
-                index.imports.setdefault(
+                if module:
 
-                    module,
+                    index.imports.setdefault(
 
-                    [],
+                        module,
 
-                ).append(
+                        [],
 
-                    relative,
+                    ).append(
 
-                )
+                        relative,
+
+                    )
