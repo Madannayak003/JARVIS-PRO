@@ -46,6 +46,8 @@ from typing import Callable, Optional
 
 from core.runtime import handle_priority
 
+from hud.integration import HUDIntegration
+
 # =============================================================
 # FASTAPI
 # =============================================================
@@ -535,6 +537,68 @@ class DashboardServer:
                 "[REMOTE] Voice output bridge failed:",
                 e
             )
+            
+    # =========================================================
+    # JARVIS VOICE OUTPUT → HUD + REMOTE DASHBOARD
+    # =========================================================
+
+    def _on_voice_output(
+        self,
+        text: str,
+    ):
+
+        if not text:
+            return
+
+        text = str(text).strip()
+
+        if not text:
+            return
+
+        print(
+            "[REMOTE VOICE] Sending:",
+            text,
+        )
+
+        # -----------------------------------------------------
+        # HUD Activity Log
+        #
+        # This records the actual JARVIS response.
+        # It does NOT control voice playback.
+        # -----------------------------------------------------
+
+        try:
+
+            from hud.integration import (
+                HUDIntegration
+            )
+
+            HUDIntegration.response(
+                text
+            )
+
+        except Exception as exc:
+
+            print(
+                "[HUD RESPONSE LOG] Failed:",
+                exc
+            )
+
+        # -----------------------------------------------------
+        # Existing Mark-style Remote Dashboard
+        # -----------------------------------------------------
+
+        self._broadcast_threadsafe({
+
+            "type": "log",
+
+            "speaker": "jarvis",
+
+            "text": text,
+
+            "ts": time.time(),
+
+        })
 
     # =========================================================
     # PAIRING PIN
@@ -716,31 +780,55 @@ class DashboardServer:
     # JARVIS VOICE OUTPUT → REMOTE DASHBOARD
     # =========================================================
 
-    def _on_voice_output(
-        self,
-        text: str,
-    ):
+        def _on_voice_output(
+            self,
+            text: str,
+        ):
 
-        if not text:
+            if not text:
 
-            return
+                return
 
-        print(
-            "[REMOTE VOICE] Sending:",
-            text,
-        )
+            print(
+                "[REMOTE VOICE] Sending:",
+                text,
+            )
 
-        self._broadcast_threadsafe({
+            # =====================================================
+            # HUD — Conversation Activity Log
+            #
+            # This records the actual JARVIS response.
+            # It does NOT change voice behaviour.
+            # =====================================================
 
-            "type": "log",
+            try:
 
-            "speaker": "jarvis",
+                HUDIntegration.response(
+                    str(text)
+                )
 
-            "text": str(text),
+            except Exception as exc:
 
-            "ts": time.time(),
+                print(
+                    "[HUD RESPONSE LOG] Failed:",
+                    exc,
+                )
 
-        })
+            # =====================================================
+            # Existing Remote Dashboard Log
+            # =====================================================
+
+            self._broadcast_threadsafe({
+
+                "type": "log",
+
+                "speaker": "jarvis",
+
+                "text": str(text),
+
+                "ts": time.time(),
+
+            })
     
     # =========================================================
     # REMOTE COMMAND

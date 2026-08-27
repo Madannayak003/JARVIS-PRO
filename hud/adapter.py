@@ -5,9 +5,11 @@ HUD Adapter
 Safe integration layer between JARVIS and the HUD.
 
 IMPORTANT:
+
 This adapter only reports information to the HUD.
 
 It must NEVER:
+
 - execute JARVIS commands
 - control the AI
 - control voice
@@ -44,6 +46,24 @@ class HUDAdapter:
     def idle():
 
         hud.idle()
+
+    # =====================================================
+    # Conversation
+    # =====================================================
+
+    @staticmethod
+    def command(text):
+
+        hud.command(
+            text
+        )
+
+    @staticmethod
+    def response(text):
+
+        hud.response(
+            text
+        )
 
     # =====================================================
     # Tasks

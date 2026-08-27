@@ -19,16 +19,7 @@ a no-op and the existing JARVIS runtime is unaffected.
 
 from .emitter import HUDEmitter
 from .event_contract import HUDEvent
-from .runtime import hud_runtime
-
 from config.hud_settings import HUD_ENABLED
-
-
-# ============================================================
-# Configuration
-# ============================================================
-
-HUD_ENABLED
 
 
 # ============================================================
@@ -53,7 +44,6 @@ class HUDIntegration:
     def _emit(event, data=None):
 
         if not HUD_ENABLED:
-
             return
 
         try:
@@ -128,7 +118,10 @@ class HUDIntegration:
     # ========================================================
 
     @classmethod
-    def task_started(cls, task):
+    def task_started(
+        cls,
+        task
+    ):
 
         cls._emit(
             HUDEvent.TASK_STARTED,
@@ -138,7 +131,10 @@ class HUDIntegration:
         )
 
     @classmethod
-    def executing(cls, task=""):
+    def executing(
+        cls,
+        task=""
+    ):
 
         cls._emit(
             HUDEvent.EXECUTING,
@@ -148,7 +144,10 @@ class HUDIntegration:
         )
 
     @classmethod
-    def task_finished(cls, task=""):
+    def task_finished(
+        cls,
+        task=""
+    ):
 
         cls._emit(
             HUDEvent.TASK_FINISHED,
@@ -171,57 +170,16 @@ class HUDIntegration:
                 "error": error
             }
         )
-        
-    # ========================================================
-    # Runtime
-    # ========================================================
-
-    @classmethod
-    def start(cls):
-
-        if not HUD_ENABLED:
-
-            return
-
-        try:
-
-            hud_runtime.start()
-
-            print(
-                "[MAIN HUD] HUD runtime started."
-            )
-
-        except Exception as e:
-
-            print(
-                "[HUD INTEGRATION] "
-                f"HUD runtime failed: {e}"
-            )
-
-    @classmethod
-    def stop(cls):
-
-        if not HUD_ENABLED:
-
-            return
-
-        try:
-
-            hud_runtime.stop()
-
-        except Exception as e:
-
-            print(
-                "[HUD INTEGRATION] "
-                f"HUD runtime stop failed: {e}"
-            )
 
     # ========================================================
     # Voice Mode
     # ========================================================
 
     @classmethod
-    def voice_mode(cls, mode):
+    def voice_mode(
+        cls,
+        mode
+    ):
 
         cls._emit(
             HUDEvent.VOICE_MODE_CHANGED,
@@ -235,7 +193,10 @@ class HUDIntegration:
     # ========================================================
 
     @classmethod
-    def system_update(cls, data):
+    def system_update(
+        cls,
+        data
+    ):
 
         cls._emit(
             HUDEvent.SYSTEM_UPDATE,
@@ -243,11 +204,57 @@ class HUDIntegration:
         )
 
     # ========================================================
+    # Conversation Activity Log
+    #
+    # IMPORTANT:
+    #
+    # These are conversation events.
+    #
+    # They are intentionally separate from:
+    #
+    # listening
+    # thinking
+    # speaking
+    # executing
+    #
+    # Those are runtime states, not activity messages.
+    # ========================================================
+
+    @classmethod
+    def command(
+        cls,
+        text
+    ):
+
+        cls._emit(
+            HUDEvent.COMMAND,
+            {
+                "text": str(text)
+            }
+        )
+
+    @classmethod
+    def response(
+        cls,
+        text
+    ):
+
+        cls._emit(
+            HUDEvent.RESPONSE,
+            {
+                "text": str(text)
+            }
+        )
+
+    # ========================================================
     # Notifications
     # ========================================================
 
     @classmethod
-    def notify(cls, message):
+    def notify(
+        cls,
+        message
+    ):
 
         cls._emit(
             HUDEvent.NOTIFICATION,
@@ -257,7 +264,10 @@ class HUDIntegration:
         )
 
     @classmethod
-    def error(cls, message):
+    def error(
+        cls,
+        message
+    ):
 
         cls._emit(
             HUDEvent.ERROR,

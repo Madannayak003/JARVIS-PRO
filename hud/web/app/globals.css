@@ -234,18 +234,6 @@ body {
   }
 }
 
-/* JARVIS PRO identity layer around the original Ultron engine. */
-.hud-brand { top: 24px; left: 24px; display: flex; align-items: baseline; gap: 8px; }
-.brand-main { font-size: 17px; font-weight: 700; letter-spacing: 0.12em; color: #ffcc66; text-shadow: 0 0 12px rgba(255, 170, 48, 0.8); }
-.brand-sub { font-size: 10px; letter-spacing: 0.28em; opacity: .65; }
-.hud-top-center { top: 18px; left: 50%; transform: translateX(-50%); font-size: 22px; font-weight: 700; letter-spacing: .14em; color: #ffcc66; text-shadow: 0 0 12px rgba(255, 170, 48, .8); }
-.hud-top-right { top: 22px; right: 24px; display: flex; gap: 12px; font-size: 11px; letter-spacing: .12em; opacity: .75; }
-.hud-top-right strong { color: #ffcc66; }
-.hud-bottom-center { left: 50%; bottom: 26px; transform: translateX(-50%); text-align: center; }
-.core-name { font-size: 13px; font-weight: 700; letter-spacing: .18em; color: #ffaa30; }
-.core-status { margin-top: 8px; font-size: 13px; font-weight: 700; letter-spacing: .12em; color: #ffcc66; }
-.core-sub { margin-top: 8px; font-size: 9px; letter-spacing: .16em; opacity: .45; }
-
 /* =========================================================
    JARVIS PRO
    UI-2 — MARK COCKPIT
@@ -283,11 +271,12 @@ body {
 }
 
 /* =========================================================
-   HEADER
+   HEADER — CLEAN JARVIS PRO
    ========================================================= */
 
 .cockpit-header {
   position: absolute;
+
   top: 0;
   left: 0;
   right: 0;
@@ -303,60 +292,127 @@ body {
   border-bottom: 1px solid
     rgba(255, 140, 0, 0.28);
 
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.38),
-      rgba(0, 0, 0, 0.08)
-    );
+  background: rgba(0, 0, 0, 0.28);
+
+  /* Keep the header crisp */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  filter: none;
+
+  z-index: 50;
 }
+
+
+/* =========================================================
+   LEFT — JARVIS PRO
+   ========================================================= */
 
 .cockpit-brand {
   display: flex;
+
   align-items: baseline;
+
   gap: 8px;
 
   letter-spacing: 2px;
+
+  filter: none;
+
+  opacity: 1;
 }
 
-.brand-main {
+.cockpit-brand .brand-main {
   font-size: 18px;
+
   font-weight: 700;
+
+  letter-spacing: 2px;
+
+  color: #ffcc66;
+
+  text-shadow:
+    0 0 4px rgba(255, 170, 48, 0.45);
 }
 
-.brand-pro {
+.cockpit-brand .brand-pro {
   font-size: 9px;
+
+  letter-spacing: 1px;
+
+  color: #ffcc66;
+
   opacity: 0.55;
+
+  text-shadow: none;
 }
+
+
+/* =========================================================
+   CENTER — JARVIS
+   ========================================================= */
 
 .cockpit-title {
   position: absolute;
+
   left: 50%;
+
   transform: translateX(-50%);
 
   font-size: 23px;
+
   font-weight: 700;
+
   letter-spacing: 4px;
 
+  color: #ffcc66;
+
+  opacity: 1;
+
+  filter: none;
+
   text-shadow:
-    0 0 8px rgba(255, 170, 0, 0.65);
+    0 0 4px rgba(255, 170, 0, 0.45);
+
+  white-space: nowrap;
 }
+
+
+/* =========================================================
+   RIGHT — SYSTEM ONLINE
+   ========================================================= */
 
 .cockpit-system-status {
   display: flex;
+
   gap: 14px;
 
+  align-items: center;
+
   font-size: 11px;
+
   letter-spacing: 1px;
+
+  opacity: 1;
+
+  filter: none;
 }
 
 .status-label {
-  opacity: 0.55;
+  color: #ffcc66;
+
+  opacity: 0.5;
+
+  text-shadow: none;
 }
 
 .status-value {
+  color: #ffcc66;
+
+  opacity: 1;
+
   text-shadow:
-    0 0 7px rgba(255, 170, 0, 0.55);
+    0 0 4px rgba(255, 170, 0, 0.4);
 }
 
 /* =========================================================
@@ -510,6 +566,55 @@ body {
   white-space: nowrap;
 }
 
+.activity-log {
+  overflow-y: hidden;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.activity-log::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.activity-message {
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(255, 165, 0, 0.12);
+}
+
+.activity-message-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 5px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0.65;
+}
+
+.activity-message-text {
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.activity-user .activity-message-meta {
+  opacity: 0.85;
+}
+
+.activity-jarvis .activity-message-meta {
+  opacity: 1;
+}
+
+.activity-empty {
+  padding: 14px 4px;
+  opacity: 0.5;
+  font-size: 11px;
+}
+
 .activity-error {
   margin: 14px;
 
@@ -526,19 +631,6 @@ body {
 /* =========================================================
    CORE LABEL
    ========================================================= */
-
-.cockpit-core-label {
-  position: absolute;
-
-  left: 50%;
-  bottom: 48px;
-
-  transform: translateX(-50%);
-
-  text-align: center;
-
-  letter-spacing: 2px;
-}
 
 .core-name {
   font-size: 13px;
@@ -787,5 +879,1024 @@ body {
 .activity-log::-webkit-scrollbar-thumb {
 
   border-radius: 2px;
+
+}
+
+/* =========================================================
+   JARVIS PRO
+   SETTINGS SYSTEM
+   ========================================================= */
+
+
+/* =========================================================
+   JARVIS PRO
+   SETTINGS BUTTON
+   ========================================================= */
+
+.jarvis-settings-button {
+
+  position: fixed;
+
+  /*
+   * TOP-RIGHT
+   *
+   * Matches the reference HUD layout.
+   */
+  top: 14px;
+  right: 145px;
+
+  z-index: 100;
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid
+    rgba(255, 170, 48, 0.55);
+
+  border-radius: 4px;
+
+  background:
+    rgba(10, 5, 0, 0.72);
+
+  color: #ffcc66;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 16px;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  text-shadow:
+    0 0 8px
+    rgba(255, 170, 48, 0.7);
+
+  box-shadow:
+    0 0 10px
+    rgba(255, 140, 20, 0.12);
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+
+.jarvis-settings-button:hover {
+
+  background:
+    rgba(70, 35, 0, 0.8);
+
+  border-color:
+    rgba(255, 200, 100, 0.9);
+
+  box-shadow:
+    0 0 14px
+    rgba(255, 150, 30, 0.35);
+
+  transform: translateY(-1px);
+
+}
+
+
+.jarvis-settings-button:active {
+
+  transform: translateY(0);
+
+}
+
+
+/* =========================================================
+   SETTINGS / CONTROLS PANEL
+   ========================================================= */
+
+.jarvis-settings-panel {
+
+  position: fixed;
+
+  /*
+   * SYSTEM MONITOR:
+   * top = 98px
+   * height = approximately 245px
+   *
+   * Therefore controls begin below it.
+   */
+  top: 355px;
+  left: 24px;
+
+  z-index: 90;
+
+  width: 282px;
+
+  padding: 10px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.48);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5, 5, 4, 0.96),
+      rgba(0, 0, 0, 0.92)
+    );
+
+  box-shadow:
+    0 0 24px
+    rgba(0, 0, 0, 0.7),
+
+    inset 0 0 25px
+    rgba(255, 120, 0, 0.035);
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  pointer-events: auto;
+
+  /*
+   * Prevent the panel from becoming
+   * excessively tall on small screens.
+   */
+  max-height:
+    calc(100vh - 375px);
+
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+
+}
+
+
+/* =========================================================
+   SETTINGS PANEL BRAND
+   ========================================================= */
+
+.settings-panel-brand {
+
+  height: 28px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding-left: 3px;
+
+  margin-bottom: 5px;
+
+  color: #ffcc66;
+
+  font-size: 10px;
+
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 8px
+    rgba(255, 170, 48, 0.55);
+
+}
+
+
+/* =========================================================
+   CONTROLS TITLE
+   ========================================================= */
+
+.settings-section-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  height: 24px;
+
+  margin-bottom: 5px;
+
+  color: #ffcc66;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+
+  opacity: 0.72;
+
+}
+
+
+.settings-section-title span {
+
+  color: #ff9d00;
+
+  font-size: 7px;
+
+}
+
+
+/* =========================================================
+   CONTROL BUTTON
+   ========================================================= */
+
+.settings-control {
+
+  width: 100%;
+
+  min-height: 37px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 6px;
+
+  padding: 0 10px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.24);
+
+  border-radius: 3px;
+
+  background:
+    rgba(15, 8, 2, 0.58);
+
+  color: #ffb84d;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 9px;
+
+  letter-spacing: 0.5px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+
+.settings-control:hover {
+
+  border-color:
+    rgba(255, 170, 48, 0.72);
+
+  background:
+    rgba(55, 28, 2, 0.68);
+
+  box-shadow:
+    0 0 10px
+    rgba(255, 140, 0, 0.13);
+
+}
+
+
+.settings-control-primary {
+
+  border-color:
+    rgba(255, 170, 48, 0.65);
+
+  background:
+    rgba(25, 18, 8, 0.78);
+
+  color: #ffcc66;
+
+}
+
+
+.settings-control-icon {
+
+  flex: 0 0 12px;
+
+  color: #ff9d00;
+
+  font-size: 8px;
+
+  text-align: center;
+
+}
+
+
+.settings-control-key {
+
+  margin-left: auto;
+
+  opacity: 0.65;
+
+  font-size: 8px;
+
+}
+
+
+.settings-control strong {
+
+  margin-left: auto;
+
+  font-weight: normal;
+
+}
+
+
+.settings-control-toggle-on {
+
+  border-color:
+    rgba(255, 170, 48, 0.55);
+
+}
+
+
+.settings-control-toggle-on strong {
+
+  color: #ffcc66;
+
+}
+
+
+/* =========================================================
+   MORNING BRIEF
+   ========================================================= */
+
+.settings-control-brief {
+
+  margin-bottom: 0;
+
+}
+
+
+.settings-control-brief-on {
+
+  border-color:
+    rgba(60, 210, 120, 0.65);
+
+  background:
+    rgba(0, 60, 30, 0.24);
+
+  color: #65e8a2;
+
+}
+
+
+.settings-control-brief-on
+.settings-control-icon {
+
+  color: #65e8a2;
+
+}
+
+
+/* =========================================================
+   SECTION TITLE
+   ========================================================= */
+
+.settings-section-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  height: 24px;
+
+  margin-bottom: 5px;
+
+  color: #ffcc66;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+
+  opacity: 0.72;
+}
+
+
+.settings-section-title span {
+
+  color: #ff9d00;
+
+  font-size: 7px;
+
+}
+
+
+/* =========================================================
+   SETTINGS CONTROL
+   ========================================================= */
+
+.settings-control {
+
+  width: 100%;
+
+  min-height: 37px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 6px;
+
+  padding: 0 10px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.24);
+
+  border-radius: 3px;
+
+  background:
+    rgba(15, 8, 2, 0.58);
+
+  color: #ffb84d;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 9px;
+
+  letter-spacing: 0.5px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+
+.settings-control:hover {
+
+  border-color:
+    rgba(255, 170, 48, 0.72);
+
+  background:
+    rgba(55, 28, 2, 0.68);
+
+  box-shadow:
+    0 0 10px
+    rgba(255, 140, 0, 0.13);
+}
+
+
+.settings-control-primary {
+
+  border-color:
+    rgba(255, 170, 48, 0.65);
+
+  background:
+    rgba(25, 18, 8, 0.78);
+
+  color: #ffcc66;
+}
+
+
+.settings-control-icon {
+
+  flex: 0 0 12px;
+
+  color: #ff9d00;
+
+  font-size: 8px;
+
+  text-align: center;
+}
+
+
+.settings-control-key {
+
+  margin-left: auto;
+
+  opacity: 0.65;
+
+  font-size: 8px;
+}
+
+
+.settings-control strong {
+
+  margin-left: auto;
+
+  font-weight: normal;
+}
+
+
+.settings-control-toggle-on {
+
+  border-color:
+    rgba(255, 170, 48, 0.55);
+
+}
+
+
+.settings-control-toggle-on strong {
+
+  color: #ffcc66;
+}
+
+
+/* =========================================================
+   MORNING BRIEF
+   ========================================================= */
+
+.settings-control-brief {
+
+  margin-bottom: 0;
+}
+
+
+.settings-control-brief-on {
+
+  border-color:
+    rgba(60, 210, 120, 0.65);
+
+  background:
+    rgba(0, 60, 30, 0.24);
+
+  color: #65e8a2;
+}
+
+
+.settings-control-brief-on
+.settings-control-icon {
+
+  color: #65e8a2;
+}
+
+
+/* =========================================================
+   MODAL BACKDROP
+   ========================================================= */
+
+.settings-modal-backdrop {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 200;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(0, 0, 0, 0.58);
+
+  backdrop-filter:
+    blur(2px);
+
+  pointer-events: auto;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.settings-modal {
+
+  width: min(
+    430px,
+    calc(100vw - 40px)
+  );
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.55);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(4, 7, 9, 0.98),
+      rgba(0, 2, 4, 0.97)
+    );
+
+  box-shadow:
+    0 0 40px
+    rgba(0, 0, 0, 0.8),
+
+    inset 0 0 35px
+    rgba(255, 120, 0, 0.035);
+
+  color: #ffb84d;
+
+  font-family:
+    "Courier New",
+    monospace;
+}
+
+
+/* =========================================================
+   MODAL HEADING
+   ========================================================= */
+
+.settings-modal-heading {
+
+  height: 52px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 20px;
+
+  border-bottom: 1px solid
+    rgba(255, 140, 0, 0.24);
+
+  color: #ffcc66;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  text-shadow:
+    0 0 8px
+    rgba(255, 170, 48, 0.6);
+}
+
+
+.settings-modal-heading span {
+
+  color: #ff9d00;
+
+}
+
+
+/* =========================================================
+   REMOTE MODAL
+   ========================================================= */
+
+.remote-modal-content {
+
+  padding: 25px;
+
+  text-align: center;
+}
+
+
+.remote-icon {
+
+  width: 130px;
+  height: 130px;
+
+  margin:
+    0 auto 16px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid
+    rgba(255, 170, 48, 0.35);
+
+  background:
+    rgba(255, 150, 0, 0.035);
+
+  color: #ffcc66;
+
+  font-size: 70px;
+
+  text-shadow:
+    0 0 18px
+    rgba(255, 160, 30, 0.7);
+}
+
+
+.remote-title {
+
+  margin-bottom: 8px;
+
+  color: #ffcc66;
+
+  font-size: 13px;
+
+  letter-spacing: 1px;
+}
+
+
+.remote-description {
+
+  margin-bottom: 20px;
+
+  color: #a87842;
+
+  font-size: 10px;
+}
+
+
+.remote-status-box {
+
+  padding: 14px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.25);
+
+  background:
+    rgba(20, 8, 0, 0.55);
+}
+
+
+.remote-status-box span {
+
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #987044;
+
+  font-size: 9px;
+}
+
+
+.remote-status-box strong {
+
+  display: block;
+
+  color: #ffcc66;
+
+  font-size: 10px;
+
+  word-break: break-all;
+}
+
+
+.remote-note {
+
+  margin:
+    15px 0 0;
+
+  color: #765c3c;
+
+  font-size: 9px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   CUSTOMISE FORM
+   ========================================================= */
+
+.customise-form {
+
+  padding: 22px;
+}
+
+
+.customise-form label {
+
+  display: block;
+
+  margin-bottom: 18px;
+
+  color: #9b7448;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+}
+
+
+.settings-field-help {
+
+  display: block;
+
+  margin-top: 5px;
+
+  margin-bottom: 7px;
+
+  color: #745536;
+
+  font-size: 8px;
+
+  letter-spacing: 0;
+}
+
+
+.customise-form input[type="text"] {
+
+  width: 100%;
+
+  height: 35px;
+
+  padding: 0 11px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.3);
+
+  outline: none;
+
+  background:
+    rgba(2, 8, 11, 0.85);
+
+  color: #ffcc66;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 11px;
+}
+
+
+.customise-form input[type="text"]:focus {
+
+  border-color:
+    rgba(255, 180, 60, 0.72);
+
+  box-shadow:
+    0 0 8px
+    rgba(255, 140, 0, 0.12);
+}
+
+
+/* =========================================================
+   COLOUR
+   ========================================================= */
+
+.colour-control {
+
+  display: flex;
+
+  gap: 8px;
+}
+
+
+.colour-control input[type="color"] {
+
+  flex: 0 0 45px;
+
+  width: 45px;
+  height: 35px;
+
+  padding: 2px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.3);
+
+  background: #020303;
+
+  cursor: pointer;
+}
+
+
+.colour-control input[type="text"] {
+
+  flex: 1;
+}
+
+
+/* =========================================================
+   MODAL BUTTONS
+   ========================================================= */
+
+.settings-modal-actions {
+
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 22px;
+}
+
+
+.settings-modal-button {
+
+  flex: 1;
+
+  height: 36px;
+
+  border: 1px solid
+    rgba(255, 140, 0, 0.34);
+
+  background:
+    rgba(20, 8, 0, 0.7);
+
+  color: #c98a42;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+
+  cursor: pointer;
+}
+
+
+.settings-modal-button:hover {
+
+  border-color:
+    rgba(255, 190, 80, 0.72);
+
+  color: #ffcc66;
+}
+
+
+.settings-modal-button-primary {
+
+  border-color:
+    rgba(255, 140, 0, 0.65);
+
+  color: #ffcc66;
+
+  background:
+    rgba(80, 30, 0, 0.4);
+
+}
+
+
+/* =========================================================
+   RESPONSIVE SETTINGS
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .jarvis-settings-button {
+
+    right: 18px;
+
+  }
+
+  .jarvis-settings-panel {
+
+    left: 18px;
+
+    width: 220px;
+
+    top: 355px;
+
+  }
+
+}
+
+
+@media (max-width: 760px) {
+
+  .jarvis-settings-button {
+
+    right: 14px;
+
+  }
+
+  .jarvis-settings-panel {
+
+    left: 14px;
+
+    top: 355px;
+
+    width: 220px;
+
+    max-height:
+      calc(100vh - 370px);
+
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .jarvis-settings-panel {
+
+    left: 10px;
+
+    width:
+      calc(100vw - 20px);
+
+    top: 355px;
+
+  }
+
+  .settings-modal {
+
+    width:
+      calc(100vw - 24px);
+
+  }
 
 }

@@ -11,49 +11,50 @@ import HudCockpit from "@/components/HudCockpit";
 import {
   HUDBridge,
   type HUDConnectionStatus,
-  type HUDState,
   type HUDBridgeEvent,
+  type HUDState,
 } from "@/lib/hudBridge";
 
 
 const EMPTY_STATE: HUDState = {
-
   status: "idle",
-
   voice_mode: "online",
-
   ai_model: "",
-
   current_task: "",
-
   task_status: "",
-
   listening: false,
-
   speaking: false,
-
   thinking: false,
-
   executing: false,
-
   system: {},
-
   notification: "",
-
   error: "",
-
   last_event: "",
-
   last_update: "",
-
 };
 
 
-export default function Home() {
+export type HUDActivity = {
+  id: string;
 
-  // =======================================================
-  // CURRENT HUD STATE
-  // =======================================================
+  speaker:
+    | "user"
+    | "jarvis"
+    | "system";
+
+  text: string;
+
+  timestamp: string;
+};
+
+
+type SettingsModal =
+  | "remote"
+  | "customise"
+  | null;
+
+
+export default function Home() {
 
   const [
     hudState,
@@ -63,22 +64,6 @@ export default function Home() {
   );
 
 
-  // =======================================================
-  // ACTIVITY HISTORY
-  // =======================================================
-
-  const [
-    hudEvents,
-    setHudEvents,
-  ] = useState<HUDBridgeEvent[]>(
-    []
-  );
-
-
-  // =======================================================
-  // CONNECTION
-  // =======================================================
-
   const [
     connection,
     setConnection,
@@ -87,148 +72,377 @@ export default function Home() {
   );
 
 
-  // =======================================================
-  // HUD CONNECTION
-  // =======================================================
+  const [
+    activities,
+    setActivities,
+  ] = useState<HUDActivity[]>(
+    []
+  );
+
+
+  /* =========================================================
+     SETTINGS
+     ========================================================= */
+
+  const [
+    settingsOpen,
+    setSettingsOpen,
+  ] = useState(false);
+
+
+  const [
+    modal,
+    setModal,
+  ] = useState<SettingsModal>(
+    null
+  );
+
+
+  const [
+    autoStart,
+    setAutoStart,
+  ] = useState(false);
+
+
+  const [
+    morningBrief,
+    setMorningBrief,
+  ] = useState(true);
+
+
+  const [
+    assistantName,
+    setAssistantName,
+  ] = useState("JARVIS");
+
+
+  const [
+    userName,
+    setUserName,
+  ] = useState("");
+
+
+  const [
+    assistantColour,
+    setAssistantColour,
+  ] = useState("#ffaa30");
+
+
+  /* =========================================================
+     LOAD SETTINGS
+     ========================================================= */
 
   useEffect(() => {
 
-    const bridge = new HUDBridge(
+    try {
 
-      process.env
-        .NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL ||
+      const saved =
+        window.localStorage.getItem(
+          "jarvis-pro-settings"
+        );
+
+      if (!saved) {
+        return;
+      }
+
+      const settings =
+        JSON.parse(saved);
+
+      if (
+        typeof settings.autoStart ===
+        "boolean"
+      ) {
+        setAutoStart(
+          settings.autoStart
+        );
+      }
+
+      if (
+        typeof settings.morningBrief ===
+        "boolean"
+      ) {
+        setMorningBrief(
+          settings.morningBrief
+        );
+      }
+
+      if (
+        typeof settings.assistantName ===
+        "string"
+      ) {
+        setAssistantName(
+          settings.assistantName
+        );
+      }
+
+      if (
+        typeof settings.userName ===
+        "string"
+      ) {
+        setUserName(
+          settings.userName
+        );
+      }
+
+      if (
+        typeof settings.assistantColour ===
+        "string"
+      ) {
+        setAssistantColour(
+          settings.assistantColour
+        );
+      }
+
+    } catch {
+
+      // Ignore invalid saved settings.
+
+    }
+
+  }, []);
+
+
+  /* =========================================================
+     SAVE SETTINGS
+     ========================================================= */
+
+  const saveSettings = () => {
+
+    try {
+
+      window.localStorage.setItem(
+        "jarvis-pro-settings",
+        JSON.stringify({
+          autoStart,
+          morningBrief,
+          assistantName,
+          userName,
+          assistantColour,
+        })
+      );
+
+    } catch {
+
+      // Ignore localStorage failures.
+
+    }
+
+  };
+
+
+  /* =========================================================
+     FULLSCREEN
+     ========================================================= */
+
+  const toggleFullscreen = async () => {
+
+    try {
+
+      if (!document.fullscreenElement) {
+
+        await document.documentElement.requestFullscreen();
+
+      } else {
+
+        await document.exitFullscreen();
+
+      }
+
+    } catch {
+
+      // Browser may deny fullscreen.
+
+    }
+
+  };
+
+
+  /* =========================================================
+     DESKTOP SHORTCUT
+     ========================================================= */
+
+  const createDesktopShortcut = () => {
+
+    /*
+     * Browser security prevents a webpage from directly
+     * creating a Windows desktop shortcut.
+     *
+     * For now we show the intended action.
+     * The real Windows shortcut will be connected from
+     * the Python/JARVIS side in the next integration step.
+     */
+
+    alert(
+      "Desktop shortcut integration will be connected to JARVIS PRO."
+    );
+
+  };
+
+
+  /* =========================================================
+     REMOTE CONTROL
+     ========================================================= */
+
+  const openRemoteControl = () => {
+
+    setModal("remote");
+
+  };
+
+
+  /* =========================================================
+     CUSTOMISE ASSISTANT
+     ========================================================= */
+
+  const openCustomise = () => {
+
+    setModal("customise");
+
+  };
+
+
+  /* =========================================================
+     APPLY ASSISTANT SETTINGS
+     ========================================================= */
+
+  const applyAssistantSettings = () => {
+
+    saveSettings();
+
+    setModal(null);
+
+  };
+
+
+  /* =========================================================
+     CLOSE SETTINGS
+     ========================================================= */
+
+  const closeSettings = () => {
+
+    setSettingsOpen(false);
+
+  };
+
+
+  /* =========================================================
+     HUD SSE CONNECTION
+     ========================================================= */
+
+  useEffect(() => {
+
+    const bridge =
+      new HUDBridge(
+
+        process.env
+          .NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL
+        ||
         "http://127.0.0.1:8766",
 
+        setHudState,
 
-      // ===================================================
-      // STATE
-      // ===================================================
+        (
+          event: HUDBridgeEvent
+        ) => {
 
-      (state) => {
+          /*
+           * Only real conversation messages
+           * enter the Activity Log.
+           *
+           * Runtime state events such as:
+           *
+           * LISTENING
+           * THINKING
+           * SPEAKING
+           * EXECUTING
+           *
+           * remain HUD state only.
+           */
 
-        setHudState(
-          state
-        );
+          if (
+            event.name !== "command" &&
+            event.name !== "response"
+          ) {
 
-      },
-
-
-      // ===================================================
-      // EVENT
-      // ===================================================
-
-      (event) => {
-
-        setHudEvents(
-          (previous) => {
-
-            // ---------------------------------------------
-            // Never put telemetry updates into activity log.
-            // ---------------------------------------------
-
-            if (
-              event.name ===
-              "system_update"
-            ) {
-
-              return previous;
-
-            }
-
-
-            // ---------------------------------------------
-            // Ignore repeated identical events.
-            //
-            // Example:
-            //
-            // LISTENING
-            // LISTENING
-            // LISTENING
-            //
-            // becomes:
-            //
-            // LISTENING
-            // ---------------------------------------------
-
-            const last =
-              previous[
-                previous.length - 1
-              ];
-
-
-            if (
-              last &&
-              last.name === event.name
-            ) {
-
-              return previous;
-
-            }
-
-
-            // ---------------------------------------------
-            // Add new event.
-            // ---------------------------------------------
-
-            const next = [
-              ...previous,
-              event,
-            ];
-
-
-            // ---------------------------------------------
-            // Keep only latest 25 meaningful events.
-            // ---------------------------------------------
-
-            return next.slice(
-              -25
-            );
+            return;
 
           }
-        );
-
-      },
 
 
-      // ===================================================
-      // CONNECTION
-      // ===================================================
+          const speaker =
+            event.name === "command"
+              ? "user"
+              : "jarvis";
 
-      (status) => {
 
-        setConnection(
-          status
-        );
+          const text =
+            String(
+              event.data?.text ?? ""
+            ).trim();
 
-      },
 
-    );
+          if (!text) {
+
+            return;
+
+          }
+
+
+          const activity: HUDActivity = {
+
+            id:
+              `${event.timestamp}-${Math.random()}`,
+
+            speaker,
+
+            text,
+
+            timestamp:
+              event.timestamp,
+
+          };
+
+
+          setActivities(
+            (previous) => {
+
+              const next = [
+                ...previous,
+                activity,
+              ];
+
+              /*
+               * Keep the latest 30 messages.
+               */
+
+              return next.slice(-30);
+
+            }
+          );
+
+        },
+
+        setConnection,
+
+      );
 
 
     bridge.connect();
 
 
-    return () => {
-
+    return () =>
       bridge.disconnect();
-
-    };
 
   }, []);
 
-
-  // =======================================================
-  // UI
-  // =======================================================
 
   return (
 
     <main className="jarvis-hud">
 
-
-      {/* ================================================= */}
-      {/* ULTRON ENGINE */}
-      {/* ================================================= */}
+      {/* =====================================================
+          ULTRON ENGINE
+          ===================================================== */}
 
       <div className="ultron-layer">
 
@@ -237,27 +451,26 @@ export default function Home() {
       </div>
 
 
-      {/* ================================================= */}
-      {/* JARVIS COCKPIT */}
-      {/* ================================================= */}
+      {/* =====================================================
+          JARVIS COCKPIT
+          ===================================================== */}
 
       <HudCockpit
-
         state={hudState}
-
-        events={hudEvents}
-
+        activities={activities}
       />
 
 
-      {/* ================================================= */}
-      {/* CONNECTION */}
-      {/* ================================================= */}
+      {/* =====================================================
+          CONNECTION
+          ===================================================== */}
 
       <div className="hud-bridge-status">
 
         <span
-          className={`hud-bridge-dot ${connection}`}
+          className={
+            `hud-bridge-dot ${connection}`
+          }
           aria-hidden="true"
         />
 
@@ -275,6 +488,506 @@ export default function Home() {
 
       </div>
 
+
+      {/* =====================================================
+          SETTINGS BUTTON
+          ===================================================== */}
+
+      <button
+        type="button"
+        className="jarvis-settings-button"
+        aria-label="Open JARVIS settings"
+        aria-expanded={settingsOpen}
+        onClick={() =>
+          setSettingsOpen(
+            (open) => !open
+          )
+        }
+      >
+        ⚙
+      </button>
+
+
+      {/* =====================================================
+          SETTINGS PANEL
+          ===================================================== */}
+
+      {settingsOpen && (
+
+        <aside
+          className="jarvis-settings-panel"
+          aria-label="JARVIS settings"
+        >
+
+          <div className="settings-panel-brand">
+
+            <span>
+              JARVIS PRO
+            </span>
+
+          </div>
+
+
+          <div className="settings-section-title">
+
+            <span>◆</span>
+
+            CONTROLS
+
+          </div>
+
+
+          {/* -------------------------------------------------
+              REMOTE CONTROL
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className="settings-control settings-control-primary"
+            onClick={openRemoteControl}
+          >
+
+            <span className="settings-control-icon">
+              ●
+            </span>
+
+            <span>
+              REMOTE CONTROL
+            </span>
+
+          </button>
+
+
+          {/* -------------------------------------------------
+              FULLSCREEN
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className="settings-control"
+            onClick={toggleFullscreen}
+          >
+
+            <span className="settings-control-icon">
+              ◇
+            </span>
+
+            <span>
+              FULLSCREEN
+            </span>
+
+            <span className="settings-control-key">
+              [F11]
+            </span>
+
+          </button>
+
+
+          {/* -------------------------------------------------
+              DESKTOP SHORTCUT
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className="settings-control"
+            onClick={createDesktopShortcut}
+          >
+
+            <span className="settings-control-icon">
+              ≡
+            </span>
+
+            <span>
+              CREATE DESKTOP SHORTCUT
+            </span>
+
+          </button>
+
+
+          {/* -------------------------------------------------
+              AUTO START
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className={
+              `settings-control ${
+                autoStart
+                  ? "settings-control-toggle-on"
+                  : ""
+              }`
+            }
+            onClick={() => {
+
+              const next =
+                !autoStart;
+
+              setAutoStart(next);
+
+              try {
+
+                window.localStorage.setItem(
+                  "jarvis-pro-settings",
+                  JSON.stringify({
+                    autoStart: next,
+                    morningBrief,
+                    assistantName,
+                    userName,
+                    assistantColour,
+                  })
+                );
+
+              } catch {}
+
+            }}
+          >
+
+            <span className="settings-control-icon">
+              ≡
+            </span>
+
+            <span>
+              AUTO-START:
+            </span>
+
+            <strong>
+              {autoStart
+                ? "ON"
+                : "OFF"}
+            </strong>
+
+          </button>
+
+
+          {/* -------------------------------------------------
+              CUSTOMISE ASSISTANT
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className="settings-control"
+            onClick={openCustomise}
+          >
+
+            <span className="settings-control-icon">
+              ⚙
+            </span>
+
+            <span>
+              CUSTOMISE ASSISTANT
+            </span>
+
+          </button>
+
+
+          {/* -------------------------------------------------
+              MORNING BRIEF
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className={
+              `settings-control settings-control-brief ${
+                morningBrief
+                  ? "settings-control-brief-on"
+                  : ""
+              }`
+            }
+            onClick={() => {
+
+              const next =
+                !morningBrief;
+
+              setMorningBrief(next);
+
+              try {
+
+                window.localStorage.setItem(
+                  "jarvis-pro-settings",
+                  JSON.stringify({
+                    autoStart,
+                    morningBrief: next,
+                    assistantName,
+                    userName,
+                    assistantColour,
+                  })
+                );
+
+              } catch {}
+
+            }}
+          >
+
+            <span className="settings-control-icon">
+              ✳
+            </span>
+
+            <span>
+              MORNING BRIEF:
+            </span>
+
+            <strong>
+              {morningBrief
+                ? "ON"
+                : "OFF"}
+            </strong>
+
+          </button>
+
+        </aside>
+
+      )}
+
+
+      {/* =====================================================
+          REMOTE CONTROL MODAL
+          ===================================================== */}
+
+      {modal === "remote" && (
+
+        <div
+          className="settings-modal-backdrop"
+          onClick={() =>
+            setModal(null)
+          }
+        >
+
+          <section
+            className="settings-modal remote-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            <div className="settings-modal-heading">
+
+              <span>
+                ◆
+              </span>
+
+              REMOTE ACCESS
+
+            </div>
+
+
+            <div className="remote-modal-content">
+
+              <div className="remote-icon">
+                ◉
+              </div>
+
+
+              <div className="remote-title">
+                JARVIS PRO REMOTE
+              </div>
+
+
+              <p className="remote-description">
+
+                Remote control integration
+
+              </p>
+
+
+              <div className="remote-status-box">
+
+                <span>
+                  JARVIS DASHBOARD
+                </span>
+
+                <strong>
+                  http://192.168.31.124:8765
+                </strong>
+
+              </div>
+
+
+              <p className="remote-note">
+
+                The existing JARVIS remote dashboard
+                remains separate from the HUD bridge.
+
+              </p>
+
+
+              <div className="settings-modal-actions">
+
+                <button
+                  type="button"
+                  className="settings-modal-button settings-modal-button-primary"
+                  onClick={() => {
+
+                    window.open(
+                      "http://192.168.31.124:8765",
+                      "_blank",
+                      "noopener,noreferrer"
+                    );
+
+                  }}
+                >
+                  OPEN REMOTE
+                </button>
+
+
+                <button
+                  type="button"
+                  className="settings-modal-button"
+                  onClick={() =>
+                    setModal(null)
+                  }
+                >
+                  DISMISS
+                </button>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+      )}
+
+
+      {/* =====================================================
+          CUSTOMISE ASSISTANT MODAL
+          ===================================================== */}
+
+      {modal === "customise" && (
+
+        <div
+          className="settings-modal-backdrop"
+          onClick={() =>
+            setModal(null)
+          }
+        >
+
+          <section
+            className="settings-modal customise-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            <div className="settings-modal-heading">
+
+              <span>
+                ⚙
+              </span>
+
+              CUSTOMISE ASSISTANT
+
+            </div>
+
+
+            <div className="customise-form">
+
+              <label>
+
+                ASSISTANT NAME
+
+                <input
+                  type="text"
+                  value={assistantName}
+                  onChange={(event) =>
+                    setAssistantName(
+                      event.target.value
+                    )
+                  }
+                  placeholder="JARVIS"
+                />
+
+              </label>
+
+
+              <label>
+
+                YOUR NAME
+
+                <span className="settings-field-help">
+                  leave blank for default sir / efendim
+                </span>
+
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(event) =>
+                    setUserName(
+                      event.target.value
+                    )
+                  }
+                  placeholder="e.g. Tony"
+                />
+
+              </label>
+
+
+              <label>
+
+                UI COLOUR
+
+                <span className="settings-field-help">
+                  choose HUD accent colour
+                </span>
+
+                <div className="colour-control">
+
+                  <input
+                    type="color"
+                    value={assistantColour}
+                    onChange={(event) =>
+                      setAssistantColour(
+                        event.target.value
+                      )
+                    }
+                  />
+
+                  <input
+                    type="text"
+                    value={assistantColour}
+                    onChange={(event) =>
+                      setAssistantColour(
+                        event.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+              </label>
+
+
+              <div className="settings-modal-actions">
+
+                <button
+                  type="button"
+                  className="settings-modal-button settings-modal-button-primary"
+                  onClick={applyAssistantSettings}
+                >
+                  APPLY CHANGES
+                </button>
+
+
+                <button
+                  type="button"
+                  className="settings-modal-button"
+                  onClick={() =>
+                    setModal(null)
+                  }
+                >
+                  CANCEL
+                </button>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+      )}
 
     </main>
 

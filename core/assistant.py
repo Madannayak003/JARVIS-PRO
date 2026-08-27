@@ -117,6 +117,15 @@ def run():
             continue
 
         query = query.strip()
+        
+        # =====================================================
+        # HUD — Record actual user command
+        #
+        # This is conversation/activity history.
+        # It is separate from LISTENING / THINKING status.
+        # =====================================================
+
+        HUDIntegration.command(query)
 
         # =====================================================
         # WAITING FOR WHATSAPP MESSAGE

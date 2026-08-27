@@ -11,7 +11,7 @@ from core.services import start_all
 from voice.mode import get_mode
 
 from hud.integration import HUDIntegration
-
+from hud.runtime import hud_runtime
 from hud.web_bridge import hud_web
 
 from dashboard.server import DashboardServer
@@ -70,17 +70,21 @@ def main():
     # HUD RUNTIME
     # =====================================================
 
-    HUDIntegration.start()
-    
+    hud_runtime.start()
+
+    print(
+        "[MAIN HUD] HUD runtime started."
+    )
+
     # =====================================================
     # HUD WEB BRIDGE
     # =====================================================
 
-    hud_web.start()
+    if hud_web.start():
 
-    print(
-        "[MAIN HUD] Web HUD bridge started."
-    )
+        print(
+            "[MAIN HUD] Web HUD bridge started."
+        )
 
     # =====================================================
     # LIVE CONVERSATION

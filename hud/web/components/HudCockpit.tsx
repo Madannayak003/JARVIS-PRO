@@ -1,23 +1,27 @@
 "use client";
 
+import {
+  useEffect,
+  useRef,
+} from "react";
+
 import type {
   HUDState,
-  HUDBridgeEvent,
 } from "@/lib/hudBridge";
+
+import type {
+  HUDActivity,
+} from "@/app/page";
 
 
 type Props = {
 
   state: HUDState;
 
-  events: HUDBridgeEvent[];
+  activities: HUDActivity[];
 
 };
 
-
-// =========================================================
-// VALUE FORMATTER
-// =========================================================
 
 function formatValue(
   value: unknown,
@@ -34,33 +38,20 @@ function formatValue(
 
   }
 
-  return String(
-    value
-  );
+  return String(value);
 
 }
 
 
-// =========================================================
-// SYSTEM BAR
-// =========================================================
-
 function SystemBar({
-
   label,
-
   value,
-
 }: {
-
   label: string;
-
   value: unknown;
-
 }) {
 
   const numeric =
-
     typeof value === "number"
 
       ? Math.max(
@@ -90,9 +81,7 @@ function SystemBar({
 
             ? `${numeric}%`
 
-            : formatValue(
-                value
-              )}
+            : formatValue(value)}
 
         </span>
 
@@ -103,12 +92,14 @@ function SystemBar({
 
         <div
           className="cockpit-bar-fill"
+
           style={{
             width:
               numeric !== null
                 ? `${numeric}%`
                 : "0%",
           }}
+
         />
 
       </div>
@@ -120,113 +111,7 @@ function SystemBar({
 }
 
 
-// =========================================================
-// EVENT MESSAGE
-// =========================================================
-
-function getEventMessage(
-  event: HUDBridgeEvent
-) {
-
-  const data =
-    event.data || {};
-
-
-  // -------------------------------------------------------
-  // Notification
-  // -------------------------------------------------------
-
-  if (
-    typeof data.message === "string" &&
-    data.message
-  ) {
-
-    return data.message;
-
-  }
-
-
-  // -------------------------------------------------------
-  // Error
-  // -------------------------------------------------------
-
-  if (
-    typeof data.error === "string" &&
-    data.error
-  ) {
-
-    return data.error;
-
-  }
-
-
-  // -------------------------------------------------------
-  // Task
-  // -------------------------------------------------------
-
-  if (
-    typeof data.task === "string" &&
-    data.task
-  ) {
-
-    return (
-      `${event.name} · ${data.task}`
-    );
-
-  }
-
-
-  // -------------------------------------------------------
-  // Voice mode
-  // -------------------------------------------------------
-
-  if (
-    typeof data.mode === "string" &&
-    data.mode
-  ) {
-
-    return (
-      `${event.name} · ${data.mode}`
-    );
-
-  }
-
-
-  // -------------------------------------------------------
-  // AI model
-  // -------------------------------------------------------
-
-  if (
-    typeof data.model === "string" &&
-    data.model
-  ) {
-
-    return (
-      `${event.name} · ${data.model}`
-    );
-
-  }
-
-
-  // -------------------------------------------------------
-  // Normal event
-  // -------------------------------------------------------
-
-  return event.name
-    .replaceAll(
-      "_",
-      " "
-    )
-    .toUpperCase();
-
-}
-
-
-// =========================================================
-// TIME
-// =========================================================
-
-function formatEventTime(
+function formatTime(
   timestamp: string
 ) {
 
@@ -236,66 +121,84 @@ function formatEventTime(
 
   }
 
+  const date =
+    new Date(timestamp);
 
-  try {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
 
-    return new Date(
-      timestamp
-    ).toLocaleTimeString(
-      [],
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }
-    );
-
-  } catch {
-
-    return "--:--:--";
+    return timestamp;
 
   }
+
+  return date.toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }
+  );
 
 }
 
 
-// =========================================================
-// COCKPIT
-// =========================================================
-
 export default function HudCockpit({
-
   state,
-
-  events,
-
+  activities,
 }: Props) {
-
 
   const system =
     state.system || {};
 
 
   const activeStatus =
-    state.status?.toUpperCase() ||
-    "IDLE";
+    state.status?.toUpperCase()
+    || "IDLE";
 
 
-  const activity =
-    state.current_task ||
-    state.notification ||
-    "No active task";
+  // =====================================================
+  // ACTIVITY LOG AUTO-SCROLL
+  // =====================================================
+
+  const activityLogRef =
+    useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+
+    const log =
+      activityLogRef.current;
+
+    if (!log) {
+      return;
+    }
+
+    /*
+     * Wait until React has finished rendering
+     * the new activity entry.
+     */
+    requestAnimationFrame(() => {
+
+      log.scrollTop =
+        log.scrollHeight;
+
+    });
+
+  }, [activities]);
 
 
   return (
 
     <div className="hud-cockpit">
 
-
-      {/* ================================================= */}
+      {/* ============================================= */}
       {/* TOP BAR */}
-      {/* ================================================= */}
+      {/* ============================================= */}
 
       <header className="cockpit-header">
 
@@ -326,8 +229,8 @@ export default function HudCockpit({
           <span className="status-value">
 
             {state.voice_mode
-              ?.toUpperCase() ||
-              "ONLINE"}
+              ?.toUpperCase()
+              || "ONLINE"}
 
           </span>
 
@@ -336,9 +239,9 @@ export default function HudCockpit({
       </header>
 
 
-      {/* ================================================= */}
-      {/* SYSTEM MONITOR */}
-      {/* ================================================= */}
+      {/* ============================================= */}
+      {/* LEFT — SYSTEM MONITOR */}
+      {/* ============================================= */}
 
       <aside className="cockpit-panel cockpit-left">
 
@@ -429,9 +332,9 @@ export default function HudCockpit({
       </aside>
 
 
-      {/* ================================================= */}
-      {/* ACTIVITY LOG */}
-      {/* ================================================= */}
+      {/* ============================================= */}
+      {/* RIGHT — REAL ACTIVITY LOG */}
+      {/* ============================================= */}
 
       <aside className="cockpit-panel cockpit-right">
 
@@ -446,53 +349,69 @@ export default function HudCockpit({
         </div>
 
 
-        <div className="activity-log">
+        <div
+          ref={activityLogRef}
+          className="activity-log"
+        >
 
-          {events.length === 0 ? (
+          {activities.length === 0 ? (
 
             <div className="activity-empty">
 
-              SYSTEM READY
+              Waiting for conversation...
 
             </div>
 
           ) : (
 
-            events
-              .slice()
-              .reverse()
-              .map(
-                (
-                  event,
-                  index
-                ) => (
+            activities.map(
+              (activity) => (
 
-                  <div
-                    className="activity-log-entry"
-                    key={`${event.timestamp}-${event.name}-${index}`}
-                  >
+                <div
+                  key={activity.id}
+                  className={
+                    `activity-message ` +
+                    `activity-${activity.speaker}`
+                  }
+                >
 
-                    <span className="activity-time">
+                  <div className="activity-message-meta">
 
-                      {formatEventTime(
-                        event.timestamp
+                    <span>
+                      {formatTime(
+                        activity.timestamp
                       )}
-
                     </span>
 
+                    <span>
 
-                    <span className="activity-event">
+                      {activity.speaker ===
+                        "user"
 
-                      {getEventMessage(
-                        event
-                      )}
+                        ? "USER"
+
+                        : activity.speaker ===
+                          "jarvis"
+
+                          ? "JARVIS"
+
+                          : "SYS"}
 
                     </span>
 
                   </div>
 
-                )
+
+                  <div className="activity-message-text">
+
+                    {activity.text}
+
+                  </div>
+
+                </div>
+
               )
+            )
 
           )}
 
@@ -500,85 +419,64 @@ export default function HudCockpit({
 
       </aside>
 
-
-      {/* ================================================= */}
-      {/* CENTER LABEL */}
-      {/* ================================================= */}
-
-      <div className="cockpit-core-label">
-
-        <div className="core-name">
-          JARVIS
-        </div>
-
-
-        <div className="core-status">
-
-          {activeStatus}
-
-        </div>
-
-
-        <div className="core-subtitle">
-
-          ULTRON CORE // JARVIS PRO
-
-        </div>
-
-      </div>
-
-
-      {/* ================================================= */}
-      {/* BOTTOM STATUS */}
-      {/* ================================================= */}
+      {/* ============================================= */}
+      {/* BOTTOM RUNTIME STATUS */}
+      {/* ============================================= */}
 
       <div className="cockpit-bottom">
 
         <div
-          className={`voice-indicator ${
-            state.listening
-              ? "active"
-              : ""
-          }`}
+          className={
+            `voice-indicator ${
+              state.listening
+                ? "active"
+                : ""
+            }`
+          }
         >
           LISTENING
         </div>
 
 
         <div
-          className={`voice-indicator ${
-            state.thinking
-              ? "active"
-              : ""
-          }`}
+          className={
+            `voice-indicator ${
+              state.thinking
+                ? "active"
+                : ""
+            }`
+          }
         >
           THINKING
         </div>
 
 
         <div
-          className={`voice-indicator ${
-            state.speaking
-              ? "active"
-              : ""
-          }`}
+          className={
+            `voice-indicator ${
+              state.speaking
+                ? "active"
+                : ""
+            }`
+          }
         >
           SPEAKING
         </div>
 
 
         <div
-          className={`voice-indicator ${
-            state.executing
-              ? "active"
-              : ""
-          }`}
+          className={
+            `voice-indicator ${
+              state.executing
+                ? "active"
+                : ""
+            }`
+          }
         >
           EXECUTING
         </div>
 
       </div>
-
 
     </div>
 
