@@ -65,6 +65,8 @@ from brain import (
     conversation_context,
 )
 
+from hud.integration import HUDIntegration
+
 
 # ============================================================
 # RUN
@@ -78,6 +80,12 @@ def run():
 
     while True:
 
+        # =====================================================
+        # HUD — Waiting for user input
+        # =====================================================
+
+        HUDIntegration.listening()
+
         query = get_command()
 
         if not query:
@@ -85,6 +93,12 @@ def run():
             time.sleep(0.05)
 
             continue
+
+        # =====================================================
+        # HUD — JARVIS is processing the command
+        # =====================================================
+
+        HUDIntegration.thinking()
 
         # =====================================================
         # New user input preempts TTS

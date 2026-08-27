@@ -14,6 +14,8 @@ from voice.state import (
     is_cancelled,
 )
 
+from hud.integration import HUDIntegration
+
 
 # =========================================================
 # PRO TTS PIPELINE
@@ -137,6 +139,8 @@ class TTSPipeline:
         self.started = False
 
         self.finished = False
+        
+        self.hud_speaking = False
 
         self.worker_done_count = 0
 
@@ -558,44 +562,9 @@ class TTSPipeline:
             "Playback worker started"
         )
 
-        while True:
+        try:
 
-            if self.cancelled():
-
-                self._cleanup_pending_audio()
-
-                return
-
-            # -------------------------------------------------
-            # Wait for the next sentence's audio.
-            # -------------------------------------------------
-
-            with self.pending_condition:
-
-                while (
-
-                    self.next_play_index
-                    not in self.pending_audio
-
-                    and not self.cancelled()
-
-                ):
-
-                    # -------------------------------------------------
-                    # If all generation workers have finished and
-                    # there is no audio for the next sentence, there
-                    # is nothing more to play.
-                    # -------------------------------------------------
-
-                    if self._generation_finished():
-
-                        self._cleanup_pending_audio()
-
-                        return
-
-                    self.pending_condition.wait(
-                        timeout=0.05
-                    )
+            while True:
 
                 if self.cancelled():
 
@@ -603,32 +572,131 @@ class TTSPipeline:
 
                     return
 
-                if (
-                    self.next_play_index
-                    not in self.pending_audio
-                ):
+                # -------------------------------------------------
+                # Wait for the next sentence's audio.
+                # -------------------------------------------------
 
-                    continue
+                with self.pending_condition:
 
-                audio_file, sentence = (
-                    self.pending_audio.pop(
+                    while (
+
+                        self.next_play_index
+                        not in self.pending_audio
+
+                        and not self.cancelled()
+
+                    ):
+
+                        if self._generation_finished():
+
+                            self._cleanup_pending_audio()
+
+                            return
+
+                        self.pending_condition.wait(
+                            timeout=0.05
+                        )
+
+                    if self.cancelled():
+
+                        self._cleanup_pending_audio()
+
+                        return
+
+                    if (
+                        self.next_play_index
+                        not in self.pending_audio
+                    ):
+
+                        continue
+
+                    audio_file, sentence = (
+                        self.pending_audio.pop(
+                            self.next_play_index
+                        )
+                    )
+
+                    current_index = (
                         self.next_play_index
                     )
-                )
 
-                current_index = (
-                    self.next_play_index
-                )
+                    self.next_play_index += 1
 
-                self.next_play_index += 1
+                # -------------------------------------------------
+                # HUD — JARVIS has started speaking.
+                #
+                # This is intentionally triggered when the
+                # first sentence is actually ready for playback,
+                # not merely when the TTS pipeline starts.
+                # -------------------------------------------------
 
-            # -------------------------------------------------
-            # Play prepared audio.
-            # -------------------------------------------------
+                if not self.hud_speaking:
 
-            try:
+                    try:
 
-                if self.cancelled():
+                        HUDIntegration.speaking()
+
+                        self.hud_speaking = True
+
+                    except Exception as e:
+
+                        print(
+                            "[HUD] Speaking event failed:",
+                            e
+                        )
+
+                # -------------------------------------------------
+                # Play prepared audio.
+                # -------------------------------------------------
+
+                try:
+
+                    if self.cancelled():
+
+                        if audio_file:
+
+                            self._delete_audio(
+                                audio_file
+                            )
+
+                        return
+
+                    print(
+                        "[TTS PIPELINE] "
+                        f"Playing sentence "
+                        f"{current_index}"
+                    )
+
+                    # -------------------------------------------------
+                    # Edge TTS prepared audio
+                    # -------------------------------------------------
+
+                    if audio_file:
+
+                        play_prepared_speech(
+
+                            audio_file,
+
+                            self.session,
+
+                        )
+
+                    # -------------------------------------------------
+                    # Offline / fallback
+                    # -------------------------------------------------
+
+                    else:
+
+                        self._play_fallback(
+                            sentence
+                        )
+
+                except Exception as e:
+
+                    print(
+                        "[TTS PLAYBACK ERROR]",
+                        e
+                    )
 
                     if audio_file:
 
@@ -636,50 +704,33 @@ class TTSPipeline:
                             audio_file
                         )
 
-                    return
+        finally:
 
-                print(
-                    "[TTS PIPELINE] "
-                    f"Playing sentence "
-                    f"{current_index}"
-                )
+            # -------------------------------------------------
+            # Entire TTS playback is finished.
+            #
+            # This executes even when:
+            #
+            # - playback completes normally
+            # - user interrupts
+            # - session is cancelled
+            # - an error occurs
+            # -------------------------------------------------
 
-                # -------------------------------------------------
-                # Edge TTS prepared audio
-                # -------------------------------------------------
+            if self.hud_speaking:
 
-                if audio_file:
+                try:
 
-                    play_prepared_speech(
+                    HUDIntegration.idle()
 
-                        audio_file,
+                except Exception as e:
 
-                        self.session,
-
+                    print(
+                        "[HUD] Idle event failed:",
+                        e
                     )
 
-                # -------------------------------------------------
-                # Offline / fallback
-                # -------------------------------------------------
-
-                else:
-
-                    self._play_fallback(
-                        sentence
-                    )
-
-            except Exception as e:
-
-                print(
-                    "[TTS PLAYBACK ERROR]",
-                    e
-                )
-
-                if audio_file:
-
-                    self._delete_audio(
-                        audio_file
-                    )
+                self.hud_speaking = False
 
     # =====================================================
     # Generation Finished
@@ -781,10 +832,28 @@ class TTSPipeline:
 
         self._cleanup_pending_audio()
 
+        # -------------------------------------------------
+        # HUD — complete speech state.
+        #
+        # This happens only after ALL generated sentences
+        # have finished playing.
+        # -------------------------------------------------
+
+        try:
+
+            HUDIntegration.idle()
+
+        except Exception as e:
+
+            print(
+                "[TTS PIPELINE] "
+                f"HUD idle update failed: {e}"
+            )
+
         print(
             "[TTS PIPELINE] Finished"
         )
-
+        
     # =====================================================
     # Delete Audio
     # =====================================================

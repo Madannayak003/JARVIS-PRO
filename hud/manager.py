@@ -71,6 +71,18 @@ class HUDManager:
 
     def listening(self):
 
+        # -----------------------------------------------------
+        # SPEAKING has priority over LISTENING.
+        #
+        # The microphone can remain active while JARVIS is
+        # speaking. Do not allow the microphone listener to
+        # overwrite the HUD speaking state.
+        # -----------------------------------------------------
+
+        if self.state.speaking:
+
+            return
+
         self.state.status = HUD_LISTENING
 
         self.state.listening = True
@@ -78,7 +90,9 @@ class HUDManager:
         self.state.thinking = False
         self.state.executing = False
 
-        self._publish(HUD_LISTENING)
+        self._publish(
+            HUD_LISTENING
+        )
 
     # -----------------------------------------------------
 

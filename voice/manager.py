@@ -19,6 +19,8 @@ from voice.state import (
     is_cancelled,
 )
 
+from hud.integration import HUDIntegration
+
 
 ONLINE = False
 
@@ -170,7 +172,11 @@ def _worker(text, session):
             "[VOICE] Speech cancelled before TTS"
         )
 
+        HUDIntegration.idle()
+
         return False
+
+    success = False
 
     # -----------------------------------------------------
     # Online Edge TTS
@@ -180,7 +186,7 @@ def _worker(text, session):
 
         try:
 
-            return speak_online(
+            success = speak_online(
                 text,
                 wait=True,
                 session=session,
@@ -197,24 +203,26 @@ def _worker(text, session):
     # Offline Piper
     # -----------------------------------------------------
 
-    if is_cancelled(session):
+    if not success and not is_cancelled(session):
 
-        return False
+        try:
 
-    try:
+            success = speak_offline(text)
 
-        speak_offline(text)
+        except Exception as e:
 
-        return True
+            print(
+                "[VOICE] Offline TTS failed:",
+                e
+            )
 
-    except Exception as e:
+    # -----------------------------------------------------
+    # HUD — Speech finished
+    # -----------------------------------------------------
 
-        print(
-            "[VOICE] Offline TTS failed:",
-            e
-        )
+    HUDIntegration.idle()
 
-        return False
+    return bool(success)
 
 # =========================================================
 # PRO TTS PREPARE
@@ -425,6 +433,12 @@ def speak(
     print(
         f"[VOICE] {text}"
     )
+    
+    # -----------------------------------------------------
+    # HUD — JARVIS is speaking
+    # -----------------------------------------------------
+
+    HUDIntegration.speaking()
 
     # -----------------------------------------------------
     # Synchronous mode
