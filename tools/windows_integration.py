@@ -62,30 +62,31 @@ def _require_windows() -> None:
 
 def _python_executable() -> str:
     """
-    Return the windowless Python executable used by
-    the JARVIS PRO desktop shortcut.
+    Return pythonw.exe when available so the Windows
+    desktop shortcut launches JARVIS without a console window.
 
-    This prevents a CMD/terminal window from appearing
-    when JARVIS is launched from the desktop shortcut.
+    Falls back to the current Python executable if
+    pythonw.exe is unavailable.
     """
 
-    python_exe = Path(sys.executable).resolve()
+    current_python = (
+        Path(sys.executable)
+        .resolve()
+    )
 
-    if os.name == "nt":
+    pythonw = (
+        current_python
+        .with_name("pythonw.exe")
+    )
 
-        pythonw_exe = (
-            python_exe.parent
-            / "pythonw.exe"
+    if pythonw.is_file():
+
+        return str(
+            pythonw
         )
 
-        if pythonw_exe.is_file():
-
-            return str(
-                pythonw_exe
-            )
-
     return str(
-        python_exe
+        current_python
     )
 
 
