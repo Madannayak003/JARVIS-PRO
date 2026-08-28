@@ -54,6 +54,8 @@ _voice_thread = None
 
 _shutdown_event = threading.Event()
 
+_core_ready = threading.Event()
+
 _shutdown_lock = threading.Lock()
 
 _shutdown_started = False
@@ -303,20 +305,40 @@ def wait_for_web_hud(
 # =============================================================
 
 def run_voice_engine():
-
     try:
 
-        from voice.online_runner import run
+        # =====================================================
+        # WAIT FOR CORE
+        #
+        # The voice engine must not start before the
+        # skills, memory and services are ready.
+        #
+        # The HUD does NOT wait for this.
+        # =====================================================
 
+        print(
+            "[MAIN] "
+            "Voice engine waiting for core..."
+        )
+
+        _core_ready.wait()
+
+        if _shutdown_event.is_set():
+            return
+
+        print(
+            "[MAIN] "
+            "Core ready. Starting voice engine..."
+        )
+
+        from voice.online_runner import run
 
         print(
             "[MAIN] "
             "Online JARVIS voice engine started."
         )
 
-
         run()
-
 
     except Exception as error:
 
@@ -328,11 +350,7 @@ def run_voice_engine():
             f"[MAIN] {error}"
         )
 
-
     finally:
-
-        # If voice engine exits by itself,
-        # close the desktop application too.
 
         if not _shutdown_event.is_set():
 
@@ -591,6 +609,63 @@ def stop_web_hud():
 
 
 # =============================================================
+# BACKGROUND CORE INITIALIZATION
+# =============================================================
+
+def initialize_core_background():
+    """
+    Initialize the heavy JARVIS core without blocking
+    the native HUD startup.
+
+    The native pywebview HUD remains on the main thread.
+    """
+
+    try:
+
+        print(
+            "[CORE] Background initialization started."
+        )
+
+        print(
+            "[CORE] Loading skills..."
+        )
+
+        load_all()
+
+        print(
+            "[CORE] Initializing memory..."
+        )
+
+        init_memory()
+
+        print(
+            "[CORE] Starting services..."
+        )
+
+        start_all()
+
+        print(
+            "[CORE] Background initialization complete."
+        )
+
+        _core_ready.set()
+
+    except Exception as error:
+
+        print(
+            "[CORE] Background initialization failed:"
+        )
+
+        print(
+            f"[CORE] {error}"
+        )
+
+        _core_ready.set()
+
+        raise
+
+
+# =============================================================
 # MAIN
 # =============================================================
 
@@ -649,12 +724,22 @@ def main():
             "Starting existing online JARVIS..."
         )
 
+        # =====================================================
+        # START HEAVY CORE INITIALIZATION IN BACKGROUND
+        # =====================================================
 
-        load_all()
+        core_thread = threading.Thread(
+            target=initialize_core_background,
+            name="jarvis-core-init",
+            daemon=True,
+        )
 
-        init_memory()
+        core_thread.start()
 
-        start_all()
+        print(
+            "[MAIN] "
+            "Core initialization started in background."
+        )
 
 
         # =====================================================
