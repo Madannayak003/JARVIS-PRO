@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -89,6 +90,32 @@ export default function Home() {
     []
   );
 
+  const [
+    morningBriefHeadlines,
+    setMorningBriefHeadlines,
+  ] = useState<
+    Array<{
+      category: string;
+      title: string;
+      link?: string;
+    }>
+  >([]);
+
+  const [
+    morningBriefActive,
+    setMorningBriefActive,
+  ] = useState(false);
+
+  const [
+    morningBriefStartedSpeaking,
+    setMorningBriefStartedSpeaking,
+  ] = useState(false);
+
+  const morningBriefActiveRef =
+    useRef(false);
+
+  const morningBriefStartedSpeakingRef =
+    useRef(false);
 
   /* =========================================================
      SETTINGS
@@ -462,19 +489,62 @@ export default function Home() {
           event: HUDBridgeEvent
         ) => {
 
-          /*
-           * Only real conversation messages
-           * enter the Activity Log.
-           *
-           * Runtime state events such as:
-           *
-           * LISTENING
-           * THINKING
-           * SPEAKING
-           * EXECUTING
-           *
-           * remain HUD state only.
-           */
+          /* =========================================================
+            MORNING BRIEF
+            ========================================================= */
+
+          if (event.name === "morning_brief") {
+
+            const headlines =
+              Array.isArray(
+                event.data?.headlines
+              )
+                ? event.data.headlines
+                : [];
+
+            if (headlines.length > 0) {
+
+              setMorningBriefHeadlines(
+                headlines
+              );
+
+              setMorningBriefActive(true);
+
+              setMorningBriefStartedSpeaking(false);
+
+              morningBriefActiveRef.current = true;
+
+              morningBriefStartedSpeakingRef.current = false;
+
+            }
+
+            return;
+
+          }
+
+          /* =========================================================
+            MORNING BRIEF SPEECH LIFECYCLE
+            ========================================================= */
+
+          if (event.name === "speaking") {
+
+            if (
+              morningBriefActiveRef.current
+            ) {
+
+              setMorningBriefStartedSpeaking(true);
+
+              morningBriefStartedSpeakingRef.current = true;
+
+            }
+
+            return;
+
+          }
+
+          /* =========================================================
+            ACTIVITY LOG
+            ========================================================= */
 
           if (
             event.name !== "command" &&
@@ -575,7 +645,71 @@ export default function Home() {
       <HudCockpit
         state={hudState}
         activities={activities}
+        morningBriefHeadlines={morningBriefHeadlines}
+        onMorningBriefClose={() => {
+          setMorningBriefActive(false);
+          setMorningBriefHeadlines([]);
+        }}
       />
+
+      {morningBriefActive &&
+        morningBriefHeadlines.length > 0 && (
+
+        <div className="morning-brief-overlay">
+
+          <button
+            type="button"
+            className="morning-brief-close"
+            onClick={() => {
+              setMorningBriefActive(false);
+              setMorningBriefHeadlines([]);
+            }}
+            aria-label="Close morning brief"
+          >
+            ×
+          </button>
+
+          <div className="morning-brief-header">
+
+            <span className="morning-brief-marker">
+              ◆
+            </span>
+
+            <span>
+              TODAY'S TOP HEADLINES
+            </span>
+
+          </div>
+
+
+          <div className="morning-brief-list">
+
+            {morningBriefHeadlines.map(
+              (headline, index) => (
+
+                <div
+                  key={`${headline.title}-${index}`}
+                  className="morning-brief-item"
+                >
+
+                  <span className="morning-brief-category">
+                    {headline.category.toUpperCase()}
+                  </span>
+
+                  <span className="morning-brief-title">
+                    {headline.title}
+                  </span>
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
+        </div>
+
+      )}
 
 
       {/* =====================================================

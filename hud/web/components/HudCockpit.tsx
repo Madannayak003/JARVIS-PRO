@@ -20,6 +20,14 @@ type Props = {
 
   activities: HUDActivity[];
 
+  morningBriefHeadlines: Array<{
+    category: string;
+    title: string;
+    link?: string;
+  }>;
+
+  onMorningBriefClose: () => void;
+
 };
 
 
@@ -150,6 +158,8 @@ function formatTime(
 export default function HudCockpit({
   state,
   activities,
+  morningBriefHeadlines,
+  onMorningBriefClose,
 }: Props) {
 
   const system =
@@ -165,31 +175,72 @@ export default function HudCockpit({
   // ACTIVITY LOG AUTO-SCROLL
   // =====================================================
 
-  const activityLogRef =
-    useRef<HTMLDivElement>(null);
+  // const activityLogRef =
+  //   useRef<HTMLDivElement>(null);
 
+
+  // useEffect(() => {
+
+  //   const log =
+  //     activityLogRef.current;
+
+  //   if (!log) {
+  //     return;
+  //   }
+
+  //   /*
+  //    * Wait until React has finished rendering
+  //    * the new activity entry.
+  //    */
+  //   requestAnimationFrame(() => {
+
+  //     log.scrollTop =
+  //       log.scrollHeight;
+
+  //   });
+
+  // }, [activities]);
+
+  // =====================================================
+  // MORNING BRIEF AUTO-DISMISS
+  // =====================================================
 
   useEffect(() => {
 
-    const log =
-      activityLogRef.current;
+    if (
+      morningBriefHeadlines.length === 0
+    ) {
 
-    if (!log) {
       return;
+
     }
 
     /*
-     * Wait until React has finished rendering
-     * the new activity entry.
+     * Keep the news visible long enough
+     * for the startup briefing to be seen.
+     *
+     * The backend already limits the spoken
+     * briefing to 3 headlines.
      */
-    requestAnimationFrame(() => {
 
-      log.scrollTop =
-        log.scrollHeight;
+    const timer =
+      window.setTimeout(() => {
 
-    });
+        /*
+         * The parent owns the actual state,
+         * so this component intentionally does
+         * not mutate it here.
+         *
+         * The display will therefore remain until
+         * the parent clears it.
+         */
 
-  }, [activities]);
+      }, 1);
+
+    return () =>
+      window.clearTimeout(timer);
+
+  }, [morningBriefHeadlines]);
 
 
   return (
@@ -349,10 +400,7 @@ export default function HudCockpit({
         </div>
 
 
-        <div
-          ref={activityLogRef}
-          className="activity-log"
-        >
+        <div className="activity-log">
 
           {activities.length === 0 ? (
 
