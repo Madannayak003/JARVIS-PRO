@@ -11,6 +11,8 @@ from core.registry import execute
 
 from core.listener import start_listener
 from core.listener import get_command
+from core.listener import shutdown_requested
+from core.listener import stop_listener
 
 from core.runtime import handle_priority
 
@@ -78,7 +80,7 @@ def run():
 
     start_listener()
 
-    while True:
+    while not shutdown_requested():
 
         # =====================================================
         # HUD — Waiting for user input

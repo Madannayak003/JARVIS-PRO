@@ -48,6 +48,12 @@ from core.runtime import handle_priority
 
 from hud.integration import HUDIntegration
 
+from tools.windows_integration import (
+    create_desktop_shortcut,
+    get_autostart_status,
+    set_autostart,
+)
+
 # =============================================================
 # FASTAPI
 # =============================================================
@@ -706,6 +712,34 @@ class DashboardServer:
             )
             is not None
         )
+        
+    # =========================================================
+    # LOCAL CONTROL AUTHORIZATION
+    # =========================================================
+
+    def _authorize_local(
+        self,
+        request: Request,
+    ) -> bool:
+        """
+        Allow local JARVIS HUD controls only from this PC.
+
+        Remote phones/devices must not be able to create
+        Windows shortcuts or modify Windows startup.
+        """
+
+        client = request.client
+
+        if client is None:
+            return False
+
+        host = client.host
+
+        return host in {
+            "127.0.0.1",
+            "::1",
+            self.ip,
+        }
 
     # =========================================================
     # BROADCAST
@@ -1362,6 +1396,173 @@ class DashboardServer:
                     self._clients
                 ),
             }
+            
+                # =====================================================
+        # LOCAL — DESKTOP SHORTCUT
+        # =====================================================
+
+        @app.post(
+            "/api/local/shortcut"
+        )
+        async def local_shortcut(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                result = create_desktop_shortcut()
+
+                return {
+                    "ok": True,
+                    "message": result,
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL SHORTCUT ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+
+        # =====================================================
+        # LOCAL — AUTO START STATUS
+        # =====================================================
+
+        @app.get(
+            "/api/local/autostart"
+        )
+        async def local_autostart_status(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                enabled = get_autostart_status()
+
+                return {
+                    "ok": True,
+                    "enabled": enabled,
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL AUTOSTART STATUS ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+
+        # =====================================================
+        # LOCAL — AUTO START SET
+        # =====================================================
+
+        @app.post(
+            "/api/local/autostart"
+        )
+        async def local_autostart(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                body = await request.json()
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            enabled = bool(
+                body.get(
+                    "enabled",
+                    False,
+                )
+            )
+
+            try:
+
+                result = set_autostart(
+                    enabled
+                )
+
+                return {
+                    "ok": True,
+                    "enabled": enabled,
+                    "message": result,
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL AUTOSTART ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
 
         # =====================================================
         # COMMAND

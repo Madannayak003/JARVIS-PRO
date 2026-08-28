@@ -147,6 +147,11 @@ export default function Home() {
     setRemoteLoading,
   ] = useState(false);
 
+  const [
+    shortcutLoading,
+    setShortcutLoading,
+  ] = useState(false);
+
   /* =========================================================
      LOAD SETTINGS
      ========================================================= */
@@ -280,20 +285,70 @@ export default function Home() {
      DESKTOP SHORTCUT
      ========================================================= */
 
-  const createDesktopShortcut = () => {
+  const createDesktopShortcut = async () => {
 
-    /*
-     * Browser security prevents a webpage from directly
-     * creating a Windows desktop shortcut.
-     *
-     * For now we show the intended action.
-     * The real Windows shortcut will be connected from
-     * the Python/JARVIS side in the next integration step.
-     */
+    if (shortcutLoading) {
+      return;
+    }
 
-    alert(
-      "Desktop shortcut integration will be connected to JARVIS PRO."
-    );
+    setShortcutLoading(true);
+
+    try {
+
+      const dashboardUrl =
+        process.env
+          .NEXT_PUBLIC_JARVIS_DASHBOARD_URL
+        ||
+        (
+          typeof window !== "undefined"
+            ? `http://${window.location.hostname}:8765`
+            : "http://127.0.0.1:8765"
+        );
+
+      const response =
+        await fetch(
+          `${dashboardUrl}/api/local/shortcut`,
+          {
+            method: "POST",
+            cache: "no-store",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          data?.error ||
+          "Unable to create desktop shortcut."
+        );
+
+      }
+
+      alert(
+        data.message ||
+        "JARVIS PRO desktop shortcut created successfully."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[DESKTOP SHORTCUT]",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Desktop shortcut creation failed."
+      );
+
+    } finally {
+
+      setShortcutLoading(false);
+
+    }
 
   };
 
@@ -653,6 +708,7 @@ export default function Home() {
             type="button"
             className="settings-control"
             onClick={createDesktopShortcut}
+            disabled={shortcutLoading}
           >
 
             <span className="settings-control-icon">
@@ -660,7 +716,9 @@ export default function Home() {
             </span>
 
             <span>
-              CREATE DESKTOP SHORTCUT
+              {shortcutLoading
+                ? "CREATING SHORTCUT..."
+                : "CREATE DESKTOP SHORTCUT"}
             </span>
 
           </button>

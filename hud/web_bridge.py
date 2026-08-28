@@ -66,6 +66,24 @@ class _BridgeHandler(BaseHTTPRequestHandler):
             return
 
         self._json({"error": "Not found"}, 404)
+        
+    def do_POST(self) -> None:
+
+        if self.path == "/shutdown":
+
+            self.bridge.request_shutdown()
+
+            self._json({
+                "ok": True,
+                "message": "JARVIS shutdown requested.",
+            })
+
+            return
+
+        self._json(
+            {"error": "Not found"},
+            404,
+        )
 
     def _events(self) -> None:
         client = self.bridge.add_client()
@@ -121,6 +139,7 @@ class HUDWebBridge:
         self._clients: list[_Client] = []
         self._lock = threading.Lock()
         self._subscribed = False
+        self._shutdown_callback = None
 
     def start(self) -> bool:
         if self._server is not None:
@@ -172,6 +191,36 @@ class HUDWebBridge:
             client.alive = False
 
         print("[HUD WEB] Bridge stopped.")
+        
+    def set_shutdown_callback(
+        self,
+        callback,
+    ) -> None:
+
+        self._shutdown_callback = callback
+
+
+    def request_shutdown(self) -> None:
+
+        print(
+            "[HUD WEB] Shutdown requested by desktop HUD."
+        )
+
+        callback = self._shutdown_callback
+
+        if callback is None:
+
+            print(
+                "[HUD WEB] No shutdown callback registered."
+            )
+
+            return
+
+        threading.Thread(
+            target=callback,
+            name="jarvis-shutdown-request",
+            daemon=True,
+        ).start()
 
     def _subscribe(self) -> None:
         if self._subscribed:
