@@ -497,6 +497,86 @@ class ExecutionContextResolver:
                     "close"
                 )
                 definition["object"] = process
+                
+        # ----------------------------------------------------
+        # Browser result context
+        #
+        # Preserve the real Google / YouTube results that
+        # were produced by the already-executed browser action.
+        #
+        # This allows Natural Conversation references such as:
+        #
+        #     "open the second one"
+        #     "play the third one"
+        #
+        # to resolve through the existing ConversationContext.
+        # ----------------------------------------------------
+
+        if action_name in {
+            "google_search",
+            "youtube_search",
+            "youtube_play_first",
+            "youtube_next",
+            "youtube_previous",
+        }:
+
+            try:
+
+                from core.browser_context import (
+                    browser_context,
+                )
+
+                # --------------------------------------------
+                # Google search results
+                # --------------------------------------------
+
+                if action_name == "google_search":
+
+                    browser_results = (
+                        browser_context.last_search_results
+                    )
+
+                    if browser_results:
+
+                        definition["objects"] = (
+                            browser_results
+                        )
+
+                        definition["object"] = (
+                            browser_results
+                        )
+
+                # --------------------------------------------
+                # YouTube queue
+                # --------------------------------------------
+
+                elif action_name in {
+                    "youtube_search",
+                    "youtube_play_first",
+                    "youtube_next",
+                    "youtube_previous",
+                }:
+
+                    youtube_results = (
+                        browser_context.youtube_queue
+                    )
+
+                    if youtube_results:
+
+                        definition["objects"] = (
+                            youtube_results
+                        )
+
+                        definition["object"] = (
+                            browser_context.current_youtube_video
+                        )
+
+            except Exception as e:
+
+                print(
+                    "[EXECUTION CONTEXT] "
+                    f"Browser context enrichment failed: {e}"
+                )
 
         # ----------------------------------------------------
         # Action itself is always authoritative

@@ -602,6 +602,46 @@ class ConversationUnderstandingEngine:
                 r"\bthe second one\b",
                 "the second one"
             ),
+            
+                        (
+                r"\bthe third one\b",
+                "the third one"
+            ),
+
+            (
+                r"\bthe fourth one\b",
+                "the fourth one"
+            ),
+
+            (
+                r"\bthe fifth one\b",
+                "the fifth one"
+            ),
+
+            (
+                r"\bnumber one\b",
+                "number one"
+            ),
+
+            (
+                r"\bnumber two\b",
+                "number two"
+            ),
+
+            (
+                r"\bnumber three\b",
+                "number three"
+            ),
+
+            (
+                r"\bnumber four\b",
+                "number four"
+            ),
+
+            (
+                r"\bnumber five\b",
+                "number five"
+            ),
 
             (
                 r"\bthe last one\b",
@@ -634,6 +674,40 @@ class ConversationUnderstandingEngine:
                 references.append(value)
 
         return references
+
+    # ========================================================
+    # Reference Position
+    #
+    # Converts a recognized positional reference into a
+    # one-based position.
+    #
+    # This method does NOT access BrowserContext.
+    # ========================================================
+
+    @staticmethod
+    def reference_position(
+        reference: str,
+    ) -> int | None:
+
+        positions = {
+
+            "the first one": 1,
+            "the second one": 2,
+            "the third one": 3,
+            "the fourth one": 4,
+            "the fifth one": 5,
+
+            "number one": 1,
+            "number two": 2,
+            "number three": 3,
+            "number four": 4,
+            "number five": 5,
+
+        }
+
+        return positions.get(
+            reference.strip().lower()
+        )
 
     # ========================================================
     # Waiting State

@@ -6,7 +6,6 @@ import requests
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
-
 # =========================================================
 # GLOBAL BROWSER LOCK
 # =========================================================
@@ -131,6 +130,80 @@ class BrowserController:
         # JARVIS should return to the previous tab.
         #
         self.previous_page = None
+        
+    # =====================================================
+    # BROWSER CONTEXT SYNCHRONIZATION
+    # =====================================================
+
+    def _sync_context(self):
+
+        try:
+
+            from core.browser_context import browser_context
+
+            if (
+                not self.page
+                or self.page.is_closed()
+            ):
+
+                return
+
+            url = self.page.url or ""
+
+            title = ""
+
+            try:
+
+                title = self.page.title()
+
+            except Exception:
+
+                pass
+
+            site = ""
+
+            if "youtube.com" in url:
+
+                site = "youtube"
+
+            elif "google.com" in url:
+
+                site = "google"
+
+            elif "github.com" in url:
+
+                site = "github"
+
+            elif "gmail.com" in url:
+
+                site = "gmail"
+
+            elif "spotify.com" in url:
+
+                site = "spotify"
+
+            elif url:
+
+                site = url.split(
+                    "://",
+                    1
+                )[-1].split(
+                    "/",
+                    1
+                )[0]
+
+            browser_context.set_page(
+                url=url,
+                site=site,
+                title=title,
+            )
+
+        except Exception as error:
+
+            print(
+                "[Browser Context] "
+                f"Sync failed: {error}"
+            )
 
     # =====================================================
     # INTERNAL EXECUTION
@@ -435,13 +508,15 @@ class BrowserController:
 
                 self.page.bring_to_front()
 
+                self._sync_context()
+
                 print(
                     "[Browser] "
                     "Page opened in JARVIS Chrome"
                 )
 
                 return True
-
+            
             except Exception as e:
 
                 print(
@@ -515,6 +590,85 @@ class BrowserController:
                 )
 
                 self.page.bring_to_front()
+
+                self._sync_context()
+
+                # =========================================================
+                # GOOGLE SEARCH RESULT EXTRACTION
+                # =========================================================
+
+                results = []
+
+                try:
+
+                    links = self.page.locator(
+                        "div.MjjYud a:has(h3)"
+                    )
+
+                    count = links.count()
+
+                    print(
+                        f"[Google] Found {count} candidate result link(s)"
+                    )
+
+                    for index in range(
+                        min(count, 10)
+                    ):
+
+                        try:
+
+                            link = links.nth(index)
+
+                            href = link.get_attribute(
+                                "href",
+                                timeout=2000,
+                            )
+
+                            title = link.locator(
+                                "h3"
+                            ).inner_text(
+                                timeout=2000
+                            )
+
+                            if not href or not title:
+
+                                continue
+
+                            results.append({
+                                "title": title.strip(),
+                                "url": href.strip(),
+                                "platform": "google",
+                                "result_type": "search",
+                            })
+
+                        except Exception:
+
+                            continue
+
+                except Exception as e:
+
+                    print(
+                        "[Google] "
+                        f"Result extraction failed: {e}"
+                    )
+
+
+                # =========================================================
+                # SAVE RESULTS
+                # =========================================================
+
+                from core.browser_context import browser_context
+
+                browser_context.set_search(
+                    query=query,
+                    platform="google",
+                    results=results,
+                )
+
+                print(
+                    f"[Google] Captured "
+                    f"{len(results)} search result(s)"
+                )
 
                 print(
                     "[Google] "
@@ -602,6 +756,8 @@ class BrowserController:
                 )
 
                 self.page.bring_to_front()
+                
+                self._sync_context()
 
                 print(
                     "[YouTube] "
@@ -672,6 +828,8 @@ class BrowserController:
             )
 
             self.page.bring_to_front()
+            
+            self._sync_context()
 
             print(
                 "[GitHub] "
@@ -774,6 +932,8 @@ class BrowserController:
             )
 
             self.page.bring_to_front()
+            
+            self._sync_context()
 
             print(
                 "[YouTube] "
@@ -1281,6 +1441,8 @@ class BrowserController:
                     f"[Browser NEW TAB] "
                     f"New-tab navigation notice: {e}"
                 )
+                
+            self._sync_context()
 
             print(
                 "[Browser] "
@@ -1332,6 +1494,8 @@ class BrowserController:
                 self.previous_page = None
 
                 self.page.bring_to_front()
+                
+                self._sync_context()
 
                 print(
                     "[Browser] "
@@ -1371,6 +1535,8 @@ class BrowserController:
                 return False
 
             self.page.reload()
+            
+            self._sync_context()
 
             return True
 
@@ -1404,26 +1570,37 @@ class BrowserController:
             # First: normal browser history
             # -------------------------------------------------
 
-            response = self.page.go_back(
-                wait_until="domcontentloaded",
-                timeout=10000,
-            )
+            try:
 
-            if response is not None:
-
-                self.page.bring_to_front()
-
-                print(
-                    "[Browser] Navigated back"
+                self.page.go_back(
+                    wait_until="commit",
+                    timeout=5000,
                 )
 
-                return True
+            except Exception as error:
+
+                print(
+                    f"[Browser BACK WARNING] {error}"
+                )
+
+            self.page.bring_to_front()
+
+            self._sync_context()
+
+            print(
+                "[Browser] Navigated back"
+            )
+
+            return True
+
+        except Exception as e:
+
+            print(
+                f"[Browser BACK ERROR] {e}"
+            )
 
             # -------------------------------------------------
-            # No history.
-            #
-            # This commonly happens when the current page is
-            # a newly-created blank tab.
+            # No usable browser history.
             #
             # Return to the previous JARVIS tab.
             # -------------------------------------------------
@@ -1441,13 +1618,15 @@ class BrowserController:
 
                 self.page.bring_to_front()
 
+                self._sync_context()
+
                 print(
                     "[Browser] "
                     "Returned to previous tab"
                 )
 
                 # -------------------------------------------------
-                # Close the temporary blank/new tab.
+                # Close temporary tab.
                 # -------------------------------------------------
 
                 try:
@@ -1499,7 +1678,26 @@ class BrowserController:
 
                 return False
 
-            self.page.go_forward()
+            try:
+
+                self.page.go_forward(
+                    wait_until="commit",
+                    timeout=5000,
+                )
+
+            except Exception as error:
+
+                print(
+                    f"[Browser FORWARD WARNING] {error}"
+                )
+
+            self.page.bring_to_front()
+
+            self._sync_context()
+
+            print(
+                "[Browser] Navigated forward"
+            )
 
             return True
 

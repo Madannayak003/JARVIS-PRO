@@ -7,6 +7,8 @@ from skills.browser.browser_controller import browser
 
 from core.live_execution import is_live_execution
 
+from core.browser_context import browser_context
+
 import os
 
 SITES = {
@@ -73,6 +75,11 @@ def ai_open(data):
             speak(f"Opening {app}")
 
         navigation.open(SITES[app])
+        
+        browser_context.set_page(
+            url=SITES[app],
+            site=app,
+        )
 
         # Action Memory
         set_memory("app", app)
@@ -112,6 +119,10 @@ def ai_google(data):
 
     result = browser.search_google(query)
 
+    browser_context.set_page(
+        site="google",
+    )
+
     if not result:
         print("[Google] Search failed")
         return False
@@ -135,6 +146,16 @@ def ai_youtube(data):
         speak(f"Searching YouTube for {query}")
 
     navigation.youtube(query)
+    
+    browser_context.set_search(
+        query=query,
+        platform="youtube",
+        results=[],
+    )
+
+    browser_context.set_page(
+        site="youtube",
+    )
     
     # Action Memory 
     set_memory("site", "youtube")

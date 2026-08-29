@@ -7,6 +7,8 @@ from skills.browser.browser_controller import browser
 from config.youtube import get_first_video
 from config.youtube import get_video_list
 
+from core.browser_context import browser_context
+
 import threading
 
 youtube_queue = []
@@ -68,12 +70,28 @@ def youtube_play_first(data):
     if not videos:
         speak("I could not find YouTube videos.")
         return False
+    
+    # Save YouTube search results to browser context
+    browser_context.set_search(
+        query=query,
+        platform="youtube",
+        results=videos,
+    )
+
+    browser_context.set_youtube_queue(
+        query=query,
+        videos=videos,
+    )
 
     # Save search results as JARVIS queue
     youtube_queue = videos
     youtube_index = 0
 
     video = youtube_queue[youtube_index]
+    
+    browser_context.set_current_youtube(
+        youtube_index
+    )
 
     print(f"[YouTube Queue] Loaded {len(youtube_queue)} videos")
     print(f"[YouTube Queue] Position: {youtube_index + 1}")
@@ -114,6 +132,10 @@ def youtube_next(data):
         return False
 
     youtube_index += 1
+    
+    browser_context.set_current_youtube(
+        youtube_index
+    )
 
     video = youtube_queue[youtube_index]
 
@@ -140,6 +162,10 @@ def youtube_previous(data):
         return False
 
     youtube_index -= 1
+
+    browser_context.set_current_youtube(
+        youtube_index
+    )
 
     video = youtube_queue[youtube_index]
 

@@ -73,6 +73,45 @@ class FollowUpExecutionBridge:
             or skill
             or ""
         ).lower().strip()
+        
+        
+        # ====================================================
+        # RESOLVED REFERENCE
+        # ====================================================
+        #
+        # FollowUpResolver has already resolved references
+        # into real contextual objects.
+        #
+        # Example:
+        #
+        # "the second one"
+        #       ↓
+        # BrowserResult(...)
+        #
+        # The bridge only converts that object into an
+        # existing JARVIS action. It does not resolve or
+        # execute anything itself.
+        # ====================================================
+
+        resolved_references = (
+            getattr(
+                follow_up,
+                "resolved_references",
+                {}
+            )
+            or {}
+        )
+
+        resolved_object = None
+
+        if resolved_references:
+
+            resolved_object = next(
+                iter(
+                    resolved_references.values()
+                ),
+                None
+            )
 
         # ====================================================
         # SPOTIFY
