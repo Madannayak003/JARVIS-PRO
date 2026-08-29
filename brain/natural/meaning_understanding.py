@@ -623,6 +623,7 @@ class MeaningUnderstandingEngine:
         )
 
     @staticmethod
+    @staticmethod
     def _contains_reference(
         text: str,
     ) -> bool:
@@ -631,23 +632,81 @@ class MeaningUnderstandingEngine:
             text.split()
         )
 
-        return bool(
-            words.intersection(
-                {
-                    "it",
-                    "that",
-                    "this",
-                    "they",
-                    "them",
-                    "those",
-                }
-            )
+        # ----------------------------------------------------
+        # Pronoun references
+        # ----------------------------------------------------
+
+        if words.intersection(
+            {
+                "it",
+                "that",
+                "this",
+                "they",
+                "them",
+                "those",
+            }
+        ):
+            return True
+
+        # ----------------------------------------------------
+        # Positional references
+        # ----------------------------------------------------
+
+        positional_references = (
+            "the first one",
+            "the second one",
+            "the third one",
+            "the fourth one",
+            "the fifth one",
+            "number one",
+            "number two",
+            "number three",
+            "number four",
+            "number five",
+            "the last one",
+            "the previous one",
+            "the same one",
+        )
+
+        return any(
+            reference in text
+            for reference in positional_references
         )
 
     @staticmethod
     def _find_reference(
         text: str,
     ) -> Optional[str]:
+
+        # ----------------------------------------------------
+        # Positional references
+        # ----------------------------------------------------
+
+        positional_references = (
+            "the first one",
+            "the second one",
+            "the third one",
+            "the fourth one",
+            "the fifth one",
+            "number one",
+            "number two",
+            "number three",
+            "number four",
+            "number five",
+            "the last one",
+            "the previous one",
+            "the same one",
+        )
+
+        for reference in positional_references:
+
+            if reference in text:
+
+                return reference
+
+        # ----------------------------------------------------
+        # Pronoun references
+        # ----------------------------------------------------
 
         for reference in (
             "it",

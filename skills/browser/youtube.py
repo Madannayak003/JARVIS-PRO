@@ -22,6 +22,8 @@ current_youtube_query = ""
 def ai_youtube(data):
 
     global current_youtube_query
+    global youtube_queue
+    global youtube_index
 
     query = data.get("query", "").strip()
 
@@ -31,11 +33,67 @@ def ai_youtube(data):
     current_youtube_query = query
 
     if not is_live_execution():
-        speak(f"Searching YouTube for {query}")
+        speak(
+            f"Searching YouTube for {query}"
+        )
+
+    # -------------------------------------------------
+    # Open YouTube search page
+    # -------------------------------------------------
 
     browser.search_youtube(query)
 
-    return True 
+    # -------------------------------------------------
+    # Capture search results for NCI
+    #
+    # This is important:
+    #
+    # "play the second one"
+    #
+    # must have actual YouTube result objects
+    # available to ReferenceResolver.
+    # -------------------------------------------------
+
+    videos = get_video_list(
+        query,
+        10
+    )
+
+    if not videos:
+        return True
+
+    # -------------------------------------------------
+    # Store generic browser search context
+    # -------------------------------------------------
+
+    browser_context.set_search(
+        query=query,
+        platform="youtube",
+        results=videos,
+    )
+
+    # -------------------------------------------------
+    # Store YouTube-specific queue
+    # -------------------------------------------------
+
+    browser_context.set_youtube_queue(
+        query=query,
+        videos=videos,
+    )
+
+    # -------------------------------------------------
+    # Keep existing YouTube runtime queue synchronized
+    # -------------------------------------------------
+
+    youtube_queue = videos
+
+    youtube_index = (
+        0
+        if videos
+        else -1
+    )
+
+    return True
 
 
 # =====================================================
@@ -188,6 +246,32 @@ def youtube_previous(data):
 
     return browser.play_video(video["video_id"])
 
+def youtube_play_result(data):
+
+    video_id = (
+        data.get("video_id", "")
+        or ""
+    ).strip()
+
+    if not video_id:
+        return False
+
+    video = (
+        browser_context.current_youtube_video
+    )
+
+    if video is not None:
+        title = getattr(
+            video,
+            "title",
+            ""
+        )
+
+        if title and not is_live_execution():
+            speak(f"Playing {title}")
+
+    return browser.play_video(video_id)
+
 
 # =====================================================
 # Registry
@@ -204,3 +288,5 @@ register("youtube_resume", youtube_resume)
 register("youtube_next", youtube_next)
 
 register("youtube_previous", youtube_previous)
+
+register("youtube_play_result",youtube_play_result)

@@ -45,6 +45,14 @@ from brain.followup_execution_bridge import (
     followup_execution_bridge,
 )
 
+from brain.followup_resolver import (
+    FollowUpResolver,
+)
+
+from brain.conversation_context import (
+    conversation_context,
+)
+
 from core.live_execution import is_live_execution
 
 # =========================================================
@@ -410,12 +418,28 @@ def dispatch(
         and conversation_analysis.follow_up.is_follow_up
     ):
 
+        # -------------------------------------------------
+        # Re-resolve the follow-up against the LIVE
+        # conversation context.
+        #
+        # This is important for references such as:
+        #
+        #     "the second one"
+        #
+        # ConversationRequest understands the reference,
+        # but FollowUpResolver resolves it to the actual
+        # contextual object.
+        # -------------------------------------------------
+
+        follow_up = FollowUpResolver().resolve(
+            conversation_analysis.follow_up,
+            conversation_context.context,
+        )
+
         follow_up_plan = (
             followup_execution_bridge.resolve(
                 raw_input=command,
-                follow_up=(
-                    conversation_analysis.follow_up
-                ),
+                follow_up=follow_up,
             )
         )
 

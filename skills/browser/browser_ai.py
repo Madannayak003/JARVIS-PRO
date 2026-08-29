@@ -167,6 +167,23 @@ def ai_youtube(data):
 
     return True
 
+def browser_open_result(data):
+
+    url = (
+        data.get("url", "")
+        or ""
+    ).strip()
+
+    if not url:
+        return False
+
+    if not is_live_execution():
+        speak("Opening the selected result")
+
+    return browser.open(url)
+
+
+register("browser_open_result", browser_open_result)
 
 register("open", ai_open)
 

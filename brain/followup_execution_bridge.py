@@ -76,21 +76,14 @@ class FollowUpExecutionBridge:
         
         
         # ====================================================
-        # RESOLVED REFERENCE
+        # RESOLVED REFERENCE → EXISTING ACTION
         # ====================================================
         #
         # FollowUpResolver has already resolved references
         # into real contextual objects.
         #
-        # Example:
-        #
-        # "the second one"
-        #       ↓
-        # BrowserResult(...)
-        #
         # The bridge only converts that object into an
-        # existing JARVIS action. It does not resolve or
-        # execute anything itself.
+        # executable action plan. It does NOT execute it.
         # ====================================================
 
         resolved_references = (
@@ -102,16 +95,92 @@ class FollowUpExecutionBridge:
             or {}
         )
 
-        resolved_object = None
+        resolved_object = next(
+            iter(resolved_references.values()),
+            None
+        )
 
-        if resolved_references:
+        if resolved_object is not None:
 
-            resolved_object = next(
-                iter(
-                    resolved_references.values()
-                ),
-                None
+            # ---------------------------------------------
+            # BrowserResult
+            # ---------------------------------------------
+
+            platform = (
+                getattr(
+                    resolved_object,
+                    "platform",
+                    ""
+                )
+                or ""
+            ).lower()
+
+            result_type = (
+                getattr(
+                    resolved_object,
+                    "result_type",
+                    ""
+                )
+                or ""
+            ).lower()
+
+            data = (
+                getattr(
+                    resolved_object,
+                    "data",
+                    {}
+                )
+                or {}
             )
+
+            # ---------------------------------------------
+            # YouTube video reference
+            # ---------------------------------------------
+
+            if (
+                platform == "youtube"
+                and result_type == "video"
+            ):
+
+                video_id = data.get(
+                    "video_id"
+                )
+
+                if video_id:
+
+                    return [
+                        {
+                            "action": "youtube_play_result",
+                            "video_id": video_id,
+                        }
+                    ]
+
+            # ---------------------------------------------
+            # Browser / Google result reference
+            # ---------------------------------------------
+
+            url = getattr(
+                resolved_object,
+                "url",
+                ""
+            )
+
+            if (
+                url
+                and platform in {
+                    "google",
+                    "bing",
+                    "browser",
+                    "web",
+                }
+            ):
+
+                return [
+                    {
+                        "action": "browser_open_result",
+                        "url": url,
+                    }
+                ]
 
         # ====================================================
         # SPOTIFY
@@ -414,6 +483,60 @@ class FollowUpExecutionBridge:
                     return [
                         {
                             "action": "close"
+                        }
+                    ]
+                    
+        # ====================================================
+        # GOOGLE / BROWSER SEARCH RESULT
+        # ====================================================
+
+        if domain in {
+            "google",
+            "browser",
+        }:
+
+            # ------------------------------------------------
+            # Open a resolved search result
+            # ------------------------------------------------
+
+            resolved_object = (
+                follow_up.object
+            )
+
+            if (
+                resolved_object is not None
+                and command
+            ):
+
+                url = getattr(
+                    resolved_object,
+                    "url",
+                    None
+                )
+
+                if not url:
+
+                    data = getattr(
+                        resolved_object,
+                        "data",
+                        None
+                    )
+
+                    if isinstance(data, dict):
+
+                        url = data.get(
+                            "url"
+                        )
+
+                if url:
+
+                    return [
+                        {
+                            "action":
+                                "browser_open_result",
+
+                            "url":
+                                url,
                         }
                     ]
         

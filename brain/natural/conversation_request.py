@@ -367,6 +367,23 @@ class ConversationRequestBuilder:
             "references"
         )
 
+        # Backward-compatible fallback:
+        # MeaningUnderstanding currently exposes a
+        # singular "reference" field.
+        if not references:
+
+            reference_value = self._value(
+                meaning,
+                "reference",
+                None
+            )
+
+            if reference_value is not None:
+
+                references = [
+                    reference_value
+                ]
+
         resolved_references = (
             self._dict_value(
                 meaning,
