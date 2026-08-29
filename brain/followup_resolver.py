@@ -402,7 +402,7 @@ class FollowUpResolver:
 
             raw_input=raw_input,
 
-            relation=relation.value,
+            relation=getattr(relation, "value", relation),
 
             application=active_application,
 
@@ -550,7 +550,7 @@ class FollowUpResolver:
 
         parts.append(
             f"Conversation relation: "
-            f"{relation.value}"
+            f"{getattr(relation, 'value', relation)}"
         )
 
         if context_values.get(

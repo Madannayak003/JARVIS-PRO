@@ -1075,6 +1075,46 @@ def run():
                 "[NCI REQUEST]",
                 conversation_request,
             )
+            
+            print(
+                "[NCI DEBUG] relation:",
+                conversation_request.relation,
+            )
+
+            print(
+                "[NCI DEBUG] intent:",
+                conversation_request.intent,
+            )
+
+            print(
+                "[NCI DEBUG] application:",
+                conversation_request.application,
+            )
+
+            print(
+                "[NCI DEBUG] skill:",
+                conversation_request.skill,
+            )
+
+            print(
+                "[NCI DEBUG] object:",
+                conversation_request.object,
+            )
+
+            print(
+                "[NCI DEBUG] references:",
+                conversation_request.references,
+            )
+
+            print(
+                "[NCI DEBUG] resolved:",
+                conversation_request.resolved_references,
+            )
+
+            print(
+                "[NCI DEBUG] unresolved:",
+                conversation_request.unresolved_references,
+            )
 
         except Exception as e:
 

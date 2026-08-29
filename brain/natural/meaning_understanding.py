@@ -59,6 +59,8 @@ class MeaningUnderstanding:
 
     intent: str = "unknown"
 
+    relation: Optional[str] = None
+
     topic: Optional[str] = None
 
     task: Optional[str] = None
@@ -410,6 +412,7 @@ class MeaningUnderstandingEngine:
                 context=context,
                 decision=decision,
                 intent="contextual_reference",
+                relation="reference",
                 topic=active_topic,
                 task=active_task,
                 object=active_object,
@@ -533,6 +536,7 @@ class MeaningUnderstandingEngine:
         context: NaturalContext,
         decision: InteractionDecision,
         intent: str,
+        relation: Optional[str] = None,
         topic: Optional[str] = None,
         task: Optional[str] = None,
         object: Optional[str] = None,
@@ -552,6 +556,8 @@ class MeaningUnderstandingEngine:
             mode=decision.mode,
 
             intent=intent,
+            
+            relation=relation,
 
             topic=topic,
 
