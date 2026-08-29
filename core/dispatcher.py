@@ -436,6 +436,35 @@ def dispatch(
             conversation_context.context,
         )
 
+        print(
+            "[FOLLOW-UP DEBUG] resolved_references:",
+            follow_up.resolved_references,
+        )
+
+        print(
+            "[FOLLOW-UP DEBUG] object:",
+            follow_up.object,
+        )
+
+        if follow_up.object is not None:
+            print(
+                "[FOLLOW-UP DEBUG] object video_id:",
+                getattr(
+                    follow_up.object,
+                    "data",
+                    {}
+                ).get("video_id")
+                if hasattr(
+                    getattr(
+                        follow_up.object,
+                        "data",
+                        None
+                    ),
+                    "get"
+                )
+                else None,
+            )
+
         follow_up_plan = (
             followup_execution_bridge.resolve(
                 raw_input=command,
