@@ -242,3 +242,5 @@ test_ollama.py
 main_online_backup.py
 
 yolo11n.pt
+
+works.text
