@@ -80,6 +80,8 @@ class ReferenceResolver:
             "the second one": 100,
 
             "the last one": 100,
+            
+            "the next one": 100,
 
             "the previous one": 100,
 
@@ -149,13 +151,34 @@ class ReferenceResolver:
             )
 
         # ----------------------------------------------------
-        # Previous / last
+        # Next
         # ----------------------------------------------------
 
-        if reference in {
-            "the last one",
-            "the previous one",
-        }:
+        if reference == "the next one":
+
+            return self._resolve_relative(
+                reference,
+                values,
+                direction=1,
+            )
+
+        # ----------------------------------------------------
+        # Previous
+        # ----------------------------------------------------
+
+        if reference == "the previous one":
+
+            return self._resolve_relative(
+                reference,
+                values,
+                direction=-1,
+            )
+
+        # ----------------------------------------------------
+        # Last
+        # ----------------------------------------------------
+
+        if reference == "the last one":
 
             return self._resolve_last(
                 reference,
@@ -510,6 +533,167 @@ class ReferenceResolver:
             reason=(
                 f"Resolved '{reference}' from "
                 "the contextual object list."
+            ),
+        )
+        
+    # ========================================================
+    # Resolve Relative
+    # ========================================================
+
+    def _resolve_relative(
+        self,
+        reference: str,
+        values: dict,
+        direction: int,
+    ) -> ReferenceResolution:
+
+        objects = values.get(
+            "objects"
+        )
+
+        # ----------------------------------------------------
+        # Browser / YouTube relative references
+        #
+        # Use the centralized BrowserContext when available.
+        #
+        # This preserves the authoritative YouTube position
+        # maintained by the browser subsystem.
+        # ----------------------------------------------------
+
+        try:
+
+            application = values.get(
+                "application"
+            )
+
+            if application == "youtube":
+
+                from core.browser_reference import (
+                    browser_reference_resolver,
+                )
+
+                if direction > 0:
+
+                    browser_result = (
+                        browser_reference_resolver.next_youtube()
+                    )
+
+                else:
+
+                    browser_result = (
+                        browser_reference_resolver.previous_youtube()
+                    )
+
+                if browser_result is not None:
+
+                    return self._success(
+                        reference=reference,
+                        value=browser_result,
+                        source="browser_context.youtube",
+                        confidence=0.96,
+                        reason=(
+                            f"Resolved '{reference}' "
+                            "using the active YouTube position."
+                        ),
+                    )
+
+        except Exception as e:
+
+            print(
+                "[REFERENCE] "
+                f"YouTube relative resolution failed: {e}"
+            )
+
+        # ----------------------------------------------------
+        # Generic contextual relative resolution
+        # ----------------------------------------------------
+
+        if not isinstance(
+            objects,
+            (list, tuple)
+        ) or not objects:
+
+            return self._unresolved(
+                reference,
+                (
+                    "No object list exists for "
+                    "relative reference resolution."
+                )
+            )
+
+        # ----------------------------------------------------
+        # Find the current object.
+        #
+        # Priority:
+        #   1. explicit referenced object
+        #   2. current object
+        # ----------------------------------------------------
+
+        current = (
+            values.get("referenced_object")
+            or values.get("object")
+        )
+
+        if current is None:
+
+            return self._unresolved(
+                reference,
+                (
+                    "No current contextual object exists "
+                    "for relative reference resolution."
+                )
+            )
+
+        # ----------------------------------------------------
+        # Locate current object in the contextual list.
+        # ----------------------------------------------------
+
+        try:
+
+            current_index = objects.index(
+                current
+            )
+
+        except ValueError:
+
+            return self._unresolved(
+                reference,
+                (
+                    "Current contextual object is not "
+                    "present in the object list."
+                )
+            )
+
+        target_index = (
+            current_index + direction
+        )
+
+        # ----------------------------------------------------
+        # Boundary protection.
+        # ----------------------------------------------------
+
+        if target_index < 0:
+
+            return self._unresolved(
+                reference,
+                "Already at the first contextual object."
+            )
+
+        if target_index >= len(objects):
+
+            return self._unresolved(
+                reference,
+                "Already at the last contextual object."
+            )
+
+        return self._success(
+            reference=reference,
+            value=objects[target_index],
+            source="objects",
+            confidence=0.95,
+            reason=(
+                f"Resolved '{reference}' relative to "
+                f"the current contextual object."
             ),
         )
 

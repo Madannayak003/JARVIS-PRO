@@ -670,6 +670,7 @@ class MeaningUnderstandingEngine:
             "number four",
             "number five",
             "the last one",
+            "the next one",
             "the previous one",
             "the same one",
         )
@@ -700,6 +701,7 @@ class MeaningUnderstandingEngine:
             "number four",
             "number five",
             "the last one",
+            "the next one",
             "the previous one",
             "the same one",
         )

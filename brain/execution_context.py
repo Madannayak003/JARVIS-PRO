@@ -516,6 +516,7 @@ class ExecutionContextResolver:
             "google_search",
             "youtube_search",
             "youtube_play_first",
+            "youtube_play_result",
             "youtube_next",
             "youtube_previous",
         }:
@@ -553,10 +554,10 @@ class ExecutionContextResolver:
                 elif action_name in {
                     "youtube_search",
                     "youtube_play_first",
+                    "youtube_play_result",
                     "youtube_next",
                     "youtube_previous",
                 }:
-
                     youtube_results = (
                         browser_context.youtube_queue
                     )

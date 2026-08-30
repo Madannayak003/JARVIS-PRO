@@ -93,6 +93,75 @@ def ai_youtube(data):
         else -1
     )
 
+    # -------------------------------------------------
+    # Record successful YouTube search for NCI
+    #
+    # This connects the existing BrowserContext result
+    # list to ConversationContext.
+    #
+    # It allows:
+    #
+    #     "play the second one"
+    #     "play the third one"
+    #     "open the first one"
+    #
+    # to resolve against the actual YouTube results.
+    # -------------------------------------------------
+
+    try:
+
+        from brain.conversation_coordinator import (
+            conversation_coordinator,
+        )
+
+        from brain.execution_context import (
+            execution_context_resolver,
+        )
+
+        execution_context = (
+            execution_context_resolver.resolve(
+                action_name="youtube_search",
+                action_data={
+                    "query": query,
+                },
+                result=True,
+            )
+        )
+
+        conversation_coordinator.record_execution(
+
+            topic=execution_context.topic,
+
+            task=execution_context.task,
+
+            application=execution_context.application,
+
+            skill=execution_context.skill,
+
+            intent=execution_context.intent,
+
+            action=execution_context.action,
+
+            object=execution_context.object,
+
+            objects=execution_context.objects,
+
+            result=True,
+
+        )
+
+        print(
+            "[YOUTUBE CONVERSATION] "
+            "Search context recorded."
+        )
+
+    except Exception as e:
+
+        print(
+            "[YOUTUBE CONVERSATION] "
+            f"Context update failed safely: {e}"
+        )
+
     return True
 
 
@@ -256,11 +325,41 @@ def youtube_play_result(data):
     if not video_id:
         return False
 
-    video = (
-        browser_context.current_youtube_video
-    )
+    # =====================================================
+    # Synchronize BrowserContext with the requested video
+    # =====================================================
+
+    video = None
+
+    for index, queued_video in enumerate(
+        browser_context.youtube_queue
+    ):
+
+        queued_video_id = (
+            queued_video.data.get(
+                "video_id",
+                ""
+            )
+            if queued_video.data
+            else ""
+        )
+
+        if queued_video_id == video_id:
+
+            video = (
+                browser_context.set_current_youtube(
+                    index
+                )
+            )
+
+            break
+
+    # =====================================================
+    # Speak the actual video being played
+    # =====================================================
 
     if video is not None:
+
         title = getattr(
             video,
             "title",
@@ -268,9 +367,18 @@ def youtube_play_result(data):
         )
 
         if title and not is_live_execution():
-            speak(f"Playing {title}")
 
-    return browser.play_video(video_id)
+            speak(
+                f"Playing {title}"
+            )
+
+    # =====================================================
+    # Play
+    # =====================================================
+
+    return browser.play_video(
+        video_id
+    )
 
 
 # =====================================================

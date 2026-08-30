@@ -150,12 +150,72 @@ def spotify_route(command):
         if song.endswith(" on spotify"):
             song = song[:-11].strip()
 
+        # =====================================================
+        # CONTEXTUAL / ORDINAL REFERENCES
+        #
+        # These commands must NEVER be interpreted as a
+        # Spotify song name.
+        #
+        # Examples:
+        #
+        #   play the first one
+        #   play the second one
+        #   play the third one
+        #   play the last one
+        #   play that one
+        #   play this one
+        #
+        # Natural Conversation / Follow-Up routing owns these.
+        # =====================================================
+
+        contextual_play_phrases = {
+
+            "the first one",
+            "the second one",
+            "the third one",
+            "the fourth one",
+            "the fifth one",
+            "the last one",
+            "the next one",
+            "the previous one",
+
+            "first one",
+            "second one",
+            "third one",
+            "fourth one",
+            "fifth one",
+            "last one",
+            "next one",
+            "previous one",
+
+            "that one",
+            "this one",
+
+        }
+
+        if song in contextual_play_phrases:
+
+            return None
+
+        # =====================================================
+        # Explicit YouTube references
+        # =====================================================
+
+        if (
+            "youtube" in song
+            or "video" in song
+        ):
+
+            return None
+
+        # =====================================================
+        # Generic Spotify song
+        # =====================================================
+
         if song not in [
             "spotify",
             "music",
             "song",
-            "first video",
-            "youtube video",
         ]:
 
             return [{

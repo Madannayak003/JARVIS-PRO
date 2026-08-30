@@ -139,33 +139,19 @@ def ai_google(data):
 
 
 def ai_youtube(data):
+    """
+    Compatibility wrapper.
 
-    query = data.get("query", "")
+    The authoritative YouTube implementation lives in:
+        skills.browser.youtube
 
-    if not is_live_execution():
-        speak(f"Searching YouTube for {query}")
+    This wrapper delegates to it instead of maintaining
+    a second YouTube implementation.
+    """
 
-    navigation.youtube(query)
-    
-    browser_context.set_search(
-        query=query,
-        platform="youtube",
-        results=[],
-    )
+    from skills.browser.youtube import ai_youtube as youtube_search
 
-    browser_context.set_page(
-        site="youtube",
-    )
-    
-    # Action Memory 
-    set_memory("site", "youtube")
-    set_memory("search", query)
-    set_memory("action", "youtube_search")
-    set_memory("search_platform", "youtube")
-    
-    print("[MEMORY]", dump())
-
-    return True
+    return youtube_search(data)
 
 def browser_open_result(data):
 

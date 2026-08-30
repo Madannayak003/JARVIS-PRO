@@ -309,6 +309,7 @@ def dispatch(
 
                     relation=(
                         conversation_request.relation
+                        or "new_request"
                     ),
 
                     application=(
@@ -341,7 +342,11 @@ def dispatch(
 
                     references=list(
                         conversation_request.references
-                        or []
+                        or (
+                            [conversation_request.reference]
+                            if conversation_request.reference
+                            else []
+                        )
                     ),
 
                     resolved_references=dict(
@@ -503,6 +508,75 @@ def dispatch(
                     "[CONVERSATION PRIORITY RESULT]",
                     repr(result),
                 )
+
+                # -----------------------------------------
+                # Synchronize conversational context after
+                # follow-up execution.
+                #
+                # The follow-up may have changed the active
+                # browser object, for example:
+                #
+                #     "play the second one"
+                #
+                # The existing normal execution path already
+                # performs this synchronization. The
+                # contextual follow-up path must do the same.
+                # -----------------------------------------
+
+                try:
+
+                    execution_context = (
+                        execution_context_resolver.resolve(
+
+                            action_name=action_name,
+
+                            action_data=action,
+
+                            result=result,
+
+                        )
+                    )
+
+                    conversation_coordinator.record_execution(
+
+                        topic=execution_context.topic,
+
+                        task=execution_context.task,
+
+                        application=(
+                            execution_context.application
+                        ),
+
+                        skill=execution_context.skill,
+
+                        intent=execution_context.intent,
+
+                        action=execution_context.action,
+
+                        object=execution_context.object,
+
+                        objects=execution_context.objects,
+
+                        result=result,
+
+                    )
+
+                    print(
+                        "[CONVERSATION EXECUTION]",
+                        conversation_coordinator.context.snapshot(),
+                    )
+
+                except Exception as e:
+
+                    # -------------------------------------
+                    # Natural Conversation must NEVER
+                    # break existing JARVIS execution.
+                    # -------------------------------------
+
+                    print(
+                        "[CONVERSATION] "
+                        f"Follow-up context update failed: {e}"
+                    )
 
             return            
 
