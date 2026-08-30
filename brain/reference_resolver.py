@@ -78,6 +78,26 @@ class ReferenceResolver:
             "the first one": 100,
 
             "the second one": 100,
+            
+            "the first one": 100,
+            
+            "the second one": 100,
+            
+            "the third one": 100,
+            
+            "the fourth one": 100,
+            
+            "the fifth one": 100,
+            
+            "the sixth one": 100,
+            
+            "the seventh one": 100,
+            
+            "the eighth one": 100,
+            
+            "the ninth one": 100,
+            
+            "the tenth one": 100,
 
             "the last one": 100,
             
@@ -134,20 +154,45 @@ class ReferenceResolver:
         # Specific list references
         # ----------------------------------------------------
 
-        if reference == "the first one":
+        # ----------------------------------------------------
+        # Generic ordinal list references
+        #
+        # Supports:
+        #
+        #     the first one
+        #     the second one
+        #     the third one
+        #     the fourth one
+        #     the fifth one
+        #     ...
+        #
+        # Convert the spoken ordinal into a zero-based
+        # object-list index.
+        # ----------------------------------------------------
+
+        ordinal_indexes = {
+
+            "the first one": 0,
+            "the second one": 1,
+            "the third one": 2,
+            "the fourth one": 3,
+            "the fifth one": 4,
+            "the sixth one": 5,
+            "the seventh one": 6,
+            "the eighth one": 7,
+            "the ninth one": 8,
+            "the tenth one": 9,
+
+        }
+
+        if reference in ordinal_indexes:
 
             return self._resolve_index(
                 reference,
                 values,
-                0
-            )
-
-        if reference == "the second one":
-
-            return self._resolve_index(
-                reference,
-                values,
-                1
+                ordinal_indexes[
+                    reference
+                ]
             )
 
         # ----------------------------------------------------
