@@ -32,6 +32,7 @@ SKILLS = [
     "screen.screenshot",
     "screen.clipboard",
     "system.battery",
+    "news.news",
     "network.wifi",
     "network.bluetooth",
     "network.weather",

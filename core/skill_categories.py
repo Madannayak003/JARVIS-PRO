@@ -100,6 +100,10 @@ CATEGORIES = {
         "list_reminders",
         "cancel_reminder",
     },
+    
+    "news": {
+        "get_news",
+    },
 
     "network": {
         "wifi_on",
