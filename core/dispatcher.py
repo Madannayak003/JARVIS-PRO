@@ -55,6 +55,8 @@ from brain.conversation_context import (
 
 from core.live_execution import is_live_execution
 
+from core.core_state import wait_for_core
+
 # =========================================================
 # DISPATCHER
 # =========================================================
@@ -65,6 +67,8 @@ def dispatch(
     fast_plan=None,
     conversation_request=None,
 ):
+    
+    wait_for_core()
 
     command = command.strip()
 

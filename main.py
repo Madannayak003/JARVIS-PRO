@@ -34,6 +34,8 @@ from pathlib import Path
 from skills.loader import load_all
 from ai.memory import init_memory
 from core.services import start_all
+from core.core_state import mark_core_ready
+from core.core_state import wait_for_core
 
 from voice.mode import get_mode
 
@@ -42,7 +44,6 @@ from hud.runtime import hud_runtime
 from hud.web_bridge import hud_web
 
 from dashboard.server import DashboardServer
-
 
 # =============================================================
 # GLOBAL STATE
@@ -53,8 +54,6 @@ _web_hud_process = None
 _voice_thread = None
 
 _shutdown_event = threading.Event()
-
-_core_ready = threading.Event()
 
 _shutdown_lock = threading.Lock()
 
@@ -321,7 +320,7 @@ def run_voice_engine():
             "Voice engine waiting for core..."
         )
 
-        _core_ready.wait()
+        wait_for_core()
 
         if _shutdown_event.is_set():
             return
@@ -648,7 +647,7 @@ def initialize_core_background():
             "[CORE] Background initialization complete."
         )
 
-        _core_ready.set()
+        mark_core_ready()
 
     except Exception as error:
 
@@ -659,8 +658,6 @@ def initialize_core_background():
         print(
             f"[CORE] {error}"
         )
-
-        _core_ready.set()
 
         raise
 
