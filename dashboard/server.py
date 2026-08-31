@@ -56,6 +56,14 @@ from tools.windows_integration import (
     set_autostart,
 )
 
+from core.listener import (
+    start_listener,
+    pause_listener,
+    resume_listener,
+    listener_running,
+    listener_paused,
+)
+
 # =============================================================
 # FASTAPI
 # =============================================================
@@ -1566,7 +1574,201 @@ class DashboardServer:
                     status_code=500,
                 )
                 
-                # =====================================================
+        # =====================================================
+        # LOCAL — MICROPHONE STATUS
+        # =====================================================
+
+        @app.get(
+            "/api/local/microphone"
+        )
+        async def local_microphone_status(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                running = listener_running()
+                paused = listener_paused()
+
+                return {
+                    "ok": True,
+                    "enabled": (
+                        running
+                        and not paused
+                    ),
+                    "running": running,
+                    "paused": paused,
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL MICROPHONE STATUS ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+
+        # =====================================================
+        # LOCAL — MICROPHONE SET
+        # =====================================================
+
+        @app.post(
+            "/api/local/microphone"
+        )
+        async def local_microphone(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                body = await request.json()
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            enabled = bool(
+                body.get(
+                    "enabled",
+                    False,
+                )
+            )
+
+            # =========================================================
+            # MICROPHONE ROUTING
+            #
+            # Normal mode:
+            #     HUD microphone controls normal JARVIS listener.
+            #
+            # Live mode:
+            #     HUD microphone controls Live microphone input only.
+            #     The Gemini Live session remains connected.
+            # =========================================================
+
+            try:
+
+                from voice.live_conversation import _live
+
+            except Exception:
+
+                _live = None
+
+            if _live is not None and _live.running:
+
+                # -------------------------------------------------
+                # LIVE CONVERSATION
+                # -------------------------------------------------
+
+                _live.set_microphone_enabled(
+                    enabled
+                )
+
+                actual_enabled = (
+                    _live.microphone_enabled()
+                )
+
+                running = True
+
+                paused = not actual_enabled
+
+            else:
+
+                # -------------------------------------------------
+                # NORMAL JARVIS
+                # -------------------------------------------------
+
+                if enabled:
+
+                    if not listener_running():
+
+                        start_listener()
+
+                    elif listener_paused():
+
+                        resume_listener()
+
+                else:
+
+                    pause_listener()
+
+                running = listener_running()
+
+                paused = listener_paused()
+
+                actual_enabled = (
+                    running
+                    and not paused
+                )
+
+            print(
+                "[LOCAL MICROPHONE]",
+                "ON" if actual_enabled else "OFF",
+            )
+
+            try:
+
+                HUDIntegration.system_activity(
+                    "MICROPHONE "
+                    + (
+                        "ON"
+                        if actual_enabled
+                        else "OFF"
+                    )
+                )
+
+            except Exception as exc:
+
+                print(
+                    "[HUD MICROPHONE LOG ERROR]",
+                    exc,
+                )
+
+            return {
+                "ok": True,
+                "enabled": actual_enabled,
+                "running": running,
+                "paused": paused,
+            }
+                
+        # =====================================================
         # LOCAL — MORNING BRIEF STATUS
         # =====================================================
 
@@ -1681,6 +1883,24 @@ class DashboardServer:
                     False,
                 )
             )
+            
+            try:
+
+                HUDIntegration.system_activity(
+                    "MORNING BRIEF "
+                    + (
+                        "ON"
+                        if enabled
+                        else "OFF"
+                    )
+                )
+
+            except Exception as exc:
+
+                print(
+                    "[HUD MORNING BRIEF LOG ERROR]",
+                    exc,
+                )
 
             settings_file = (
                 Path(__file__).resolve().parent.parent
@@ -1957,6 +2177,119 @@ class DashboardServer:
             return {
                 "ok": True
             }
+            
+        # =====================================================
+        # DIRECT LIVE STATUS
+        # =====================================================
+
+        @app.get(
+            "/api/live/status"
+        )
+        async def live_status(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            try:
+
+                from voice.live_conversation import (
+                    live_conversation_status,
+                )
+
+                running = (
+                    live_conversation_status()
+                    == "Live conversation is running."
+                )
+
+                return {
+                    "ok": True,
+                    "running": running,
+                }
+
+            except Exception as exc:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+        # =====================================================
+        # DIRECT LIVE START
+        # =====================================================
+
+        @app.post(
+            "/api/live/start"
+        )
+        async def live_start(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": (
+                            "Unauthorized."
+                        ),
+                    },
+                    status_code=401,
+                )
+
+            try:
+
+                from voice.live_conversation import (
+                    start_live_conversation,
+                )
+
+                result = (
+                    start_live_conversation()
+                )
+
+                await self.broadcast({
+                    "type": "sys",
+                    "text": (
+                        "Live Conversation "
+                        "start requested."
+                    ),
+                })
+
+                return {
+                    "ok": True,
+                    "result": str(
+                        result
+                    ),
+                }
+
+            except Exception as exc:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(
+                            exc
+                        ),
+                    },
+                    status_code=500,
+                )
 
         # =====================================================
         # DIRECT LIVE STOP
@@ -1969,7 +2302,7 @@ class DashboardServer:
             request: Request,
         ):
 
-            if not self._authorize(
+            if not self._authorize_local(
                 request
             ):
 

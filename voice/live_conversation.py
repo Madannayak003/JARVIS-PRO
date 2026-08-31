@@ -61,6 +61,7 @@ from google.genai import types
 from core.dispatcher import dispatch
 from core.live_execution import live_execution
 
+from hud.integration import HUDIntegration
 
 # =============================================================
 # CONFIGURATION
@@ -311,6 +312,18 @@ class LiveConversation:
         self._state_lock = threading.Lock()
 
         self._running = False
+        
+                # -----------------------------------------------------
+        # Live microphone state.
+        #
+        # This is separate from the normal JARVIS listener.
+        # Turning the HUD microphone OFF while Live is running
+        # must silence Live input without closing the session.
+        # -----------------------------------------------------
+
+        self._microphone_enabled = True
+
+        self._microphone_lock = threading.Lock()
 
         # -----------------------------------------------------
         # Prevent duplicate pause/resume operations.
@@ -343,6 +356,35 @@ class LiveConversation:
         with self._state_lock:
 
             self._running = value
+            
+    
+    # =========================================================
+    # LIVE MICROPHONE STATE
+    # =========================================================
+
+    def set_microphone_enabled(
+        self,
+        enabled: bool,
+    ):
+
+        with self._microphone_lock:
+
+            self._microphone_enabled = bool(
+                enabled
+            )
+
+        print(
+            "[LIVE] Microphone:",
+            "ON" if enabled else "OFF",
+        )
+
+    # ---------------------------------------------------------
+
+    def microphone_enabled(self) -> bool:
+
+        with self._microphone_lock:
+
+            return self._microphone_enabled
 
     # =========================================================
     # START
@@ -365,6 +407,8 @@ class LiveConversation:
             )
 
         self._stop_event.clear()
+        
+        self.set_microphone_enabled(True)
 
         self._thread = threading.Thread(
             target=self._thread_main,
@@ -527,6 +571,17 @@ class LiveConversation:
         ):
 
             if self._stop_event.is_set():
+
+                return
+
+            # -------------------------------------------------
+            # HUD microphone switch.
+            #
+            # Live session remains connected while the
+            # microphone is OFF. Only audio input is muted.
+            # -------------------------------------------------
+
+            if not self.microphone_enabled():
 
                 return
 
@@ -1333,6 +1388,19 @@ def start_live_conversation(
 
     _live.start()
 
+    try:
+
+        HUDIntegration.system_activity(
+            "LIVE CONVERSATION ON"
+        )
+
+    except Exception as exc:
+
+        print(
+            "[HUD LIVE CONVERSATION LOG ERROR]",
+            exc,
+        )
+
     return (
         "Live conversation started."
     )
@@ -1349,6 +1417,19 @@ def stop_live_conversation(
         )
 
     _live.stop()
+
+    try:
+
+        HUDIntegration.system_activity(
+            "LIVE CONVERSATION OFF"
+        )
+
+    except Exception as exc:
+
+        print(
+            "[HUD LIVE CONVERSATION LOG ERROR]",
+            exc,
+        )
 
     return (
         "Stopping live conversation."

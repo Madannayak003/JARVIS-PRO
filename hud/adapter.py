@@ -137,6 +137,17 @@ class HUDAdapter:
         hud.system_update(
             data
         )
+        
+    # =====================================================
+    # System Activity
+    # =====================================================
+
+    @staticmethod
+    def system_activity(message):
+
+        hud.system_activity(
+            message
+        )
 
     # =====================================================
     # Notifications

@@ -136,6 +136,13 @@ class HUDEmitter:
                 data
             )
             return
+        
+        if event == HUDEvent.SYSTEM_ACTIVITY:
+
+            HUDAdapter.system_activity(
+                data.get("message", "")
+            )
+            return
 
         # =========================================
         # Notifications

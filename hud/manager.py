@@ -20,6 +20,7 @@ from .events import (
     HUD_VOICE_MODE_CHANGED,
     HUD_AI_MODEL_CHANGED,
     HUD_SYSTEM_UPDATE,
+    HUD_SYSTEM_ACTIVITY,
     HUD_NOTIFICATION,
     HUD_ERROR,
     HUD_COMMAND,
@@ -257,6 +258,30 @@ class HUDManager:
         self._publish(
             HUD_SYSTEM_UPDATE,
             data,
+        )
+        
+    # =====================================================
+    # System Activity
+    # =====================================================
+
+    def system_activity(
+        self,
+        message,
+    ):
+
+        message = str(
+            message
+        ).strip()
+
+        if not message:
+
+            return
+
+        self._publish(
+            HUD_SYSTEM_ACTIVITY,
+            {
+                "message": message
+            }
         )
 
     # =====================================================

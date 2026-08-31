@@ -146,6 +146,16 @@ export default function Home() {
     setMorningBrief,
   ] = useState(true);
 
+  const [
+  microphoneEnabled,
+    setMicrophoneEnabled,
+  ] = useState(true);
+
+  const [
+    liveConversationEnabled,
+    setLiveConversationEnabled,
+  ] = useState(false);
+
 
   const [
     assistantName,
@@ -156,7 +166,7 @@ export default function Home() {
   const [
     userName,
     setUserName,
-  ] = useState("");
+  ] = useState("MADAN.R");
 
 
   const [
@@ -254,42 +264,87 @@ export default function Home() {
 
   useEffect(() => {
 
-  const loadMorningBrief = async () => {
+    const loadMorningBrief = async () => {
 
-    try {
+      try {
 
-      const response = await fetch(
-        "http://127.0.0.1:8765/api/local/morning-brief"
-      );
+        const response = await fetch(
+          "http://127.0.0.1:8765/api/local/morning-brief"
+        );
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (
-        response.ok &&
-        result.ok &&
-        typeof result.enabled === "boolean"
-      ) {
+        if (
+          response.ok &&
+          result.ok &&
+          typeof result.enabled === "boolean"
+        ) {
 
-        setMorningBrief(
-          result.enabled
+          setMorningBrief(
+            result.enabled
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Could not load Morning Brief setting:",
+          error
         );
 
       }
 
-    } catch (error) {
+    };
 
-      console.error(
-        "[HUD] Could not load Morning Brief setting:",
-        error
-      );
+    loadMorningBrief();
 
-    }
+  }, []);
 
-  };
+  
 
-  loadMorningBrief();
+  useEffect(() => {
 
-}, []);
+    const loadLiveConversation = async () => {
+
+      try {
+
+        const response = await fetch(
+          "http://127.0.0.1:8765/api/live/status",
+          {
+            cache: "no-store",
+          }
+        );
+
+        const result =
+          await response.json();
+
+        if (
+          response.ok &&
+          result.ok &&
+          typeof result.running === "boolean"
+        ) {
+
+          setLiveConversationEnabled(
+            result.running
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Could not load Live Conversation status:",
+          error
+        );
+
+      }
+
+    };
+
+    loadLiveConversation();
+
+  }, []);
 
 
   /* =========================================================
@@ -587,23 +642,26 @@ export default function Home() {
 
           if (
             event.name !== "command" &&
-            event.name !== "response"
+            event.name !== "response" &&
+            event.name !== "system_activity"
           ) {
-
             return;
-
           }
 
 
           const speaker =
             event.name === "command"
               ? "user"
-              : "jarvis";
+              : event.name === "response"
+                ? "jarvis"
+                : "system";
 
 
           const text =
             String(
-              event.data?.text ?? ""
+              event.name === "system_activity"
+                ? event.data?.message ?? ""
+                : event.data?.text ?? ""
             ).trim();
 
 
@@ -972,6 +1030,193 @@ export default function Home() {
 
           </button>
 
+          {/* -------------------------------------------------
+              MICROPHONE
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className={
+              `settings-control ${
+                microphoneEnabled
+                  ? "settings-control-toggle-on"
+                  : ""
+              }`
+            }
+            onClick={async () => {
+
+              const next =
+                !microphoneEnabled;
+
+              setMicrophoneEnabled(next);
+
+              try {
+
+                const response =
+                  await fetch(
+                    "http://127.0.0.1:8765/api/local/microphone",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type":
+                          "application/json",
+                      },
+                      body: JSON.stringify({
+                        enabled: next,
+                      }),
+                    }
+                  );
+
+                const result =
+                  await response.json();
+
+                if (
+                  !response.ok ||
+                  !result.ok
+                ) {
+
+                  throw new Error(
+                    result.error ||
+                    "Failed to update microphone."
+                  );
+
+                }
+
+                setMicrophoneEnabled(
+                  Boolean(result.enabled)
+                );
+
+                console.log(
+                  "[HUD] Microphone:",
+                  result.enabled
+                    ? "ON"
+                    : "OFF"
+                );
+
+              } catch (error) {
+
+                console.error(
+                  "[HUD] Microphone update failed:",
+                  error
+                );
+
+                setMicrophoneEnabled(
+                  !next
+                );
+
+              }
+
+            }}
+          >
+
+            <span className="settings-control-icon">
+              ●
+            </span>
+
+            <span>
+              MICROPHONE:
+            </span>
+
+            <strong>
+              {microphoneEnabled
+                ? "ON"
+                : "OFF"}
+            </strong>
+
+          </button>
+
+          {/* -------------------------------------------------
+              LIVE CONVERSATION
+              ------------------------------------------------- */}
+
+          <button
+            type="button"
+            className={
+              `settings-control ${
+                liveConversationEnabled
+                  ? "settings-control-toggle-on"
+                  : ""
+              }`
+            }
+            onClick={async () => {
+
+              const next =
+                !liveConversationEnabled;
+
+              setLiveConversationEnabled(next);
+
+              try {
+
+                const response =
+                  await fetch(
+                    `http://127.0.0.1:8765/api/live/${
+                      next
+                        ? "start"
+                        : "stop"
+                    }`,
+                    {
+                      method: "POST",
+                      cache: "no-store",
+                    }
+                  );
+
+                const result =
+                  await response.json();
+
+                if (
+                  !response.ok ||
+                  !result.ok
+                ) {
+
+                  throw new Error(
+                    result.error ||
+                    "Failed to update Live Conversation."
+                  );
+
+                }
+
+                setLiveConversationEnabled(
+                  next
+                );
+
+                console.log(
+                  "[HUD] Live Conversation:",
+                  next
+                    ? "ON"
+                    : "OFF"
+                );
+
+              } catch (error) {
+
+                console.error(
+                  "[HUD] Live Conversation update failed:",
+                  error
+                );
+
+                setLiveConversationEnabled(
+                  !next
+                );
+
+              }
+
+            }}
+          >
+
+            <span className="settings-control-icon">
+              ●
+            </span>
+
+            <span>
+              LIVE CONVERSATION:
+            </span>
+
+            <strong>
+              {liveConversationEnabled
+                ? "ON"
+                : "OFF"}
+            </strong>
+
+          </button>
 
           {/* -------------------------------------------------
               MORNING BRIEF

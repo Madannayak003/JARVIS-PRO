@@ -62,6 +62,8 @@ HUD_RESPONSE = "response"
 
 HUD_SYSTEM_UPDATE = "system_update"
 
+HUD_SYSTEM_ACTIVITY = "system_activity"
+
 HUD_NOTIFICATION = "notification"
 
 HUD_ERROR = "error"

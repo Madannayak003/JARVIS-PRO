@@ -202,6 +202,23 @@ class HUDIntegration:
             HUDEvent.SYSTEM_UPDATE,
             data
         )
+        
+    # ========================================================
+    # System Activity
+    # ========================================================
+
+    @classmethod
+    def system_activity(
+        cls,
+        message,
+    ):
+
+        cls._emit(
+            HUDEvent.SYSTEM_ACTIVITY,
+            {
+                "message": str(message)
+            }
+        )
 
     # ========================================================
     # Conversation Activity Log
