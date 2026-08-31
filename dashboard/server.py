@@ -44,6 +44,8 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
+import json
+
 from core.runtime import handle_priority
 
 from hud.integration import HUDIntegration
@@ -1553,6 +1555,193 @@ class DashboardServer:
 
                 print(
                     "[LOCAL AUTOSTART ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+                
+                # =====================================================
+        # LOCAL — MORNING BRIEF STATUS
+        # =====================================================
+
+        @app.get(
+            "/api/local/morning-brief"
+        )
+        async def local_morning_brief_status(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            settings_file = (
+                Path(__file__).resolve().parent.parent
+                / "data"
+                / "settings"
+                / "jarvis_settings.json"
+            )
+
+            try:
+
+                if not settings_file.exists():
+
+                    return {
+                        "ok": True,
+                        "enabled": True,
+                    }
+
+                with settings_file.open(
+                    "r",
+                    encoding="utf-8",
+                ) as file:
+
+                    settings = json.load(file)
+
+                return {
+                    "ok": True,
+                    "enabled": bool(
+                        settings.get(
+                            "morningBrief",
+                            True,
+                        )
+                    ),
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL MORNING BRIEF STATUS ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+
+        # =====================================================
+        # LOCAL — MORNING BRIEF SET
+        # =====================================================
+
+        @app.post(
+            "/api/local/morning-brief"
+        )
+        async def local_morning_brief(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+
+                body = await request.json()
+
+            except Exception:
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            enabled = bool(
+                body.get(
+                    "enabled",
+                    False,
+                )
+            )
+
+            settings_file = (
+                Path(__file__).resolve().parent.parent
+                / "data"
+                / "settings"
+                / "jarvis_settings.json"
+            )
+
+            try:
+
+                settings_file.parent.mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
+
+                settings = {}
+
+                if settings_file.exists():
+
+                    try:
+
+                        with settings_file.open(
+                            "r",
+                            encoding="utf-8",
+                        ) as file:
+
+                            settings = json.load(file)
+
+                    except Exception:
+
+                        settings = {}
+
+                settings["morningBrief"] = enabled
+
+                with settings_file.open(
+                    "w",
+                    encoding="utf-8",
+                ) as file:
+
+                    json.dump(
+                        settings,
+                        file,
+                        indent=2,
+                    )
+
+                    file.write("\n")
+
+                print(
+                    "[LOCAL MORNING BRIEF] "
+                    f"Set to {'ON' if enabled else 'OFF'}"
+                )
+
+                return {
+                    "ok": True,
+                    "enabled": enabled,
+                }
+
+            except Exception as exc:
+
+                print(
+                    "[LOCAL MORNING BRIEF ERROR]",
                     exc,
                 )
 

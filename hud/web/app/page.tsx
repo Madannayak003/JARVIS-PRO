@@ -252,6 +252,45 @@ export default function Home() {
 
   }, []);
 
+  useEffect(() => {
+
+  const loadMorningBrief = async () => {
+
+    try {
+
+      const response = await fetch(
+        "http://127.0.0.1:8765/api/local/morning-brief"
+      );
+
+      const result = await response.json();
+
+      if (
+        response.ok &&
+        result.ok &&
+        typeof result.enabled === "boolean"
+      ) {
+
+        setMorningBrief(
+          result.enabled
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "[HUD] Could not load Morning Brief setting:",
+        error
+      );
+
+    }
+
+  };
+
+  loadMorningBrief();
+
+}, []);
+
 
   /* =========================================================
      SAVE SETTINGS
@@ -947,27 +986,55 @@ export default function Home() {
                   : ""
               }`
             }
-            onClick={() => {
+            onClick={async () => {
 
-              const next =
-                !morningBrief;
+              const next = !morningBrief;
 
               setMorningBrief(next);
 
               try {
 
-                window.localStorage.setItem(
-                  "jarvis-pro-settings",
-                  JSON.stringify({
-                    autoStart,
-                    morningBrief: next,
-                    assistantName,
-                    userName,
-                    assistantColour,
-                  })
+                const response = await fetch(
+                  "http://127.0.0.1:8765/api/local/morning-brief",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      enabled: next,
+                    }),
+                  }
                 );
 
-              } catch {}
+                const result = await response.json();
+
+                if (!response.ok || !result.ok) {
+
+                  throw new Error(
+                    result.error ||
+                    "Failed to update Morning Brief."
+                  );
+
+                }
+
+                console.log(
+                  "[HUD] Morning Brief:",
+                  result.enabled
+                    ? "ON"
+                    : "OFF"
+                );
+
+              } catch (error) {
+
+                console.error(
+                  "[HUD] Morning Brief update failed:",
+                  error
+                );
+
+                setMorningBrief(!next);
+
+              }
 
             }}
           >

@@ -1,4 +1,6 @@
 import time
+from pathlib import Path
+import json
 
 from voice.manager import speak, stop_speaking
 from config.settings import WAKE_WORDS
@@ -79,6 +81,53 @@ from brain import (
 
 from hud.integration import HUDIntegration
 
+# ============================================================
+# MORNING BRIEF SETTINGS
+# ============================================================
+
+MORNING_BRIEF_SETTINGS_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "data"
+    / "settings"
+    / "jarvis_settings.json"
+)
+
+
+def is_morning_brief_enabled() -> bool:
+    """
+    Return whether startup Morning Brief speech is enabled.
+
+    Missing or invalid settings default to ON so existing
+    JARVIS behaviour is preserved.
+    """
+
+    try:
+
+        if not MORNING_BRIEF_SETTINGS_FILE.exists():
+            return True
+
+        with MORNING_BRIEF_SETTINGS_FILE.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+
+            settings = json.load(file)
+
+        value = settings.get(
+            "morningBrief",
+            True,
+        )
+
+        return bool(value)
+
+    except Exception as error:
+
+        print(
+            "[MORNING BRIEF] "
+            f"Settings read failed safely: {error}"
+        )
+
+        return True
 
 # ============================================================
 # RUN
@@ -87,24 +136,18 @@ from hud.integration import HUDIntegration
 def run():
 
     # ========================================================
-    # MORNING BRIEF — START NEWS FETCH FIRST
-    #
-    # News begins loading in the background while the normal
-    # startup greeting is being prepared/spoken.
+    # MORNING BRIEF SETTING
     # ========================================================
 
-    news_future = None
+    morning_brief_enabled = (
+        is_morning_brief_enabled()
+    )
 
-    try:
-
-        news_future = start_news_fetch()
-
-    except Exception as e:
-
-        print(
-            "[MORNING BRIEF] "
-            f"Could not start news fetch: {e}"
-        )
+    print(
+        "[MORNING BRIEF] "
+        f"Startup speech: "
+        f"{'ON' if morning_brief_enabled else 'OFF'}"
+    )
 
     # ========================================================
     # EXISTING STARTUP GREETING
@@ -115,47 +158,71 @@ def run():
     )
 
     # ========================================================
-    # MORNING BRIEF — WAIT FOR BACKGROUND RESULT
-    #
-    # The existing speak() path is reused.
-    # No second TTS engine is created.
+    # MORNING BRIEF
     # ========================================================
 
-    if news_future is not None:
+    if morning_brief_enabled:
+
+        news_future = None
 
         try:
 
-            headlines = news_future.result(
-                timeout=15
+            print(
+                "[MORNING BRIEF] "
+                "Starting background news fetch..."
             )
 
-            if headlines:
-
-                spoken_brief = (
-                    build_spoken_brief(
-                        headlines
-                    )
-                )
-
-                if spoken_brief:
-
-                    speak(
-                        spoken_brief
-                    )
-
-            else:
-
-                print(
-                    "[MORNING BRIEF] "
-                    "No headlines available."
-                )
+            news_future = start_news_fetch()
 
         except Exception as e:
 
             print(
                 "[MORNING BRIEF] "
-                f"Brief failed safely: {e}"
+                f"Could not start news fetch: {e}"
             )
+
+        if news_future is not None:
+
+            try:
+
+                headlines = news_future.result(
+                    timeout=15
+                )
+
+                if not headlines:
+
+                    print(
+                        "[MORNING BRIEF] "
+                        "No headlines available."
+                    )
+
+                else:
+
+                    spoken_brief = (
+                        build_spoken_brief(
+                            headlines
+                        )
+                    )
+
+                    if spoken_brief:
+
+                        speak(
+                            spoken_brief
+                        )
+
+            except Exception as e:
+
+                print(
+                    "[MORNING BRIEF] "
+                    f"Brief failed safely: {e}"
+                )
+
+    else:
+
+        print(
+            "[MORNING BRIEF] "
+            "Startup news disabled."
+        )
 
     # ========================================================
     # START EXISTING MICROPHONE
