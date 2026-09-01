@@ -59,7 +59,11 @@ from google import genai
 from google.genai import types
 
 from core.dispatcher import dispatch
-from core.live_execution import live_execution
+
+from core.live_execution import (
+    live_execution,
+    get_live_responses,
+)
 
 from hud.integration import HUDIntegration
 
@@ -1207,14 +1211,49 @@ class LiveConversation:
                                             command
                                         )
 
+                                        live_responses = get_live_responses()
+
+
                                     # -------------------------------------------------
-                                    # Return the ACTUAL dispatcher result to Gemini.
+                                    # Prefer the actual response produced by the
+                                    # existing JARVIS skill.
                                     #
-                                    # Do not claim success when the existing JARVIS
-                                    # dispatcher/skill reported failure.
+                                    # Example:
+                                    #
+                                    #     time_skill
+                                    #         ↓
+                                    #     speak("The time is 01:49 AM")
+                                    #         ↓
+                                    #     captured here
+                                    #
+                                    # Gemini must receive that authoritative result
+                                    # instead of generating its own answer.
                                     # -------------------------------------------------
 
-                                    if isinstance(
+                                    authoritative_response = " ".join(
+                                        response.strip()
+                                        for response in live_responses
+                                        if response and response.strip()
+                                    )
+
+                                    if authoritative_response:
+
+                                        print(
+                                            "[LIVE] JARVIS skill response:",
+                                            authoritative_response,
+                                        )
+
+                                        result = {
+                                            "success": True,
+                                            "message": (
+                                                f"JARVIS result: {authoritative_response}. "
+                                                "Use this result as the authoritative answer to the user's request. "
+                                                "Do not generate a different value."
+                                            ),
+                                            "authoritative": True,
+                                        }
+
+                                    elif isinstance(
                                         dispatch_result,
                                         bool,
                                     ):

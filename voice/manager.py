@@ -1,7 +1,10 @@
 import threading
 import requests
 
-from core.live_execution import is_live_execution
+from core.live_execution import (
+    is_live_execution,
+    capture_live_response,
+)
 
 from voice.online_edge import (
     speak_online,
@@ -376,8 +379,13 @@ def speak(
 
     if is_live_execution():
 
+        capture_live_response(
+            str(text)
+        )
+
         print(
             "[VOICE] Live execution active - "
+            "captured response and "
             "suppressing normal TTS."
         )
 

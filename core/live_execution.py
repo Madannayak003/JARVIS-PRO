@@ -20,6 +20,8 @@ _lock = threading.RLock()
 
 _live_execution_count = 0
 
+_live_responses = []
+
 
 def is_live_execution() -> bool:
     """
@@ -31,10 +33,51 @@ def is_live_execution() -> bool:
         return _live_execution_count > 0
 
 
+def capture_live_response(text: str) -> None:
+    """
+    Capture authoritative JARVIS speech generated while a
+    Live command is executing.
+
+    This does NOT speak anything. It only stores the text so
+    Gemini Live can receive the real JARVIS skill result.
+    """
+
+    if not text:
+        return
+
+    with _lock:
+
+        if _live_execution_count <= 0:
+            return
+
+        _live_responses.append(str(text))
+
+
+def get_live_responses() -> list[str]:
+    """
+    Return all authoritative responses captured during the
+    current Live execution context.
+    """
+
+    with _lock:
+        return list(_live_responses)
+
+
+def clear_live_responses() -> None:
+    """
+    Clear previously captured Live responses.
+    """
+
+    with _lock:
+        _live_responses.clear()
+
+
 @contextmanager
 def live_execution():
 
     global _live_execution_count
+
+    clear_live_responses()
 
     with _lock:
         _live_execution_count += 1
