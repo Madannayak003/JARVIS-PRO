@@ -38,6 +38,61 @@ class ModelManager:
         )
 
         self.policy = policy
+        
+    # ======================================================
+    # Capability Model Preferences
+    # ======================================================
+
+    CAPABILITY_MODEL_PREFERENCES = {
+
+        # Fast conversational responses.
+        "conversation": [
+            "gemini-3.5-flash-lite",
+            "gemini-3.6-flash",
+        ],
+
+        # Explicit fast capability.
+        "fast": [
+            "gemini-3.5-flash-lite",
+            "gemini-3.6-flash",
+        ],
+
+        # Heavy/general AI work.
+        "coding": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "developer": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "editing": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "repair": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "reasoning": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "planning": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+
+        "screen_vision": [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+        ],
+    }
 
     # ======================================================
     # Get Explicit Model
@@ -180,11 +235,21 @@ class ModelManager:
     # Get All Policy Candidates
     # ======================================================
 
+        # ======================================================
+    # Get All Policy Candidates
+    # ======================================================
+
     def candidates(
         self,
         capability: str,
         provider: Optional[str] = None,
     ) -> List[ModelDefinition]:
+
+        capability = (
+            capability
+            .strip()
+            .lower()
+        )
 
         models = self.find_models(
             capability
@@ -208,17 +273,28 @@ class ModelManager:
             return models
 
         # --------------------------------------------------
-        # Policy ordering
+        # Provider policy
         # --------------------------------------------------
 
         provider_order = self._policy_order(
             capability
         )
 
+        # --------------------------------------------------
+        # Model preference for this capability
+        # --------------------------------------------------
+
+        preferred_models = (
+            self.CAPABILITY_MODEL_PREFERENCES.get(
+                capability,
+                []
+            )
+        )
+
         ordered = []
 
         # --------------------------------------------------
-        # Add providers in policy order
+        # Follow provider policy first
         # --------------------------------------------------
 
         for preferred_provider in provider_order:
@@ -227,17 +303,47 @@ class ModelManager:
                 preferred_provider.lower()
             )
 
-            for model in models:
+            provider_models = [
 
-                if (
-                    model.provider.lower()
-                    == preferred_provider
-                ):
+                model
+
+                for model in models
+
+                if model.provider.lower()
+                == preferred_provider
+            ]
+
+            # ----------------------------------------------
+            # Apply capability-specific model preference
+            # ----------------------------------------------
+
+            if preferred_models:
+
+                for preferred_model in preferred_models:
+
+                    for model in provider_models:
+
+                        if (
+                            model.name.lower()
+                            == preferred_model.lower()
+                        ):
+
+                            if model not in ordered:
+                                ordered.append(model)
+
+            # ----------------------------------------------
+            # Add remaining models for this provider
+            # in their normal priority order.
+            # ----------------------------------------------
+
+            for model in provider_models:
+
+                if model not in ordered:
 
                     ordered.append(model)
 
         # --------------------------------------------------
-        # Add any unlisted providers
+        # Add unlisted providers
         # --------------------------------------------------
 
         for model in models:
