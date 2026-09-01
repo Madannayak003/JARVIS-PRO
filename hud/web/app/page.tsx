@@ -1257,9 +1257,9 @@ function AssistantColourPicker({
         <button
           type="button"
           className="assistant-colour-default"
-          onClick={() =>
-            onChange("#ffaa30")
-          }
+          onClick={() => {
+            onChange("#ffaa30");
+          }}
         >
           DEFAULT
         </button>
