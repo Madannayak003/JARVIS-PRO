@@ -51,7 +51,7 @@ ROUTERS = [
 
 def fast_route(command):
 
-    command = command.lower().strip()
+    command = command.lower().strip().rstrip("?!.,")
 
     print("[FAST ROUTER]", command)
 
