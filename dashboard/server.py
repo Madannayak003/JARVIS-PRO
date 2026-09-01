@@ -2095,10 +2095,10 @@ class DashboardServer:
                 asyncio.get_running_loop()
             )
 
-            if not self._authorize(
-                request
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
             ):
-
                 return JSONResponse(
                     {
                         "ok": False,

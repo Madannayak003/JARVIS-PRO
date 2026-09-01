@@ -193,6 +193,16 @@ export default function Home() {
     setShortcutLoading,
   ] = useState(false);
 
+  const [
+    commandInput,
+    setCommandInput,
+  ] = useState("");
+
+  const [
+    commandSending,
+    setCommandSending,
+  ] = useState(false);
+
   /* =========================================================
    LOAD SETTINGS
    ========================================================= */
@@ -762,6 +772,82 @@ export default function Home() {
 
   };
 
+  /* =========================================================
+    HUD COMMAND INPUT
+  ========================================================= */
+
+  const sendHudCommand = async () => {
+
+    const text =
+      commandInput.trim();
+
+    if (
+      !text ||
+      commandSending
+    ) {
+      return;
+    }
+
+
+    setCommandSending(true);
+
+
+    try {
+
+      const response =
+        await fetch(
+          `${JARVIS_DASHBOARD_URL}/api/command`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            cache: "no-store",
+            body: JSON.stringify({
+              text,
+            }),
+          }
+        );
+
+
+      const result =
+        await response.json();
+
+
+      if (
+        !response.ok ||
+        !result.ok
+      ) {
+
+        throw new Error(
+          result?.error ||
+          "Command could not be sent."
+        );
+
+      }
+
+
+      /*
+       * Clear only after the backend accepts
+       * the command.
+       */
+      setCommandInput("");
+
+    } catch (error) {
+
+      console.error(
+        "[HUD COMMAND]",
+        error
+      );
+
+    } finally {
+
+      setCommandSending(false);
+
+    }
+
+  };
 
   /* =========================================================
      REMOTE CONTROL
@@ -1510,6 +1596,62 @@ function AssistantColourPicker({
           setMorningBriefHeadlines([]);
         }}
       />
+
+      {/* =====================================================
+          COMMAND INPUT
+          ===================================================== */}
+
+      <div className="hud-command-input">
+
+        <div className="hud-command-label">
+          ◆ COMMAND INPUT
+        </div>
+
+        <div className="hud-command-row">
+
+          <input
+            type="text"
+            value={commandInput}
+            onChange={(event) =>
+              setCommandInput(
+                event.target.value
+              )
+            }
+            onKeyDown={(event) => {
+
+              if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                void sendHudCommand();
+
+              }
+
+            }}
+            placeholder="Type a command or question..."
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            disabled={commandSending}
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              void sendHudCommand()
+            }
+            disabled={
+              commandSending ||
+              !commandInput.trim()
+            }
+            aria-label="Send command"
+          >
+            ▶
+          </button>
+
+        </div>
+
+      </div>
 
       {morningBriefActive &&
         morningBriefHeadlines.length > 0 && (
