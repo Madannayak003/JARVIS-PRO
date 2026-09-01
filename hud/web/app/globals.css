@@ -1,4 +1,26 @@
-* {
+:root {
+  --assistant-colour: #ffaa30;
+
+  --assistant-colour-45: color-mix(
+    in srgb,
+    var(--assistant-colour) 45%,
+    transparent
+  );
+
+  --assistant-colour-65: color-mix(
+    in srgb,
+    var(--assistant-colour) 65%,
+    transparent
+  );
+
+  --assistant-colour-80: color-mix(
+    in srgb,
+    var(--assistant-colour) 80%,
+    transparent
+  );
+}
+
+*{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -74,7 +96,7 @@ body {
 .hud {
   position: fixed;
   z-index: 20;
-  color: #ffaa30;
+  color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   user-select: none;
 }
@@ -95,7 +117,7 @@ body {
   background: rgba(20, 10, 0, 0.55);
   border: 1px solid rgba(255, 170, 48, 0.45);
   border-radius: 4px;
-  color: #ffaa30;
+  color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 15px;
   font-weight: bold;
@@ -245,7 +267,7 @@ body {
   height: 100vh;
   overflow: hidden;
   background: #020303;
-  color: #ffb000;
+  color: var(--assistant-colour);
   font-family: "Courier New", monospace;
 }
 
@@ -276,7 +298,6 @@ body {
 
 .cockpit-header {
   position: absolute;
-
   top: 0;
   left: 0;
   right: 0;
@@ -290,11 +311,14 @@ body {
   padding: 0 24px;
 
   border-bottom: 1px solid
-    rgba(255, 140, 0, 0.28);
+    color-mix(
+      in srgb,
+      var(--assistant-colour) 28%,
+      transparent
+    );
 
   background: rgba(0, 0, 0, 0.28);
 
-  /* Keep the header crisp */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 
@@ -329,7 +353,7 @@ body {
 
   letter-spacing: 2px;
 
-  color: #ffcc66;
+  color: var(--assistant-colour);
 
   text-shadow:
     0 0 4px rgba(255, 170, 48, 0.45);
@@ -340,7 +364,7 @@ body {
 
   letter-spacing: 1px;
 
-  color: #ffcc66;
+  color: var(--assistant-colour);
 
   opacity: 0.55;
 
@@ -365,7 +389,7 @@ body {
 
   letter-spacing: 4px;
 
-  color: #ffcc66;
+  color: var(--assistant-colour);
 
   opacity: 1;
 
@@ -399,7 +423,7 @@ body {
 }
 
 .status-label {
-  color: #ffcc66;
+  color: var(--assistant-colour);
 
   opacity: 0.5;
 
@@ -407,12 +431,16 @@ body {
 }
 
 .status-value {
-  color: #ffcc66;
+  color: var(--assistant-colour);
 
   opacity: 1;
 
   text-shadow:
-    0 0 4px rgba(255, 170, 0, 0.4);
+    0 0 4px color-mix(
+      in srgb,
+      var(--assistant-colour) 40%,
+      transparent
+    );
 }
 
 /* =========================================================
@@ -428,7 +456,11 @@ body {
   min-height: 245px;
 
   border: 1px solid
-    rgba(255, 140, 0, 0.38);
+    color-mix(
+      in srgb,
+      var(--assistant-colour) 38%,
+      transparent
+    );
 
   background:
     linear-gradient(
@@ -460,7 +492,11 @@ body {
   padding: 0 14px;
 
   border-bottom: 1px solid
-    rgba(255, 140, 0, 0.25);
+  color-mix(
+    in srgb,
+    var(--assistant-colour) 25%,
+    transparent
+  );
 
   font-size: 11px;
   letter-spacing: 1px;
@@ -501,19 +537,31 @@ body {
   width: 100%;
   height: 5px;
 
-  background: rgba(255, 140, 0, 0.08);
+ background: color-mix(
+    in srgb,
+    var(--assistant-colour) 8%,
+    transparent
+  );
 
   border: 1px solid
-    rgba(255, 140, 0, 0.16);
+    color-mix(
+      in srgb,
+      var(--assistant-colour) 16%,
+      transparent
+    );
 }
 
 .cockpit-bar-fill {
   height: 100%;
 
-  background: #ff9d00;
+  background: var(--assistant-colour);
 
   box-shadow:
-    0 0 8px rgba(255, 150, 0, 0.7);
+    0 0 8px color-mix(
+      in srgb,
+      var(--assistant-colour) 70%,
+      transparent
+    );
 
   transition:
     width 300ms ease;
@@ -569,7 +617,13 @@ body {
 
 .activity-message {
   padding: 9px 4px;
-  border-bottom: 1px solid rgba(255, 165, 0, 0.12);
+
+  border-bottom: 1px solid
+    color-mix(
+      in srgb,
+      var(--assistant-colour) 12%,
+      transparent
+    );
 }
 
 .activity-message-meta {
@@ -673,8 +727,14 @@ body {
 .voice-indicator.active {
   opacity: 1;
 
+  color: var(--assistant-colour);
+
   text-shadow:
-    0 0 10px rgba(255, 170, 0, 0.8);
+    0 0 10px color-mix(
+      in srgb,
+      var(--assistant-colour) 80%,
+      transparent
+    );
 }
 
 /* =========================================================
@@ -2222,4 +2282,282 @@ body {
 
   text-shadow:
     0 0 8px rgba(240, 185, 75, 0.9);
+}
+
+/* =========================================================
+   ASSISTANT COLOUR PICKER
+   ========================================================= */
+
+.assistant-colour-picker {
+  width: 100%;
+  margin-top: 2px;
+}
+
+
+/* ---------------------------------------------------------
+   HEADING
+   --------------------------------------------------------- */
+
+.assistant-colour-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+}
+
+.assistant-colour-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.assistant-colour-heading span {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.assistant-colour-heading small {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+
+/* ---------------------------------------------------------
+   DEFAULT
+   --------------------------------------------------------- */
+
+.assistant-colour-default {
+  border: 1px solid rgba(255, 170, 48, 0.45);
+
+  background: transparent;
+
+  color: var(--assistant-colour);
+
+  padding: 5px 10px;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 8px;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.assistant-colour-default:hover {
+  border-color: var(--assistant-colour);
+
+  box-shadow:
+    0 0 8px rgba(255, 170, 48, 0.35);
+
+  color: #ffd27a;
+}
+
+
+/* ---------------------------------------------------------
+   WHEEL AREA
+   --------------------------------------------------------- */
+
+.assistant-colour-wheel-area {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  padding: 4px 0 10px;
+}
+
+
+/* ---------------------------------------------------------
+   COLOUR WHEEL
+   --------------------------------------------------------- */
+
+.assistant-colour-wheel {
+  position: relative;
+
+  width: 150px;
+  height: 150px;
+
+  border-radius: 50%;
+
+  cursor: crosshair;
+
+  background:
+    radial-gradient(
+      circle,
+      transparent 0%,
+      transparent 1%,
+      rgba(255, 255, 255, 0.02) 1.5%,
+      transparent 2%
+    ),
+    conic-gradient(
+      from 0deg,
+      #ff0000,
+      #ffff00,
+      #00ff00,
+      #00ffff,
+      #0000ff,
+      #ff00ff,
+      #ff0000
+    );
+
+  box-shadow:
+    0 0 10px rgba(255, 170, 48, 0.18);
+
+  touch-action: none;
+}
+
+
+/* ---------------------------------------------------------
+   WHITE → TRANSPARENT SATURATION MASK
+   --------------------------------------------------------- */
+
+.assistant-colour-wheel::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #fff 0%,
+      rgba(255, 255, 255, 0.7) 20%,
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   BLACK VALUE MASK
+   --------------------------------------------------------- */
+
+.assistant-colour-wheel::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      transparent 55%,
+      rgba(0, 0, 0, 0.02) 70%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+
+  pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   HANDLE
+   --------------------------------------------------------- */
+
+.assistant-colour-wheel-handle {
+  position: absolute;
+
+  z-index: 5;
+
+  width: 15px;
+  height: 15px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background: #fff;
+
+  border: 2px solid #111;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 7px rgba(255, 255, 255, 0.8);
+
+  pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   CENTER PREVIEW
+   --------------------------------------------------------- */
+
+.assistant-colour-preview {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 50%;
+  top: 50%;
+
+  width: 62px;
+  height: 62px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  border: 2px solid rgba(0, 0, 0, 0.9);
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 15px rgba(0, 0, 0, 0.45);
+
+  pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   HEX FIELD
+   --------------------------------------------------------- */
+
+.assistant-colour-hex {
+  width: 100%;
+
+  height: 32px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid rgba(255, 170, 48, 0.45);
+
+  background:
+    rgba(0, 10, 12, 0.8);
+
+  color: var(--assistant-colour);
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 11px;
+
+  letter-spacing: 0.05em;
+
+  outline: none;
+}
+
+.assistant-colour-hex:focus {
+  border-color: var(--assistant-colour);
+
+  box-shadow:
+    0 0 8px rgba(255, 170, 48, 0.18);
 }

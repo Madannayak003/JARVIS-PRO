@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-} from "react";
+import type { CSSProperties } from "react";
 
 import type {
   HUDState,
@@ -19,6 +16,10 @@ type Props = {
   state: HUDState;
 
   activities: HUDActivity[];
+
+  assistantName: string;
+
+  userName: string;
 
   morningBriefHeadlines: Array<{
     category: string;
@@ -158,6 +159,8 @@ function formatTime(
 export default function HudCockpit({
   state,
   activities,
+  assistantName,
+  userName,
   morningBriefHeadlines,
   onMorningBriefClose,
 }: Props) {
@@ -169,78 +172,6 @@ export default function HudCockpit({
   const activeStatus =
     state.status?.toUpperCase()
     || "IDLE";
-
-
-  // =====================================================
-  // ACTIVITY LOG AUTO-SCROLL
-  // =====================================================
-
-  // const activityLogRef =
-  //   useRef<HTMLDivElement>(null);
-
-
-  // useEffect(() => {
-
-  //   const log =
-  //     activityLogRef.current;
-
-  //   if (!log) {
-  //     return;
-  //   }
-
-  //   /*
-  //    * Wait until React has finished rendering
-  //    * the new activity entry.
-  //    */
-  //   requestAnimationFrame(() => {
-
-  //     log.scrollTop =
-  //       log.scrollHeight;
-
-  //   });
-
-  // }, [activities]);
-
-  // =====================================================
-  // MORNING BRIEF AUTO-DISMISS
-  // =====================================================
-
-  useEffect(() => {
-
-    if (
-      morningBriefHeadlines.length === 0
-    ) {
-
-      return;
-
-    }
-
-    /*
-     * Keep the news visible long enough
-     * for the startup briefing to be seen.
-     *
-     * The backend already limits the spoken
-     * briefing to 3 headlines.
-     */
-
-    const timer =
-      window.setTimeout(() => {
-
-        /*
-         * The parent owns the actual state,
-         * so this component intentionally does
-         * not mutate it here.
-         *
-         * The display will therefore remain until
-         * the parent clears it.
-         */
-
-      }, 1);
-
-    return () =>
-      window.clearTimeout(timer);
-
-  }, [morningBriefHeadlines]);
 
 
   return (
@@ -256,7 +187,7 @@ export default function HudCockpit({
         <div className="cockpit-brand">
 
           <span className="brand-main">
-            JARVIS
+            {assistantName}
           </span>
 
           <span className="brand-pro">
@@ -267,7 +198,7 @@ export default function HudCockpit({
 
 
         <div className="cockpit-title">
-          JARVIS
+          {assistantName || "JARVIS"}
         </div>
 
 
@@ -441,7 +372,7 @@ export default function HudCockpit({
                         : activity.speaker ===
                           "jarvis"
 
-                          ? "JARVIS"
+                          ? assistantName
 
                           : "SYS"}
 

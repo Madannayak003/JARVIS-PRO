@@ -65,6 +65,10 @@ type SettingsModal =
     clients: number;
   };
 
+  const JARVIS_DASHBOARD_URL =
+    process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
+    "http://127.0.0.1:8765";
+
 export default function Home() {
 
   const [
@@ -190,75 +194,219 @@ export default function Home() {
   ] = useState(false);
 
   /* =========================================================
-     LOAD SETTINGS
-     ========================================================= */
+   LOAD SETTINGS
+   ========================================================= */
 
   useEffect(() => {
 
-    try {
+    const loadSettings = async () => {
 
-      const saved =
-        window.localStorage.getItem(
-          "jarvis-pro-settings"
+      /*
+      * -------------------------------------------------------
+      * FIRST: load localStorage as a temporary fallback.
+      * -------------------------------------------------------
+      */
+
+      try {
+
+        const saved =
+          window.localStorage.getItem(
+            "jarvis-pro-settings"
+          );
+
+        if (saved) {
+
+          const settings =
+            JSON.parse(saved);
+
+          if (
+            typeof settings.autoStart === "boolean"
+          ) {
+            setAutoStart(settings.autoStart);
+          }
+
+          if (
+            typeof settings.morningBrief === "boolean"
+          ) {
+            setMorningBrief(settings.morningBrief);
+          }
+
+          if (
+            typeof settings.assistantName === "string"
+          ) {
+            setAssistantName(settings.assistantName);
+          }
+
+          if (
+            typeof settings.userName === "string"
+          ) {
+            setUserName(settings.userName);
+          }
+
+          if (
+            typeof settings.assistantColour === "string"
+          ) {
+            setAssistantColour(
+              settings.assistantColour
+            );
+          }
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Local settings fallback failed:",
+          error
         );
 
-      if (!saved) {
-        return;
       }
 
-      const settings =
-        JSON.parse(saved);
 
-      if (
-        typeof settings.autoStart ===
-        "boolean"
-      ) {
-        setAutoStart(
-          settings.autoStart
+      /*
+      * -------------------------------------------------------
+      * SECOND: Python backend is the real source of truth.
+      * -------------------------------------------------------
+      */
+
+      try {
+
+        const response =
+          await fetch(
+            `${JARVIS_DASHBOARD_URL}/api/local/customise`,
+            {
+              cache: "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          response.ok &&
+          result.ok
+        ) {
+
+          if (
+            typeof result.assistantName === "string"
+          ) {
+            setAssistantName(
+              result.assistantName
+            );
+          }
+
+          if (
+            typeof result.userName === "string"
+          ) {
+            setUserName(
+              result.userName
+            );
+          }
+
+          if (
+            typeof result.assistantColour === "string"
+          ) {
+            setAssistantColour(
+              result.assistantColour
+            );
+          }
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Could not load persistent assistant settings:",
+          error
         );
+
       }
 
-      if (
-        typeof settings.morningBrief ===
-        "boolean"
-      ) {
-        setMorningBrief(
-          settings.morningBrief
+
+      /*
+      * -------------------------------------------------------
+      * AUTO START
+      * -------------------------------------------------------
+      */
+
+      try {
+
+        const response =
+          await fetch(
+            `${JARVIS_DASHBOARD_URL}/api/local/autostart`,
+            {
+              cache: "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          response.ok &&
+          result.ok &&
+          typeof result.enabled === "boolean"
+        ) {
+
+          setAutoStart(
+            result.enabled
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Could not load Auto-Start status:",
+          error
         );
+
       }
 
-      if (
-        typeof settings.assistantName ===
-        "string"
-      ) {
-        setAssistantName(
-          settings.assistantName
+
+      /*
+      * -------------------------------------------------------
+      * MICROPHONE
+      * -------------------------------------------------------
+      */
+
+      try {
+
+        const response =
+          await fetch(
+            `${JARVIS_DASHBOARD_URL}/api/local/microphone`,
+            {
+              cache: "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          response.ok &&
+          result.ok &&
+          typeof result.enabled === "boolean"
+        ) {
+
+          setMicrophoneEnabled(
+            result.enabled
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "[HUD] Could not load microphone status:",
+          error
         );
+
       }
 
-      if (
-        typeof settings.userName ===
-        "string"
-      ) {
-        setUserName(
-          settings.userName
-        );
-      }
+    };
 
-      if (
-        typeof settings.assistantColour ===
-        "string"
-      ) {
-        setAssistantColour(
-          settings.assistantColour
-        );
-      }
-
-    } catch {
-
-      // Ignore invalid saved settings.
-
-    }
+    loadSettings();
 
   }, []);
 
@@ -351,7 +499,11 @@ export default function Home() {
      SAVE SETTINGS
      ========================================================= */
 
-  const saveSettings = () => {
+  const saveSettings = (
+    nextAssistantName = assistantName,
+    nextUserName = userName,
+    nextAssistantColour = assistantColour,
+  ) => {
 
     try {
 
@@ -360,20 +512,22 @@ export default function Home() {
         JSON.stringify({
           autoStart,
           morningBrief,
-          assistantName,
-          userName,
-          assistantColour,
+          assistantName: nextAssistantName,
+          userName: nextUserName,
+          assistantColour: nextAssistantColour,
         })
       );
 
-    } catch {
+    } catch (error) {
 
-      // Ignore localStorage failures.
+      console.error(
+        "[HUD] Could not save assistant settings:",
+        error
+      );
 
     }
 
   };
-
 
   /* =========================================================
      FULLSCREEN
@@ -543,11 +697,154 @@ export default function Home() {
      APPLY ASSISTANT SETTINGS
      ========================================================= */
 
-  const applyAssistantSettings = () => {
+  const applyAssistantSettings = async () => {
 
-    saveSettings();
+    const name =
+      assistantName.trim() || "JARVIS";
 
-    setModal(null);
+    const user =
+      userName.trim();
+
+    const colour =
+      /^#[0-9a-fA-F]{6}$/.test(
+        assistantColour
+      )
+        ? assistantColour.toLowerCase()
+        : "#ffaa30";
+
+
+    /*
+    * Update UI immediately.
+    */
+
+    setAssistantName(name);
+    setUserName(user);
+    setAssistantColour(colour);
+
+
+    /*
+    * Keep localStorage as a fallback/cache.
+    */
+
+    try {
+
+      window.localStorage.setItem(
+        "jarvis-pro-settings",
+        JSON.stringify({
+          autoStart,
+          morningBrief,
+          assistantName: name,
+          userName: user,
+          assistantColour: colour,
+        })
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[HUD] Local settings cache failed:",
+        error
+      );
+
+    }
+
+
+    /*
+    * Persist to the actual JARVIS backend.
+    */
+
+    try {
+
+      const response =
+        await fetch(
+          `${JARVIS_DASHBOARD_URL}/api/local/customise`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            cache: "no-store",
+            body: JSON.stringify({
+              assistantName: name,
+              userName: user,
+              assistantColour: colour,
+            }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.ok
+      ) {
+
+        throw new Error(
+          result?.error ||
+          "Failed to save assistant settings."
+        );
+
+      }
+
+      /*
+      * Use the backend-confirmed values.
+      */
+
+      if (
+        typeof result.settings?.assistantName ===
+        "string"
+      ) {
+
+        setAssistantName(
+          result.settings.assistantName
+        );
+
+      }
+
+      if (
+        typeof result.settings?.userName ===
+        "string"
+      ) {
+
+        setUserName(
+          result.settings.userName
+        );
+
+      }
+
+      if (
+        typeof result.settings?.assistantColour ===
+        "string"
+      ) {
+
+        setAssistantColour(
+          result.settings.assistantColour
+        );
+
+      }
+
+      console.log(
+        "[HUD] Assistant settings saved."
+      );
+
+      setModal(null);
+
+    } catch (error) {
+
+      console.error(
+        "[HUD] Assistant settings save failed:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not save assistant settings."
+      );
+
+    }
 
   };
 
@@ -720,9 +1017,337 @@ export default function Home() {
   }, []);
 
 
+function AssistantColourPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  function hexToRgb(hex: string) {
+    const clean = hex.replace("#", "");
+
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) {
+      return null;
+    }
+
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+
+  function rgbToHsv(
+    r: number,
+    g: number,
+    b: number
+  ) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+
+    let h = 0;
+
+    if (delta !== 0) {
+      if (max === r) {
+        h = ((g - b) / delta) % 6;
+      } else if (max === g) {
+        h = (b - r) / delta + 2;
+      } else {
+        h = (r - g) / delta + 4;
+      }
+
+      h *= 60;
+
+      if (h < 0) {
+        h += 360;
+      }
+    }
+
+    const s =
+      max === 0
+        ? 0
+        : delta / max;
+
+    return {
+      h,
+      s,
+      v: max,
+    };
+  }
+
+  function hsvToHex(
+    h: number,
+    s: number,
+    v: number
+  ) {
+    const c = v * s;
+    const x =
+      c *
+      (
+        1 -
+        Math.abs(
+          ((h / 60) % 2) - 1
+        )
+      );
+
+    const m = v - c;
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+
+    if (h < 60) {
+      r = c;
+      g = x;
+    } else if (h < 120) {
+      r = x;
+      g = c;
+    } else if (h < 180) {
+      g = c;
+      b = x;
+    } else if (h < 240) {
+      g = x;
+      b = c;
+    } else if (h < 300) {
+      r = x;
+      b = c;
+    } else {
+      r = c;
+      b = x;
+    }
+
+    const toHex = (n: number) =>
+      Math.round(
+        (n + m) * 255
+      )
+        .toString(16)
+        .padStart(2, "0");
+
+    return (
+      "#" +
+      toHex(r) +
+      toHex(g) +
+      toHex(b)
+    );
+  }
+
+  const rgb = hexToRgb(value);
+
+  const hsv = rgb
+    ? rgbToHsv(
+        rgb.r,
+        rgb.g,
+        rgb.b
+      )
+    : {
+        h: 35,
+        s: 1,
+        v: 1,
+      };
+
+  const angle =
+    (hsv.h * Math.PI) / 180;
+
+  const radius = 43;
+
+  const handleX =
+    50 +
+    Math.cos(angle) *
+      radius *
+      hsv.s;
+
+  const handleY =
+    50 +
+    Math.sin(angle) *
+      radius *
+      hsv.s;
+
+  function updateFromPointer(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    const wheel =
+      wheelRef.current;
+
+    if (!wheel) {
+      return;
+    }
+
+    const rect =
+      wheel.getBoundingClientRect();
+
+    const x =
+      event.clientX -
+      (rect.left + rect.width / 2);
+
+    const y =
+      event.clientY -
+      (rect.top + rect.height / 2);
+
+    const distance =
+      Math.sqrt(
+        x * x +
+        y * y
+      );
+
+    const maxRadius =
+      Math.min(
+        rect.width,
+        rect.height
+      ) / 2;
+
+    const clampedRadius =
+      Math.min(
+        distance,
+        maxRadius
+      );
+
+    let hue =
+      Math.atan2(
+        y,
+        x
+      ) *
+      (180 / Math.PI);
+
+    if (hue < 0) {
+      hue += 360;
+    }
+
+    const saturation =
+      Math.min(
+        1,
+        clampedRadius /
+          maxRadius
+      );
+
+    onChange(
+      hsvToHex(
+        hue,
+        saturation,
+        1
+      )
+    );
+  }
+
+  return (
+    <div className="assistant-colour-picker">
+
+      <div className="assistant-colour-heading">
+
+        <div>
+
+          <span>
+            UI COLOUR
+          </span>
+
+          <small>
+            choose HUD accent colour
+          </small>
+
+        </div>
+
+        <button
+          type="button"
+          className="assistant-colour-default"
+          onClick={() =>
+            onChange("#ffaa30")
+          }
+        >
+          DEFAULT
+        </button>
+
+      </div>
+
+
+      <div className="assistant-colour-wheel-area">
+
+        <div
+          ref={wheelRef}
+          className="assistant-colour-wheel"
+          onPointerDown={(event) => {
+            setDragging(true);
+            event.currentTarget.setPointerCapture(
+              event.pointerId
+            );
+            updateFromPointer(event);
+          }}
+          onPointerMove={(event) => {
+            if (dragging) {
+              updateFromPointer(event);
+            }
+          }}
+          onPointerUp={() => {
+            setDragging(false);
+          }}
+          onPointerCancel={() => {
+            setDragging(false);
+          }}
+        >
+
+          <div
+            className="assistant-colour-wheel-handle"
+            style={{
+              left: `${handleX}%`,
+              top: `${handleY}%`,
+            }}
+          />
+
+          <div
+            className="assistant-colour-preview"
+            style={{
+              background: value,
+            }}
+          />
+
+        </div>
+
+      </div>
+
+
+      <input
+        className="assistant-colour-hex"
+        type="text"
+        value={value}
+        onChange={(event) => {
+          const next =
+            event.target.value;
+
+          if (
+            /^#[0-9a-fA-F]{6}$/.test(
+              next
+            )
+          ) {
+            onChange(
+              next.toLowerCase()
+            );
+          } else {
+            onChange(next);
+          }
+        }}
+        spellCheck={false}
+      />
+
+    </div>
+  );
+}
+
+
   return (
 
-    <main className="jarvis-hud">
+      <main
+        className="jarvis-hud"
+        style={{
+          "--assistant-colour": assistantColour,
+        } as React.CSSProperties}
+      >
 
       {/* =====================================================
           ULTRON ENGINE
@@ -742,6 +1367,8 @@ export default function Home() {
       <HudCockpit
         state={hudState}
         activities={activities}
+        assistantName={assistantName}
+        userName={userName}
         morningBriefHeadlines={morningBriefHeadlines}
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
@@ -1570,40 +2197,10 @@ export default function Home() {
               </label>
 
 
-              <label>
-
-                UI COLOUR
-
-                <span className="settings-field-help">
-                  choose HUD accent colour
-                </span>
-
-                <div className="colour-control">
-
-                  <input
-                    type="color"
-                    value={assistantColour}
-                    onChange={(event) =>
-                      setAssistantColour(
-                        event.target.value
-                      )
-                    }
-                  />
-
-                  <input
-                    type="text"
-                    value={assistantColour}
-                    onChange={(event) =>
-                      setAssistantColour(
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-              </label>
-
+              <AssistantColourPicker
+                value={assistantColour}
+                onChange={setAssistantColour}
+              />
 
               <div className="settings-modal-actions">
 
