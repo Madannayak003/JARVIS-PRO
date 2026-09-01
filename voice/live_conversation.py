@@ -218,6 +218,25 @@ IMPORTANT:
 This is a spoken conversation. Favor natural short answers
 over long assistant-style paragraphs.
 
+LIVE INFORMATION AND JARVIS SKILLS
+
+Some questions should use an existing JARVIS skill instead of
+being answered from Gemini's internal knowledge.
+
+TIME AND DATE
+- For "What time is it?", use jarvis_command.
+- For "What is the current time?", use jarvis_command.
+- For "Tell me the time.", use jarvis_command.
+- For "What time is it now?", use jarvis_command.
+- Do not answer the current time yourself.
+- JARVIS's time skill is authoritative for the user's local time.
+
+WEB SEARCH
+- For requests such as "Search for artificial intelligence",
+  "Search for Python tutorials", or "Google search for ...",
+  use jarvis_command.
+- Do not answer a web-search request from your own knowledge.
+
 JARVIS COMPUTER COMMANDS
 
 You are connected to the JARVIS computer-control system.
@@ -269,11 +288,13 @@ JARVIS_COMMAND_TOOL = {
             "name": "jarvis_command",
             "description": (
                 "Execute a command using the existing JARVIS "
-                "command system. Use this only when the user "
-                "is asking JARVIS to perform an action on the "
-                "computer or use one of its installed skills. "
-                "Do not use it for ordinary questions or casual "
-                "conversation."
+                "command system. Use this when the user asks "
+                "JARVIS to perform an action on the computer, "
+                "use an installed JARVIS skill, retrieve current "
+                "information through a JARVIS skill, or perform "
+                "a web search. Do not use it for ordinary static "
+                "questions or casual conversation when no JARVIS "
+                "skill is required."
             ),
             "parameters": {
                 "type": "object",
@@ -313,7 +334,7 @@ class LiveConversation:
 
         self._running = False
         
-                # -----------------------------------------------------
+         # -----------------------------------------------------
         # Live microphone state.
         #
         # This is separate from the normal JARVIS listener.
@@ -409,6 +430,16 @@ class LiveConversation:
         self._stop_event.clear()
         
         self.set_microphone_enabled(True)
+        
+        print(
+            "[LIVE] =================================================="
+        )
+        print(
+            "[LIVE] LIVE CONVERSATION START REQUESTED"
+        )
+        print(
+            "[LIVE] =================================================="
+        )
 
         self._thread = threading.Thread(
             target=self._thread_main,
@@ -463,7 +494,13 @@ class LiveConversation:
             self._set_running(False)
 
             print(
-                "[LIVE] Live Conversation ended."
+                "[LIVE] =================================================="
+            )
+            print(
+                "[LIVE] LIVE CONVERSATION ENDED"
+            )
+            print(
+                "[LIVE] =================================================="
             )
 
     # =========================================================
@@ -481,7 +518,17 @@ class LiveConversation:
             )
 
         print(
-            "[LIVE] Starting Live Conversation..."
+            "[LIVE] =================================================="
+        )
+        print(
+            "[LIVE] LIVE CONVERSATION STARTING"
+        )
+        print(
+            "[LIVE] =================================================="
+        )
+
+        print(
+            "[LIVE] Starting Gemini Live session..."
         )
 
         print(
@@ -493,6 +540,10 @@ class LiveConversation:
         # -----------------------------------------------------
 
         self._pause_normal_microphone()
+        
+        print(
+            "[LIVE] Normal JARVIS microphone paused."
+        )
 
         input_queue: asyncio.Queue[
             bytes
@@ -623,6 +674,13 @@ class LiveConversation:
 
                 print(
                     "[LIVE] Gemini Live connected."
+                )
+                
+                print(
+                    "[LIVE] Persistent Live session active."
+                )
+                print(
+                    "[LIVE] Waiting for conversation..."
                 )
 
                 # =============================================
@@ -889,6 +947,55 @@ class LiveConversation:
 
             except asyncio.QueueFull:
                 pass
+            
+    # =========================================================
+    # INTERRUPT LIVE SPEAKER
+    # =========================================================
+
+    @staticmethod
+    def _interrupt_speaker(
+        speaker,
+    ):
+        """
+        Immediately interrupt Live audio playback.
+
+        IMPORTANT:
+        abort() clears the current PortAudio playback,
+        but it also leaves the stream stopped.
+
+        Therefore the same stream is immediately restarted
+        so the next Gemini response can continue using it.
+
+        This affects ONLY the Live Conversation speaker.
+        """
+
+        if speaker is None:
+
+            return
+
+        try:
+
+            # Immediately discard currently buffered audio.
+            speaker.abort()
+
+            # Re-open the same active stream for the
+            # next Gemini response.
+            speaker.start()
+
+            print(
+                "[LIVE] Speaker output interrupted."
+            )
+
+            print(
+                "[LIVE] Speaker stream restarted."
+            )
+
+        except Exception as exc:
+
+            print(
+                "[LIVE] Speaker interruption failed:",
+                exc,
+            )
 
     # =========================================================
     # SEND AUDIO
@@ -970,12 +1077,71 @@ class LiveConversation:
         """
 
         try:
+            
+            print(
+                "[LIVE TURN] Waiting for user..."
+            )
 
             async for response in session.receive():
+                
+                                # =============================================
+                # SERVER GO-AWAY NOTICE
+                # =============================================
+                #
+                # Gemini is telling us that this Live
+                # connection is approaching closure.
+                #
+                # Do not reconnect here.
+                # Do not create another Live session.
+                # Just report the server notice and allow
+                # the current receive operation to finish.
+                # =============================================
+
+                if response.go_away:
+
+                    time_left = (
+                        response.go_away.time_left
+                        or "unknown"
+                    )
+
+                    print(
+                        "[LIVE] Gemini Live connection "
+                        f"will close soon. Time left: {time_left}"
+                    )
                 
                 # =============================================
                 # JARVIS TOOL CALL
                 # =============================================
+                
+                # =============================================
+                # TOOL CALL CANCELLATION
+                # =============================================
+                #
+                # Gemini may cancel a previously issued tool
+                # call, for example when the user interrupts
+                # the response or changes direction.
+                #
+                # This is NOT a Live session failure.
+                #
+                # Do not stop the entire conversation.
+                # Do not reconnect.
+                # =============================================
+
+                if response.tool_call_cancellation:
+
+                    cancelled_ids = (
+                        response.tool_call_cancellation.ids
+                        or []
+                    )
+
+                    print(
+                        "[LIVE TOOL] Tool call cancelled:",
+                        cancelled_ids,
+                    )
+
+                    # Continue receiving from the SAME
+                    # persistent Gemini Live session.
+                    continue
 
                 if response.tool_call:
 
@@ -1037,16 +1203,48 @@ class LiveConversation:
 
                                     with live_execution():
 
-                                        dispatch(
+                                        dispatch_result = dispatch(
                                             command
                                         )
 
-                                    result = {
-                                        "success": True,
-                                        "message": (
-                                            f"JARVIS executed: {command}"
-                                        ),
-                                    }
+                                    # -------------------------------------------------
+                                    # Return the ACTUAL dispatcher result to Gemini.
+                                    #
+                                    # Do not claim success when the existing JARVIS
+                                    # dispatcher/skill reported failure.
+                                    # -------------------------------------------------
+
+                                    if isinstance(
+                                        dispatch_result,
+                                        bool,
+                                    ):
+
+                                        result = {
+                                            "success": dispatch_result,
+                                            "message": (
+                                                f"JARVIS executed: {command}"
+                                                if dispatch_result
+                                                else f"JARVIS failed to execute: {command}"
+                                            ),
+                                        }
+
+                                    elif dispatch_result is None:
+
+                                        result = {
+                                            "success": True,
+                                            "message": (
+                                                f"JARVIS executed: {command}"
+                                            ),
+                                        }
+
+                                    else:
+
+                                        result = {
+                                            "success": True,
+                                            "message": str(
+                                                dispatch_result
+                                            ),
+                                        }
 
                                 except Exception as exc:
 
@@ -1182,6 +1380,50 @@ class LiveConversation:
                         )
 
                 # =============================================
+                # MODEL RESPONSE INTERRUPTED
+                # =============================================
+                #
+                # The user may begin speaking while Gemini is
+                # producing audio.
+                #
+                # This is a normal Live Conversation event.
+                #
+                # IMPORTANT:
+                # Do NOT close the Gemini session.
+                # Do NOT reconnect.
+                # Do NOT set the global stop event.
+                # The same session continues with the user's
+                # new turn.
+                # =============================================
+
+                if getattr(
+                    server_content,
+                    "interrupted",
+                    False,
+                ):
+
+                    print(
+                        "[LIVE] --------------------------------------------------"
+                    )
+                    print(
+                        "[LIVE] USER INTERRUPTED MODEL RESPONSE"
+                    )
+                    print(
+                        "[LIVE] --------------------------------------------------"
+                    )
+
+                    self._interrupt_speaker(
+                        speaker
+                    )
+
+                    print(
+                        "[LIVE] Continuing same Gemini Live session."
+                    )
+
+                    return "turn_complete"
+
+
+                # =============================================
                 # TURN COMPLETE
                 # =============================================
 
@@ -1196,8 +1438,6 @@ class LiveConversation:
                     )
 
                     # -----------------------------------------
-                    # CRITICAL:
-                    #
                     # Only this receive operation ends.
                     #
                     # Gemini session remains alive.
