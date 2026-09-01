@@ -59,64 +59,77 @@ function SystemBar({
   label: string;
   value: unknown;
 }) {
-
   const numeric =
     typeof value === "number"
-
-      ? Math.max(
-          0,
-          Math.min(
-            100,
-            value
-          )
-        )
-
+      ? Math.max(0, Math.min(100, value))
       : null;
 
+  const isHigh =
+    numeric !== null &&
+    numeric > 85;
 
   return (
+    <div
+      className={
+        `cockpit-system-row${
+          isHigh
+            ? " cockpit-system-high"
+            : ""
+        }`
+      }
+    >
 
-    <div className="cockpit-system-row">
+      <div
+        className="cockpit-gauge"
+        style={{
+          "--gauge-value":
+            `${numeric ?? 0}%`,
+        } as React.CSSProperties}
+      >
 
-      <div className="cockpit-system-label">
+        <div
+          className="cockpit-gauge-fill"
+          style={{
+            "--gauge-value":
+              `${numeric ?? 0}%`,
+          } as React.CSSProperties}
+        >
 
-        <span>
-          {label}
-        </span>
+          <div className="cockpit-gauge-center">
 
-        <span>
+            <span className="cockpit-gauge-value">
+              {numeric !== null
+                ? `${numeric}%`
+                : "--"}
+            </span>
 
-          {numeric !== null
+            <span className="cockpit-gauge-unit">
+              LOAD
+            </span>
 
-            ? `${numeric}%`
+          </div>
 
-            : formatValue(value)}
-
-        </span>
+        </div>
 
       </div>
 
 
-      <div className="cockpit-bar">
+      <div className="cockpit-system-info">
 
-        <div
-          className="cockpit-bar-fill"
+        <span className="cockpit-system-name">
+          {label}
+        </span>
 
-          style={{
-            width:
-              numeric !== null
-                ? `${numeric}%`
-                : "0%",
-          }}
-
-        />
+        <span className="cockpit-system-state">
+          {isHigh
+            ? "HIGH LOAD"
+            : "NOMINAL"}
+        </span>
 
       </div>
 
     </div>
-
   );
-
 }
 
 
@@ -254,60 +267,6 @@ export default function HudCockpit({
             label="BAT"
             value={system.battery}
           />
-
-
-          <div className="cockpit-data-row">
-
-            <span>
-              NET
-            </span>
-
-            <span>
-
-              {formatValue(
-                system.network,
-                "ONLINE"
-              )}
-
-            </span>
-
-          </div>
-
-
-          <div className="cockpit-data-row">
-
-            <span>
-              GPU
-            </span>
-
-            <span>
-
-              {formatValue(
-                system.gpu,
-                "N/A"
-              )}
-
-            </span>
-
-          </div>
-
-
-          <div className="cockpit-data-row">
-
-            <span>
-              MODE
-            </span>
-
-            <span>
-
-              {formatValue(
-                state.voice_mode,
-                "ONLINE"
-              ).toUpperCase()}
-
-            </span>
-
-          </div>
 
         </div>
 

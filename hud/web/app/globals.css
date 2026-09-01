@@ -1,6 +1,24 @@
 :root {
   --assistant-colour: #ffaa30;
 
+  --assistant-colour-10: color-mix(
+    in srgb,
+    var(--assistant-colour) 10%,
+    transparent
+  );
+
+  --assistant-colour-20: color-mix(
+    in srgb,
+    var(--assistant-colour) 20%,
+    transparent
+  );
+
+  --assistant-colour-30: color-mix(
+    in srgb,
+    var(--assistant-colour) 30%,
+    transparent
+  );
+
   --assistant-colour-45: color-mix(
     in srgb,
     var(--assistant-colour) 45%,
@@ -20,7 +38,7 @@
   );
 }
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -115,7 +133,7 @@ body {
   height: 44px;
   padding: 0 12px;
   background: rgba(20, 10, 0, 0.55);
-  border: 1px solid rgba(255, 170, 48, 0.45);
+  border: 1px solid var(--assistant-colour-45);
   border-radius: 4px;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
@@ -124,8 +142,8 @@ body {
   letter-spacing: 0.08em;
   cursor: pointer;
   backdrop-filter: blur(2px);
-  text-shadow: 0 0 6px rgba(255, 170, 48, 0.7);
-  box-shadow: 0 0 12px rgba(255, 140, 20, 0.12) inset;
+  text-shadow: 0 0 6px var(--assistant-colour-65);
+  box-shadow: 0 0 12px var(--assistant-colour-45) inset;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -133,21 +151,33 @@ body {
 }
 
 .hud-btn:hover {
-  background: rgba(60, 30, 0, 0.7);
-  border-color: rgba(255, 200, 100, 0.9);
+  background: color-mix(
+    in srgb,
+    var(--assistant-colour) 12%,
+    transparent
+  );
+  border-color: var(--assistant-colour-80);
   box-shadow:
-    0 0 14px rgba(255, 150, 30, 0.35),
-    0 0 12px rgba(255, 140, 20, 0.2) inset;
+    0 0 14px var(--assistant-colour-45),
+    0 0 12px var(--assistant-colour-45) inset;
 }
 
 .hud-btn:active {
-  background: rgba(90, 45, 0, 0.8);
+  background: color-mix(
+    in srgb,
+    var(--assistant-colour) 18%,
+    transparent
+  );
 }
 
 .hud-btn[aria-pressed="true"] {
-  background: rgba(120, 60, 0, 0.6);
-  border-color: #ffcc66;
-  color: #ffcc66;
+  background: color-mix(
+    in srgb,
+    var(--assistant-colour) 20%,
+    transparent
+  );
+  border-color: var(--assistant-colour);
+  color: var(--assistant-colour);
 }
 
 .hud-row {
@@ -162,14 +192,14 @@ body {
   line-height: 1.7;
   letter-spacing: 0.1em;
   opacity: 0.55;
-  text-shadow: 0 0 8px rgba(255, 170, 48, 0.6);
+  text-shadow: 0 0 8px var(--assistant-colour-65);
   pointer-events: none;
 }
 
 .hud-hint .key {
   display: inline-block;
   padding: 0 4px;
-  border: 1px solid rgba(255, 170, 48, 0.5);
+  border: 1px solid var(--assistant-colour-45);
   border-radius: 3px;
   margin-right: 4px;
   font-size: 10px;
@@ -181,7 +211,7 @@ body {
   font-size: 13px;
   letter-spacing: 0.35em;
   opacity: 0.7;
-  text-shadow: 0 0 10px rgba(255, 170, 48, 0.8);
+  text-shadow: 0 0 10px var(--assistant-colour-80);
   pointer-events: none;
 }
 
@@ -191,7 +221,11 @@ body {
   margin-top: 6px;
   width: 120px;
   height: 1px;
-  background: linear-gradient(to right, rgba(255, 170, 48, 0.8), transparent);
+  background: linear-gradient(
+    to right,
+    var(--assistant-colour-80),
+    transparent
+  );
 }
 
 .hud-error {
@@ -203,15 +237,17 @@ body {
 
 /* ——— Camera preview panel ——— */
 .camera-panel {
-  position: relative;
+  position: absolute;
+  right: 220px;
+  bottom: 0;
   width: 208px;
   height: 156px;
   display: none;
-  border: 1px solid rgba(255, 170, 48, 0.45);
+  border: 1px solid var(--assistant-colour-45);
   border-radius: 4px;
   overflow: hidden;
   background: #0a0500;
-  box-shadow: 0 0 16px rgba(255, 140, 20, 0.15);
+  box-shadow: 0 0 16px var(--assistant-colour-45);
 }
 
 .camera-panel.visible {
@@ -224,9 +260,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1); /* mirror so it behaves like a mirror */
-  filter: sepia(1) hue-rotate(-15deg) saturate(2.2) brightness(0.75)
-    contrast(1.15);
+  transform: scaleX(-1);
+  filter: sepia(1) hue-rotate(-15deg) saturate(2.2) brightness(0.75) contrast(1.15);
   opacity: 0.85;
 }
 
@@ -245,9 +280,9 @@ body {
   padding: 3px 6px;
   font-size: 10px;
   letter-spacing: 0.15em;
-  color: #ffcc66;
+  color: var(--assistant-colour);
   background: rgba(10, 5, 0, 0.65);
-  text-shadow: 0 0 6px rgba(255, 170, 48, 0.8);
+  text-shadow: 0 0 6px var(--assistant-colour-65);
 }
 
 @media (max-width: 600px) {
@@ -257,8 +292,7 @@ body {
 }
 
 /* =========================================================
-   JARVIS PRO
-   UI-2 — MARK COCKPIT
+   JARVIS PRO — UI-2 MARK COCKPIT
    ========================================================= */
 
 .jarvis-hud {
@@ -271,19 +305,11 @@ body {
   font-family: "Courier New", monospace;
 }
 
-/* =========================================================
-   ULTRON ENGINE
-   ========================================================= */
-
 .ultron-layer {
   position: absolute;
   inset: 0;
   z-index: 1;
 }
-
-/* =========================================================
-   COCKPIT
-   ========================================================= */
 
 .hud-cockpit {
   position: absolute;
@@ -293,7 +319,7 @@ body {
 }
 
 /* =========================================================
-   HEADER — CLEAN JARVIS PRO
+   HEADER
    ========================================================= */
 
 .cockpit-header {
@@ -301,146 +327,69 @@ body {
   top: 0;
   left: 0;
   right: 0;
-
   height: 62px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 0 24px;
-
-  border-bottom: 1px solid
-    color-mix(
-      in srgb,
-      var(--assistant-colour) 28%,
-      transparent
-    );
-
+  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 28%, transparent);
   background: rgba(0, 0, 0, 0.28);
-
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-
-  filter: none;
-
   z-index: 50;
 }
 
-
-/* =========================================================
-   LEFT — JARVIS PRO
-   ========================================================= */
-
 .cockpit-brand {
   display: flex;
-
   align-items: baseline;
-
   gap: 8px;
-
   letter-spacing: 2px;
-
-  filter: none;
-
-  opacity: 1;
 }
 
 .cockpit-brand .brand-main {
   font-size: 18px;
-
   font-weight: 700;
-
   letter-spacing: 2px;
-
   color: var(--assistant-colour);
-
-  text-shadow:
-    0 0 4px rgba(255, 170, 48, 0.45);
+  text-shadow: 0 0 4px var(--assistant-colour-45);
 }
 
 .cockpit-brand .brand-pro {
   font-size: 9px;
-
   letter-spacing: 1px;
-
   color: var(--assistant-colour);
-
   opacity: 0.55;
-
-  text-shadow: none;
 }
-
-
-/* =========================================================
-   CENTER — JARVIS
-   ========================================================= */
 
 .cockpit-title {
   position: absolute;
-
   left: 50%;
-
   transform: translateX(-50%);
-
   font-size: 23px;
-
   font-weight: 700;
-
   letter-spacing: 4px;
-
   color: var(--assistant-colour);
-
-  opacity: 1;
-
-  filter: none;
-
-  text-shadow:
-    0 0 4px rgba(255, 170, 0, 0.45);
-
+  text-shadow: 0 0 4px var(--assistant-colour-45);
   white-space: nowrap;
 }
 
-
-/* =========================================================
-   RIGHT — SYSTEM ONLINE
-   ========================================================= */
-
 .cockpit-system-status {
   display: flex;
-
   gap: 14px;
-
   align-items: center;
-
   font-size: 11px;
-
   letter-spacing: 1px;
-
-  opacity: 1;
-
-  filter: none;
 }
 
 .status-label {
   color: var(--assistant-colour);
-
   opacity: 0.5;
-
-  text-shadow: none;
 }
 
 .status-value {
   color: var(--assistant-colour);
-
   opacity: 1;
-
-  text-shadow:
-    0 0 4px color-mix(
-      in srgb,
-      var(--assistant-colour) 40%,
-      transparent
-    );
+  text-shadow: 0 0 4px color-mix(in srgb, var(--assistant-colour) 40%, transparent);
 }
 
 /* =========================================================
@@ -449,29 +398,11 @@ body {
 
 .cockpit-panel {
   position: absolute;
-
-  top: 98px;
-
+  top: 80px;
   width: 282px;
-  min-height: 245px;
-
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--assistant-colour) 38%,
-      transparent
-    );
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(7, 7, 6, 0.82),
-      rgba(0, 0, 0, 0.58)
-    );
-
-  box-shadow:
-    inset 0 0 30px rgba(255, 110, 0, 0.025),
-    0 0 20px rgba(0, 0, 0, 0.5);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .cockpit-left {
@@ -484,119 +415,209 @@ body {
 }
 
 .panel-heading {
-  height: 38px;
-
+  height: 32px;
   display: flex;
   align-items: center;
-
-  padding: 0 14px;
-
-  border-bottom: 1px solid
-  color-mix(
-    in srgb,
-    var(--assistant-colour) 25%,
-    transparent
-  );
-
+  padding: 0 4px;
+  border-bottom: none;
   font-size: 11px;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
 .panel-marker {
   margin-right: 8px;
-
-  font-size: 7px;
-
-  text-shadow:
-    0 0 8px rgba(255, 150, 0, 0.8);
+  font-size: 9px;
+  color: var(--assistant-colour);
+  text-shadow: 0 0 8px var(--assistant-colour-65);
 }
 
 .panel-body {
-  padding: 17px 16px;
+  padding: 10px 4px;
 }
 
 /* =========================================================
-   SYSTEM
+   SYSTEM MONITOR — CIRCULAR TELEMETRY
    ========================================================= */
 
 .cockpit-system-row {
-  margin-bottom: 17px;
-}
-
-.cockpit-system-label {
   display: flex;
-  justify-content: space-between;
-
-  margin-bottom: 7px;
-
-  font-size: 10px;
-  letter-spacing: 1px;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 4px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
-.cockpit-bar {
-  width: 100%;
-  height: 5px;
-
- background: color-mix(
-    in srgb,
-    var(--assistant-colour) 8%,
-    transparent
+.cockpit-gauge {
+  position: relative;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--assistant-colour) var(--gauge-value, 0%),
+    rgba(255, 255, 255, 0.045) var(--gauge-value, 0%)
   );
-
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--assistant-colour) 16%,
-      transparent
-    );
+  box-shadow:
+    0 0 10px var(--assistant-colour-20),
+    inset 0 0 10px rgba(0, 0, 0, 0.8);
 }
 
-.cockpit-bar-fill {
-  height: 100%;
+.cockpit-gauge::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #020303;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
 
-  background: var(--assistant-colour);
+.cockpit-gauge-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--assistant-colour) var(--gauge-value, 0%),
+    transparent var(--gauge-value, 0%)
+  );
+  box-shadow: 0 0 8px var(--assistant-colour-45);
+}
 
+.cockpit-gauge-center {
+  position: absolute;
+  inset: 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #020303;
+}
+
+.cockpit-gauge-value {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px var(--assistant-colour-65);
+}
+
+.cockpit-gauge-unit {
+  margin-top: 2px;
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+}
+
+.cockpit-system-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cockpit-system-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--assistant-colour);
+  text-shadow: 0 0 5px var(--assistant-colour-30);
+}
+
+.cockpit-system-state {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+}
+
+/* High Load State */
+.cockpit-system-high .cockpit-gauge,
+.cockpit-system-high .cockpit-gauge-fill {
+  background: conic-gradient(
+    #ff3333 var(--gauge-value, 0%),
+    rgba(255, 255, 255, 0.045) var(--gauge-value, 0%)
+  );
   box-shadow:
-    0 0 8px color-mix(
-      in srgb,
-      var(--assistant-colour) 70%,
-      transparent
-    );
+    0 0 10px rgba(255, 40, 40, 0.55),
+    0 0 20px rgba(255, 40, 40, 0.18);
+}
 
-  transition:
-    width 300ms ease;
+.cockpit-system-high .cockpit-gauge-value,
+.cockpit-system-high .cockpit-system-name {
+  color: #ff4444;
+  text-shadow: 0 0 6px rgba(255, 50, 50, 0.75);
+}
+
+.cockpit-system-high .cockpit-system-state {
+  color: #ff4444;
+  opacity: 0.85;
+}
+
+/* =========================================================
+   SECONDARY SYSTEM DATA / ROWS
+   ========================================================= */
+
+.cockpit-left .cockpit-data-row:first-of-type {
+  margin-top: 10px;
 }
 
 .cockpit-data-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  min-height: 24px;
+  padding: 4px 2px;
+  margin-top: 3px;
+  border-bottom: 1px solid var(--assistant-colour-10);
+  color: var(--assistant-colour);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
 
-  padding: 8px 0;
-
-  border-top: 1px solid
-    rgba(255, 140, 0, 0.1);
-
-  font-size: 10px;
+.cockpit-data-row:last-child {
+  border-bottom: 0;
 }
 
 .cockpit-data-row span:first-child {
-  opacity: 0.5;
+  position: relative;
+  padding-left: 14px;
+  opacity: 0.55;
+  letter-spacing: 0.14em;
+}
+
+.cockpit-data-row span:first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  transform: translateY(-50%);
+  border: 1px solid var(--assistant-colour-45);
+  box-shadow: 0 0 5px var(--assistant-colour-30);
+}
+
+.cockpit-data-row span:last-child {
+  color: var(--assistant-colour);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 5px var(--assistant-colour-45);
 }
 
 /* =========================================================
-   ACTIVITY
+   ACTIVITY PANEL
    ========================================================= */
 
 .activity-section {
   display: flex;
   flex-direction: column;
-
   gap: 7px;
-
   padding: 15px;
-
-  border-bottom: 1px solid
-    rgba(255, 140, 0, 0.09);
+  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 9%, transparent);
 }
 
 .activity-label {
@@ -607,9 +628,7 @@ body {
 
 .activity-value {
   font-size: 11px;
-
-  color: #ffc45b;
-
+  color: var(--assistant-colour);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -617,13 +636,7 @@ body {
 
 .activity-message {
   padding: 9px 4px;
-
-  border-bottom: 1px solid
-    color-mix(
-      in srgb,
-      var(--assistant-colour) 12%,
-      transparent
-    );
+  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 12%, transparent);
 }
 
 .activity-message-meta {
@@ -658,67 +671,48 @@ body {
 
 .activity-error {
   margin: 14px;
-
   padding: 10px;
-
-  border: 1px solid
-    rgba(255, 50, 50, 0.35);
-
+  border: 1px solid rgba(255, 50, 50, 0.35);
   color: #ff5555;
-
   font-size: 10px;
 }
 
 /* =========================================================
-   CORE LABEL
+   BOTTOM HUD / STATUS
    ========================================================= */
 
 .core-name {
   font-size: 13px;
   font-weight: 700;
-
-  text-shadow:
-    0 0 10px rgba(255, 170, 0, 0.7);
+  text-shadow: 0 0 10px var(--assistant-colour-65);
 }
 
 .core-status {
   margin-top: 8px;
-
   font-size: 11px;
   font-weight: 700;
 }
 
 .core-subtitle {
   margin-top: 7px;
-
   font-size: 8px;
   opacity: 0.4;
-
   letter-spacing: 2px;
 }
 
-/* =========================================================
-   BOTTOM STATUS
-   ========================================================= */
-
 .cockpit-bottom {
   position: absolute;
-
   left: 50%;
   bottom: 18px;
-
   transform: translateX(-50%);
-
   display: flex;
   gap: 28px;
 }
 
 .voice-indicator {
-  font-size: 9px;
+  font-size: 15px;
   letter-spacing: 1px;
-
   opacity: 0.2;
-
   transition:
     opacity 200ms ease,
     text-shadow 200ms ease;
@@ -726,53 +720,33 @@ body {
 
 .voice-indicator.active {
   opacity: 1;
-
   color: var(--assistant-colour);
-
-  text-shadow:
-    0 0 10px color-mix(
-      in srgb,
-      var(--assistant-colour) 80%,
-      transparent
-    );
+  text-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 80%, transparent);
 }
-
-/* =========================================================
-   CONNECTION
-   ========================================================= */
 
 .hud-bridge-status {
   position: absolute;
-
   top: 76px;
   right: 24px;
-
   z-index: 30;
-
   display: flex;
   align-items: center;
   gap: 7px;
-
   font-size: 8px;
   letter-spacing: 1px;
-
   opacity: 0.55;
 }
 
 .hud-bridge-dot {
   width: 6px;
   height: 6px;
-
   border-radius: 50%;
-
   background: #777;
 }
 
 .hud-bridge-dot.connected {
-  background: #ff9d00;
-
-  box-shadow:
-    0 0 8px rgba(255, 150, 0, 0.9);
+  background: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour-80);
 }
 
 .hud-bridge-dot.offline {
@@ -780,223 +754,94 @@ body {
 }
 
 /* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 1000px) {
-
-  .cockpit-panel {
-    width: 220px;
-  }
-
-}
-
-@media (max-width: 760px) {
-
-  .cockpit-panel {
-    display: none;
-  }
-
-  .cockpit-title {
-    font-size: 18px;
-  }
-
-}
-
-/* =========================================================
-   JARVIS PRO
    ACTIVITY LOG
    ========================================================= */
 
 .activity-log {
-
   height: 420px;
-
   overflow-y: auto;
-
   overflow-x: hidden;
-
   padding: 8px 12px;
-
   pointer-events: auto;
-
   cursor: pointer;
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  font-family: "Courier New", monospace;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 165, 0, 0.65) transparent;
-
+  scrollbar-color: var(--assistant-colour-65) transparent;
 }
-
-
-/* =========================================================
-   ENTRY
-   ========================================================= */
 
 .activity-log-entry {
-
   display: flex;
-
   align-items: flex-start;
-
   gap: 9px;
-
   min-height: 24px;
-
   padding: 4px 0;
-
-  border-bottom:
-    1px solid
-    rgba(255, 153, 0, 0.07);
-
+  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 7%, transparent);
 }
-
-
-/* =========================================================
-   TIME
-   ========================================================= */
 
 .activity-time {
-
   flex: 0 0 58px;
-
   font-size: 9px;
-
   opacity: 0.45;
-
   line-height: 16px;
-
 }
-
-
-/* =========================================================
-   EVENT
-   ========================================================= */
 
 .activity-event {
-
   flex: 1;
-
   min-width: 0;
-
   font-size: 10px;
-
   line-height: 16px;
-
   word-break: break-word;
-
   text-transform: uppercase;
-
 }
 
-
-/* =========================================================
-   EMPTY
-   ========================================================= */
-
-.activity-empty {
-
+.activity-log .activity-empty {
   padding: 10px 0;
-
   font-size: 10px;
-
   letter-spacing: 1px;
-
   opacity: 0.45;
-
 }
-
-
-/* =========================================================
-   SCROLLBAR
-   ========================================================= */
 
 .activity-log::-webkit-scrollbar {
-
   width: 4px;
-
 }
-
 
 .activity-log::-webkit-scrollbar-track {
-
   background: transparent;
-
 }
 
-
 .activity-log::-webkit-scrollbar-thumb {
-  background: rgba(255, 165, 0, 0.65);
+  background: var(--assistant-colour-65);
   border-radius: 4px;
 }
 
 .activity-log::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 180, 40, 0.9);
+  background: var(--assistant-colour);
 }
 
 /* =========================================================
-   JARVIS PRO
-   SETTINGS SYSTEM
-   ========================================================= */
-
-
-/* =========================================================
-   JARVIS PRO
-   SETTINGS BUTTON
+   SETTINGS BUTTON (HEADER TOP-RIGHT)
    ========================================================= */
 
 .jarvis-settings-button {
-
   position: fixed;
-
-  /*
-   * TOP-RIGHT
-   *
-   * Matches the reference HUD layout.
-   */
   top: 14px;
   right: 145px;
-
   z-index: 100;
-
-  width: 30px;
-  height: 30px;
-
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid
-    rgba(255, 170, 48, 0.55);
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 55%, transparent);
   border-radius: 4px;
-
-  background:
-    rgba(10, 5, 0, 0.72);
-
-  color: #ffcc66;
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  background: rgba(10, 5, 0, 0.72);
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
   font-size: 16px;
-
   line-height: 1;
-
   cursor: pointer;
-
-  text-shadow:
-    0 0 8px
-    rgba(255, 170, 48, 0.7);
-
-  box-shadow:
-    0 0 10px
-    rgba(255, 140, 20, 0.12);
-
+  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
   transition:
     background 150ms ease,
     border-color 150ms ease,
@@ -1004,960 +849,347 @@ body {
     transform 150ms ease;
 }
 
-
 .jarvis-settings-button:hover {
-
-  background:
-    rgba(70, 35, 0, 0.8);
-
-  border-color:
-    rgba(255, 200, 100, 0.9);
-
-  box-shadow:
-    0 0 14px
-    rgba(255, 150, 30, 0.35);
-
+  background: color-mix(in srgb, var(--assistant-colour) 12%, transparent);
+  border-color: var(--assistant-colour);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
   transform: translateY(-1px);
-
 }
-
 
 .jarvis-settings-button:active {
-
   transform: translateY(0);
-
 }
 
-
 /* =========================================================
-   SETTINGS / CONTROLS PANEL
+   JARVIS PRO — SETTINGS & CONTROL PANEL (LEFT HUD)
    ========================================================= */
 
 .jarvis-settings-panel {
-
   position: fixed;
 
-  /*
-   * SYSTEM MONITOR:
-   * top = 98px
-   * height = approximately 245px
-   *
-   * Therefore controls begin below it.
-   */
-  top: 355px;
   left: 24px;
+  bottom: 120px;
 
-  z-index: 90;
-
-  width: 282px;
-
-  padding: 10px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.48);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(5, 5, 4, 0.96),
-      rgba(0, 0, 0, 0.92)
-    );
-
-  box-shadow:
-    0 0 24px
-    rgba(0, 0, 0, 0.7),
-
-    inset 0 0 25px
-    rgba(255, 120, 0, 0.035);
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  width: 300px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  background: rgba(2, 3, 3, 0.08);
+  border-radius: 4px;
+  box-shadow: none;
+  backdrop-filter: none;
+  z-index: 100;
   pointer-events: auto;
-
-  /*
-   * Prevent the panel from becoming
-   * excessively tall on small screens.
-   */
-  max-height:
-    calc(100vh - 375px);
-
-  overflow-y: auto;
-
-  scrollbar-width: thin;
-
 }
-
-
-/* =========================================================
-   SETTINGS PANEL BRAND
-   ========================================================= */
 
 .settings-panel-brand {
+  grid-column: 1 / -1;
+  padding: 4px 0 2px;
+  color: var(--assistant-colour);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 7px var(--assistant-colour-45);
+}
 
-  height: 28px;
-
+.settings-section-title {
+  grid-column: 1 / -1;
   display: flex;
-
   align-items: center;
-
-  padding-left: 3px;
-
-  margin-bottom: 5px;
-
-  color: #ffcc66;
-
+  gap: 8px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  color: var(--assistant-colour);
   font-size: 10px;
-
-  letter-spacing: 2px;
-
-  text-shadow:
-    0 0 8px
-    rgba(255, 170, 48, 0.55);
-
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  opacity: 0.85;
 }
 
-
-/* =========================================================
-   CONTROLS TITLE
-   ========================================================= */
-
-.settings-section-title {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  height: 24px;
-
-  margin-bottom: 5px;
-
-  color: #ffcc66;
-
-  font-size: 9px;
-
-  letter-spacing: 1px;
-
-  opacity: 0.72;
-
+.settings-section-title::before {
+  font-size: 8px;
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px var(--assistant-colour-65);
 }
 
-
-.settings-section-title span {
-
-  color: #ff9d00;
-
-  font-size: 7px;
-
-}
-
-
-/* =========================================================
-   CONTROL BUTTON
-   ========================================================= */
-
+/* Clean, Readable Cybernetic Control Buttons */
 .settings-control {
-
   width: 100%;
-
-  min-height: 37px;
-
+  min-height: 42px;
+  padding: 8px 10px;
   display: flex;
-
   align-items: center;
-
-  gap: 9px;
-
-  margin-bottom: 6px;
-
-  padding: 0 10px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.24);
-
+  justify-content: space-between;
+  gap: 5px;
+  background: rgba(15, 8, 2, 0.45);
+  border: 1px solid var(--assistant-colour-30);
   border-radius: 3px;
-
-  background:
-    rgba(15, 8, 2, 0.58);
-
-  color: #ffb84d;
-
-  font-family:
-    "Courier New",
-    monospace;
-
-  font-size: 9px;
-
-  letter-spacing: 0.5px;
-
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-align: left;
-
   cursor: pointer;
-
-  transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  backdrop-filter: blur(2px);
+  text-shadow: 0 0 5px var(--assistant-colour-30);
+  transition: all 0.15s ease-in-out;
 }
-
 
 .settings-control:hover {
-
-  border-color:
-    rgba(255, 170, 48, 0.72);
-
-  background:
-    rgba(55, 28, 2, 0.68);
-
+  background: color-mix(in srgb, var(--assistant-colour) 12%, transparent);
+  border-color: var(--assistant-colour-80);
   box-shadow:
-    0 0 10px
-    rgba(255, 140, 0, 0.13);
-
+    0 0 10px var(--assistant-colour-20),
+    inset 0 0 8px var(--assistant-colour-10);
+  color: #fff;
+  text-shadow: 0 0 8px var(--assistant-colour);
 }
 
+.settings-control-icon {
+  flex: 0 0 12px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--assistant-colour);
+}
+
+.settings-control-key,
+.settings-control strong {
+  margin-left: auto;
+  padding: 1px 4px;
+  border: 1px solid var(--assistant-colour-30);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--assistant-colour);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+/* Active / On Toggle States */
+.settings-control-toggle-on,
+.settings-control-brief-on {
+  background: rgba(0, 255, 80, 0.08);
+  border-color: rgba(0, 255, 80, 0.7);
+  color: #00ff66;
+  box-shadow:
+    inset 0 0 12px rgba(0, 255, 80, 0.1),
+    0 0 10px rgba(0, 255, 80, 0.2);
+}
+
+.settings-control-toggle-on .settings-control-icon,
+.settings-control-toggle-on strong,
+.settings-control-brief-on .settings-control-icon,
+.settings-control-brief-on strong {
+  color: #00ff66;
+  border-color: rgba(0, 255, 80, 0.6);
+  text-shadow: 0 0 6px rgba(0, 255, 80, 0.6);
+}
 
 .settings-control-primary {
-
-  border-color:
-    rgba(255, 170, 48, 0.65);
-
-  background:
-    rgba(25, 18, 8, 0.78);
-
-  color: #ffcc66;
-
+  border-color: var(--assistant-colour-65);
+  background: rgba(255, 170, 48, 0.08);
 }
 
-
-.settings-control-icon {
-
-  flex: 0 0 12px;
-
-  color: #ff9d00;
-
-  font-size: 8px;
-
-  text-align: center;
-
+.settings-control:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
 }
-
-
-.settings-control-key {
-
-  margin-left: auto;
-
-  opacity: 0.65;
-
-  font-size: 8px;
-
-}
-
-
-.settings-control strong {
-
-  margin-left: auto;
-
-  font-weight: normal;
-
-}
-
-
-.settings-control-toggle-on {
-
-  border-color:
-    rgba(255, 170, 48, 0.55);
-
-}
-
-
-.settings-control-toggle-on strong {
-
-  color: #ffcc66;
-
-}
-
 
 /* =========================================================
-   MORNING BRIEF
-   ========================================================= */
-
-.settings-control-brief {
-
-  margin-bottom: 0;
-
-}
-
-
-.settings-control-brief-on {
-
-  border-color:
-    rgba(60, 210, 120, 0.65);
-
-  background:
-    rgba(0, 60, 30, 0.24);
-
-  color: #65e8a2;
-
-}
-
-
-.settings-control-brief-on
-.settings-control-icon {
-
-  color: #65e8a2;
-
-}
-
-
-/* =========================================================
-   SECTION TITLE
-   ========================================================= */
-
-.settings-section-title {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  height: 24px;
-
-  margin-bottom: 5px;
-
-  color: #ffcc66;
-
-  font-size: 9px;
-
-  letter-spacing: 1px;
-
-  opacity: 0.72;
-}
-
-
-.settings-section-title span {
-
-  color: #ff9d00;
-
-  font-size: 7px;
-
-}
-
-
-/* =========================================================
-   SETTINGS CONTROL
-   ========================================================= */
-
-.settings-control {
-
-  width: 100%;
-
-  min-height: 37px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 9px;
-
-  margin-bottom: 6px;
-
-  padding: 0 10px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.24);
-
-  border-radius: 3px;
-
-  background:
-    rgba(15, 8, 2, 0.58);
-
-  color: #ffb84d;
-
-  font-family:
-    "Courier New",
-    monospace;
-
-  font-size: 9px;
-
-  letter-spacing: 0.5px;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-
-.settings-control:hover {
-
-  border-color:
-    rgba(255, 170, 48, 0.72);
-
-  background:
-    rgba(55, 28, 2, 0.68);
-
-  box-shadow:
-    0 0 10px
-    rgba(255, 140, 0, 0.13);
-}
-
-
-.settings-control-primary {
-
-  border-color:
-    rgba(255, 170, 48, 0.65);
-
-  background:
-    rgba(25, 18, 8, 0.78);
-
-  color: #ffcc66;
-}
-
-
-.settings-control-icon {
-
-  flex: 0 0 12px;
-
-  color: #ff9d00;
-
-  font-size: 8px;
-
-  text-align: center;
-}
-
-
-.settings-control-key {
-
-  margin-left: auto;
-
-  opacity: 0.65;
-
-  font-size: 8px;
-}
-
-
-.settings-control strong {
-
-  margin-left: auto;
-
-  font-weight: normal;
-}
-
-
-.settings-control-toggle-on {
-
-  border-color:
-    rgba(255, 170, 48, 0.55);
-
-}
-
-
-.settings-control-toggle-on strong {
-
-  color: #ffcc66;
-}
-
-
-/* =========================================================
-   MORNING BRIEF
-   ========================================================= */
-
-.settings-control-brief {
-
-  margin-bottom: 0;
-}
-
-
-.settings-control-brief-on {
-
-  border-color:
-    rgba(60, 210, 120, 0.65);
-
-  background:
-    rgba(0, 60, 30, 0.24);
-
-  color: #65e8a2;
-}
-
-
-.settings-control-brief-on
-.settings-control-icon {
-
-  color: #65e8a2;
-}
-
-
-/* =========================================================
-   MODAL BACKDROP
+   MODAL BACKDROP & DIALOGS
    ========================================================= */
 
 .settings-modal-backdrop {
-
   position: fixed;
-
   inset: 0;
-
   z-index: 200;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
-
-  background:
-    rgba(0, 0, 0, 0.58);
-
-  backdrop-filter:
-    blur(2px);
-
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
   pointer-events: auto;
 }
 
-
-/* =========================================================
-   MODAL
-   ========================================================= */
-
 .settings-modal {
-
-  width: min(
-    430px,
-    calc(100vw - 40px)
-  );
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.55);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(4, 7, 9, 0.98),
-      rgba(0, 2, 4, 0.97)
-    );
-
+  width: min(440px, calc(100vw - 40px));
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 55%, transparent);
+  background: linear-gradient(135deg, rgba(4, 7, 9, 0.98), rgba(0, 2, 4, 0.97));
   box-shadow:
-    0 0 40px
-    rgba(0, 0, 0, 0.8),
-
-    inset 0 0 35px
-    rgba(255, 120, 0, 0.035);
-
-  color: #ffb84d;
-
-  font-family:
-    "Courier New",
-    monospace;
+    0 0 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 35px color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
 }
-
-
-/* =========================================================
-   MODAL HEADING
-   ========================================================= */
 
 .settings-modal-heading {
-
   height: 52px;
-
   display: flex;
-
   align-items: center;
-
   gap: 12px;
-
   padding: 0 20px;
-
-  border-bottom: 1px solid
-    rgba(255, 140, 0, 0.24);
-
-  color: #ffcc66;
-
+  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 24%, transparent);
+  color: var(--assistant-colour);
   font-size: 14px;
-
   font-weight: 700;
-
   letter-spacing: 1px;
-
-  text-shadow:
-    0 0 8px
-    rgba(255, 170, 48, 0.6);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 60%, transparent);
 }
-
 
 .settings-modal-heading span {
-
-  color: #ff9d00;
-
+  color: var(--assistant-colour);
 }
 
-
-/* =========================================================
-   REMOTE MODAL
-   ========================================================= */
-
 .remote-modal-content {
-
   padding: 25px;
-
   text-align: center;
 }
 
-
 .remote-icon {
-
   width: 130px;
   height: 130px;
-
-  margin:
-    0 auto 16px;
-
+  margin: 0 auto 16px;
   display: flex;
-
   align-items: center;
   justify-content: center;
-
-  border: 1px solid
-    rgba(255, 170, 48, 0.35);
-
-  background:
-    rgba(255, 150, 0, 0.035);
-
-  color: #ffcc66;
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 35%, transparent);
+  background: color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
+  color: var(--assistant-colour);
   font-size: 70px;
-
-  text-shadow:
-    0 0 18px
-    rgba(255, 160, 30, 0.7);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--assistant-colour) 70%, transparent);
 }
 
-
 .remote-title {
-
   margin-bottom: 8px;
-
-  color: #ffcc66;
-
+  color: var(--assistant-colour);
   font-size: 13px;
-
   letter-spacing: 1px;
 }
 
-
 .remote-description {
-
   margin-bottom: 20px;
-
-  color: #a87842;
-
+  color: color-mix(in srgb, var(--assistant-colour) 60%, transparent);
   font-size: 10px;
 }
 
-
 .remote-status-box {
-
   padding: 14px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.25);
-
-  background:
-    rgba(20, 8, 0, 0.55);
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 25%, transparent);
+  background: color-mix(in srgb, var(--assistant-colour) 3%, transparent);
 }
 
-
 .remote-status-box span {
-
   display: block;
-
   margin-bottom: 8px;
-
-  color: #987044;
-
+  color: color-mix(in srgb, var(--assistant-colour) 50%, transparent);
   font-size: 9px;
 }
 
-
 .remote-status-box strong {
-
   display: block;
-
-  color: #ffcc66;
-
+  color: var(--assistant-colour);
   font-size: 10px;
-
   word-break: break-all;
 }
 
-
 .remote-note {
-
-  margin:
-    15px 0 0;
-
-  color: #765c3c;
-
+  margin: 15px 0 0;
+  color: color-mix(in srgb, var(--assistant-colour) 45%, transparent);
   font-size: 9px;
-
   line-height: 1.5;
 }
 
-
-/* =========================================================
-   CUSTOMISE FORM
-   ========================================================= */
-
+/* Customise Form */
 .customise-form {
-
   padding: 22px;
 }
 
-
 .customise-form label {
-
   display: block;
-
   margin-bottom: 18px;
-
-  color: #9b7448;
-
+  color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
   font-size: 9px;
-
   letter-spacing: 1px;
 }
 
-
 .settings-field-help {
-
   display: block;
-
   margin-top: 5px;
-
   margin-bottom: 7px;
-
-  color: #745536;
-
+  color: color-mix(in srgb, var(--assistant-colour) 48%, transparent);
   font-size: 8px;
-
   letter-spacing: 0;
 }
 
-
 .customise-form input[type="text"] {
-
   width: 100%;
-
   height: 35px;
-
   padding: 0 11px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.3);
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 30%, transparent);
   outline: none;
-
-  background:
-    rgba(2, 8, 11, 0.85);
-
-  color: #ffcc66;
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  background: rgba(2, 8, 11, 0.85);
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
   font-size: 11px;
 }
 
-
 .customise-form input[type="text"]:focus {
-
-  border-color:
-    rgba(255, 180, 60, 0.72);
-
-  box-shadow:
-    0 0 8px
-    rgba(255, 140, 0, 0.12);
+  border-color: color-mix(in srgb, var(--assistant-colour) 72%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 12%, transparent);
 }
 
-
-/* =========================================================
-   COLOUR
-   ========================================================= */
-
 .colour-control {
-
   display: flex;
-
   gap: 8px;
 }
 
-
 .colour-control input[type="color"] {
-
   flex: 0 0 45px;
-
   width: 45px;
   height: 35px;
-
   padding: 2px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.3);
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 30%, transparent);
   background: #020303;
-
   cursor: pointer;
 }
 
-
 .colour-control input[type="text"] {
-
   flex: 1;
 }
 
-
-/* =========================================================
-   MODAL BUTTONS
-   ========================================================= */
-
 .settings-modal-actions {
-
   display: flex;
-
   gap: 10px;
-
   margin-top: 22px;
 }
 
-
 .settings-modal-button {
-
   flex: 1;
-
   height: 36px;
-
-  border: 1px solid
-    rgba(255, 140, 0, 0.34);
-
-  background:
-    rgba(20, 8, 0, 0.7);
-
-  color: #c98a42;
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 34%, transparent);
+  background: color-mix(in srgb, var(--assistant-colour) 3%, transparent);
+  color: color-mix(in srgb, var(--assistant-colour) 70%, transparent);
+  font-family: "Courier New", monospace;
   font-size: 9px;
-
   letter-spacing: 1px;
-
   cursor: pointer;
 }
 
-
 .settings-modal-button:hover {
-
-  border-color:
-    rgba(255, 190, 80, 0.72);
-
-  color: #ffcc66;
+  border-color: color-mix(in srgb, var(--assistant-colour) 72%, transparent);
+  color: var(--assistant-colour);
 }
-
 
 .settings-modal-button-primary {
-
-  border-color:
-    rgba(255, 140, 0, 0.65);
-
-  color: #ffcc66;
-
-  background:
-    rgba(80, 30, 0, 0.4);
-
-}
-
-
-/* =========================================================
-   RESPONSIVE SETTINGS
-   ========================================================= */
-
-@media (max-width: 1000px) {
-
-  .jarvis-settings-button {
-
-    right: 18px;
-
-  }
-
-  .jarvis-settings-panel {
-
-    left: 18px;
-
-    width: 220px;
-
-    top: 355px;
-
-  }
-
-}
-
-
-@media (max-width: 760px) {
-
-  .jarvis-settings-button {
-
-    right: 14px;
-
-  }
-
-  .jarvis-settings-panel {
-
-    left: 14px;
-
-    top: 355px;
-
-    width: 220px;
-
-    max-height:
-      calc(100vh - 370px);
-
-  }
-
-}
-
-
-@media (max-width: 600px) {
-
-  .jarvis-settings-panel {
-
-    left: 10px;
-
-    width:
-      calc(100vw - 20px);
-
-    top: 355px;
-
-  }
-
-  .settings-modal {
-
-    width:
-      calc(100vw - 24px);
-
-  }
-
+  border-color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
+  color: var(--assistant-colour);
+  background: color-mix(in srgb, var(--assistant-colour) 10%, transparent);
 }
 
 /* =========================================================
-   REMOTE QR
+   REMOTE QR & PIN
    ========================================================= */
 
 .remote-qr-wrapper {
@@ -1972,23 +1204,18 @@ body {
 .remote-qr {
   padding: 10px;
   background: #050505;
-  border: 1px solid rgba(255, 204, 102, 0.35);
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 35%, transparent);
   box-shadow:
-    0 0 18px rgba(255, 170, 48, 0.12),
-    inset 0 0 18px rgba(255, 170, 48, 0.04);
+    0 0 18px color-mix(in srgb, var(--assistant-colour) 12%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--assistant-colour) 4%, transparent);
 }
 
 .remote-qr-label {
   font-size: 9px;
   letter-spacing: 0.2em;
-  color: #ffcc66;
+  color: var(--assistant-colour);
   opacity: 0.75;
 }
-
-
-/* =========================================================
-   REMOTE PIN
-   ========================================================= */
 
 .remote-pin-box {
   display: flex;
@@ -1997,8 +1224,8 @@ body {
   gap: 6px;
   margin: 14px auto;
   padding: 12px 22px;
-  border: 1px solid rgba(255, 204, 102, 0.25);
-  background: rgba(255, 170, 48, 0.035);
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 25%, transparent);
+  background: color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
 }
 
 .remote-pin-label {
@@ -2010,14 +1237,9 @@ body {
 .remote-pin {
   font-size: 24px;
   letter-spacing: 0.28em;
-  color: #ffcc66;
-  text-shadow: 0 0 12px rgba(255, 170, 48, 0.45);
+  color: var(--assistant-colour);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--assistant-colour) 45%, transparent);
 }
-
-
-/* =========================================================
-   REMOTE STATES
-   ========================================================= */
 
 .remote-loading,
 .remote-offline {
@@ -2030,13 +1252,13 @@ body {
 }
 
 .remote-loading {
-  color: #ffcc66;
+  color: var(--assistant-colour);
   font-size: 10px;
   letter-spacing: 0.18em;
 }
 
 .remote-offline strong {
-  color: #ffcc66;
+  color: var(--assistant-colour);
   font-size: 11px;
   letter-spacing: 0.12em;
 }
@@ -2049,239 +1271,121 @@ body {
 }
 
 /* =========================================================
-   MORNING BRIEF — TRANSPARENT HUD TEXT
+   MORNING BRIEF OVERLAY
    ========================================================= */
 
 .morning-brief-overlay {
   position: absolute;
-
   top: 13%;
   left: 50%;
-
   transform: translateX(-50%);
-
   width: min(900px, 70vw);
-
   z-index: 20;
-
   pointer-events: none;
-
   background: transparent;
   border: none;
   box-shadow: none;
-
   padding: 0;
-
-  color: #d9a441;
-
-  font-family:
-    "Courier New",
-    monospace;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
 }
-
-
-/* ---------------------------------------------------------
-   HEADER
-   --------------------------------------------------------- */
 
 .morning-brief-header {
   display: flex;
   align-items: center;
-
   gap: 10px;
-
   margin-bottom: 14px;
-
-  color: #d9a441;
-
+  color: var(--assistant-colour);
   font-size: 12px;
-
   letter-spacing: 3px;
-
   background: transparent;
 }
 
-
-/* ---------------------------------------------------------
-   MARKER
-   --------------------------------------------------------- */
-
 .morning-brief-marker {
-  color: #f0b94b;
-
-  text-shadow:
-    0 0 6px rgba(240, 185, 75, 0.8);
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--assistant-colour) 80%, transparent);
 }
-
-
-/* ---------------------------------------------------------
-   HEADLINE LIST
-   --------------------------------------------------------- */
 
 .morning-brief-list {
   display: flex;
-
   flex-direction: column;
-
   gap: 9px;
-
   background: transparent;
 }
-
-
-/* ---------------------------------------------------------
-   EACH HEADLINE
-   --------------------------------------------------------- */
 
 .morning-brief-item {
   display: grid;
-
   grid-template-columns: 80px 1fr;
-
   gap: 14px;
-
   background: transparent;
-
   border: none;
-
   padding: 0;
-
   margin: 0;
-
   line-height: 1.45;
-
   font-size: 13px;
-
   letter-spacing: 0.5px;
-
-  text-shadow:
-    0 0 5px rgba(217, 164, 65, 0.35);
-
-  animation:
-    morning-brief-print
-    0.8s
-    steps(45)
-    both;
+  text-shadow: 0 0 5px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
+  animation: morning-brief-print 0.8s steps(45) both;
 }
 
-
-/* ---------------------------------------------------------
-   CATEGORY
-   --------------------------------------------------------- */
-
 .morning-brief-category {
-  color: #a98235;
-
+  color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
   font-size: 10px;
-
   letter-spacing: 1.5px;
-
   padding-top: 2px;
 }
 
-
-/* ---------------------------------------------------------
-   TITLE
-   --------------------------------------------------------- */
-
 .morning-brief-title {
-  color: #d8c39a;
-
+  color: color-mix(in srgb, var(--assistant-colour) 78%, white 22%);
   min-width: 0;
-
   overflow: hidden;
-
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
-
-/* ---------------------------------------------------------
-   PRINT / TYPE EFFECT
-   --------------------------------------------------------- */
-
-.morning-brief-item:nth-child(1) {
-  animation-delay: 0.15s;
-}
-
-.morning-brief-item:nth-child(2) {
-  animation-delay: 0.45s;
-}
-
-.morning-brief-item:nth-child(3) {
-  animation-delay: 0.75s;
-}
-
-.morning-brief-item:nth-child(4) {
-  animation-delay: 1.05s;
-}
-
-.morning-brief-item:nth-child(5) {
-  animation-delay: 1.35s;
-}
-
-.morning-brief-item:nth-child(6) {
-  animation-delay: 1.65s;
-}
-
+.morning-brief-item:nth-child(1) { animation-delay: 0.15s; }
+.morning-brief-item:nth-child(2) { animation-delay: 0.45s; }
+.morning-brief-item:nth-child(3) { animation-delay: 0.75s; }
+.morning-brief-item:nth-child(4) { animation-delay: 1.05s; }
+.morning-brief-item:nth-child(5) { animation-delay: 1.35s; }
+.morning-brief-item:nth-child(6) { animation-delay: 1.65s; }
 
 @keyframes morning-brief-print {
-
   from {
     opacity: 0;
     transform: translateX(-8px);
     clip-path: inset(0 100% 0 0);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
     clip-path: inset(0 0 0 0);
   }
-
 }
 
 .morning-brief-close {
   position: absolute;
-
   top: -4px;
   right: -4px;
-
   width: 22px;
   height: 22px;
-
   padding: 0;
-
   border: none;
-
   background: transparent;
-
-  color: #a98235;
-
+  color: var(--assistant-colour);
   font-family: "Courier New", monospace;
-
   font-size: 18px;
-
   line-height: 22px;
-
   cursor: pointer;
-
   pointer-events: auto;
-
   opacity: 0.7;
-
-  text-shadow:
-    0 0 5px rgba(217, 164, 65, 0.5);
+  text-shadow: 0 0 5px color-mix(in srgb, var(--assistant-colour) 50%, transparent);
 }
 
 .morning-brief-close:hover {
-  color: #f0b94b;
-
+  color: var(--assistant-colour);
   opacity: 1;
-
-  text-shadow:
-    0 0 8px rgba(240, 185, 75, 0.9);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 90%, transparent);
 }
 
 /* =========================================================
@@ -2293,16 +1397,10 @@ body {
   margin-top: 2px;
 }
 
-
-/* ---------------------------------------------------------
-   HEADING
-   --------------------------------------------------------- */
-
 .assistant-colour-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   margin-bottom: 14px;
 }
 
@@ -2323,28 +1421,14 @@ body {
   opacity: 0.55;
 }
 
-
-/* ---------------------------------------------------------
-   DEFAULT
-   --------------------------------------------------------- */
-
 .assistant-colour-default {
-  border: 1px solid rgba(255, 170, 48, 0.45);
-
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 45%, transparent);
   background: transparent;
-
   color: var(--assistant-colour);
-
   padding: 5px 10px;
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  font-family: "Courier New", monospace;
   font-size: 8px;
-
   cursor: pointer;
-
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -2353,211 +1437,145 @@ body {
 
 .assistant-colour-default:hover {
   border-color: var(--assistant-colour);
-
-  box-shadow:
-    0 0 8px rgba(255, 170, 48, 0.35);
-
-  color: #ffd27a;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
+  color: var(--assistant-colour);
 }
-
-
-/* ---------------------------------------------------------
-   WHEEL AREA
-   --------------------------------------------------------- */
 
 .assistant-colour-wheel-area {
   display: flex;
-
   justify-content: center;
   align-items: center;
-
   padding: 4px 0 10px;
 }
 
-
-/* ---------------------------------------------------------
-   COLOUR WHEEL
-   --------------------------------------------------------- */
-
 .assistant-colour-wheel {
   position: relative;
-
   width: 150px;
   height: 150px;
-
   border-radius: 50%;
-
   cursor: crosshair;
-
   background:
-    radial-gradient(
-      circle,
-      transparent 0%,
-      transparent 1%,
-      rgba(255, 255, 255, 0.02) 1.5%,
-      transparent 2%
-    ),
-    conic-gradient(
-      from 0deg,
-      #ff0000,
-      #ffff00,
-      #00ff00,
-      #00ffff,
-      #0000ff,
-      #ff00ff,
-      #ff0000
-    );
-
-  box-shadow:
-    0 0 10px rgba(255, 170, 48, 0.18);
-
+    radial-gradient(circle, transparent 0%, transparent 1%, rgba(255, 255, 255, 0.02) 1.5%, transparent 2%),
+    conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
   touch-action: none;
 }
 
-
-/* ---------------------------------------------------------
-   WHITE → TRANSPARENT SATURATION MASK
-   --------------------------------------------------------- */
-
 .assistant-colour-wheel::before {
   content: "";
-
   position: absolute;
-
   inset: 0;
-
   border-radius: 50%;
-
-  background:
-    radial-gradient(
-      circle,
-      #fff 0%,
-      rgba(255, 255, 255, 0.7) 20%,
-      transparent 70%
-    );
-
+  background: radial-gradient(circle, #fff 0%, rgba(255, 255, 255, 0.7) 20%, transparent 70%);
   pointer-events: none;
 }
-
-
-/* ---------------------------------------------------------
-   BLACK VALUE MASK
-   --------------------------------------------------------- */
 
 .assistant-colour-wheel::after {
   content: "";
-
   position: absolute;
-
   inset: 0;
-
   border-radius: 50%;
-
-  background:
-    radial-gradient(
-      circle,
-      transparent 55%,
-      rgba(0, 0, 0, 0.02) 70%,
-      rgba(0, 0, 0, 0.18) 100%
-    );
-
+  background: radial-gradient(circle, transparent 55%, rgba(0, 0, 0, 0.02) 70%, rgba(0, 0, 0, 0.18) 100%);
   pointer-events: none;
 }
-
-
-/* ---------------------------------------------------------
-   HANDLE
-   --------------------------------------------------------- */
 
 .assistant-colour-wheel-handle {
   position: absolute;
-
   z-index: 5;
-
   width: 15px;
   height: 15px;
-
-  transform:
-    translate(-50%, -50%);
-
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-
   background: #fff;
-
   border: 2px solid #111;
-
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.9),
     0 0 7px rgba(255, 255, 255, 0.8);
-
   pointer-events: none;
 }
-
-
-/* ---------------------------------------------------------
-   CENTER PREVIEW
-   --------------------------------------------------------- */
 
 .assistant-colour-preview {
   position: absolute;
-
   z-index: 4;
-
   left: 50%;
   top: 50%;
-
   width: 62px;
   height: 62px;
-
-  transform:
-    translate(-50%, -50%);
-
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-
   border: 2px solid rgba(0, 0, 0, 0.9);
-
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
     0 0 15px rgba(0, 0, 0, 0.45);
-
   pointer-events: none;
 }
 
-
-/* ---------------------------------------------------------
-   HEX FIELD
-   --------------------------------------------------------- */
-
 .assistant-colour-hex {
   width: 100%;
-
   height: 32px;
-
-  padding:
-    0 10px;
-
-  border:
-    1px solid rgba(255, 170, 48, 0.45);
-
-  background:
-    rgba(0, 10, 12, 0.8);
-
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--assistant-colour) 45%, transparent);
+  background: rgba(0, 10, 12, 0.8);
   color: var(--assistant-colour);
-
-  font-family:
-    "Courier New",
-    monospace;
-
+  font-family: "Courier New", monospace;
   font-size: 11px;
-
   letter-spacing: 0.05em;
-
   outline: none;
 }
 
 .assistant-colour-hex:focus {
   border-color: var(--assistant-colour);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
+}
 
-  box-shadow:
-    0 0 8px rgba(255, 170, 48, 0.18);
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .cockpit-panel {
+    width: 220px;
+  }
+
+  .jarvis-settings-button {
+    right: 18px;
+  }
+
+  .jarvis-settings-panel {
+    left: 18px;
+    width: 220px;
+    top: 360px;
+  }
+}
+
+@media (max-width: 760px) {
+  .cockpit-panel {
+    display: none;
+  }
+
+  .cockpit-title {
+    font-size: 18px;
+  }
+
+  .jarvis-settings-button {
+    right: 14px;
+  }
+
+  .jarvis-settings-panel {
+    left: 14px;
+    top: 90px;
+    width: 240px;
+  }
+}
+
+@media (max-width: 600px) {
+  .jarvis-settings-panel {
+    left: 10px;
+    width: calc(100vw - 20px);
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .settings-modal {
+    width: calc(100vw - 24px);
+  }
 }

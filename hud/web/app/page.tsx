@@ -363,12 +363,51 @@ export default function Home() {
 
       }
 
+            /*
+       * -------------------------------------------------------
+       * END SETTINGS LOADING
+       * -------------------------------------------------------
+       */
 
-      /*
-      * -------------------------------------------------------
-      * MICROPHONE
-      * -------------------------------------------------------
-      */
+    };
+
+    loadSettings();
+
+  }, []);
+
+
+  /*
+   * =========================================================
+   * MICROPHONE STARTUP STATUS
+   * =========================================================
+   *
+   * The HUD can load slightly before the background
+   * microphone listener starts.
+   *
+   * Therefore we retry the status check briefly during
+   * startup instead of changing the actual microphone state.
+   */
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    let timer: number | null = null;
+
+    let attempts = 0;
+
+    const MAX_ATTEMPTS = 10;
+
+
+    const loadMicrophone = async () => {
+
+      if (cancelled) {
+        return;
+      }
+
+
+      attempts += 1;
+
 
       try {
 
@@ -380,8 +419,10 @@ export default function Home() {
             }
           );
 
+
         const result =
           await response.json();
+
 
         if (
           response.ok &&
@@ -389,9 +430,60 @@ export default function Home() {
           typeof result.enabled === "boolean"
         ) {
 
-          setMicrophoneEnabled(
-            result.enabled
-          );
+          /*
+           * Update the HUD from the real backend state.
+           */
+          if (!cancelled) {
+
+            setMicrophoneEnabled(
+              result.enabled
+            );
+
+          }
+
+
+          /*
+           * If the microphone is still OFF during
+           * JARVIS startup, give the background listener
+           * a little time to finish initializing.
+           *
+           * Stop retrying after MAX_ATTEMPTS so we don't
+           * continuously poll when the user intentionally
+           * keeps the microphone OFF.
+           */
+          if (
+            !result.enabled &&
+            attempts < MAX_ATTEMPTS &&
+            !cancelled
+          ) {
+
+            timer =
+              window.setTimeout(
+                loadMicrophone,
+                1000
+              );
+
+          }
+
+          return;
+
+        }
+
+
+        /*
+         * Unexpected response.
+         * Retry briefly during startup.
+         */
+        if (
+          attempts < MAX_ATTEMPTS &&
+          !cancelled
+        ) {
+
+          timer =
+            window.setTimeout(
+              loadMicrophone,
+              1000
+            );
 
         }
 
@@ -402,13 +494,51 @@ export default function Home() {
           error
         );
 
+
+        /*
+         * Dashboard may still be starting.
+         */
+        if (
+          attempts < MAX_ATTEMPTS &&
+          !cancelled
+        ) {
+
+          timer =
+            window.setTimeout(
+              loadMicrophone,
+              1000
+            );
+
+        }
+
       }
 
     };
 
-    loadSettings();
+
+    loadMicrophone();
+
+
+    return () => {
+
+      cancelled = true;
+
+      if (timer !== null) {
+
+        window.clearTimeout(timer);
+
+      }
+
+    };
 
   }, []);
+
+  
+  /*
+  * -------------------------------------------------------
+  * MORNING BRIEF STATUS
+  * -------------------------------------------------------
+  */
 
   useEffect(() => {
 
@@ -448,8 +578,13 @@ export default function Home() {
     loadMorningBrief();
 
   }, []);
-
   
+  
+  /*
+  * -------------------------------------------------------
+  * LIVE CONVERSATION STATUS
+  * -------------------------------------------------------
+  */
 
   useEffect(() => {
 
