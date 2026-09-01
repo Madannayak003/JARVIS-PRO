@@ -15,6 +15,7 @@ Supports:
 """
 
 import os
+import time
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -396,6 +397,56 @@ class GeminiProvider(AIProvider):
                 )
             )
 
+            # ==================================================
+            # GEMINI REQUEST DEBUG
+            # ==================================================
+
+            print(
+                "[GEMINI DEBUG] prompt length:",
+                len(request.prompt or "")
+            )
+
+            print(
+                "[GEMINI DEBUG] system prompt length:",
+                len(request.system_prompt or "")
+            )
+
+            print(
+                "[GEMINI DEBUG] capability:",
+                request.capability
+            )
+
+            print(
+                "[GEMINI DEBUG] model:",
+                request.model
+            )
+
+            print(
+                "[GEMINI DEBUG] metadata keys:",
+                list((request.metadata or {}).keys())
+            )
+
+            # ==================================================
+            # STREAM TIMING
+            # ==================================================
+
+            stream_start = time.perf_counter()
+
+            print(
+                f"[GEMINI STREAM] Request started: {model}"
+            )
+
+            client_start = time.perf_counter()
+
+            client = self._get_client()
+
+            print(
+                "[GEMINI STREAM] Client ready:",
+                f"{time.perf_counter() - client_start:.3f}s"
+            )
+
+            api_start = time.perf_counter()
+
             response_stream = (
                 client.models.generate_content_stream(
 
@@ -406,6 +457,13 @@ class GeminiProvider(AIProvider):
                     config=config,
                 )
             )
+
+            print(
+                "[GEMINI STREAM] API stream created:",
+                f"{time.perf_counter() - api_start:.3f}s"
+            )
+
+            first_text_time = None
 
             for chunk in response_stream:
 
@@ -419,7 +477,7 @@ class GeminiProvider(AIProvider):
                 ):
 
                     print(
-                        "\n[GEMINI STREAM] Interrupted"
+                        "[GEMINI STREAM] Interrupted"
                     )
 
                     break
@@ -431,6 +489,27 @@ class GeminiProvider(AIProvider):
                 ) or ""
 
                 if text:
+
+                    # --------------------------------------
+                    # First text timing
+                    # --------------------------------------
+
+                    if first_text_time is None:
+
+                        first_text_time = (
+                            time.perf_counter()
+                        )
+
+                        print(
+                            "[GEMINI STREAM] "
+                            f"FIRST TEXT: "
+                            f"{first_text_time - stream_start:.3f}s"
+                        )
+
+                    print(
+                        "[GEMINI STREAM] CHUNK:",
+                        repr(text),
+                    )
 
                     yield AIStreamChunk(
 
@@ -478,9 +557,19 @@ class GeminiProvider(AIProvider):
 
             return
 
-        # --------------------------------------------------
-        # Normal completion
-        # --------------------------------------------------
+        # ==================================================
+        # NORMAL COMPLETION
+        # ==================================================
+
+        total_time = (
+            time.perf_counter()
+            - stream_start
+        )
+
+        print(
+            "[GEMINI STREAM] COMPLETE:",
+            f"{total_time:.3f}s"
+        )
 
         yield AIStreamChunk(
 
