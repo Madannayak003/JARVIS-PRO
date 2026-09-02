@@ -67,7 +67,11 @@ type SettingsModal =
 
   const JARVIS_DASHBOARD_URL =
     process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
-    "http://127.0.0.1:8765";
+    (
+      typeof window !== "undefined"
+        ? `http://${window.location.hostname}:8765`
+        : "http://127.0.0.1:8765"
+    );
 
 export default function Home() {
 
@@ -398,7 +402,7 @@ export default function Home() {
    * startup instead of changing the actual microphone state.
    */
 
-  useEffect(() => {
+    useEffect(() => {
 
     let cancelled = false;
 
@@ -408,16 +412,13 @@ export default function Home() {
 
     const MAX_ATTEMPTS = 10;
 
-
     const loadMicrophone = async () => {
 
       if (cancelled) {
         return;
       }
 
-
       attempts += 1;
-
 
       try {
 
@@ -429,10 +430,8 @@ export default function Home() {
             }
           );
 
-
         const result =
           await response.json();
-
 
         if (
           response.ok &&
@@ -441,7 +440,8 @@ export default function Home() {
         ) {
 
           /*
-           * Update the HUD from the real backend state.
+           * Python backend is the single source
+           * of truth for microphone state.
            */
           if (!cancelled) {
 
@@ -451,15 +451,9 @@ export default function Home() {
 
           }
 
-
           /*
-           * If the microphone is still OFF during
-           * JARVIS startup, give the background listener
-           * a little time to finish initializing.
-           *
-           * Stop retrying after MAX_ATTEMPTS so we don't
-           * continuously poll when the user intentionally
-           * keeps the microphone OFF.
+           * During startup, retry briefly if the
+           * backend reports the microphone OFF.
            */
           if (
             !result.enabled &&
@@ -476,9 +470,7 @@ export default function Home() {
           }
 
           return;
-
         }
-
 
         /*
          * Unexpected response.
@@ -504,10 +496,6 @@ export default function Home() {
           error
         );
 
-
-        /*
-         * Dashboard may still be starting.
-         */
         if (
           attempts < MAX_ATTEMPTS &&
           !cancelled
@@ -525,9 +513,66 @@ export default function Home() {
 
     };
 
-
     loadMicrophone();
 
+    /*
+     * -------------------------------------------------------
+     * CONTINUOUS BACKEND STATE SYNC
+     * -------------------------------------------------------
+     *
+     * Multiple HUD windows can control the same
+     * JARVIS microphone.
+     *
+     * Therefore each HUD periodically refreshes
+     * its button state from the Python backend.
+     */
+
+    const syncMicrophone = async () => {
+
+      if (cancelled) {
+        return;
+      }
+
+      try {
+
+        const response =
+          await fetch(
+            `${JARVIS_DASHBOARD_URL}/api/local/microphone`,
+            {
+              cache: "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          response.ok &&
+          result.ok &&
+          typeof result.enabled === "boolean" &&
+          !cancelled
+        ) {
+
+          setMicrophoneEnabled(
+            result.enabled
+          );
+
+        }
+
+      } catch {
+        /*
+         * Do not disturb the existing UI state
+         * if the backend is temporarily unavailable.
+         */
+      }
+
+    };
+
+    const syncTimer =
+      window.setInterval(
+        syncMicrophone,
+        1000
+      );
 
     return () => {
 
@@ -538,6 +583,10 @@ export default function Home() {
         window.clearTimeout(timer);
 
       }
+
+      window.clearInterval(
+        syncTimer
+      );
 
     };
 
@@ -552,12 +601,21 @@ export default function Home() {
 
   useEffect(() => {
 
+    let cancelled = false;
+
     const loadMorningBrief = async () => {
+
+      if (cancelled) {
+        return;
+      }
 
       try {
 
         const response = await fetch(
-          "http://127.0.0.1:8765/api/local/morning-brief"
+          `${JARVIS_DASHBOARD_URL}/api/local/morning-brief`,
+          {
+            cache: "no-store",
+          }
         );
 
         const result = await response.json();
@@ -565,7 +623,8 @@ export default function Home() {
         if (
           response.ok &&
           result.ok &&
-          typeof result.enabled === "boolean"
+          typeof result.enabled === "boolean" &&
+          !cancelled
         ) {
 
           setMorningBrief(
@@ -574,18 +633,35 @@ export default function Home() {
 
         }
 
-      } catch (error) {
-
-        console.error(
-          "[HUD] Could not load Morning Brief setting:",
-          error
-        );
-
+      } catch {
+        /*
+         * Do not disturb the current UI state if
+         * the backend is temporarily unavailable.
+         */
       }
 
     };
 
     loadMorningBrief();
+
+    /*
+     * Keep multiple HUD windows synchronized.
+     */
+    const syncTimer =
+      window.setInterval(
+        loadMorningBrief,
+        1000
+      );
+
+    return () => {
+
+      cancelled = true;
+
+      window.clearInterval(
+        syncTimer
+      );
+
+    };
 
   }, []);
   
@@ -598,12 +674,18 @@ export default function Home() {
 
   useEffect(() => {
 
+    let cancelled = false;
+
     const loadLiveConversation = async () => {
+
+      if (cancelled) {
+        return;
+      }
 
       try {
 
         const response = await fetch(
-          "http://127.0.0.1:8765/api/live/status",
+          `${JARVIS_DASHBOARD_URL}/api/live/status`,
           {
             cache: "no-store",
           }
@@ -615,7 +697,8 @@ export default function Home() {
         if (
           response.ok &&
           result.ok &&
-          typeof result.running === "boolean"
+          typeof result.running === "boolean" &&
+          !cancelled
         ) {
 
           setLiveConversationEnabled(
@@ -624,18 +707,35 @@ export default function Home() {
 
         }
 
-      } catch (error) {
-
-        console.error(
-          "[HUD] Could not load Live Conversation status:",
-          error
-        );
-
+      } catch {
+        /*
+         * Do not disturb the current UI state if
+         * the backend is temporarily unavailable.
+         */
       }
 
     };
 
     loadLiveConversation();
+
+    /*
+     * Keep multiple HUD windows synchronized.
+     */
+    const syncTimer =
+      window.setInterval(
+        loadLiveConversation,
+        1000
+      );
+
+    return () => {
+
+      cancelled = true;
+
+      window.clearInterval(
+        syncTimer
+      );
+
+    };
 
   }, []);
 
@@ -1958,7 +2058,7 @@ function AssistantColourPicker({
 
                 const response =
                   await fetch(
-                    "http://127.0.0.1:8765/api/local/microphone",
+                    `${JARVIS_DASHBOARD_URL}/api/local/microphone`,
                     {
                       method: "POST",
                       headers: {
@@ -2053,7 +2153,7 @@ function AssistantColourPicker({
 
                 const response =
                   await fetch(
-                    `http://127.0.0.1:8765/api/live/${
+                    `${JARVIS_DASHBOARD_URL}/api/live/${
                       next
                         ? "start"
                         : "stop"
@@ -2144,7 +2244,7 @@ function AssistantColourPicker({
               try {
 
                 const response = await fetch(
-                  "http://127.0.0.1:8765/api/local/morning-brief",
+                  `${JARVIS_DASHBOARD_URL}/api/local/morning-brief`,
                   {
                     method: "POST",
                     headers: {
