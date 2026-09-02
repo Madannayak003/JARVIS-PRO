@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -248,10 +249,12 @@ export default function HudCockpit({
   const system =
     state.system || {};
 
+  // Reference for auto-scrolling to the latest log entry
+  const logEndRef = useRef<HTMLDivElement | null>(null);
 
-  const activeStatus =
-    state.status?.toUpperCase()
-    || "IDLE";
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activities]);
 
 
   return (
@@ -426,68 +429,12 @@ export default function HudCockpit({
 
           )}
 
+          {/* Auto-scroll anchor target */}
+          <div ref={logEndRef} />
+
         </div>
 
       </aside>
-
-      {/* ============================================= */}
-      {/* BOTTOM RUNTIME STATUS */}
-      {/* ============================================= */}
-
-      <div className="cockpit-bottom">
-
-        <div
-          className={
-            `voice-indicator ${
-              state.listening
-                ? "active"
-                : ""
-            }`
-          }
-        >
-          LISTENING
-        </div>
-
-
-        <div
-          className={
-            `voice-indicator ${
-              state.thinking
-                ? "active"
-                : ""
-            }`
-          }
-        >
-          THINKING
-        </div>
-
-
-        <div
-          className={
-            `voice-indicator ${
-              state.speaking
-                ? "active"
-                : ""
-            }`
-          }
-        >
-          SPEAKING
-        </div>
-
-
-        <div
-          className={
-            `voice-indicator ${
-              state.executing
-                ? "active"
-                : ""
-            }`
-          }
-        >
-          EXECUTING
-        </div>
-
-      </div>
 
     </div>
 

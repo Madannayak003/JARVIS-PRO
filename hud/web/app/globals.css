@@ -110,7 +110,10 @@ body {
   );
 }
 
-/* ——— HUD ——— */
+/* =========================================================
+   HUD BASE & OVERLAYS
+   ========================================================= */
+
 .hud {
   position: fixed;
   z-index: 20;
@@ -120,69 +123,59 @@ body {
 }
 
 .hud-controls {
-  bottom: 24px;
-  right: 24px;
+  position: fixed;
+  bottom: 80px;
+  left: 24px;
+  right: auto;
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: auto;
 }
 
 .hud-btn {
-  min-width: 44px;
-  height: 34px;
-  padding: 0 12px;
-  background: rgba(20, 10, 0, 0.55);
+  min-width: 40px;
+  height: 30px;
+  padding: 0 10px;
+  background: transparent;
   border: 1px solid var(--assistant-colour-45);
-  border-radius: 4px;
+  border-radius: 3px;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: bold;
   letter-spacing: 0.08em;
   cursor: pointer;
-  backdrop-filter: blur(2px);
   text-shadow: 0 0 6px var(--assistant-colour-65);
-  box-shadow: 0 0 12px var(--assistant-colour-45) inset;
+  box-shadow: 0 0 10px var(--assistant-colour-20) inset;
   transition:
-    background 0.15s ease,
     border-color 0.15s ease,
     box-shadow 0.15s ease;
 }
 
 .hud-btn:hover {
-  background: color-mix(
-    in srgb,
-    var(--assistant-colour) 12%,
-    transparent
-  );
   border-color: var(--assistant-colour-80);
   box-shadow:
-    0 0 14px var(--assistant-colour-45),
-    0 0 12px var(--assistant-colour-45) inset;
+    0 0 12px var(--assistant-colour-45),
+    0 0 10px var(--assistant-colour-30) inset;
 }
 
 .hud-btn:active {
-  background: color-mix(
-    in srgb,
-    var(--assistant-colour) 18%,
-    transparent
-  );
+  background: transparent;
 }
 
 .hud-btn[aria-pressed="true"] {
-  background: color-mix(
-    in srgb,
-    var(--assistant-colour) 20%,
-    transparent
-  );
+  background: transparent;
   border-color: var(--assistant-colour);
   color: var(--assistant-colour);
 }
 
 .hud-row {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 
 .hud-hint {
@@ -237,16 +230,17 @@ body {
 
 /* ——— Camera preview panel ——— */
 .camera-panel {
-  position: absolute;
-  right: 190px;
-  bottom: 0;
-  width: 170px;
-  height: 115px;
+  position: fixed;
+  left: 24px;
+  right: auto;
+  bottom: 170px;
+  width: 190px;
+  height: 135px;
   display: none;
   border: 1px solid var(--assistant-colour-45);
   border-radius: 4px;
   overflow: hidden;
-  background: #0a0500;
+  background: transparent;
   box-shadow: 0 0 16px var(--assistant-colour-45);
 }
 
@@ -281,18 +275,12 @@ body {
   font-size: 10px;
   letter-spacing: 0.15em;
   color: var(--assistant-colour);
-  background: rgba(10, 5, 0, 0.65);
+  background: transparent;
   text-shadow: 0 0 6px var(--assistant-colour-65);
 }
 
-@media (max-width: 600px) {
-  .hud-hint {
-    display: none;
-  }
-}
-
 /* =========================================================
-   JARVIS PRO — UI-2 MARK COCKPIT
+   JARVIS PRO — MAIN VIEWPORT & HEADER (100% TRANSPARENT)
    ========================================================= */
 
 .jarvis-hud {
@@ -300,7 +288,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #020303;
+  background: transparent;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
 }
@@ -318,10 +306,6 @@ body {
   pointer-events: none;
 }
 
-/* =========================================================
-   HEADER
-   ========================================================= */
-
 .cockpit-header {
   position: absolute;
   top: 0;
@@ -333,9 +317,7 @@ body {
   justify-content: space-between;
   padding: 0 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 28%, transparent);
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: transparent;
   z-index: 50;
 }
 
@@ -392,27 +374,81 @@ body {
   text-shadow: 0 0 4px color-mix(in srgb, var(--assistant-colour) 40%, transparent);
 }
 
+.hud-bridge-status {
+  position: absolute;
+  top: 76px;
+  right: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  opacity: 0.55;
+}
+
+.hud-bridge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #777;
+}
+
+.hud-bridge-dot.connected {
+  background: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour-80);
+}
+
+.hud-bridge-dot.offline {
+  background: #d22;
+}
+
 /* =========================================================
-   PANELS
+   PANELS: CYBERNETIC CORNER FRAMING (100% TRANSPARENT)
    ========================================================= */
 
 .cockpit-panel {
   position: absolute;
   top: 80px;
   width: 282px;
-  border: none;
   background: transparent;
-  box-shadow: none;
+  padding: 12px;
+  pointer-events: auto;
+}
+
+/* High-tech corner bracket reticles */
+.cockpit-panel::before,
+.cockpit-panel::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.cockpit-panel::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid var(--assistant-colour-65);
+  border-left: 2px solid var(--assistant-colour-65);
+}
+
+.cockpit-panel::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 2px solid var(--assistant-colour-65);
+  border-right: 2px solid var(--assistant-colour-65);
 }
 
 .cockpit-left {
   left: 24px;
+  border-left: 1px solid var(--assistant-colour-20);
 }
 
 .cockpit-right {
   right: 24px;
-  width: 360px;
-  pointer-events: auto;
+  width: 380px;
+  border-left: 1px solid var(--assistant-colour-30);
 }
 
 .panel-heading {
@@ -420,10 +456,10 @@ body {
   display: flex;
   align-items: center;
   padding: 0 4px;
-  border-bottom: none;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
+  border-bottom: 1px solid var(--assistant-colour-20);
 }
 
 .panel-marker {
@@ -437,10 +473,7 @@ body {
   padding: 10px 4px;
 }
 
-/* =========================================================
-   SYSTEM MONITOR — CIRCULAR TELEMETRY
-   ========================================================= */
-
+/* System Gauges */
 .cockpit-system-row {
   display: flex;
   align-items: center;
@@ -448,8 +481,6 @@ body {
   margin-bottom: 12px;
   padding: 4px;
   background: transparent;
-  border: 0;
-  box-shadow: none;
 }
 
 .cockpit-gauge {
@@ -535,7 +566,6 @@ body {
   opacity: 0.5;
 }
 
-/* High Load State */
 .cockpit-system-high .cockpit-gauge,
 .cockpit-system-high .cockpit-gauge-fill {
   background: conic-gradient(
@@ -559,80 +589,25 @@ body {
 }
 
 /* =========================================================
-   SECONDARY SYSTEM DATA / ROWS
+   ACTIVITY LOG (SMOOTH TOP AUTO-FADE MASK)
    ========================================================= */
 
-.cockpit-left .cockpit-data-row:first-of-type {
-  margin-top: 10px;
-}
+.activity-log {
+  height: 420px;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 12px;
+  padding: 8px 12px;
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: "Courier New", monospace;
+  scrollbar-width: thin;
+  scrollbar-color: var(--assistant-colour-45) transparent;
+  background: transparent;
 
-.cockpit-data-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 24px;
-  padding: 4px 2px;
-  margin-top: 3px;
-  border-bottom: 1px solid var(--assistant-colour-10);
-  color: var(--assistant-colour);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-}
-
-.cockpit-data-row:last-child {
-  border-bottom: 0;
-}
-
-.cockpit-data-row span:first-child {
-  position: relative;
-  padding-left: 14px;
-  opacity: 0.55;
-  letter-spacing: 0.14em;
-}
-
-.cockpit-data-row span:first-child::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  transform: translateY(-50%);
-  border: 1px solid var(--assistant-colour-45);
-  box-shadow: 0 0 5px var(--assistant-colour-30);
-}
-
-.cockpit-data-row span:last-child {
-  color: var(--assistant-colour);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-shadow: 0 0 5px var(--assistant-colour-45);
-}
-
-/* =========================================================
-   ACTIVITY PANEL
-   ========================================================= */
-
-.activity-section {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 15px;
-  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 9%, transparent);
-}
-
-.activity-label {
-  font-size: 9px;
-  letter-spacing: 1px;
-  opacity: 0.45;
-}
-
-.activity-value {
-  font-size: 11px;
-  color: var(--assistant-colour);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%);
 }
 
 .activity-message {
@@ -670,143 +645,8 @@ body {
   font-size: 11px;
 }
 
-.activity-error {
-  margin: 14px;
-  padding: 10px;
-  border: 1px solid rgba(255, 50, 50, 0.35);
-  color: #ff5555;
-  font-size: 10px;
-}
-
-/* =========================================================
-   BOTTOM HUD / STATUS
-   ========================================================= */
-
-.core-name {
-  font-size: 13px;
-  font-weight: 700;
-  text-shadow: 0 0 10px var(--assistant-colour-65);
-}
-
-.core-status {
-  margin-top: 8px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.core-subtitle {
-  margin-top: 7px;
-  font-size: 8px;
-  opacity: 0.4;
-  letter-spacing: 2px;
-}
-
-.cockpit-bottom {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 28px;
-}
-
-.voice-indicator {
-  font-size: 15px;
-  letter-spacing: 1px;
-  opacity: 0.2;
-  transition:
-    opacity 200ms ease,
-    text-shadow 200ms ease;
-}
-
-.voice-indicator.active {
-  opacity: 1;
-  color: var(--assistant-colour);
-  text-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 80%, transparent);
-}
-
-.hud-bridge-status {
-  position: absolute;
-  top: 76px;
-  right: 24px;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 8px;
-  letter-spacing: 1px;
-  opacity: 0.55;
-}
-
-.hud-bridge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #777;
-}
-
-.hud-bridge-dot.connected {
-  background: var(--assistant-colour);
-  box-shadow: 0 0 8px var(--assistant-colour-80);
-}
-
-.hud-bridge-dot.offline {
-  background: #d22;
-}
-
-/* =========================================================
-   ACTIVITY LOG
-   ========================================================= */
-
-.activity-log {
-  height: 420px;
-  width: 420px;
-  max-width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  margin-top: 12px;
-  padding: 8px 12px;
-  pointer-events: auto;
-  cursor: pointer;
-  font-family: "Courier New", monospace;
-  scrollbar-width: thin;
-  scrollbar-color: var(--assistant-colour-65) transparent;
-}
-
-.activity-log-entry {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  min-height: 24px;
-  padding: 4px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 7%, transparent);
-}
-
-.activity-time {
-  flex: 0 0 58px;
-  font-size: 9px;
-  opacity: 0.45;
-  line-height: 16px;
-}
-
-.activity-event {
-  flex: 1;
-  min-width: 0;
-  font-size: 10px;
-  line-height: 16px;
-  word-break: break-word;
-  text-transform: uppercase;
-}
-
-.activity-log .activity-empty {
-  padding: 10px 0;
-  font-size: 10px;
-  letter-spacing: 1px;
-  opacity: 0.45;
-}
-
 .activity-log::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .activity-log::-webkit-scrollbar-track {
@@ -814,195 +654,259 @@ body {
 }
 
 .activity-log::-webkit-scrollbar-thumb {
-  background: var(--assistant-colour-65);
-  border-radius: 4px;
-}
-
-.activity-log::-webkit-scrollbar-thumb:hover {
-  background: var(--assistant-colour);
+  background: var(--assistant-colour-45);
+  border-radius: 2px;
 }
 
 /* =========================================================
-   SETTINGS BUTTON (HEADER TOP-RIGHT)
+   HUD COMMAND INPUT
    ========================================================= */
 
-.jarvis-settings-button {
+.hud-command-input {
   position: fixed;
-  top: 14px;
-  right: 145px;
-  z-index: 100;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 55%, transparent);
-  border-radius: 4px;
-  background: rgba(10, 5, 0, 0.72);
+  right: 24px;
+  bottom: 15px;
+  width: min(330px, calc(100vw - 20px));
+  z-index: 120;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 70%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
-  transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+  background: transparent;
 }
 
-.jarvis-settings-button:hover {
-  background: color-mix(in srgb, var(--assistant-colour) 12%, transparent);
+.hud-command-label {
+  margin-bottom: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px var(--assistant-colour-45);
+}
+
+.hud-command-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.hud-command-row input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid var(--assistant-colour-45);
+  border-radius: 3px;
+  outline: none;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  caret-color: var(--assistant-colour);
+  box-shadow: inset 0 0 8px var(--assistant-colour-20);
+}
+
+.hud-command-row input::placeholder {
+  color: var(--assistant-colour);
+  opacity: 0.42;
+}
+
+.hud-command-row input:focus {
   border-color: var(--assistant-colour);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
-  transform: translateY(-1px);
+  box-shadow: 0 0 10px var(--assistant-colour-30);
 }
 
-.jarvis-settings-button:active {
-  transform: translateY(0);
+.hud-command-row button {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--assistant-colour-45);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hud-command-row button:hover:not(:disabled) {
+  border-color: var(--assistant-colour);
+  box-shadow: 0 0 10px var(--assistant-colour-45);
+}
+
+.hud-command-row button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* =========================================================
-   JARVIS PRO — SETTINGS & CONTROL PANEL (LEFT HUD)
+   BOTTOM HUD: BALANCED INDICATORS & WAVEFORM (100% TRANSPARENT)
    ========================================================= */
 
-.jarvis-settings-panel {
+.cockpit-bottom-container {
   position: fixed;
-
-  left: 24px;
-  bottom: 120px;
-
-  width: 300px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding: 0;
-  background: rgba(2, 3, 3, 0.08);
-  border-radius: 4px;
-  box-shadow: none;
-  backdrop-filter: none;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: transparent !important;
   pointer-events: auto;
 }
 
-.settings-panel-brand {
-  grid-column: 1 / -1;
-  padding: 4px 0 2px;
-  color: var(--assistant-colour);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-shadow: 0 0 7px var(--assistant-colour-45);
+.cockpit-bottom-indicators {
+  display: flex;
+  gap: 20px;
+  user-select: none;
 }
 
-.settings-section-title {
-  grid-column: 1 / -1;
+.voice-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-  margin-bottom: 4px;
-  color: var(--assistant-colour);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  opacity: 0.85;
-}
-
-.settings-section-title::before {
-  font-size: 8px;
-  color: var(--assistant-colour);
-  text-shadow: 0 0 6px var(--assistant-colour-65);
-}
-
-/* Clean, Readable Cybernetic Control Buttons */
-.settings-control {
-  width: 100%;
-  min-height: 42px;
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-  background: rgba(15, 8, 2, 0.45);
-  border: 1px solid var(--assistant-colour-30);
-  border-radius: 3px;
-  color: var(--assistant-colour);
+  gap: 6px;
   font-family: "Courier New", monospace;
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-align: left;
-  cursor: pointer;
-  backdrop-filter: blur(2px);
-  text-shadow: 0 0 5px var(--assistant-colour-30);
-  transition: all 0.15s ease-in-out;
+  letter-spacing: 2px;
+  opacity: 0.35;
+  color: var(--assistant-colour);
+  transition:
+    opacity 200ms ease,
+    color 200ms ease,
+    text-shadow 200ms ease;
 }
 
-.settings-control:hover {
-  background: color-mix(in srgb, var(--assistant-colour) 12%, transparent);
-  border-color: var(--assistant-colour-80);
-  box-shadow:
-    0 0 10px var(--assistant-colour-20),
-    inset 0 0 8px var(--assistant-colour-10);
+.indicator-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--assistant-colour-45);
+  transition: all 200ms ease;
+}
+
+.voice-indicator.active {
+  opacity: 1;
   color: #fff;
   text-shadow: 0 0 8px var(--assistant-colour);
 }
 
-.settings-control-icon {
-  flex: 0 0 12px;
-  font-size: 11px;
-  text-align: center;
-  color: var(--assistant-colour);
+.voice-indicator.active .indicator-dot {
+  background: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour);
 }
 
-.settings-control-key,
-.settings-control strong {
-  margin-left: auto;
-  padding: 1px 4px;
-  border: 1px solid var(--assistant-colour-30);
+/* Audio Spectrum Visualizer */
+.hud-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 16px;
+  width: 280px;
+  background: transparent;
+}
+
+.wave-bar {
+  width: 2px;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--assistant-colour-45);
+  transition: height 0.15s ease;
+}
+
+.waveform-live .wave-bar {
+  background: var(--assistant-colour);
+  box-shadow: 0 0 6px var(--assistant-colour-65);
+  animation: wavePulse 0.8s ease-in-out infinite alternate;
+}
+
+.waveform-live .wave-bar:nth-child(2n) { animation-delay: 0.15s; }
+.waveform-live .wave-bar:nth-child(3n) { animation-delay: 0.3s; }
+.waveform-live .wave-bar:nth-child(4n) { animation-delay: 0.45s; }
+
+@keyframes wavePulse {
+  0% { height: 3px; }
+  50% { height: 16px; }
+  100% { height: 6px; }
+}
+
+/* Single Line 8 Controls Strip (100% Transparent) */
+.hud-bottom-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 6px;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.hud-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  background: transparent !important;
+  border: 1px solid var(--assistant-colour-45);
   border-radius: 2px;
-  background: rgba(0, 0, 0, 0.4);
   color: var(--assistant-colour);
-  font-size: 8px;
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.08em;
+  cursor: pointer;
+  white-space: nowrap;
+  text-shadow: 0 0 4px var(--assistant-colour-30);
+  transition: all 0.15s ease-in-out;
 }
 
-/* Active / On Toggle States */
-.settings-control-toggle-on,
-.settings-control-brief-on {
-  background: rgba(0, 255, 80, 0.08);
-  border-color: rgba(0, 255, 80, 0.7);
-  color: #00ff66;
-  box-shadow:
-    inset 0 0 12px rgba(0, 255, 80, 0.1),
-    0 0 10px rgba(0, 255, 80, 0.2);
+.hud-bar-btn:hover:not(:disabled) {
+  border-color: var(--assistant-colour);
+  color: #fff;
+  box-shadow: 0 0 10px var(--assistant-colour-45);
 }
 
-.settings-control-toggle-on .settings-control-icon,
-.settings-control-toggle-on strong,
-.settings-control-brief-on .settings-control-icon,
-.settings-control-brief-on strong {
-  color: #00ff66;
-  border-color: rgba(0, 255, 80, 0.6);
-  text-shadow: 0 0 6px rgba(0, 255, 80, 0.6);
+.hud-bar-btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
-.settings-control-primary {
-  border-color: var(--assistant-colour-65);
-  background: rgba(255, 170, 48, 0.08);
-}
-
-.settings-control:disabled {
+.hud-bar-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  box-shadow: none;
+}
+
+/* Green Glow Toggles */
+.hud-bar-btn.is-active {
+  background: transparent !important;
+  border-color: #00ff66;
+  color: #00ff66;
+  box-shadow: 0 0 10px rgba(0, 255, 80, 0.4);
+  text-shadow: 0 0 6px rgba(0, 255, 80, 0.7);
+}
+
+.hud-bar-btn.is-active .btn-icon {
+  color: #00ff66;
+}
+
+.btn-icon {
+  font-size: 11px;
+  opacity: 0.85;
 }
 
 /* =========================================================
-   MODAL BACKDROP & DIALOGS
+   MODALS (100% BLURRED TRANSPARENT)
    ========================================================= */
 
 .settings-modal-backdrop {
@@ -1013,17 +917,15 @@ body {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
   pointer-events: auto;
 }
 
 .settings-modal {
   width: min(440px, calc(100vw - 40px));
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 55%, transparent);
-  background: linear-gradient(135deg, rgba(4, 7, 9, 0.98), rgba(0, 2, 4, 0.97));
-  box-shadow:
-    0 0 40px rgba(0, 0, 0, 0.8),
-    inset 0 0 35px color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
+  border: 1px solid var(--assistant-colour-65);
+  background: transparent;
+  box-shadow: 0 0 30px var(--assistant-colour-20);
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
 }
@@ -1034,35 +936,16 @@ body {
   align-items: center;
   gap: 12px;
   padding: 0 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--assistant-colour) 24%, transparent);
+  border-bottom: 1px solid var(--assistant-colour-30);
   color: var(--assistant-colour);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 1px;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 60%, transparent);
-}
-
-.settings-modal-heading span {
-  color: var(--assistant-colour);
 }
 
 .remote-modal-content {
   padding: 25px;
   text-align: center;
-}
-
-.remote-icon {
-  width: 130px;
-  height: 130px;
-  margin: 0 auto 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 35%, transparent);
-  background: color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
-  color: var(--assistant-colour);
-  font-size: 70px;
-  text-shadow: 0 0 18px color-mix(in srgb, var(--assistant-colour) 70%, transparent);
 }
 
 .remote-title {
@@ -1074,127 +957,9 @@ body {
 
 .remote-description {
   margin-bottom: 20px;
-  color: color-mix(in srgb, var(--assistant-colour) 60%, transparent);
+  color: var(--assistant-colour-65);
   font-size: 10px;
 }
-
-.remote-status-box {
-  padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 25%, transparent);
-  background: color-mix(in srgb, var(--assistant-colour) 3%, transparent);
-}
-
-.remote-status-box span {
-  display: block;
-  margin-bottom: 8px;
-  color: color-mix(in srgb, var(--assistant-colour) 50%, transparent);
-  font-size: 9px;
-}
-
-.remote-status-box strong {
-  display: block;
-  color: var(--assistant-colour);
-  font-size: 10px;
-  word-break: break-all;
-}
-
-.remote-note {
-  margin: 15px 0 0;
-  color: color-mix(in srgb, var(--assistant-colour) 45%, transparent);
-  font-size: 9px;
-  line-height: 1.5;
-}
-
-/* Customise Form */
-.customise-form {
-  padding: 22px;
-}
-
-.customise-form label {
-  display: block;
-  margin-bottom: 18px;
-  color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
-  font-size: 9px;
-  letter-spacing: 1px;
-}
-
-.settings-field-help {
-  display: block;
-  margin-top: 5px;
-  margin-bottom: 7px;
-  color: color-mix(in srgb, var(--assistant-colour) 48%, transparent);
-  font-size: 8px;
-  letter-spacing: 0;
-}
-
-.customise-form input[type="text"] {
-  width: 100%;
-  height: 35px;
-  padding: 0 11px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 30%, transparent);
-  outline: none;
-  background: rgba(2, 8, 11, 0.85);
-  color: var(--assistant-colour);
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-}
-
-.customise-form input[type="text"]:focus {
-  border-color: color-mix(in srgb, var(--assistant-colour) 72%, transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 12%, transparent);
-}
-
-.colour-control {
-  display: flex;
-  gap: 8px;
-}
-
-.colour-control input[type="color"] {
-  flex: 0 0 45px;
-  width: 45px;
-  height: 35px;
-  padding: 2px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 30%, transparent);
-  background: #020303;
-  cursor: pointer;
-}
-
-.colour-control input[type="text"] {
-  flex: 1;
-}
-
-.settings-modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.settings-modal-button {
-  flex: 1;
-  height: 36px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 34%, transparent);
-  background: color-mix(in srgb, var(--assistant-colour) 3%, transparent);
-  color: color-mix(in srgb, var(--assistant-colour) 70%, transparent);
-  font-family: "Courier New", monospace;
-  font-size: 9px;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.settings-modal-button:hover {
-  border-color: color-mix(in srgb, var(--assistant-colour) 72%, transparent);
-  color: var(--assistant-colour);
-}
-
-.settings-modal-button-primary {
-  border-color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
-  color: var(--assistant-colour);
-  background: color-mix(in srgb, var(--assistant-colour) 10%, transparent);
-}
-
-/* =========================================================
-   REMOTE QR & PIN
-   ========================================================= */
 
 .remote-qr-wrapper {
   display: flex;
@@ -1208,10 +973,8 @@ body {
 .remote-qr {
   padding: 10px;
   background: #050505;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 35%, transparent);
-  box-shadow:
-    0 0 18px color-mix(in srgb, var(--assistant-colour) 12%, transparent),
-    inset 0 0 18px color-mix(in srgb, var(--assistant-colour) 4%, transparent);
+  border: 1px solid var(--assistant-colour-45);
+  box-shadow: 0 0 18px var(--assistant-colour-20);
 }
 
 .remote-qr-label {
@@ -1228,8 +991,8 @@ body {
   gap: 6px;
   margin: 14px auto;
   padding: 12px 22px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 25%, transparent);
-  background: color-mix(in srgb, var(--assistant-colour) 3.5%, transparent);
+  border: 1px solid var(--assistant-colour-30);
+  background: transparent;
 }
 
 .remote-pin-label {
@@ -1242,7 +1005,34 @@ body {
   font-size: 24px;
   letter-spacing: 0.28em;
   color: var(--assistant-colour);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--assistant-colour) 45%, transparent);
+  text-shadow: 0 0 12px var(--assistant-colour-65);
+}
+
+.remote-status-box {
+  padding: 14px;
+  border: 1px solid var(--assistant-colour-30);
+  background: transparent;
+}
+
+.remote-status-box span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--assistant-colour-65);
+  font-size: 9px;
+}
+
+.remote-status-box strong {
+  display: block;
+  color: var(--assistant-colour);
+  font-size: 10px;
+  word-break: break-all;
+}
+
+.remote-note {
+  margin: 15px 0 0;
+  color: var(--assistant-colour-45);
+  font-size: 9px;
+  line-height: 1.5;
 }
 
 .remote-loading,
@@ -1274,122 +1064,71 @@ body {
   opacity: 0.55;
 }
 
-/* =========================================================
-   MORNING BRIEF OVERLAY
-   ========================================================= */
-
-.morning-brief-overlay {
-  position: absolute;
-  top: 13%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(900px, 70vw);
-  z-index: 20;
-  pointer-events: none;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  color: var(--assistant-colour);
-  font-family: "Courier New", monospace;
+/* Customise Modal Form */
+.customise-form {
+  padding: 22px;
 }
 
-.morning-brief-header {
+.customise-form label {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--assistant-colour-65);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.settings-field-help {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 7px;
+  color: var(--assistant-colour-45);
+  font-size: 8px;
+}
+
+.customise-form input[type="text"] {
+  width: 100%;
+  height: 35px;
+  padding: 0 11px;
+  border: 1px solid var(--assistant-colour-45);
+  outline: none;
+  background: transparent;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+}
+
+.customise-form input[type="text"]:focus {
+  border-color: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour-20);
+}
+
+.settings-modal-actions {
   display: flex;
-  align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
-  color: var(--assistant-colour);
-  font-size: 12px;
-  letter-spacing: 3px;
-  background: transparent;
+  margin-top: 22px;
 }
 
-.morning-brief-marker {
-  color: var(--assistant-colour);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--assistant-colour) 80%, transparent);
-}
-
-.morning-brief-list {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  background: transparent;
-}
-
-.morning-brief-item {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 14px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  line-height: 1.45;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 5px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
-  animation: morning-brief-print 0.8s steps(45) both;
-}
-
-.morning-brief-category {
-  color: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  padding-top: 2px;
-}
-
-.morning-brief-title {
-  color: color-mix(in srgb, var(--assistant-colour) 78%, white 22%);
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.morning-brief-item:nth-child(1) { animation-delay: 0.15s; }
-.morning-brief-item:nth-child(2) { animation-delay: 0.45s; }
-.morning-brief-item:nth-child(3) { animation-delay: 0.75s; }
-.morning-brief-item:nth-child(4) { animation-delay: 1.05s; }
-.morning-brief-item:nth-child(5) { animation-delay: 1.35s; }
-.morning-brief-item:nth-child(6) { animation-delay: 1.65s; }
-
-@keyframes morning-brief-print {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-.morning-brief-close {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
+.settings-modal-button {
+  flex: 1;
+  height: 36px;
+  border: 1px solid var(--assistant-colour-45);
   background: transparent;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
-  font-size: 18px;
-  line-height: 22px;
+  font-size: 9px;
+  letter-spacing: 1px;
   cursor: pointer;
-  pointer-events: auto;
-  opacity: 0.7;
-  text-shadow: 0 0 5px color-mix(in srgb, var(--assistant-colour) 50%, transparent);
 }
 
-.morning-brief-close:hover {
-  color: var(--assistant-colour);
-  opacity: 1;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 90%, transparent);
+.settings-modal-button:hover {
+  border-color: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour-45);
+}
+
+.settings-modal-button-primary {
+  border-color: var(--assistant-colour);
+  color: #fff;
+  background: var(--assistant-colour-20);
 }
 
 /* =========================================================
@@ -1426,23 +1165,19 @@ body {
 }
 
 .assistant-colour-default {
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 45%, transparent);
+  border: 1px solid var(--assistant-colour-45);
   background: transparent;
   color: var(--assistant-colour);
   padding: 5px 10px;
   font-family: "Courier New", monospace;
   font-size: 8px;
   cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    color 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .assistant-colour-default:hover {
   border-color: var(--assistant-colour);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 35%, transparent);
-  color: var(--assistant-colour);
+  box-shadow: 0 0 8px var(--assistant-colour-35);
 }
 
 .assistant-colour-wheel-area {
@@ -1461,7 +1196,7 @@ body {
   background:
     radial-gradient(circle, transparent 0%, transparent 1%, rgba(255, 255, 255, 0.02) 1.5%, transparent 2%),
     conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
+  box-shadow: 0 0 10px var(--assistant-colour-20);
   touch-action: none;
 }
 
@@ -1474,15 +1209,6 @@ body {
   pointer-events: none;
 }
 
-.assistant-colour-wheel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, transparent 55%, rgba(0, 0, 0, 0.02) 70%, rgba(0, 0, 0, 0.18) 100%);
-  pointer-events: none;
-}
-
 .assistant-colour-wheel-handle {
   position: absolute;
   z-index: 5;
@@ -1492,9 +1218,7 @@ body {
   border-radius: 50%;
   background: #fff;
   border: 2px solid #111;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.9),
-    0 0 7px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 7px rgba(255, 255, 255, 0.8);
   pointer-events: none;
 }
 
@@ -1508,9 +1232,6 @@ body {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.9);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 0 15px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
 
@@ -1518,8 +1239,8 @@ body {
   width: 100%;
   height: 32px;
   padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--assistant-colour) 45%, transparent);
-  background: rgba(0, 10, 12, 0.8);
+  border: 1px solid var(--assistant-colour-45);
+  background: transparent;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 11px;
@@ -1529,291 +1250,120 @@ body {
 
 .assistant-colour-hex:focus {
   border-color: var(--assistant-colour);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--assistant-colour) 18%, transparent);
+  box-shadow: 0 0 8px var(--assistant-colour-20);
 }
 
 /* =========================================================
-   HUD COMMAND INPUT — CLEAN HUD CONTROL
+   MORNING BRIEF OVERLAY (100% TRANSPARENT)
    ========================================================= */
 
-.hud-command-input {
-  position: fixed;
-
-  right: 24px;
-  bottom: 160px;
-
-  width: min(
-    355px,
-    calc(100vw - 48px)
-  );
-
-  z-index: 120;
-
-  color: var(--assistant-colour);
-
-  font-family:
-    "Courier New",
-    monospace;
-}
-
-
-/* ---------------------------------------------------------
-   LABEL
-   --------------------------------------------------------- */
-
-.hud-command-label {
-  margin-bottom: 6px;
-
-  font-size: 9px;
-  font-weight: 700;
-
-  letter-spacing: 0.12em;
-
-  color:
-    var(--assistant-colour);
-
-  text-shadow:
-    0 0 6px
-    var(--assistant-colour-45);
-}
-
-
-/* ---------------------------------------------------------
-   INPUT ROW
-   --------------------------------------------------------- */
-
-.hud-command-row {
-  display: flex;
-
-  align-items: center;
-
-  gap: 6px;
-
-  width: 100%;
-}
-
-
-/* ---------------------------------------------------------
-   INPUT
-   --------------------------------------------------------- */
-
-.hud-command-row input {
-  flex: 1;
-
-  min-width: 0;
-
-  height: 34px;
-
-  padding:
-    0 10px;
-
-  box-sizing: border-box;
-
-  background:
-    rgba(2, 3, 3, 0.55);
-
-  border:
-    1px solid
-    var(--assistant-colour-45);
-
-  border-radius: 3px;
-
-  outline: none;
-
-  color:
-    var(--assistant-colour);
-
-  font-family:
-    "Courier New",
-    monospace;
-
-  font-size: 10px;
-
-  letter-spacing: 0.06em;
-
-  caret-color:
-    var(--assistant-colour);
-
-  box-shadow:
-    inset 0 0 10px
-    rgba(0, 0, 0, 0.4);
-
-  backdrop-filter:
-    blur(3px);
-}
-
-
-/* ---------------------------------------------------------
-   PLACEHOLDER
-   --------------------------------------------------------- */
-
-.hud-command-row input::placeholder {
-  color:
-    var(--assistant-colour);
-
-  opacity: 0.42;
-}
-
-
-/* ---------------------------------------------------------
-   FOCUS
-   --------------------------------------------------------- */
-
-.hud-command-row input:focus {
-  border-color:
-    var(--assistant-colour);
-
-  box-shadow:
-    0 0 10px
-    var(--assistant-colour-20),
-
-    inset 0 0 10px
-    rgba(0, 0, 0, 0.4);
-}
-
-
-/* ---------------------------------------------------------
-   SEND BUTTON
-   --------------------------------------------------------- */
-
-.hud-command-row button {
-  flex: 0 0 34px;
-
-  width: 34px;
-  height: 34px;
-
+.morning-brief-overlay {
+  position: absolute;
+  top: 13%;
+  left: 45%;
+  transform: translateX(-50%);
+  width: min(900px, 70vw);
+  z-index: 20;
+  pointer-events: none;
+  background: transparent;
+  border: none;
   padding: 0;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+}
 
-  box-sizing: border-box;
+.morning-brief-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--assistant-colour);
+  font-size: 12px;
+  letter-spacing: 3px;
+}
 
-  border:
-    1px solid
-    var(--assistant-colour-45);
+.morning-brief-marker {
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px var(--assistant-colour-80);
+}
 
-  border-radius: 3px;
+.morning-brief-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: transparent;
+}
 
-  background:
-    rgba(2, 3, 3, 0.55);
+.morning-brief-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1.45;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px var(--assistant-colour-35);
+  animation: morning-brief-print 0.8s steps(45) both;
+}
 
-  color:
-    var(--assistant-colour);
+.morning-brief-category {
+  color: var(--assistant-colour-65);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding-top: 2px;
+}
 
-  font-family:
-    "Courier New",
-    monospace;
+.morning-brief-title {
+  color: #fff;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
-  font-size: 11px;
-
-  font-weight: 700;
-
+.morning-brief-close {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  line-height: 22px;
   cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
+  pointer-events: auto;
+  opacity: 0.7;
 }
 
-
-/* ---------------------------------------------------------
-   SEND HOVER
-   --------------------------------------------------------- */
-
-.hud-command-row button:hover:not(:disabled) {
-  background:
-    var(--assistant-colour-10);
-
-  border-color:
-    var(--assistant-colour);
-
-  box-shadow:
-    0 0 10px
-    var(--assistant-colour-20);
+.morning-brief-close:hover {
+  opacity: 1;
+  text-shadow: 0 0 8px var(--assistant-colour);
 }
 
-
-/* ---------------------------------------------------------
-   SEND ACTIVE
-   --------------------------------------------------------- */
-
-.hud-command-row button:active:not(:disabled) {
-  transform: translateY(1px);
-
-  box-shadow:
-    0 0 5px
-    var(--assistant-colour-20);
-}
-
-
-/* ---------------------------------------------------------
-   SEND DISABLED
-   --------------------------------------------------------- */
-
-.hud-command-row button:disabled {
-  opacity: 0.35;
-
-  cursor:
-    not-allowed;
-
-  box-shadow:
-    none;
-}
-
-
-/* ---------------------------------------------------------
-   SMALL SCREENS
-   --------------------------------------------------------- */
-
-@media (max-width: 600px) {
-
-  .hud-command-input {
-    left: 12px;
-    right: 12px;
-
-    bottom: 125px;
-
-    width: auto;
+@keyframes morning-brief-print {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+    clip-path: inset(0 100% 0 0);
   }
-
-  .hud-command-label {
-    font-size: 8px;
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
   }
-
-  .hud-command-row input {
-    height: 34px;
-
-    font-size: 10px;
-  }
-
-  .hud-command-row button {
-    width: 34px;
-    height: 34px;
-  }
-
 }
 
 /* =========================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE
    ========================================================= */
 
-@media (max-width: 1000px) {
-  .cockpit-panel {
-    width: 220px;
-  }
-
-  .jarvis-settings-button {
-    right: 18px;
-  }
-
-  .jarvis-settings-panel {
-    left: 18px;
-    width: 220px;
-    top: 360px;
-  }
-}
-
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .cockpit-panel {
     display: none;
   }
@@ -1822,25 +1372,29 @@ body {
     font-size: 18px;
   }
 
-  .jarvis-settings-button {
-    right: 14px;
+  .cockpit-bottom-container {
+    width: 96vw;
+    bottom: 12px;
   }
 
-  .jarvis-settings-panel {
-    left: 14px;
-    top: 90px;
-    width: 240px;
-  }
-}
-
-@media (max-width: 600px) {
-  .jarvis-settings-panel {
-    left: 10px;
-    width: calc(100vw - 20px);
-    grid-template-columns: 1fr 1fr;
+  .hud-waveform {
+    width: 200px;
   }
 
-  .settings-modal {
-    width: calc(100vw - 24px);
+  .hud-bottom-toolbar {
+    gap: 4px;
+  }
+
+  .hud-bar-btn {
+    height: 30px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  .hud-command-input {
+    left: 12px;
+    right: 12px;
+    bottom: 125px;
+    width: auto;
   }
 }
