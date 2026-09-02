@@ -69,8 +69,8 @@ from core.listener import (
 
 def create_desktop_shortcut() -> str:
     """
-    Creates a clean desktop shortcut pointing to the Jarvis Pro execution environment.
-    Supports Windows (.lnk via winshell/powershell/pywin32 fallback) and Linux (.desktop).
+    Creates a clean desktop shortcut pointing to the Jarvis Pro execution environment
+    using pythonw.exe to completely hide the terminal window.
     """
     import sys
     import os
@@ -93,14 +93,20 @@ def create_desktop_shortcut() -> str:
     target_script = os.path.abspath(sys.argv[0])
     icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config", "jarvis.ico"))
     
+    # Swap standard python.exe for pythonw.exe to run completely windowless
+    pythonw_executable = sys.executable.replace("python.exe", "pythonw.exe")
+    if not os.path.exists(pythonw_executable):
+        pythonw_executable = sys.executable  # Fallback if pythonw isn't in path
+
     if os.name == "nt":
         shortcut_path = os.path.join(desktop_path, "Jarvis Pro.lnk")
         powershell_script = (
             f"$WshShell = New-Object -ComObject WScript.Shell; "
             f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
-            f"$Shortcut.TargetPath = '{sys.executable}'; "
+            f"$Shortcut.TargetPath = '{pythonw_executable}'; "
             f"$Shortcut.Arguments = '\"{target_script}\"'; "
             f"$Shortcut.WorkingDirectory = '{os.path.dirname(target_script)}'; "
+            f"$Shortcut.WindowStyle = 7; " # 7 means minimized/hidden window start
         )
         if os.path.exists(icon_path):
             powershell_script += f"$Shortcut.IconLocation = '{icon_path}'; "
@@ -115,9 +121,9 @@ def create_desktop_shortcut() -> str:
             f"[Desktop Entry]\n"
             f"Type=Application\n"
             f"Name=Jarvis Pro\n"
-            f"Exec={sys.executable} \"{target_script}\"\n"
+            f"Exec={pythonw_executable} \"{target_script}\"\n"
             f"Path={os.path.dirname(target_script)}\n"
-            f"Terminal=true\n"
+            f"Terminal=false\n"
         )
         if os.path.exists(icon_path):
             desktop_entry += f"Icon={icon_path}\n"

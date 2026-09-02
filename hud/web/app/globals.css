@@ -395,8 +395,8 @@ body {
 }
 
 .hud-bridge-dot {
-  width: 6px;
-  height: 6px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #777;
 }
@@ -448,14 +448,15 @@ body {
 }
 
 .cockpit-left {
-  left: 24px;
-  border-left: 1px solid var(--assistant-colour-20);
+  left: 34px;
+  width: 175px;
+  border-left: 0px solid var(--assistant-colour-20);
 }
 
 .cockpit-right {
   right: 24px;
-  width: 330px;
-  border-left: 1px solid var(--assistant-colour-30);
+  width: 350px;
+  border-left: 0px solid var(--assistant-colour-30);
 }
 
 .panel-heading {
@@ -600,7 +601,7 @@ body {
    ========================================================= */
 
 .activity-log {
-  height: 420px;
+  height: 300px;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1301,13 +1302,13 @@ body {
 
 .morning-brief-overlay {
   position: absolute;
-  top: 80px;
-  left: 340px;
-  right: 420px;
+  top: 85px;
+  left: 350px;
+  right: 390px;
   z-index: 20;
-  pointer-events: auto;
+  cursor: pointer;
   background: transparent;
-  border: 1px solid var(--assistant-colour-20);
+  border: 0px solid var(--assistant-colour-20);
   padding: 16px 20px;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
