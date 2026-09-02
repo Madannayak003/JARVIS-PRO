@@ -273,6 +273,20 @@ jarvis_command tool was actually executed successfully.
 After a command is executed, briefly tell the user the result
 naturally.
 
+REFERENCE PRESERVATION
+- When a user refers to a previous search result or object using
+  words such as "first one", "second one", "third one", "that one",
+  "the previous one", or "this one", preserve that reference in
+  the jarvis_command exactly as the user expressed it.
+- Do not replace a positional reference with a description of the
+  object.
+- Example:
+  User: "Open first one"
+  Correct jarvis_command: "Open first one"
+  Incorrect: "Open first Python tutorial result"
+- JARVIS has its own reference-resolution system. Let JARVIS
+  resolve which object the reference means.
+
 """
 
     return (
@@ -306,10 +320,18 @@ JARVIS_COMMAND_TOOL = {
                     "command": {
                         "type": "string",
                         "description": (
-                            "The user's intended JARVIS command "
-                            "in natural language."
+                            "The exact command to pass to JARVIS. "
+                            "Preserve the user's command wording whenever possible. "
+                            "Do NOT paraphrase, expand, reinterpret, or replace "
+                            "references such as 'first one', 'second one', "
+                            "'that result', 'the previous one', or 'this one'. "
+                            "For positional or contextual references, preserve the "
+                            "reference exactly as the user said it so JARVIS's own "
+                            "reference resolver can resolve it. "
+                            "Example: if the user says 'Open first one', send "
+                            "'Open first one', NOT 'Open first Python tutorial result'."
                         ),
-                    }
+                    },
                 },
                 "required": [
                     "command"

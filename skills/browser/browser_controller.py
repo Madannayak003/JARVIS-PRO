@@ -505,6 +505,12 @@ class BrowserController:
                     wait_until="domcontentloaded",
                     timeout=15000,
                 )
+                
+                print(
+                    f"[Browser OPEN DEBUG] "
+                    f"GOTO COMPLETE | URL: {self.page.url} | "
+                    f"TITLE: {self.page.title()}"
+                )
 
                 self.page.bring_to_front()
 
@@ -583,15 +589,35 @@ class BrowserController:
                     f"[Google] Searching: {query}"
                 )
 
+                print(
+                    f"[Google DEBUG] BEFORE GOTO | URL: {self.page.url}"
+                )
+
+                print(
+                    "[Google DEBUG] GOTO START"
+                )
+
                 self.page.goto(
                     url,
                     wait_until="domcontentloaded",
                     timeout=15000,
                 )
 
+                print(
+                    f"[Google DEBUG] GOTO COMPLETE | URL: {self.page.url}"
+                )
+
                 self.page.bring_to_front()
 
+                print(
+                    f"[Google DEBUG] AFTER BRING TO FRONT | URL: {self.page.url}"
+                )
+
                 self._sync_context()
+
+                print(
+                    f"[Google DEBUG] AFTER SYNC | URL: {self.page.url}"
+                )
 
                 # =========================================================
                 # GOOGLE SEARCH RESULT EXTRACTION
