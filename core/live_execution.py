@@ -74,7 +74,6 @@ def clear_live_responses() -> None:
 
 @contextmanager
 def live_execution():
-
     global _live_execution_count
 
     clear_live_responses()
@@ -83,13 +82,9 @@ def live_execution():
         _live_execution_count += 1
 
     try:
-
         yield
-
     finally:
-
         with _lock:
-
             _live_execution_count = max(
                 0,
                 _live_execution_count - 1,

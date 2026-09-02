@@ -6,21 +6,19 @@ Executes commands sequentially.
 
 from queue import Queue
 
+
 _queue = Queue()
 
 
 def put(command):
-
     _queue.put(command)
 
 
 def get():
-
     return _queue.get()
 
 
 def empty():
-
     return _queue.empty()
 
 
@@ -36,5 +34,4 @@ def clear():
 
 
 def size():
-
     return _queue.qsize()

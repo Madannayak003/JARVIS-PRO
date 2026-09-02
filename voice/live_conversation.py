@@ -338,7 +338,7 @@ class LiveConversation:
 
         self._running = False
         
-         # -----------------------------------------------------
+        # -----------------------------------------------------
         # Live microphone state.
         #
         # This is separate from the normal JARVIS listener.
@@ -436,13 +436,7 @@ class LiveConversation:
         self.set_microphone_enabled(True)
         
         print(
-            "[LIVE] =================================================="
-        )
-        print(
             "[LIVE] LIVE CONVERSATION START REQUESTED"
-        )
-        print(
-            "[LIVE] =================================================="
         )
 
         self._thread = threading.Thread(
@@ -520,15 +514,9 @@ class LiveConversation:
             raise RuntimeError(
                 "GEMINI_API_KEY is not configured."
             )
-
-        print(
-            "[LIVE] =================================================="
-        )
+            
         print(
             "[LIVE] LIVE CONVERSATION STARTING"
-        )
-        print(
-            "[LIVE] =================================================="
         )
 
         print(
@@ -1112,10 +1100,6 @@ class LiveConversation:
                         "[LIVE] Gemini Live connection "
                         f"will close soon. Time left: {time_left}"
                     )
-                
-                # =============================================
-                # JARVIS TOOL CALL
-                # =============================================
                 
                 # =============================================
                 # TOOL CALL CANCELLATION

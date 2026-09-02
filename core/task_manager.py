@@ -15,14 +15,12 @@ Only ONE task of each type runs at a time.
 
 import threading
 
+
 class TaskManager:
 
     def __init__(self):
-
         self.tasks = {}
-
         self.stop_events = {}
-
         self.lock = threading.Lock()
 
     def start(self, name, target, *args):
@@ -51,7 +49,6 @@ class TaskManager:
     def stop(self, name):
 
         thread = self.tasks.get(name)
-
         event = self.stop_events.get(name)
 
         if thread and thread.is_alive():
@@ -61,13 +58,11 @@ class TaskManager:
             event.set()
 
         self.tasks.pop(name, None)
-
         self.stop_events.pop(name, None)
 
     def stop_all(self):
 
         for name in list(self.tasks.keys()):
-
             self.stop(name)
 
     def running(self, name):
@@ -77,7 +72,6 @@ class TaskManager:
         return thread is not None and thread.is_alive()
 
     def event(self, name):
-
         return self.stop_events.get(name)
 
 

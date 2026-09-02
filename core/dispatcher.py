@@ -1,7 +1,4 @@
-from click import command
-
 from ai.intent import detect
-
 from core.task_manager import task_manager
 from core.workers import chat_worker
 from core.planner_worker import planner_worker
@@ -12,7 +9,6 @@ from core.action_memory import (
 )
 
 from core.executor import execute_ai_plan
-
 from ai.memory_pipeline import learn
 from ai.memory_view import show_all
 from ai.memory_intent import handle as memory_forget
@@ -29,15 +25,10 @@ from ai.memory_stats import (
 )
 
 from brain.brain_router import BrainRouter
-
 brain_router = BrainRouter()
-
 from core.fast_router import fast_route
-
 from core.registry import execute
-
 from brain.screen_followup import is_screen_followup
-
 from brain.conversation_coordinator import conversation_coordinator
 from brain.execution_context import execution_context_resolver
 
@@ -54,7 +45,6 @@ from brain.conversation_context import (
 )
 
 from core.live_execution import is_live_execution
-
 from core.core_state import wait_for_core
 
 # =========================================================
@@ -1107,8 +1097,6 @@ def dispatch(
         command
     ):
 
-        from voice.manager import speak
-
         print(
             "[SCREEN FOLLOWUP] "
             "Routing request through conversational context."
@@ -1340,82 +1328,6 @@ def dispatch(
 
         return
     
-    # # =====================================================
-    # # GENERIC SEARCH USING ACTION MEMORY
-    # # =====================================================
-
-    # if (
-    #     command.startswith("search ")
-    #     and "youtube" not in command
-    #     and "google" not in command
-    #     and "github" not in command
-    #     and "chatgpt" not in command
-    # ):
-
-    #     current_site = get_memory(
-    #         "site"
-    #     )
-
-    #     query = (
-    #         command
-    #         .replace(
-    #             "search",
-    #             "",
-    #             1,
-    #         )
-    #         .strip()
-    #     )
-
-    #     # -------------------------------------------------
-    #     # YouTube
-    #     # -------------------------------------------------
-
-    #     if current_site == "youtube":
-
-    #         print(
-    #             "[ACTION MEMORY] "
-    #             "YouTube Search"
-    #         )
-
-    #         result = execute(
-    #             "youtube_search",
-    #             {
-    #                 "action": "youtube_search",
-    #                 "query": query,
-    #             },
-    #         )
-
-    #         print(
-    #             "[ACTION MEMORY RESULT]",
-    #             repr(result),
-    #         )
-
-    #         return
-
-    #     # -------------------------------------------------
-    #     # Google
-    #     # -------------------------------------------------
-
-    #     if current_site == "google":
-
-    #         print(
-    #             "[ACTION MEMORY] "
-    #             "Google Search"
-    #         )
-
-    #         task_manager.start(
-    #             "executor",
-    #             execute_ai_plan,
-    #             [
-    #                 {
-    #                     "action": "google_search",
-    #                     "query": query,
-    #                 }
-    #             ],
-    #         )
-
-    #         return
-
     # =====================================================
     # ACTION MEMORY
     # =====================================================
@@ -1752,6 +1664,30 @@ def dispatch(
             )
 
             return
+        
+    # =====================================================
+    # LIVE CONVERSATION FALLBACK BARRIER
+    # =====================================================
+    #
+    # When Gemini Live invokes jarvis_command, JARVIS
+    # skills must still execute through this dispatcher.
+    #
+    # However, if no JARVIS skill/action handled the
+    # command, NEVER fall through into the normal AI
+    # worker while Live Conversation is active.
+    #
+    # Gemini Live remains the conversational speaker.
+    # =====================================================
+
+    if is_live_execution():
+
+        print(
+            "[DISPATCHER] Live execution active - "
+            "no JARVIS skill handled command; "
+            "suppressing normal AI fallback."
+        )
+
+        return False
 
     
     # =====================================================
