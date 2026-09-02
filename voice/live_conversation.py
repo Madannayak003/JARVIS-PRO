@@ -384,6 +384,19 @@ class LiveConversation:
 
         self._normal_mic_lock = threading.Lock()
 
+        # -----------------------------------------------------
+        # Gemini Live session resumption.
+        #
+        # Gemini provides a resumable handle before a Live
+        # connection reaches its server-side lifetime limit.
+        # The handle is used to continue the same conversation
+        # on the next Gemini connection.
+        # -----------------------------------------------------
+
+        self._session_resumption_handle = None
+
+        self._session_resumption_lock = threading.Lock()
+
     # =========================================================
     # STATE
     # =========================================================
@@ -432,7 +445,33 @@ class LiveConversation:
         with self._microphone_lock:
 
             return self._microphone_enabled
+        
+    # =========================================================
+    # GEMINI SESSION RESUMPTION
+    # =========================================================
 
+    def _get_session_resumption_handle(self):
+
+        with self._session_resumption_lock:
+
+            return self._session_resumption_handle
+
+    # ---------------------------------------------------------
+
+    def _set_session_resumption_handle(
+        self,
+        handle,
+    ):
+
+        if not handle:
+
+            return
+
+        with self._session_resumption_lock:
+
+            self._session_resumption_handle = handle
+            
+            
     # =========================================================
     # START
     # =========================================================
@@ -622,6 +661,17 @@ class LiveConversation:
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal"
             ),
+
+            # -------------------------------------------------
+            # Allow Gemini to provide a resumable session
+            # handle when this connection approaches its
+            # server-side lifetime limit.
+            # -------------------------------------------------
+
+            session_resumption=types.SessionResumptionConfig(
+                handle=self._get_session_resumption_handle(),
+
+            ),
         )
 
         # =====================================================
@@ -678,197 +728,403 @@ class LiveConversation:
         try:
 
             # =================================================
-            # CONNECT ONCE
+            # LIVE AUDIO DEVICES
+            # =================================================
+            #
+            # These remain alive across Gemini connection
+            # rollovers.
+            #
+            # The physical microphone and speaker belong to
+            # the LiveConversation instance, not to a single
+            # Gemini connection.
             # =================================================
 
-            async with client.aio.live.connect(
-                model=LIVE_MODEL,
-                config=config,
-            ) as session:
+            microphone = sd.RawInputStream(
 
-                print(
-                    "[LIVE] Gemini Live connected."
-                )
-                
-                print(
-                    "[LIVE] Persistent Live session active."
-                )
-                print(
-                    "[LIVE] Waiting for conversation..."
-                )
+                samplerate=INPUT_RATE,
 
-                # =============================================
-                # MICROPHONE
-                # =============================================
+                channels=CHANNELS,
 
-                microphone = sd.RawInputStream(
+                dtype=DTYPE,
 
-                    samplerate=INPUT_RATE,
+                blocksize=BLOCK_SIZE,
 
-                    channels=CHANNELS,
+                callback=microphone_callback,
+            )
 
-                    dtype=DTYPE,
+            speaker = sd.RawOutputStream(
 
-                    blocksize=BLOCK_SIZE,
+                samplerate=OUTPUT_RATE,
 
-                    callback=microphone_callback,
-                )
+                channels=CHANNELS,
 
-                # =============================================
-                # SPEAKER
-                # =============================================
+                dtype=DTYPE,
 
-                speaker = sd.RawOutputStream(
+                blocksize=BLOCK_SIZE,
+            )
 
-                    samplerate=OUTPUT_RATE,
+            microphone.start()
 
-                    channels=CHANNELS,
+            speaker.start()
 
-                    dtype=DTYPE,
+            print(
+                "[LIVE] Microphone active."
+            )
 
-                    blocksize=BLOCK_SIZE,
-                )
+            print(
+                "[LIVE] Speaker active."
+            )
 
-                microphone.start()
+            # =================================================
+            # STOP WATCHER
+            # =================================================
 
-                speaker.start()
+            stop_task = asyncio.create_task(
+                self._wait_for_stop(),
+                name="JARVIS-LiveStopWatcher",
+            )
 
-                print(
-                    "[LIVE] Microphone active."
-                )
+            try:
 
-                print(
-                    "[LIVE] Speaker active."
-                )
+                # =================================================
+                # PERSISTENT LIVE CONNECTION LOOP
+                # =================================================
+                #
+                # Gemini connections have a server-side lifetime.
+                #
+                # This loop allows JARVIS to replace an expired
+                # connection automatically.
+                #
+                # The session-resumption handle captured from the
+                # previous connection is supplied to the next
+                # connection so Gemini can resume the conversation.
+                #
+                # The user remains in ONE continuous JARVIS Live
+                # Conversation from their perspective.
+                # =================================================
 
-                # =============================================
-                # AUDIO SENDER
-                # =============================================
+                connection_number = 0
 
-                sender_task = asyncio.create_task(
-                    self._send_audio(
-                        session,
-                        input_queue,
-                    ),
-                    name="JARVIS-LiveAudioSender",
-                )
+                while not self._stop_event.is_set():
 
-                # =============================================
-                # STOP WATCHER
-                # =============================================
+                    connection_number += 1
 
-                stop_task = asyncio.create_task(
-                    self._wait_for_stop(),
-                    name="JARVIS-LiveStopWatcher",
-                )
+                    print(
+                        "[LIVE] Connecting Gemini Live "
+                        f"connection #{connection_number}..."
+                    )
 
-                try:
-
-                    # =========================================
-                    # PERSISTENT RECEIVE LOOP
-                    # =========================================
+                    # ---------------------------------------------
+                    # Build configuration for THIS connection.
                     #
-                    # One Gemini session.
-                    #
-                    # receive() handles one model turn.
-                    #
-                    # When that turn finishes, we call
-                    # receive() again on the SAME session.
-                    #
-                    # There is NO reconnect here.
-                    # =========================================
+                    # Important:
+                    # The latest session-resumption handle is read
+                    # immediately before connecting.
+                    # ---------------------------------------------
 
-                    while not self._stop_event.is_set():
+                    connection_config = types.LiveConnectConfig(
 
-                        receive_task = asyncio.create_task(
-                            self._receive_one_turn(
-                                session,
-                                speaker,
-                            ),
-                            name="JARVIS-LiveReceiveTurn",
-                        )
+                        response_modalities=[
+                            types.Modality.AUDIO
+                        ],
 
-                        done, pending = await asyncio.wait(
-                            {
-                                receive_task,
-                                stop_task,
-                            },
-                            return_when=asyncio.FIRST_COMPLETED,
-                        )
+                        input_audio_transcription=(
+                            types.AudioTranscriptionConfig()
+                        ),
 
-                        # -------------------------------------
-                        # STOP REQUEST
-                        # -------------------------------------
+                        output_audio_transcription=(
+                            types.AudioTranscriptionConfig()
+                        ),
 
-                        if stop_task in done:
+                        system_instruction=types.Content(
+                            parts=[
+                                types.Part(
+                                    text=_system_prompt()
+                                )
+                            ]
+                        ),
 
-                            self._stop_event.set()
+                        tools=[
+                            JARVIS_COMMAND_TOOL
+                        ],
 
-                            if not receive_task.done():
+                        speech_config=types.SpeechConfig(
 
-                                receive_task.cancel()
+                            voice_config=types.VoiceConfig(
 
-                            await asyncio.gather(
-                                receive_task,
-                                return_exceptions=True,
+                                prebuilt_voice_config=(
+                                    types.PrebuiltVoiceConfig(
+                                        voice_name="Charon"
+                                    )
+                                )
+
                             )
 
-                            break
+                        ),
 
-                        # -------------------------------------
-                        # GEMINI TURN FINISHED
-                        # -------------------------------------
+                        thinking_config=types.ThinkingConfig(
+                            thinking_level="minimal"
+                        ),
 
-                        if receive_task in done:
+                        session_resumption=(
+                            types.SessionResumptionConfig(
+                                handle=(
+                                    self._get_session_resumption_handle()
+                                ),
+                            )
+                        ),
+                    )
+
+                    connection_should_retry = False
+
+                    try:
+
+                        async with client.aio.live.connect(
+                            model=LIVE_MODEL,
+                            config=connection_config,
+                        ) as session:
+
+                            print(
+                                "[LIVE] Gemini Live connected."
+                            )
+
+                            if connection_number == 1:
+
+                                print(
+                                    "[LIVE] Persistent Live session active."
+                                )
+
+                            else:
+
+                                print(
+                                    "[LIVE] Gemini Live connection "
+                                    "resumed automatically."
+                                )
+
+                            print(
+                                "[LIVE] Waiting for conversation..."
+                            )
+
+                            # =========================================
+                            # AUDIO SENDER
+                            # =========================================
+
+                            sender_task = asyncio.create_task(
+                                self._send_audio(
+                                    session,
+                                    input_queue,
+                                ),
+                                name="JARVIS-LiveAudioSender",
+                            )
 
                             try:
 
-                                result = (
-                                    receive_task.result()
+                                # =====================================
+                                # RECEIVE / STOP LOOP
+                                # =====================================
+
+                                while not self._stop_event.is_set():
+
+                                    receive_task = asyncio.create_task(
+                                        self._receive_one_turn(
+                                            session,
+                                            speaker,
+                                        ),
+                                        name="JARVIS-LiveReceiveTurn",
+                                    )
+
+                                    done, pending = await asyncio.wait(
+                                        {
+                                            receive_task,
+                                            stop_task,
+                                        },
+                                        return_when=asyncio.FIRST_COMPLETED,
+                                    )
+
+                                    # ---------------------------------
+                                    # USER STOPPED LIVE
+                                    # ---------------------------------
+
+                                    if stop_task in done:
+
+                                        self._stop_event.set()
+
+                                        if not receive_task.done():
+
+                                            receive_task.cancel()
+
+                                        await asyncio.gather(
+                                            receive_task,
+                                            return_exceptions=True,
+                                        )
+
+                                        break
+
+                                    # ---------------------------------
+                                    # GEMINI RECEIVE COMPLETED
+                                    # ---------------------------------
+
+                                    if receive_task in done:
+
+                                        try:
+
+                                            result = (
+                                                receive_task.result()
+                                            )
+
+                                            if result in (
+                                                "stop_requested",
+                                                "stopped",
+                                            ):
+
+                                                self._stop_event.set()
+
+                                                break
+
+                                            if result == "turn_complete":
+
+                                                continue
+                                            
+                                            # ---------------------------------
+                                            # GEMINI GO-AWAY
+                                            # ---------------------------------
+                                            #
+                                            # Gemini has warned that this
+                                            # connection is reaching its
+                                            # server-side lifetime limit.
+                                            #
+                                            # The current connection must be
+                                            # allowed to close cleanly.
+                                            #
+                                            # The outer connection loop will
+                                            # then reconnect using the latest
+                                            # session-resumption handle.
+                                            # ---------------------------------
+
+                                            if result == "go_away":
+
+                                                print(
+                                                    "[LIVE] GoAway handled. "
+                                                    "Closing current Gemini "
+                                                    "connection cleanly."
+                                                )
+
+                                                connection_should_retry = True
+
+                                                break
+
+                                            # ---------------------------------
+                                            # Gemini ended receive normally.
+                                            #
+                                            # Treat this as a connection event,
+                                            # not as a user stop.
+                                            # ---------------------------------
+
+                                            if result == "session_closed":
+
+                                                print(
+                                                    "[LIVE] Gemini Live "
+                                                    "session closed."
+                                                )
+
+                                                connection_should_retry = True
+
+                                                break
+
+                                        except asyncio.CancelledError:
+
+                                            break
+
+                                        except Exception as exc:
+
+                                            print(
+                                                "[LIVE] Gemini connection "
+                                                "ended unexpectedly:",
+                                                exc,
+                                            )
+
+                                            connection_should_retry = True
+
+                                            break
+
+                            finally:
+
+                                sender_task.cancel()
+
+                                await asyncio.gather(
+                                    sender_task,
+                                    return_exceptions=True,
                                 )
 
-                                if result in (
-                                    "session_closed",
-                                    "stop_requested",
-                                    "stopped",
-                                ):
+                    except asyncio.CancelledError:
 
-                                    break
+                        raise
 
-                                # --------------------------------
-                                # "turn_complete" is expected.
-                                #
-                                # DO NOT close the session.
-                                # --------------------------------
+                    except Exception as exc:
 
-                                if result == "turn_complete":
+                        if self._stop_event.is_set():
 
-                                    continue
+                            break
 
-                            except asyncio.CancelledError:
+                        print(
+                            "[LIVE] Gemini Live connection error:",
+                            exc,
+                        )
 
-                                break
+                        connection_should_retry = True
 
-                            except Exception as exc:
+                    # ---------------------------------------------
+                    # DO NOT reconnect after an explicit stop.
+                    # ---------------------------------------------
 
-                                print(
-                                    "[LIVE] Receive turn error:",
-                                    exc,
-                                )
+                    if self._stop_event.is_set():
 
-                                break
+                        break
 
-                finally:
+                    # ---------------------------------------------
+                    # Gemini connection ended.
+                    #
+                    # We have a resumption handle from the server,
+                    # so reconnect automatically.
+                    # ---------------------------------------------
 
-                    stop_task.cancel()
+                    if connection_should_retry:
 
-                    sender_task.cancel()
+                        print(
+                            "[LIVE] Preparing automatic Live "
+                            "connection rollover..."
+                        )
 
-                    await asyncio.gather(
-                        stop_task,
-                        sender_task,
-                        return_exceptions=True,
+                        await asyncio.sleep(1.0)
+
+                        print(
+                            "[LIVE] Resuming Live Conversation..."
+                        )
+
+                        continue
+
+                    # ---------------------------------------------
+                    # Defensive fallback.
+                    #
+                    # If the connection somehow exits without an
+                    # explicit stop or retry request, keep Live
+                    # Conversation alive rather than silently ending.
+                    # ---------------------------------------------
+
+                    print(
+                        "[LIVE] Gemini Live connection ended."
                     )
+
+                    await asyncio.sleep(1.0)
+
+            finally:
+
+                stop_task.cancel()
+
+                await asyncio.gather(
+                    stop_task,
+                    return_exceptions=True,
+                )
 
         finally:
 
@@ -1089,6 +1345,8 @@ class LiveConversation:
 
         The caller invokes this method again.
         """
+        
+        output_text_parts = []
 
         try:
             
@@ -1098,7 +1356,7 @@ class LiveConversation:
 
             async for response in session.receive():
                 
-                                # =============================================
+                # =============================================
                 # SERVER GO-AWAY NOTICE
                 # =============================================
                 #
@@ -1122,6 +1380,47 @@ class LiveConversation:
                         "[LIVE] Gemini Live connection "
                         f"will close soon. Time left: {time_left}"
                     )
+
+                    # ---------------------------------------------
+                    # IMPORTANT:
+                    #
+                    # Gemini has explicitly told us that this
+                    # connection is going to close.
+                    #
+                    # Do NOT wait for Gemini to forcibly terminate
+                    # the connection with 1008.
+                    #
+                    # Return immediately so _run() can cleanly
+                    # exit this connection and create the next
+                    # Gemini connection using the latest
+                    # session-resumption handle.
+                    # ---------------------------------------------
+
+                    print(
+                        "[LIVE] GoAway received. "
+                        "Preparing automatic connection rollover."
+                    )
+
+                    return "go_away"
+
+                # =============================================
+                # SESSION RESUMPTION UPDATE
+                # =============================================
+
+                if response.session_resumption_update:
+
+                    update = (
+                        response.session_resumption_update
+                    )
+
+                    if (
+                        update.resumable
+                        and update.new_handle
+                    ):
+
+                        self._set_session_resumption_handle(
+                            update.new_handle
+                        )
                 
                 # =============================================
                 # TOOL CALL CANCELLATION
@@ -1384,6 +1683,16 @@ class LiveConversation:
                             user_text,
                         )
 
+                        try:
+                            HUDIntegration.command(
+                                user_text
+                            )
+                        except Exception as exc:
+                            print(
+                                "[HUD LIVE COMMAND LOG] Failed:",
+                                exc,
+                            )
+
                         # -------------------------------------
                         # LOCAL STOP COMMAND
                         # -------------------------------------
@@ -1419,9 +1728,8 @@ class LiveConversation:
 
                     if output_text:
 
-                        print(
-                            "[JARVIS]",
-                            output_text,
+                        output_text_parts.append(
+                            output_text
                         )
 
                 # =============================================
@@ -1478,6 +1786,29 @@ class LiveConversation:
                     False,
                 ):
 
+                    if output_text_parts:
+
+                        complete_output = " ".join(
+                            output_text_parts
+                        ).strip()
+
+                        if complete_output:
+
+                            print(
+                                "[JARVIS]",
+                                complete_output,
+                            )
+
+                            try:
+                                HUDIntegration.response(
+                                    complete_output
+                                )
+                            except Exception as exc:
+                                print(
+                                    "[HUD LIVE RESPONSE LOG] Failed:",
+                                    exc,
+                                )
+
                     print(
                         "[LIVE] Turn complete."
                     )
@@ -1505,7 +1836,14 @@ class LiveConversation:
                 exc,
             )
 
-            self._stop_event.set()
+            # ---------------------------------------------
+            # A Gemini connection error is NOT the same as
+            # the user requesting Live to stop.
+            #
+            # _run() will detect the failed connection and
+            # automatically reconnect using the latest
+            # session-resumption handle.
+            # ---------------------------------------------
 
             raise
 
