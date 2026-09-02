@@ -130,7 +130,7 @@ body {
 
 .hud-btn {
   min-width: 44px;
-  height: 44px;
+  height: 34px;
   padding: 0 12px;
   background: rgba(20, 10, 0, 0.55);
   border: 1px solid var(--assistant-colour-45);
@@ -238,10 +238,10 @@ body {
 /* ——— Camera preview panel ——— */
 .camera-panel {
   position: absolute;
-  right: 220px;
+  right: 190px;
   bottom: 0;
-  width: 208px;
-  height: 156px;
+  width: 170px;
+  height: 115px;
   display: none;
   border: 1px solid var(--assistant-colour-45);
   border-radius: 4px;
@@ -411,6 +411,7 @@ body {
 
 .cockpit-right {
   right: 24px;
+  width: 360px;
   pointer-events: auto;
 }
 
@@ -759,8 +760,11 @@ body {
 
 .activity-log {
   height: 420px;
+  width: 420px;
+  max-width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  margin-top: 12px;
   padding: 8px 12px;
   pointer-events: auto;
   cursor: pointer;
@@ -1536,10 +1540,10 @@ body {
   position: fixed;
 
   right: 24px;
-  bottom: 145px;
+  bottom: 160px;
 
   width: min(
-    360px,
+    355px,
     calc(100vw - 48px)
   );
 

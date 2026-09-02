@@ -1,6 +1,9 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import type {
   HUDState,
@@ -166,6 +169,70 @@ function formatTime(
     }
   );
 
+}
+
+
+function ActivityMessage({
+  text,
+  animate,
+}: {
+  text: string;
+  animate: boolean;
+}) {
+
+  const [displayText, setDisplayText] =
+    useState(
+      animate ? "" : text
+    );
+
+  useEffect(() => {
+
+    if (!animate) {
+
+      setDisplayText(text);
+
+      return;
+
+    }
+
+    setDisplayText("");
+
+    let index = 0;
+
+    const interval =
+      window.setInterval(() => {
+
+        index += 1;
+
+        setDisplayText(
+          text.slice(0, index)
+        );
+
+        if (index >= text.length) {
+
+          window.clearInterval(
+            interval
+          );
+
+        }
+
+      }, 18);
+
+    return () => {
+
+      window.clearInterval(
+        interval
+      );
+
+    };
+
+  }, [text, animate]);
+
+  return (
+    <>
+      {displayText}
+    </>
+  );
 }
 
 
@@ -342,7 +409,13 @@ export default function HudCockpit({
 
                   <div className="activity-message-text">
 
-                    {activity.text}
+                    <ActivityMessage
+                      text={activity.text}
+                      animate={
+                        activity.id ===
+                        activities[activities.length - 1]?.id
+                      }
+                    />
 
                   </div>
 
