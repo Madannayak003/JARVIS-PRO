@@ -74,10 +74,6 @@ class ReferenceResolver:
         # ----------------------------------------------------
 
         self.reference_priority = {
-
-            "the first one": 100,
-
-            "the second one": 100,
             
             "the first one": 100,
             
@@ -540,6 +536,68 @@ class ReferenceResolver:
             "objects"
         )
 
+        # ----------------------------------------------------
+        # Browser search results
+        #
+        # Google/Bing/browser search results live in the
+        # centralized BrowserContext rather than the generic
+        # conversation context.
+        #
+        # Use them when the conversational object list is
+        # not available.
+        # ----------------------------------------------------
+
+        if not objects:
+
+            try:
+
+                application = str(
+                    values.get(
+                        "application"
+                    )
+                    or ""
+                ).strip().lower()
+
+                skill = str(
+                    values.get(
+                        "skill"
+                    )
+                    or ""
+                ).strip().lower()
+
+                if application in {
+                    "google",
+                    "bing",
+                    "browser",
+                    "web",
+                } or skill == "browser":
+
+                    from core.browser_context import (
+                        browser_context,
+                    )
+
+                    objects = (
+                        browser_context.last_search_results
+                    )
+
+                    if objects:
+
+                        print(
+                            "[REFERENCE] Using browser "
+                            f"search results: {len(objects)}"
+                        )
+
+            except Exception as e:
+
+                print(
+                    "[REFERENCE] Browser context lookup "
+                    f"failed: {e}"
+                )
+
+        # ----------------------------------------------------
+        # No object list
+        # ----------------------------------------------------
+
         if not objects:
 
             return self._unresolved(
@@ -550,6 +608,10 @@ class ReferenceResolver:
                 )
             )
 
+        # ----------------------------------------------------
+        # Validate collection
+        # ----------------------------------------------------
+
         if not isinstance(
             objects,
             (list, tuple)
@@ -558,6 +620,17 @@ class ReferenceResolver:
             return self._unresolved(
                 reference,
                 "Context objects are not a list."
+            )
+
+        # ----------------------------------------------------
+        # Boundary protection
+        # ----------------------------------------------------
+
+        if index < 0:
+
+            return self._unresolved(
+                reference,
+                "Requested object index is invalid."
             )
 
         if index >= len(objects):
@@ -570,14 +643,20 @@ class ReferenceResolver:
                 )
             )
 
+        # ----------------------------------------------------
+        # Resolve actual contextual object
+        # ----------------------------------------------------
+
         return self._success(
             reference=reference,
             value=objects[index],
-            source="objects",
-            confidence=0.95,
+            source="browser_context"
+            if objects
+            else "objects",
+            confidence=0.96,
             reason=(
                 f"Resolved '{reference}' from "
-                "the contextual object list."
+                "the contextual result list."
             ),
         )
         

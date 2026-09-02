@@ -594,27 +594,27 @@ class ConversationUnderstandingEngine:
             (r"\bthose\b", "those"),
 
             (
-                r"\bthe first one\b",
+                r"\b(?:the\s+)?first one\b",
                 "the first one"
             ),
 
             (
-                r"\bthe second one\b",
+                r"\b(?:the\s+)?second one\b",
                 "the second one"
             ),
-            
-                        (
-                r"\bthe third one\b",
+
+            (
+                r"\b(?:the\s+)?third one\b",
                 "the third one"
             ),
 
             (
-                r"\bthe fourth one\b",
+                r"\b(?:the\s+)?fourth one\b",
                 "the fourth one"
             ),
 
             (
-                r"\bthe fifth one\b",
+                r"\b(?:the\s+)?fifth one\b",
                 "the fifth one"
             ),
 

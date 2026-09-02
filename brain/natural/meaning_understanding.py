@@ -629,55 +629,61 @@ class MeaningUnderstandingEngine:
         )
 
     @staticmethod
-    @staticmethod
     def _contains_reference(
         text: str,
     ) -> bool:
 
-        words = set(
-            text.split()
-        )
+        import re
 
         # ----------------------------------------------------
         # Pronoun references
         # ----------------------------------------------------
 
-        if words.intersection(
-            {
-                "it",
-                "that",
-                "this",
-                "they",
-                "them",
-                "those",
-            }
+        if re.search(
+            r"\b(?:it|that|this|they|them|those)\b",
+            text,
         ):
             return True
 
         # ----------------------------------------------------
         # Positional references
+        #
+        # Accept both:
+        #
+        #     first one
+        #     the first one
+        #
+        #     second one
+        #     the second one
+        #
+        # and so on.
         # ----------------------------------------------------
 
-        positional_references = (
-            "the first one",
-            "the second one",
-            "the third one",
-            "the fourth one",
-            "the fifth one",
-            "number one",
-            "number two",
-            "number three",
-            "number four",
-            "number five",
-            "the last one",
-            "the next one",
-            "the previous one",
-            "the same one",
+        positional_patterns = (
+            r"\b(?:the\s+)?first one\b",
+            r"\b(?:the\s+)?second one\b",
+            r"\b(?:the\s+)?third one\b",
+            r"\b(?:the\s+)?fourth one\b",
+            r"\b(?:the\s+)?fifth one\b",
+
+            r"\bnumber one\b",
+            r"\bnumber two\b",
+            r"\bnumber three\b",
+            r"\bnumber four\b",
+            r"\bnumber five\b",
+
+            r"\bthe last one\b",
+            r"\b(?:the\s+)?next one\b",
+            r"\bthe previous one\b",
+            r"\bthe same one\b",
         )
 
         return any(
-            reference in text
-            for reference in positional_references
+            re.search(
+                pattern,
+                text,
+            )
+            for pattern in positional_patterns
         )
 
     @staticmethod
@@ -685,31 +691,93 @@ class MeaningUnderstandingEngine:
         text: str,
     ) -> Optional[str]:
 
+        import re
+
         # ----------------------------------------------------
         # Positional references
+        #
+        # Canonical form is returned so downstream
+        # ReferenceResolver logic can use it consistently.
         # ----------------------------------------------------
 
         positional_references = (
-            "the first one",
-            "the second one",
-            "the third one",
-            "the fourth one",
-            "the fifth one",
-            "number one",
-            "number two",
-            "number three",
-            "number four",
-            "number five",
-            "the last one",
-            "the next one",
-            "the previous one",
-            "the same one",
+            (
+                r"\b(?:the\s+)?first one\b",
+                "the first one",
+            ),
+
+            (
+                r"\b(?:the\s+)?second one\b",
+                "the second one",
+            ),
+
+            (
+                r"\b(?:the\s+)?third one\b",
+                "the third one",
+            ),
+
+            (
+                r"\b(?:the\s+)?fourth one\b",
+                "the fourth one",
+            ),
+
+            (
+                r"\b(?:the\s+)?fifth one\b",
+                "the fifth one",
+            ),
+
+            (
+                r"\bnumber one\b",
+                "number one",
+            ),
+
+            (
+                r"\bnumber two\b",
+                "number two",
+            ),
+
+            (
+                r"\bnumber three\b",
+                "number three",
+            ),
+
+            (
+                r"\bnumber four\b",
+                "number four",
+            ),
+
+            (
+                r"\bnumber five\b",
+                "number five",
+            ),
+
+            (
+                r"\bthe last one\b",
+                "the last one",
+            ),
+
+            (
+                r"\b(?:the\s+)?next one\b",
+                "the next one",
+            ),
+
+            (
+                r"\bthe previous one\b",
+                "the previous one",
+            ),
+
+            (
+                r"\bthe same one\b",
+                "the same one",
+            ),
         )
 
-        for reference in positional_references:
+        for pattern, reference in positional_references:
 
-            if reference in text:
-
+            if re.search(
+                pattern,
+                text,
+            ):
                 return reference
 
         # ----------------------------------------------------
@@ -725,8 +793,10 @@ class MeaningUnderstandingEngine:
             "those",
         ):
 
-            if reference in text.split():
-
+            if re.search(
+                rf"\b{re.escape(reference)}\b",
+                text,
+            ):
                 return reference
 
         return None

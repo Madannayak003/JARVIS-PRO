@@ -106,68 +106,7 @@ def browser_route(command):
             }
         ]
         
-    # -----------------------------------------------------
-    # Natural Google Search
-    # -----------------------------------------------------
-    #
-    # Examples:
-    #
-    #   search for artificial intelligence
-    #   search artificial intelligence
-    #   google search for artificial intelligence
-    #   search for Python tutorials on Google
-    #
-    # IMPORTANT:
-    # These must be recognized as WEB searches.
-    # File search remains handled by file_router for
-    # explicit file/document requests.
-    # -----------------------------------------------------
-
-    if command.startswith("search for "):
-
-        query = command[
-            len("search for "):
-        ].strip()
-
-        if query:
-
-            return [
-                {
-                    "action": "google_search",
-                    "query": query
-                }
-            ]
-
-    if command.startswith("search ") and not command.endswith(" on youtube"):
-
-        query = command[
-            len("search "):
-        ].strip()
-
-        if query:
-
-            return [
-                {
-                    "action": "google_search",
-                    "query": query
-                }
-            ]
-
-    if command.startswith("google search for "):
-
-        query = command[
-            len("google search for "):
-        ].strip()
-
-        if query:
-
-            return [
-                {
-                    "action": "google_search",
-                    "query": query
-                }
-            ]
-
+    
     # -----------------------------------------------------
     # Google Search
     # -----------------------------------------------------
