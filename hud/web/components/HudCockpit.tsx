@@ -249,6 +249,27 @@ export default function HudCockpit({
   const system =
     state.system || {};
 
+  // Live Clock State
+  const [currentTime, setCurrentTime] = useState("");
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        })
+      );
+    };
+
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Reference for auto-scrolling to the latest log entry
   const logEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -285,19 +306,27 @@ export default function HudCockpit({
         </div>
 
 
-        <div className="cockpit-system-status">
+        <div className="cockpit-system-status" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          
+          {/* Live Clock Display */}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span className="status-label">TIME</span>
+            <span className="status-value">{currentTime || "--:--:--"}</span>
+          </div>
 
-          <span className="status-label">
-            SYSTEM
-          </span>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span className="status-label">
+              SYSTEM
+            </span>
 
-          <span className="status-value">
+            <span className="status-value">
 
-            {state.voice_mode
-              ?.toUpperCase()
-              || "ONLINE"}
+              {state.voice_mode
+                ?.toUpperCase()
+                || "ONLINE"}
 
-          </span>
+            </span>
+          </div>
 
         </div>
 

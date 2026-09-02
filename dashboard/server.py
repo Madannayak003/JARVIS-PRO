@@ -51,7 +51,6 @@ from core.runtime import handle_priority
 from hud.integration import HUDIntegration
 
 from tools.windows_integration import (
-    create_desktop_shortcut,
     get_autostart_status,
     set_autostart,
 )
@@ -63,6 +62,71 @@ from core.listener import (
     listener_running,
     listener_paused,
 )
+
+# =============================================================
+# ROBUST DESKTOP SHORTCUT BUILDER (WINDOWS / LINUX)
+# =============================================================
+
+def create_desktop_shortcut() -> str:
+    """
+    Creates a clean desktop shortcut pointing to the Jarvis Pro execution environment.
+    Supports Windows (.lnk via winshell/powershell/pywin32 fallback) and Linux (.desktop).
+    """
+    import sys
+    import os
+
+    desktop_path = None
+    if os.name == "nt":
+        try:
+            import winreg
+            sub_key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
+                desktop_path = winreg.QueryValueEx(key, "Desktop")[0]
+        except Exception:
+            desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    else:
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+
+    if not desktop_path or not os.path.exists(desktop_path):
+        os.makedirs(desktop_path, exist_ok=True)
+
+    target_script = os.path.abspath(sys.argv[0])
+    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config", "jarvis.ico"))
+    
+    if os.name == "nt":
+        shortcut_path = os.path.join(desktop_path, "Jarvis Pro.lnk")
+        powershell_script = (
+            f"$WshShell = New-Object -ComObject WScript.Shell; "
+            f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
+            f"$Shortcut.TargetPath = '{sys.executable}'; "
+            f"$Shortcut.Arguments = '\"{target_script}\"'; "
+            f"$Shortcut.WorkingDirectory = '{os.path.dirname(target_script)}'; "
+        )
+        if os.path.exists(icon_path):
+            powershell_script += f"$Shortcut.IconLocation = '{icon_path}'; "
+        powershell_script += "$Shortcut.Save()"
+
+        import subprocess
+        subprocess.run(["powershell", "-Command", powershell_script], check=True)
+        return "Windows desktop shortcut created successfully."
+    else:
+        shortcut_path = os.path.join(desktop_path, "Jarvis-Pro.desktop")
+        desktop_entry = (
+            f"[Desktop Entry]\n"
+            f"Type=Application\n"
+            f"Name=Jarvis Pro\n"
+            f"Exec={sys.executable} \"{target_script}\"\n"
+            f"Path={os.path.dirname(target_script)}\n"
+            f"Terminal=true\n"
+        )
+        if os.path.exists(icon_path):
+            desktop_entry += f"Icon={icon_path}\n"
+        
+        with open(shortcut_path, "w", encoding="utf-8") as f:
+            f.write(desktop_entry)
+        os.chmod(shortcut_path, 0o755)
+        return "Linux desktop shortcut created successfully."
+
 
 # =============================================================
 # FASTAPI
@@ -823,60 +887,6 @@ class DashboardServer:
             pass
 
     # =========================================================
-    # JARVIS VOICE OUTPUT → REMOTE DASHBOARD
-    # =========================================================
-
-        def _on_voice_output(
-            self,
-            text: str,
-        ):
-
-            if not text:
-
-                return
-
-            print(
-                "[REMOTE VOICE] Sending:",
-                text,
-            )
-
-            # =====================================================
-            # HUD — Conversation Activity Log
-            #
-            # This records the actual JARVIS response.
-            # It does NOT change voice behaviour.
-            # =====================================================
-
-            try:
-
-                HUDIntegration.response(
-                    str(text)
-                )
-
-            except Exception as exc:
-
-                print(
-                    "[HUD RESPONSE LOG] Failed:",
-                    exc,
-                )
-
-            # =====================================================
-            # Existing Remote Dashboard Log
-            # =====================================================
-
-            self._broadcast_threadsafe({
-
-                "type": "log",
-
-                "speaker": "jarvis",
-
-                "text": str(text),
-
-                "ts": time.time(),
-
-            })
-    
-    # =========================================================
     # REMOTE COMMAND
     # =========================================================
 
@@ -1407,7 +1417,7 @@ class DashboardServer:
                 ),
             }
             
-                # =====================================================
+        # =====================================================
         # LOCAL — DESKTOP SHORTCUT
         # =====================================================
 
@@ -1672,17 +1682,6 @@ class DashboardServer:
                 )
             )
 
-            # =========================================================
-            # MICROPHONE ROUTING
-            #
-            # Normal mode:
-            #     HUD microphone controls normal JARVIS listener.
-            #
-            # Live mode:
-            #     HUD microphone controls Live microphone input only.
-            #     The Gemini Live session remains connected.
-            # =========================================================
-
             try:
 
                 from voice.live_conversation import _live
@@ -1692,10 +1691,6 @@ class DashboardServer:
                 _live = None
 
             if _live is not None and _live.running:
-
-                # -------------------------------------------------
-                # LIVE CONVERSATION
-                # -------------------------------------------------
 
                 _live.set_microphone_enabled(
                     enabled
@@ -1710,10 +1705,6 @@ class DashboardServer:
                 paused = not actual_enabled
 
             else:
-
-                # -------------------------------------------------
-                # NORMAL JARVIS
-                # -------------------------------------------------
 
                 if enabled:
 
@@ -2140,10 +2131,6 @@ class DashboardServer:
                 )
             ).strip()
 
-            # -------------------------------------------------
-            # AES encrypted command
-            # -------------------------------------------------
-
             if encrypted:
 
                 if not token:
@@ -2200,16 +2187,12 @@ class DashboardServer:
                         status_code=400,
                     )
 
-            # -------------------------------------------------
-            # Plaintext fallback
-            # -------------------------------------------------
-
             else:
 
                 text = str(
                     body.get(
                         "text",
-                        "",
+                        body.get("command", ""),
                     )
                 ).strip()
 
@@ -2224,10 +2207,6 @@ class DashboardServer:
                     },
                     status_code=400,
                 )
-
-            # -------------------------------------------------
-            # Execute through normal dispatcher
-            # -------------------------------------------------
 
             threading.Thread(
                 target=self._run_command,
@@ -2679,10 +2658,6 @@ class DashboardServer:
 
             try:
 
-                # ---------------------------------------------
-                # Send history
-                # ---------------------------------------------
-
                 for message in (
                     self._history[-100:]
                 ):
@@ -2690,10 +2665,6 @@ class DashboardServer:
                     await websocket.send_json(
                         message
                     )
-
-                # ---------------------------------------------
-                # Active status
-                # ---------------------------------------------
 
                 await websocket.send_json({
                     "type": "status",
@@ -2706,10 +2677,6 @@ class DashboardServer:
                         "Remote session active."
                     ),
                 })
-
-                # ---------------------------------------------
-                # Keep connection alive
-                # ---------------------------------------------
 
                 while True:
 
@@ -2780,9 +2747,6 @@ class DashboardServer:
                         )
 
                     except asyncio.QueueFull:
-
-                        # Drop oldest audio frame
-                        # rather than blocking.
 
                         try:
 

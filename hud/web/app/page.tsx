@@ -549,157 +549,144 @@ export default function Home() {
   }, []);
 
   function AssistantColourPicker({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (value: string) => void;
-  }) {
-    const wheelRef = useRef<HTMLDivElement | null>(null);
-    const [dragging, setDragging] = useState(false);
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const [dragging, setDragging] = useState(false);
 
-    function hexToRgb(hex: string) {
-      const clean = hex.replace("#", "");
-      if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
-      return {
-        r: parseInt(clean.slice(0, 2), 16),
-        g: parseInt(clean.slice(2, 4), 16),
-        b: parseInt(clean.slice(4, 6), 16),
-      };
-    }
-
-    function rgbToHsv(r: number, g: number, b: number) {
-      r /= 255;
-      g /= 255;
-      b /= 255;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const delta = max - min;
-      let h = 0;
-
-      if (delta !== 0) {
-        if (max === r) h = ((g - b) / delta) % 6;
-        else if (max === g) h = (b - r) / delta + 2;
-        else h = (r - g) / delta + 4;
-        h *= 60;
-        if (h < 0) h += 360;
-      }
-
-      const s = max === 0 ? 0 : delta / max;
-      return { h, s, v: max };
-    }
-
-    function hsvToHex(h: number, s: number, v: number) {
-      const c = v * s;
-      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-      const m = v - c;
-      let r = 0;
-      let g = 0;
-      let b = 0;
-
-      if (h < 60) {
-        r = c; g = x;
-      } else if (h < 120) {
-        r = x; g = c;
-      } else if (h < 180) {
-        g = c; b = x;
-      } else if (h < 240) {
-        g = x; b = c;
-      } else if (h < 300) {
-        r = x; b = c;
-      } else {
-        r = c; b = x;
-      }
-
-      const toHex = (n: number) =>
-        Math.round((n + m) * 255).toString(16).padStart(2, "0");
-
-      return "#" + toHex(r) + toHex(g) + toHex(b);
-    }
-
-    const rgb = hexToRgb(value);
-    const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 35, s: 1, v: 1 };
-    const angle = (hsv.h * Math.PI) / 180;
-    const radius = 43;
-    const handleX = 50 + Math.cos(angle) * radius * hsv.s;
-    const handleY = 50 + Math.sin(angle) * radius * hsv.s;
-
-    function updateFromPointer(event: React.PointerEvent<HTMLDivElement>) {
-      const wheel = wheelRef.current;
-      if (!wheel) return;
-      const rect = wheel.getBoundingClientRect();
-      const x = event.clientX - (rect.left + rect.width / 2);
-      const y = event.clientY - (rect.top + rect.height / 2);
-      const distance = Math.sqrt(x * x + y * y);
-      const maxRadius = Math.min(rect.width, rect.height) / 2;
-      const clampedRadius = Math.min(distance, maxRadius);
-
-      let hue = Math.atan2(y, x) * (180 / Math.PI);
-      if (hue < 0) hue += 360;
-
-      const saturation = Math.min(1, clampedRadius / maxRadius);
-      onChange(hsvToHex(hue, saturation, 1));
-    }
-
-    return (
-      <div className="assistant-colour-picker">
-        <div className="assistant-colour-heading">
-          <div>
-            <span>UI COLOUR</span>
-            <small>choose HUD accent colour</small>
-          </div>
-          <button
-            type="button"
-            className="assistant-colour-default"
-            onClick={() => onChange("#ffaa30")}
-          >
-            DEFAULT
-          </button>
-        </div>
-
-        <div className="assistant-colour-wheel-area">
-          <div
-            ref={wheelRef}
-            className="assistant-colour-wheel"
-            onPointerDown={(event) => {
-              setDragging(true);
-              event.currentTarget.setPointerCapture(event.pointerId);
-              updateFromPointer(event);
-            }}
-            onPointerMove={(event) => {
-              if (dragging) updateFromPointer(event);
-            }}
-            onPointerUp={() => setDragging(false)}
-            onPointerCancel={() => setDragging(false)}
-          >
-            <div
-              className="assistant-colour-wheel-handle"
-              style={{ left: `${handleX}%`, top: `${handleY}%` }}
-            />
-            <div
-              className="assistant-colour-preview"
-              style={{ background: value }}
-            />
-          </div>
-        </div>
-
-        <input
-          className="assistant-colour-hex"
-          type="text"
-          value={value}
-          onChange={(event) => {
-            const next = event.target.value;
-            if (/^#[0-9a-fA-F]{6}$/.test(next)) {
-              onChange(next.toLowerCase());
-            } else {
-              onChange(next);
-            }
-          }}
-          spellCheck={false}
-        />
-      </div>
-    );
+  function hexToRgb(hex: string) {
+    const clean = hex.replace("#", "");
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
   }
+
+  function rgbToHsv(r: number, g: number, b: number) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const delta = max - min;
+    let h = 0;
+    if (delta !== 0) {
+      if (max === r) h = ((g - b) / delta) % 6;
+      else if (max === g) h = (b - r) / delta + 2;
+      else h = (r - g) / delta + 4;
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+    const s = max === 0 ? 0 : delta / max;
+    return { h, s, v: max };
+  }
+
+  function hsvToHex(h: number, s: number, v: number) {
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; }
+    else if (h < 120) { r = x; g = c; }
+    else if (h < 180) { g = c; b = x; }
+    else if (h < 240) { g = x; b = c; }
+    else if (h < 300) { r = x; g = c; }
+    else { r = c; b = x; }
+
+    const toHex = (n: number) =>
+      Math.round((n + m) * 255).toString(16).padStart(2, "0");
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+  }
+
+  const rgb = hexToRgb(value);
+  const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 35, s: 1, v: 1 };
+  const angle = (hsv.h * Math.PI) / 180;
+  const radius = 43;
+  const handleX = 50 + Math.cos(angle) * radius * hsv.s;
+  const handleY = 50 + Math.sin(angle) * radius * hsv.s;
+
+  function updateFromPointer(event: React.PointerEvent<HTMLDivElement>) {
+    const wheel = wheelRef.current;
+    if (!wheel) return;
+    const rect = wheel.getBoundingClientRect();
+    const x = event.clientX - (rect.left + rect.width / 2);
+    const y = event.clientY - (rect.top + rect.height / 2);
+    const distance = Math.sqrt(x * x + y * y);
+    const maxRadius = Math.min(rect.width, rect.height) / 2;
+    const clampedRadius = Math.min(distance, maxRadius);
+
+    let hue = Math.atan2(y, x) * (180 / Math.PI);
+    if (hue < 0) hue += 360;
+
+    const saturation = Math.min(1, clampedRadius / maxRadius);
+    onChange(hsvToHex(hue, saturation, 1));
+  }
+
+  return (
+    <div className="assistant-colour-picker">
+      <div className="assistant-colour-heading">
+        <div>
+          <span>UI COLOUR</span>
+          <small>choose HUD accent colour</small>
+        </div>
+        <button
+          type="button"
+          className="assistant-colour-default"
+          onClick={() => {
+            // Instant synchronous state update
+            onChange("#ffaa30");
+          }}
+        >
+          DEFAULT
+        </button>
+      </div>
+
+      <div className="assistant-colour-wheel-area">
+        <div
+          ref={wheelRef}
+          className="assistant-colour-wheel"
+          onPointerDown={(event) => {
+            setDragging(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
+            updateFromPointer(event);
+          }}
+          onPointerMove={(event) => {
+            if (dragging) updateFromPointer(event);
+          }}
+          onPointerUp={() => setDragging(false)}
+          onPointerCancel={() => setDragging(false)}
+        >
+          <div
+            className="assistant-colour-wheel-handle"
+            style={{ left: `${handleX}%`, top: `${handleY}%` }}
+          />
+          <div
+            className="assistant-colour-preview"
+            style={{ background: value }}
+          />
+        </div>
+      </div>
+
+      <input
+        className="assistant-colour-hex"
+        type="text"
+        value={value}
+        onChange={(event) => {
+          const next = event.target.value;
+          if (/^#[0-9a-fA-F]{6}$/.test(next)) {
+            onChange(next.toLowerCase());
+          } else {
+            onChange(next);
+          }
+        }}
+        spellCheck={false}
+      />
+    </div>
+  );
+}
 
   return (
     <main

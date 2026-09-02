@@ -409,6 +409,11 @@ export default function JarvisOrb() {
             }`
           }
         >
+          {/* Cybernetic view finder corners */}
+          <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[var(--assistant-colour)] pointer-events-none z-10" />
+          <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[var(--assistant-colour)] pointer-events-none z-10" />
+          <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[var(--assistant-colour)] pointer-events-none z-10" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[var(--assistant-colour)] pointer-events-none z-10" />
 
           <video
             ref={videoRef}
@@ -424,22 +429,23 @@ export default function JarvisOrb() {
             className="camera-overlay"
           />
 
-          <div className="camera-status">
+          <div className="camera-status flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${status.hands > 0 ? "bg-[#00ff66] shadow-[0_0_6px_#00ff66]" : "bg-[var(--assistant-colour)] opacity-60"}`} />
+              {status.hands > 0
 
-            {status.hands > 0
+                ? `${status.hands} HAND${
+                    status.hands > 1
+                      ? "S"
+                      : ""
+                  } · ${
+                    MODE_LABEL[
+                      status.mode
+                    ]
+                  }`
 
-              ? `${status.hands} HAND${
-                  status.hands > 1
-                    ? "S"
-                    : ""
-                } · ${
-                  MODE_LABEL[
-                    status.mode
-                  ]
-                }`
-
-              : "SHOW HANDS"}
-
+                : "SCANNING"}
+            </span>
           </div>
 
         </div>
@@ -472,9 +478,9 @@ export default function JarvisOrb() {
 
               : cameraOn
 
-                ? "GESTURES ON"
+                ? "● GESTURES ON"
 
-                : "GESTURES OFF"}
+                : "○ GESTURES OFF"}
 
           </button>
 
