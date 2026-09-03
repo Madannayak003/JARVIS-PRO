@@ -21,8 +21,18 @@ const PINCH_OFF = 0.45;
 
 // How strongly hand movement rotates the orb (radians per normalized unit)
 const ROTATE_SPEED = 5.0;
-// Smoothing factor for grab-point tracking (0..1, higher = snappier)
-const SMOOTHING = 0.4;
+
+// Position smoothing
+const SMOOTHING = 0.22;
+
+// Movement filtering
+const MOVEMENT_DEADZONE = 0.001;
+
+// Velocity smoothing
+const VELOCITY_SMOOTHING = 0.18;
+
+// Maximum single-frame movement
+const MAX_MOVEMENT = 0.08;
 
 export type GestureMode = "idle" | "spin" | "zoom";
 
@@ -63,6 +73,10 @@ export class HandTracker {
   private handStates = new Map<string, HandState>();
   private prevMode: GestureMode = "idle";
   private prevSpinGrab: Point | null = null;
+  private smoothedSpinVelocity: Point = {
+    x: 0,
+    y: 0,
+  };
   private prevZoomDist: number | null = null;
   private lastStatus: TrackerStatus = { hands: 0, mode: "idle" };
 
@@ -118,6 +132,10 @@ export class HandTracker {
     this.handStates.clear();
     this.prevMode = "idle";
     this.prevSpinGrab = null;
+    this.smoothedSpinVelocity = {
+      x: 0,
+      y: 0,
+    };
     this.prevZoomDist = null;
     const ctx = this.overlay.getContext("2d");
     ctx?.clearRect(0, 0, this.overlay.width, this.overlay.height);
@@ -187,6 +205,10 @@ export class HandTracker {
     // Reset reference points on any mode change to avoid jumps
     if (mode !== this.prevMode) {
       this.prevSpinGrab = null;
+      this.smoothedSpinVelocity = {
+        x: 0,
+        y: 0,
+      };
       this.prevZoomDist = null;
       this.prevMode = mode;
     }
@@ -196,8 +218,15 @@ export class HandTracker {
       if (this.prevSpinGrab) {
         const dx = grab.x - this.prevSpinGrab.x;
         const dy = grab.y - this.prevSpinGrab.y;
-        if (Math.abs(dx) > 1e-4 || Math.abs(dy) > 1e-4) {
-          this.callbacks.onRotate(dx * ROTATE_SPEED, dy * ROTATE_SPEED);
+
+        if (
+          Math.abs(dx) > MOVEMENT_DEADZONE ||
+          Math.abs(dy) > MOVEMENT_DEADZONE
+        ) {
+          this.callbacks.onRotate(
+            dx * ROTATE_SPEED,
+            dy * ROTATE_SPEED
+          );
         }
       }
       this.prevSpinGrab = grab;

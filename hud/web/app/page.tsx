@@ -76,6 +76,7 @@ export default function Home() {
 
   const morningBriefActiveRef = useRef(false);
   const morningBriefStartedSpeakingRef = useRef(false);
+  const pendingHudCommandsRef = useRef<string[]>([]);
 
   /* =========================================================
      SETTINGS & MODAL STATE
@@ -101,110 +102,106 @@ export default function Home() {
      LOAD SETTINGS
      ========================================================= */
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const saved = window.localStorage.getItem("jarvis-pro-settings");
-        if (saved) {
-          const settings = JSON.parse(saved);
-          if (typeof settings.autoStart === "boolean") setAutoStart(settings.autoStart);
-          if (typeof settings.morningBrief === "boolean") setMorningBrief(settings.morningBrief);
-          if (typeof settings.assistantName === "string") setAssistantName(settings.assistantName);
-          if (typeof settings.userName === "string") setUserName(settings.userName);
-          if (typeof settings.assistantColour === "string") setAssistantColour(settings.assistantColour);
-        }
-      } catch (error) {
-        console.error("[HUD] Local settings fallback failed:", error);
-      }
+    let isMounted = true;
 
-      try {
-        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/customise`, {
-          cache: "no-store",
-        });
-        const result = await response.json();
-        if (response.ok && result.ok) {
-          if (typeof result.assistantName === "string") setAssistantName(result.assistantName);
-          if (typeof result.userName === "string") setUserName(result.userName);
-          if (typeof result.assistantColour === "string") setAssistantColour(result.assistantColour);
+    // 1. Load local storage cache instantly first
+    try {
+      const saved = window.localStorage.getItem("jarvis-pro-settings");
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (typeof settings.autoStart === "boolean") setAutoStart(settings.autoStart);
+        if (typeof settings.morningBrief === "boolean") setMorningBrief(settings.morningBrief);
+        if (typeof settings.assistantName === "string") setAssistantName(settings.assistantName);
+        if (typeof settings.userName === "string") setUserName(settings.userName);
+        if (typeof settings.assistantColour === "string") {
+          setAssistantColour(settings.assistantColour);
+          document.documentElement.style.setProperty("--assistant-colour", settings.assistantColour);
         }
-      } catch (error) {
-        console.error("[HUD] Could not load persistent assistant settings:", error);
       }
+    } catch (error) {
+      console.error("[HUD] Local settings fallback failed:", error);
+    }
 
-      try {
-        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/autostart`, {
-          cache: "no-store",
-        });
-        const result = await response.json();
-        if (response.ok && result.ok && typeof result.enabled === "boolean") {
-          setAutoStart(result.enabled);
+    // 2. Fetch server settings with boot-up retry logic
+    const loadWithRetry = async (fn: () => Promise<void>, retries = 5, delay = 1000) => {
+      for (let i = 0; i < retries; i++) {
+        if (!isMounted) return;
+        try {
+          await fn();
+          return;
+        } catch {
+          await new Promise((res) => setTimeout(res, delay));
         }
-      } catch (error) {
-        console.error("[HUD] Could not load Auto-Start status:", error);
       }
     };
 
-    loadSettings();
+    loadWithRetry(async () => {
+      const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/customise`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && isMounted) {
+          if (data.assistantName) setAssistantName(data.assistantName);
+          if (data.userName) setUserName(data.userName);
+          if (data.assistantColour) {
+            setAssistantColour(data.assistantColour);
+            document.documentElement.style.setProperty("--assistant-colour", data.assistantColour);
+          }
+        }
+      }
+    });
+
+    loadWithRetry(async () => {
+      const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/autostart`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && isMounted) setAutoStart(data.enabled);
+      }
+    });
+
+    loadWithRetry(async () => {
+      const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && isMounted) setMicrophoneEnabled(data.enabled);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   /* =========================================================
      MICROPHONE STATUS & SYNC
      ========================================================= */
   useEffect(() => {
-    let cancelled = false;
-    let timer: number | null = null;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 10;
+    let isMounted = true;
 
-    const loadMicrophone = async () => {
-      if (cancelled) return;
-      attempts += 1;
-
+    const syncMicrophone = async () => {
+      if (!isMounted) return;
       try {
         const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
           cache: "no-store",
         });
         const result = await response.json();
-
-        if (response.ok && result.ok && typeof result.enabled === "boolean") {
-          if (!cancelled) setMicrophoneEnabled(result.enabled);
-          if (!result.enabled && attempts < MAX_ATTEMPTS && !cancelled) {
-            timer = window.setTimeout(loadMicrophone, 1000);
-          }
-          return;
+        if (response.ok && result.ok && typeof result.enabled === "boolean" && isMounted) {
+          setMicrophoneEnabled(result.enabled);
         }
-
-        if (attempts < MAX_ATTEMPTS && !cancelled) {
-          timer = window.setTimeout(loadMicrophone, 1000);
-        }
-      } catch (error) {
-        console.error("[HUD] Could not load microphone status:", error);
-        if (attempts < MAX_ATTEMPTS && !cancelled) {
-          timer = window.setTimeout(loadMicrophone, 1000);
-        }
+      } catch {
+        // Silently ignore during server boot-up
       }
     };
 
-    loadMicrophone();
-
-    const syncMicrophone = async () => {
-      if (cancelled) return;
-      try {
-        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
-          cache: "no-store",
-        });
-        const result = await response.json();
-        if (response.ok && result.ok && typeof result.enabled === "boolean" && !cancelled) {
-          setMicrophoneEnabled(result.enabled);
-        }
-      } catch {}
-    };
-
-    const syncTimer = window.setInterval(syncMicrophone, 1000);
+    // Initial check with brief delay to let server spin up
+    const initialTimeout = window.setTimeout(syncMicrophone, 1500);
+    
+    // Ongoing background sync every 3 seconds
+    const syncInterval = window.setInterval(syncMicrophone, 3000);
 
     return () => {
-      cancelled = true;
-      if (timer !== null) window.clearTimeout(timer);
-      window.clearInterval(syncTimer);
+      isMounted = false;
+      window.clearTimeout(initialTimeout);
+      window.clearInterval(syncInterval);
     };
   }, []);
 
@@ -265,6 +262,131 @@ export default function Home() {
   }, []);
 
   /* =========================================================
+     HUD SSE CONNECTION (STRICT DEDUPLICATION)
+     ========================================================= */
+  useEffect(() => {
+    let speakTimer: number | null = null;
+
+    const bridge = new HUDBridge(
+      process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766",
+      setHudState,
+      (event: HUDBridgeEvent) => {
+        if (event.name === "morning_brief") {
+          const headlines = Array.isArray(event.data?.headlines) ? event.data.headlines : [];
+          if (headlines.length > 0) {
+            setMorningBriefHeadlines(headlines);
+            setMorningBriefActive(true);
+            setMorningBriefStartedSpeaking(false);
+            morningBriefActiveRef.current = true;
+            morningBriefStartedSpeakingRef.current = false;
+          }
+          return;
+        }
+
+        if (event.name === "speaking") {
+          if (morningBriefActiveRef.current) {
+            setMorningBriefStartedSpeaking(true);
+            morningBriefStartedSpeakingRef.current = true;
+          }
+          
+          if (speakTimer !== null) window.clearTimeout(speakTimer);
+          speakTimer = window.setTimeout(() => {
+            setHudState((prev) => ({
+              ...prev,
+              speaking: false,
+              status: prev.listening ? "listening" : "idle",
+            }));
+          }, 7000);
+
+          return;
+        }
+
+        if (
+          event.name !== "command" &&
+          event.name !== "response" &&
+          event.name !== "system_activity"
+        ) {
+          return;
+        }
+
+        const speaker =
+          event.name === "command"
+            ? "user"
+            : event.name === "response"
+            ? "jarvis"
+            : "system";
+
+        const text = String(
+          event.name === "system_activity"
+            ? event.data?.message ?? ""
+            : event.data?.text ?? ""
+        ).trim();
+
+        if (!text) return;
+
+        /*
+        * The command-input UI already inserted this USER message.
+        *
+        * If the backend now sends the same command through SSE,
+        * consume the pending marker instead of adding a duplicate.
+        */
+        if (speaker === "user") {
+          const pendingIndex =
+            pendingHudCommandsRef.current.indexOf(text);
+
+          if (pendingIndex !== -1) {
+            pendingHudCommandsRef.current.splice(
+              pendingIndex,
+              1
+            );
+
+            return;
+          }
+        }
+
+        if (speaker === "jarvis") {
+          if (speakTimer !== null) window.clearTimeout(speakTimer);
+          speakTimer = window.setTimeout(() => {
+            setHudState((prev) => ({
+              ...prev,
+              speaking: false,
+              status: prev.listening ? "listening" : "idle",
+            }));
+          }, 4000);
+        }
+
+        // Strict deduplication: check if the exact same message text was added anywhere in the recent log history
+        setActivities((previous) => {
+          const isDuplicate = previous.some(
+            (item) => item.text === text && item.speaker === speaker
+          );
+
+          if (isDuplicate) {
+            return previous;
+          }
+
+          const activity: HUDActivity = {
+            id: `${event.timestamp}-${Math.random()}`,
+            speaker,
+            text,
+            timestamp: event.timestamp,
+          };
+
+          return [...previous, activity].slice(-30);
+        });
+      },
+      setConnection
+    );
+
+    bridge.connect();
+
+    return () => {
+      bridge.disconnect();
+      if (speakTimer !== null) window.clearTimeout(speakTimer);
+    };
+  }, []);
+
+  /* =========================================================
      FULLSCREEN
      ========================================================= */
   const toggleFullscreen = async () => {
@@ -311,32 +433,62 @@ export default function Home() {
   };
 
   /* =========================================================
-    HUD COMMAND INPUT — INSTANT LOG UPDATE
+    HUD COMMAND INPUT — DYNAMIC PORT FETCH WITH RETRY
   ========================================================= */
 
   const sendHudCommand = async () => {
-    const text = commandInput.trim();
+  const text = commandInput.trim();
 
-    if (!text || commandSending) {
-      return;
-    }
+  if (!text || commandSending) {
+    return;
+  }
 
-    setCommandSending(true);
+  setCommandSending(true);
+  setCommandInput("");
 
-    // 1. Instantly append the typed command to the activity log
-    const localActivity: HUDActivity = {
-      id: `${Date.now()}-${Math.random()}`,
-      speaker: "user",
-      text: text,
-      timestamp: new Date().toISOString(),
-    };
+  /*
+   * ---------------------------------------------------------
+   * SHOW USER COMMAND IMMEDIATELY
+   * ---------------------------------------------------------
+   *
+   * The command is displayed locally first so the Activity Log
+   * never has to wait for the backend SSE command event.
+   *
+   * If the backend also sends the same command event, the SSE
+   * handler below will recognize this pending command and avoid
+   * adding it twice.
+   */
 
-    setActivities((previous) => [...previous, localActivity].slice(-30));
-    setCommandInput("");
+  pendingHudCommandsRef.current.push(text);
 
+  const userActivity: HUDActivity = {
+    id: `hud-command-${Date.now()}-${Math.random()}`,
+    speaker: "user",
+    text,
+    timestamp: new Date().toISOString(),
+  };
+
+  setActivities((previous) => [
+    ...previous,
+    userActivity,
+  ].slice(-30));
+
+  const currentHost =
+    typeof window !== "undefined"
+      ? window.location.hostname
+      : "127.0.0.1";
+
+  const dashboardEndpoint =
+    `http://${currentHost}:8765/api/command`;
+
+  let success = false;
+  let lastError =
+    "Command could not be processed by backend.";
+
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await fetch(
-        `${JARVIS_DASHBOARD_URL}/api/command`,
+        dashboardEndpoint,
         {
           method: "POST",
           headers: {
@@ -344,40 +496,84 @@ export default function Home() {
           },
           cache: "no-store",
           body: JSON.stringify({
-            command: text, // Fallback key for python backends
-            text: text,    // Standard payload key
+            command: text,
+            text: text,
           }),
         }
       );
 
       const result = await response.json();
 
-      if (!response.ok || !result.ok) {
-        throw new Error(
-          result?.error ||
-          result?.message ||
-          "Command could not be processed by backend."
-        );
+      if (response.ok && result.ok) {
+        success = true;
+        break;
       }
 
+      lastError =
+        result?.error ||
+        result?.message ||
+        lastError;
+
     } catch (error) {
-      console.error(
-        "[HUD COMMAND ERROR]",
-        error
+
+      lastError =
+        error instanceof Error
+          ? error.message
+          : "Network error";
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 600)
       );
-      
-      // Optional system error log entry if it fails
-      const errorActivity: HUDActivity = {
-        id: `${Date.now()}-${Math.random()}`,
-        speaker: "system",
-        text: `COMMAND FAILED: ${error instanceof Error ? error.message : "Unknown error"}`,
-        timestamp: new Date().toISOString(),
-      };
-      setActivities((previous) => [...previous, errorActivity].slice(-30));
-    } finally {
-      setCommandSending(false);
     }
-  };
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * COMMAND FAILED
+   * ---------------------------------------------------------
+   */
+
+  if (!success) {
+
+    console.error(
+      "[HUD COMMAND ERROR]",
+      lastError
+    );
+
+    const errorActivity: HUDActivity = {
+      id: `${Date.now()}-${Math.random()}`,
+      speaker: "system",
+      text: `COMMAND FAILED: ${lastError}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    setActivities((previous) =>
+      [
+        ...previous,
+        errorActivity,
+      ].slice(-30)
+    );
+  }
+
+  /*
+   * Remove the pending marker after the request finishes.
+   *
+   * This prevents the marker from living forever if the backend
+   * does not send a command SSE event.
+   */
+
+  const pendingIndex =
+    pendingHudCommandsRef.current.indexOf(text);
+
+  if (pendingIndex !== -1) {
+    pendingHudCommandsRef.current.splice(
+      pendingIndex,
+      1
+    );
+  }
+
+  setCommandSending(false);
+};
 
   /* =========================================================
      REMOTE CONTROL
@@ -477,76 +673,6 @@ export default function Home() {
     }
   };
 
-  /* =========================================================
-     HUD SSE CONNECTION
-     ========================================================= */
-  useEffect(() => {
-    const bridge = new HUDBridge(
-      process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766",
-      setHudState,
-      (event: HUDBridgeEvent) => {
-        if (event.name === "morning_brief") {
-          const headlines = Array.isArray(event.data?.headlines) ? event.data.headlines : [];
-          if (headlines.length > 0) {
-            setMorningBriefHeadlines(headlines);
-            setMorningBriefActive(true);
-            setMorningBriefStartedSpeaking(false);
-            morningBriefActiveRef.current = true;
-            morningBriefStartedSpeakingRef.current = false;
-          }
-          return;
-        }
-
-        if (event.name === "speaking") {
-          if (morningBriefActiveRef.current) {
-            setMorningBriefStartedSpeaking(true);
-            morningBriefStartedSpeakingRef.current = true;
-          }
-          return;
-        }
-
-        if (
-          event.name !== "command" &&
-          event.name !== "response" &&
-          event.name !== "system_activity"
-        ) {
-          return;
-        }
-
-        const speaker =
-          event.name === "command"
-            ? "user"
-            : event.name === "response"
-            ? "jarvis"
-            : "system";
-
-        const text = String(
-          event.name === "system_activity"
-            ? event.data?.message ?? ""
-            : event.data?.text ?? ""
-        ).trim();
-
-        if (!text) return;
-
-        const activity: HUDActivity = {
-          id: `${event.timestamp}-${Math.random()}`,
-          speaker,
-          text,
-          timestamp: event.timestamp,
-        };
-
-        setActivities((previous) => {
-          const next = [...previous, activity];
-          return next.slice(-30);
-        });
-      },
-      setConnection
-    );
-
-    bridge.connect();
-
-    return () => bridge.disconnect();
-  }, []);
 
   function AssistantColourPicker({
   value,
@@ -809,8 +935,9 @@ export default function Home() {
           ===================================================== */}
       <div className="cockpit-bottom-container">
         {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
+        {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
         <div className="cockpit-bottom-indicators">
-          <div className={`voice-indicator ${hudState.listening ? "active" : ""}`}>
+          <div className={`voice-indicator ${hudState.listening && !hudState.speaking && !morningBriefStartedSpeaking ? "active" : ""}`}>
             <span className="indicator-dot" />
             <span className="indicator-label">[ LISTENING ]</span>
           </div>
@@ -818,7 +945,7 @@ export default function Home() {
             <span className="indicator-dot" />
             <span className="indicator-label">[ THINKING ]</span>
           </div>
-          <div className={`voice-indicator ${hudState.speaking ? "active" : ""}`}>
+          <div className={`voice-indicator ${hudState.speaking || morningBriefStartedSpeaking ? "active" : ""}`}>
             <span className="indicator-dot" />
             <span className="indicator-label">[ SPEAKING ]</span>
           </div>

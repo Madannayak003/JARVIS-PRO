@@ -69,8 +69,8 @@ from core.listener import (
 
 def create_desktop_shortcut() -> str:
     """
-    Creates a clean desktop shortcut pointing to the Jarvis Pro execution environment
-    using pythonw.exe to completely hide the terminal window.
+    Creates a clean desktop shortcut with the exact working directory 
+    set to your Jarvis project path, using pythonw.exe to stay windowless.
     """
     import sys
     import os
@@ -90,13 +90,14 @@ def create_desktop_shortcut() -> str:
     if not desktop_path or not os.path.exists(desktop_path):
         os.makedirs(desktop_path, exist_ok=True)
 
-    target_script = os.path.abspath(sys.argv[0])
-    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config", "jarvis.ico"))
+    # Get absolute path to main.py instead of sys.argv[0] so shortcut always boots the core
+    project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    target_script = os.path.join(project_dir, "main.py")
+    icon_path = os.path.join(project_dir, "config", "jarvis.ico")
     
-    # Swap standard python.exe for pythonw.exe to run completely windowless
     pythonw_executable = sys.executable.replace("python.exe", "pythonw.exe")
     if not os.path.exists(pythonw_executable):
-        pythonw_executable = sys.executable  # Fallback if pythonw isn't in path
+        pythonw_executable = sys.executable
 
     if os.name == "nt":
         shortcut_path = os.path.join(desktop_path, "Jarvis Pro.lnk")
@@ -105,8 +106,8 @@ def create_desktop_shortcut() -> str:
             f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
             f"$Shortcut.TargetPath = '{pythonw_executable}'; "
             f"$Shortcut.Arguments = '\"{target_script}\"'; "
-            f"$Shortcut.WorkingDirectory = '{os.path.dirname(target_script)}'; "
-            f"$Shortcut.WindowStyle = 7; " # 7 means minimized/hidden window start
+            f"$Shortcut.WorkingDirectory = '{project_dir}'; "  # Forces correct project path context
+            f"$Shortcut.WindowStyle = 7; "
         )
         if os.path.exists(icon_path):
             powershell_script += f"$Shortcut.IconLocation = '{icon_path}'; "
@@ -122,7 +123,7 @@ def create_desktop_shortcut() -> str:
             f"Type=Application\n"
             f"Name=Jarvis Pro\n"
             f"Exec={pythonw_executable} \"{target_script}\"\n"
-            f"Path={os.path.dirname(target_script)}\n"
+            f"Path={project_dir}\n"
             f"Terminal=false\n"
         )
         if os.path.exists(icon_path):
