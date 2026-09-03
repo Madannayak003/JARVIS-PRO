@@ -386,6 +386,43 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let state:
+      | "idle"
+      | "listening"
+      | "thinking"
+      | "speaking"
+      | "executing";
+
+    if (hudState.speaking) {
+      state = "speaking";
+    } else if (hudState.thinking) {
+      state = "thinking";
+    } else if (hudState.executing) {
+      state = "executing";
+    } else if (hudState.listening) {
+      state = "listening";
+    } else {
+      state = "idle";
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "jarvis-assistant-state",
+        {
+          detail: {
+            state,
+          },
+        },
+      ),
+    );
+  }, [
+    hudState.speaking,
+    hudState.thinking,
+    hudState.executing,
+    hudState.listening,
+  ]);
+
   /* =========================================================
      FULLSCREEN
      ========================================================= */

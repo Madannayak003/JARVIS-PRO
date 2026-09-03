@@ -8,9 +8,9 @@ import {
 } from "react";
 
 import {
-  createOrbScene,
+  createJarvisAvatar,
   type OrbSceneApi,
-} from "@/lib/orbScene";
+} from "@/lib/jarvisAvatar";
 
 import {
   HandTracker,
@@ -80,7 +80,7 @@ export default function JarvisOrb() {
     }
 
     const scene =
-      createOrbScene(container);
+      createJarvisAvatar(container);
 
     sceneRef.current =
       scene;
