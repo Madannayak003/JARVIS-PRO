@@ -62,6 +62,8 @@ export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
   const [connection, setConnection] = useState<HUDConnectionStatus>("connecting");
   const [activities, setActivities] = useState<HUDActivity[]>([]);
+  const [waveformLevels, setWaveformLevels] =
+    useState<number[]>(Array(16).fill(0));
 
   const [morningBriefHeadlines, setMorningBriefHeadlines] = useState<
     Array<{
@@ -77,6 +79,11 @@ export default function Home() {
   const morningBriefActiveRef = useRef(false);
   const morningBriefStartedSpeakingRef = useRef(false);
   const pendingHudCommandsRef = useRef<string[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const microphoneStreamRef = useRef<MediaStream | null>(null);
+  const waveformFrameRef = useRef<number | null>(null);
+  const waveformLevelsRef = useRef<number[]>([]);
 
   /* =========================================================
      SETTINGS & MODAL STATE
@@ -199,6 +206,140 @@ export default function Home() {
   }, []);
 
   /* =========================================================
+   LIVE MICROPHONE WAVEFORM ANALYSER
+   ========================================================= */
+  useEffect(() => {
+    let cancelled = false;
+
+    const startWaveformAnalyser = async () => {
+      try {
+        if (cancelled) return;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        microphoneStreamRef.current = stream;
+
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as typeof window & {
+            webkitAudioContext?: typeof AudioContext;
+          }).webkitAudioContext;
+
+        if (!AudioContextClass) return;
+
+        const audioContext = new AudioContextClass();
+        const analyser = audioContext.createAnalyser();
+
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.72;
+
+        const source =
+          audioContext.createMediaStreamSource(stream);
+
+        source.connect(analyser);
+
+        audioContextRef.current = audioContext;
+        analyserRef.current = analyser;
+
+        const data = new Uint8Array(analyser.fftSize);
+
+        const updateWaveform = () => {
+          if (cancelled) return;
+
+          const currentAnalyser = analyserRef.current;
+
+          if (!currentAnalyser) return;
+
+          currentAnalyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+
+          for (let i = 0; i < data.length; i++) {
+            const normalized =
+              (data[i] - 128) / 128;
+
+            sum += normalized * normalized;
+          }
+
+          const rms = Math.sqrt(sum / data.length);
+
+          const level = Math.min(
+            1,
+            Math.max(0, rms * 5.5)
+          );
+
+          const levels = Array.from(
+            { length: 16 },
+            (_, index) => {
+              const centerDistance =
+                Math.abs(index - 7.5) / 7.5;
+
+              const falloff =
+                1 - centerDistance * 0.45;
+
+              const variation =
+                0.82 +
+                Math.sin(
+                  performance.now() * 0.012 +
+                  index * 0.9
+                ) * 0.18;
+
+              return Math.min(
+                1,
+                level * falloff * variation
+              );
+            }
+          );
+
+          waveformLevelsRef.current = levels;
+          setWaveformLevels(levels);
+
+          waveformFrameRef.current =
+            requestAnimationFrame(updateWaveform);
+          };
+
+        updateWaveform();
+      } catch (error) {
+        console.warn(
+          "[HUD WAVEFORM] Microphone analyser unavailable:",
+          error
+        );
+      }
+    };
+
+    startWaveformAnalyser();
+
+    return () => {
+      cancelled = true;
+
+      if (waveformFrameRef.current !== null) {
+        cancelAnimationFrame(
+          waveformFrameRef.current
+        );
+        waveformFrameRef.current = null;
+      }
+
+      microphoneStreamRef.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
+      microphoneStreamRef.current = null;
+
+      void audioContextRef.current?.close();
+
+      audioContextRef.current = null;
+      analyserRef.current = null;
+    };
+  }, []);
+
+  /* =========================================================
      MORNING BRIEF STATUS SYNC
      ========================================================= */
   useEffect(() => {
@@ -281,14 +422,27 @@ export default function Home() {
             setMorningBriefStartedSpeaking(true);
             morningBriefStartedSpeakingRef.current = true;
           }
-          
-          if (speakTimer !== null) window.clearTimeout(speakTimer);
+
+          // Explicitly enter SPEAKING state.
+          // This is important for Live Conversation too.
+          setHudState((prev) => ({
+            ...prev,
+            speaking: true,
+            status: "speaking",
+          }));
+
+          if (speakTimer !== null) {
+            window.clearTimeout(speakTimer);
+          }
+
           speakTimer = window.setTimeout(() => {
             setMorningBriefStartedSpeaking(false);
             morningBriefStartedSpeakingRef.current = false;
+
             setHudState((prev) => ({
               ...prev,
               speaking: false,
+              status: prev.listening ? "listening" : "idle",
             }));
           }, 7000);
 
@@ -328,11 +482,21 @@ export default function Home() {
         }
 
         if (speaker === "jarvis") {
-          if (speakTimer !== null) window.clearTimeout(speakTimer);
+          setHudState((prev) => ({
+            ...prev,
+            speaking: true,
+            status: "speaking",
+          }));
+
+          if (speakTimer !== null) {
+            window.clearTimeout(speakTimer);
+          }
+
           speakTimer = window.setTimeout(() => {
             setHudState((prev) => ({
               ...prev,
               speaking: false,
+              status: prev.listening ? "listening" : "idle",
             }));
           }, 4000);
         }
@@ -918,7 +1082,16 @@ export default function Home() {
       <div className="cockpit-bottom-container">
         {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
         <div className="cockpit-bottom-indicators">
-          <div className={`voice-indicator ${hudState.listening && !hudState.speaking && !morningBriefStartedSpeaking ? "active" : ""}`}>
+          <div
+            className={`voice-indicator ${
+              hudState.listening &&
+              !hudState.speaking &&
+              hudState.status !== "speaking" &&
+              !morningBriefStartedSpeaking
+                ? "active"
+                : ""
+            }`}
+          >
             <span className="indicator-dot" />
             <span className="indicator-label">[ LISTENING ]</span>
           </div>
@@ -926,7 +1099,15 @@ export default function Home() {
             <span className="indicator-dot" />
             <span className="indicator-label">[ THINKING ]</span>
           </div>
-          <div className={`voice-indicator ${hudState.speaking || morningBriefStartedSpeaking ? "active" : ""}`}>
+          <div
+            className={`voice-indicator ${
+              hudState.speaking ||
+              hudState.status === "speaking" ||
+              morningBriefStartedSpeaking
+                ? "active"
+                : ""
+            }`}
+          >
             <span className="indicator-dot" />
             <span className="indicator-label">[ SPEAKING ]</span>
           </div>
@@ -939,26 +1120,39 @@ export default function Home() {
         {/* REACTIVE AUDIO WAVEFORM / SPECTRUM VISUALIZER */}
         <div
           className={`hud-waveform ${
-            hudState.speaking || hudState.listening ? "waveform-live" : ""
+            hudState.listening &&
+            !hudState.speaking &&
+            hudState.status !== "speaking"
+              ? "waveform-live"
+              : ""
           }`}
           aria-hidden="true"
         >
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
-          <span className="wave-bar" />
+          {Array.from({ length: 16 }, (_, index) => {
+            const level =
+              waveformLevels[index] ?? 0;
+
+            const active =
+              hudState.listening &&
+              !hudState.speaking &&
+              hudState.status !== "speaking";
+
+            const height = active
+              ? `${Math.max(2, level * 24)}px`
+              : "2px";
+
+            return (
+              <span
+                key={index}
+                className="wave-bar"
+                style={{
+                  height,
+                  transition:
+                    "height 70ms linear",
+                }}
+              />
+            );
+          })}
         </div>
 
         {/* ALL 8 BUTTONS IN ONE TRANSPARENT INLINE ROW */}

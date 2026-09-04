@@ -359,6 +359,7 @@ class LiveConversation:
         self._state_lock = threading.Lock()
 
         self._running = False
+        self._hud_speaking = False
         
         # -----------------------------------------------------
         # Live microphone state.
@@ -445,6 +446,51 @@ class LiveConversation:
         with self._microphone_lock:
 
             return self._microphone_enabled
+        
+        
+    # =========================================================
+    # HUD SPEAKING STATE
+    # =========================================================
+
+    def _hud_start_speaking(self):
+        if self._hud_speaking:
+            return
+
+        try:
+            HUDIntegration.speaking()
+            self._hud_speaking = True
+
+            print(
+                "[LIVE HUD] SPEAKING ON"
+            )
+
+        except Exception as exc:
+            print(
+                "[LIVE HUD] Speaking event failed:",
+                exc,
+            )
+
+    # ---------------------------------------------------------
+
+    def _hud_stop_speaking(self):
+        if not self._hud_speaking:
+            return
+
+        try:
+            HUDIntegration.idle()
+
+            print(
+                "[LIVE HUD] SPEAKING OFF"
+            )
+
+        except Exception as exc:
+            print(
+                "[LIVE HUD] Idle event failed:",
+                exc,
+            )
+
+        finally:
+            self._hud_speaking = False
         
     # =========================================================
     # GEMINI SESSION RESUMPTION
@@ -1127,6 +1173,12 @@ class LiveConversation:
                 )
 
         finally:
+            
+            # =================================================
+            # HUD SPEAKING CLEANUP
+            # =================================================
+
+            self._hud_stop_speaking()
 
             # =================================================
             # CLOSE MICROPHONE
@@ -1642,6 +1694,10 @@ class LiveConversation:
 
                 if response.data:
 
+                    # Gemini has produced actual speaker audio.
+                    # Tell the HUD that JARVIS is now speaking.
+                    self._hud_start_speaking()
+
                     await asyncio.to_thread(
                         speaker.write,
                         response.data,
@@ -1764,6 +1820,8 @@ class LiveConversation:
                     print(
                         "[LIVE] --------------------------------------------------"
                     )
+                    
+                    self._hud_stop_speaking()
 
                     self._interrupt_speaker(
                         speaker
@@ -1808,6 +1866,7 @@ class LiveConversation:
                                     "[HUD LIVE RESPONSE LOG] Failed:",
                                     exc,
                                 )
+                    self._hud_stop_speaking()
 
                     print(
                         "[LIVE] Turn complete."
