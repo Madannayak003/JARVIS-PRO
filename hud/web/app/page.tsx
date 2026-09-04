@@ -104,7 +104,6 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Load local storage cache instantly first
     try {
       const saved = window.localStorage.getItem("jarvis-pro-settings");
       if (saved) {
@@ -122,7 +121,6 @@ export default function Home() {
       console.error("[HUD] Local settings fallback failed:", error);
     }
 
-    // 2. Fetch server settings with boot-up retry logic
     const loadWithRetry = async (fn: () => Promise<void>, retries = 5, delay = 1000) => {
       for (let i = 0; i < retries; i++) {
         if (!isMounted) return;
@@ -187,15 +185,10 @@ export default function Home() {
         if (response.ok && result.ok && typeof result.enabled === "boolean" && isMounted) {
           setMicrophoneEnabled(result.enabled);
         }
-      } catch {
-        // Silently ignore during server boot-up
-      }
+      } catch {}
     };
 
-    // Initial check with brief delay to let server spin up
     const initialTimeout = window.setTimeout(syncMicrophone, 1500);
-    
-    // Ongoing background sync every 3 seconds
     const syncInterval = window.setInterval(syncMicrophone, 3000);
 
     return () => {
@@ -291,10 +284,11 @@ export default function Home() {
           
           if (speakTimer !== null) window.clearTimeout(speakTimer);
           speakTimer = window.setTimeout(() => {
+            setMorningBriefStartedSpeaking(false);
+            morningBriefStartedSpeakingRef.current = false;
             setHudState((prev) => ({
               ...prev,
               speaking: false,
-              status: prev.listening ? "listening" : "idle",
             }));
           }, 7000);
 
@@ -324,22 +318,11 @@ export default function Home() {
 
         if (!text) return;
 
-        /*
-        * The command-input UI already inserted this USER message.
-        *
-        * If the backend now sends the same command through SSE,
-        * consume the pending marker instead of adding a duplicate.
-        */
+        // Consume pending user command marker to prevent duplicate logs
         if (speaker === "user") {
-          const pendingIndex =
-            pendingHudCommandsRef.current.indexOf(text);
-
+          const pendingIndex = pendingHudCommandsRef.current.indexOf(text);
           if (pendingIndex !== -1) {
-            pendingHudCommandsRef.current.splice(
-              pendingIndex,
-              1
-            );
-
+            pendingHudCommandsRef.current.splice(pendingIndex, 1);
             return;
           }
         }
@@ -350,12 +333,11 @@ export default function Home() {
             setHudState((prev) => ({
               ...prev,
               speaking: false,
-              status: prev.listening ? "listening" : "idle",
             }));
           }, 4000);
         }
 
-        // Strict deduplication: check if the exact same message text was added anywhere in the recent log history
+        // Strict global deduplication check
         setActivities((previous) => {
           const isDuplicate = previous.some(
             (item) => item.text === text && item.speaker === speaker
@@ -385,43 +367,6 @@ export default function Home() {
       if (speakTimer !== null) window.clearTimeout(speakTimer);
     };
   }, []);
-
-  useEffect(() => {
-    let state:
-      | "idle"
-      | "listening"
-      | "thinking"
-      | "speaking"
-      | "executing";
-
-    if (hudState.speaking) {
-      state = "speaking";
-    } else if (hudState.thinking) {
-      state = "thinking";
-    } else if (hudState.executing) {
-      state = "executing";
-    } else if (hudState.listening) {
-      state = "listening";
-    } else {
-      state = "idle";
-    }
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "jarvis-assistant-state",
-        {
-          detail: {
-            state,
-          },
-        },
-      ),
-    );
-  }, [
-    hudState.speaking,
-    hudState.thinking,
-    hudState.executing,
-    hudState.listening,
-  ]);
 
   /* =========================================================
      FULLSCREEN
@@ -470,147 +415,91 @@ export default function Home() {
   };
 
   /* =========================================================
-    HUD COMMAND INPUT — DYNAMIC PORT FETCH WITH RETRY
+    HUD COMMAND INPUT — INSTANT LOG UPDATE WITH RETRY
   ========================================================= */
-
   const sendHudCommand = async () => {
-  const text = commandInput.trim();
+    const text = commandInput.trim();
 
-  if (!text || commandSending) {
-    return;
-  }
-
-  setCommandSending(true);
-  setCommandInput("");
-
-  /*
-   * ---------------------------------------------------------
-   * SHOW USER COMMAND IMMEDIATELY
-   * ---------------------------------------------------------
-   *
-   * The command is displayed locally first so the Activity Log
-   * never has to wait for the backend SSE command event.
-   *
-   * If the backend also sends the same command event, the SSE
-   * handler below will recognize this pending command and avoid
-   * adding it twice.
-   */
-
-  pendingHudCommandsRef.current.push(text);
-
-  const userActivity: HUDActivity = {
-    id: `hud-command-${Date.now()}-${Math.random()}`,
-    speaker: "user",
-    text,
-    timestamp: new Date().toISOString(),
-  };
-
-  setActivities((previous) => [
-    ...previous,
-    userActivity,
-  ].slice(-30));
-
-  const currentHost =
-    typeof window !== "undefined"
-      ? window.location.hostname
-      : "127.0.0.1";
-
-  const dashboardEndpoint =
-    `http://${currentHost}:8765/api/command`;
-
-  let success = false;
-  let lastError =
-    "Command could not be processed by backend.";
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const response = await fetch(
-        dashboardEndpoint,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-          body: JSON.stringify({
-            command: text,
-            text: text,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok && result.ok) {
-        success = true;
-        break;
-      }
-
-      lastError =
-        result?.error ||
-        result?.message ||
-        lastError;
-
-    } catch (error) {
-
-      lastError =
-        error instanceof Error
-          ? error.message
-          : "Network error";
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 600)
-      );
+    if (!text || commandSending) {
+      return;
     }
-  }
 
-  /*
-   * ---------------------------------------------------------
-   * COMMAND FAILED
-   * ---------------------------------------------------------
-   */
+    setCommandSending(true);
+    setCommandInput("");
 
-  if (!success) {
+    pendingHudCommandsRef.current.push(text);
 
-    console.error(
-      "[HUD COMMAND ERROR]",
-      lastError
-    );
-
-    const errorActivity: HUDActivity = {
-      id: `${Date.now()}-${Math.random()}`,
-      speaker: "system",
-      text: `COMMAND FAILED: ${lastError}`,
+    const userActivity: HUDActivity = {
+      id: `hud-command-${Date.now()}-${Math.random()}`,
+      speaker: "user",
+      text,
       timestamp: new Date().toISOString(),
     };
 
-    setActivities((previous) =>
-      [
-        ...previous,
-        errorActivity,
-      ].slice(-30)
-    );
-  }
+    setActivities((previous) => [
+      ...previous,
+      userActivity,
+    ].slice(-30));
 
-  /*
-   * Remove the pending marker after the request finishes.
-   *
-   * This prevents the marker from living forever if the backend
-   * does not send a command SSE event.
-   */
+    const currentHost =
+      typeof window !== "undefined"
+        ? window.location.hostname
+        : "127.0.0.1";
 
-  const pendingIndex =
-    pendingHudCommandsRef.current.indexOf(text);
+    const dashboardEndpoint = `http://${currentHost}:8765/api/command`;
 
-  if (pendingIndex !== -1) {
-    pendingHudCommandsRef.current.splice(
-      pendingIndex,
-      1
-    );
-  }
+    let success = false;
+    let lastError = "Command could not be processed by backend.";
 
-  setCommandSending(false);
-};
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const response = await fetch(
+          dashboardEndpoint,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+            body: JSON.stringify({
+              command: text,
+              text: text,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.ok) {
+          success = true;
+          break;
+        }
+
+        lastError = result?.error || result?.message || lastError;
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : "Network error";
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+    }
+
+    if (!success) {
+      console.error("[HUD COMMAND ERROR]", lastError);
+      const errorActivity: HUDActivity = {
+        id: `${Date.now()}-${Math.random()}`,
+        speaker: "system",
+        text: `COMMAND FAILED: ${lastError}`,
+        timestamp: new Date().toISOString(),
+      };
+      setActivities((previous) => [...previous, errorActivity].slice(-30));
+    }
+
+    const pendingIndex = pendingHudCommandsRef.current.indexOf(text);
+    if (pendingIndex !== -1) {
+      pendingHudCommandsRef.current.splice(pendingIndex, 1);
+    }
+
+    setCommandSending(false);
+  };
 
   /* =========================================================
      REMOTE CONTROL
@@ -710,146 +599,167 @@ export default function Home() {
     }
   };
 
-
   function AssistantColourPicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const wheelRef = useRef<HTMLDivElement | null>(null);
-  const [dragging, setDragging] = useState(false);
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+  }) {
+    const wheelRef = useRef<HTMLDivElement | null>(null);
 
-  function hexToRgb(hex: string) {
-    const clean = hex.replace("#", "");
-    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
-    return {
-      r: parseInt(clean.slice(0, 2), 16),
-      g: parseInt(clean.slice(2, 4), 16),
-      b: parseInt(clean.slice(4, 6), 16),
-    };
-  }
-
-  function rgbToHsv(r: number, g: number, b: number) {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    const delta = max - min;
-    let h = 0;
-    if (delta !== 0) {
-      if (max === r) h = ((g - b) / delta) % 6;
-      else if (max === g) h = (b - r) / delta + 2;
-      else h = (r - g) / delta + 4;
-      h *= 60;
-      if (h < 0) h += 360;
+    function hexToRgb(hex: string) {
+      const clean = hex.replace("#", "");
+      if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+      return {
+        r: parseInt(clean.slice(0, 2), 16),
+        g: parseInt(clean.slice(2, 4), 16),
+        b: parseInt(clean.slice(4, 6), 16),
+      };
     }
-    const s = max === 0 ? 0 : delta / max;
-    return { h, s, v: max };
-  }
 
-  function hsvToHex(h: number, s: number, v: number) {
-    const c = v * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = v - c;
-    let r = 0, g = 0, b = 0;
-    if (h < 60) { r = c; g = x; }
-    else if (h < 120) { r = x; g = c; }
-    else if (h < 180) { g = c; b = x; }
-    else if (h < 240) { g = x; b = c; }
-    else if (h < 300) { r = x; g = c; }
-    else { r = c; b = x; }
+    function rgbToHsv(r: number, g: number, b: number) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const delta = max - min;
+      let h = 0;
+      if (delta !== 0) {
+        if (max === r) h = ((g - b) / delta) % 6;
+        else if (max === g) h = (b - r) / delta + 2;
+        else h = (r - g) / delta + 4;
+        h *= 60;
+        if (h < 0) h += 360;
+      }
+      const s = max === 0 ? 0 : delta / max;
+      return { h, s, v: max };
+    }
 
-    const toHex = (n: number) =>
-      Math.round((n + m) * 255).toString(16).padStart(2, "0");
-    return "#" + toHex(r) + toHex(g) + toHex(b);
-  }
+    function hsvToHex(h: number, s: number, v: number) {
+      const c = v * s;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = v - c;
+      let r = 0, g = 0, b = 0;
+      if (h < 60) { r = c; g = x; }
+      else if (h < 120) { r = x; g = c; }
+      else if (h < 180) { g = c; b = x; }
+      else if (h < 240) { g = x; b = c; }
+      else if (h < 300) { r = x; g = c; }
+      else { r = c; b = x; }
 
-  const rgb = hexToRgb(value);
-  const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 35, s: 1, v: 1 };
-  const angle = (hsv.h * Math.PI) / 180;
-  const radius = 43;
-  const handleX = 50 + Math.cos(angle) * radius * hsv.s;
-  const handleY = 50 + Math.sin(angle) * radius * hsv.s;
+      const toHex = (n: number) =>
+        Math.round(Math.max(0, Math.min(1, n + m)) * 255).toString(16).padStart(2, "0");
+      return "#" + toHex(r) + toHex(g) + toHex(b);
+    }
 
-  function updateFromPointer(event: React.PointerEvent<HTMLDivElement>) {
-    const wheel = wheelRef.current;
-    if (!wheel) return;
-    const rect = wheel.getBoundingClientRect();
-    const x = event.clientX - (rect.left + rect.width / 2);
-    const y = event.clientY - (rect.top + rect.height / 2);
-    const distance = Math.sqrt(x * x + y * y);
-    const maxRadius = Math.min(rect.width, rect.height) / 2;
-    const clampedRadius = Math.min(distance, maxRadius);
+    const rgb = hexToRgb(value);
+    const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 35, s: 1, v: 1 };
+    
+    // Top-aligned angle offset (-90 deg) to match CSS conic-gradient orientation
+    const angle = ((hsv.h - 90) * Math.PI) / 180;
+    const radius = 38;
+    const handleX = 50 + Math.cos(angle) * radius * Math.max(0.4, hsv.s);
+    const handleY = 50 + Math.sin(angle) * radius * Math.max(0.4, hsv.s);
 
-    let hue = Math.atan2(y, x) * (180 / Math.PI);
-    if (hue < 0) hue += 360;
+    function updateFromPointer(clientX: number, clientY: number) {
+      const wheel = wheelRef.current;
+      if (!wheel) return;
+      const rect = wheel.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const x = clientX - centerX;
+      const y = clientY - centerY;
+      const distance = Math.hypot(x, y);
+      const maxRadius = rect.width / 2;
+      
+      // Compute angle and offset by +90 deg so Red is at 12 o'clock (0 deg)
+      let hue = Math.atan2(y, x) * (180 / Math.PI) + 90;
+      if (hue < 0) hue += 360;
+      if (hue >= 360) hue -= 360;
 
-    const saturation = Math.min(1, clampedRadius / maxRadius);
-    onChange(hsvToHex(hue, saturation, 1));
-  }
+      const saturation = Math.min(1, Math.max(0.1, distance / maxRadius));
+      onChange(hsvToHex(hue, saturation, 1));
+    }
 
-  return (
-    <div className="assistant-colour-picker">
-      <div className="assistant-colour-heading">
-        <div>
-          <span>UI COLOUR</span>
-          <small>choose HUD accent colour</small>
+    const resetToDefault = (e: React.SyntheticEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const DEFAULT_COLOR = "#ffaa30";
+      onChange(DEFAULT_COLOR);
+      setAssistantColour(DEFAULT_COLOR);
+      document.documentElement.style.setProperty("--assistant-colour", DEFAULT_COLOR);
+    };
+
+    return (
+      <div className="assistant-colour-picker" style={{ position: "relative", zIndex: 10 }}>
+        <div className="assistant-colour-heading" style={{ position: "relative", zIndex: 20 }}>
+          <div>
+            <span>UI COLOUR</span>
+            <small>choose HUD accent colour</small>
+          </div>
+          <button
+            type="button"
+            className="assistant-colour-default"
+            style={{
+              position: "relative",
+              zIndex: 30,
+              cursor: "pointer",
+              pointerEvents: "auto",
+            }}
+            onPointerDown={resetToDefault}
+            onClick={resetToDefault}
+          >
+            DEFAULT
+          </button>
         </div>
-        <button
-          type="button"
-          className="assistant-colour-default"
-          onClick={() => {
-            // Instant synchronous state update
-            onChange("#ffaa30");
-          }}
-        >
-          DEFAULT
-        </button>
-      </div>
 
-      <div className="assistant-colour-wheel-area">
-        <div
-          ref={wheelRef}
-          className="assistant-colour-wheel"
-          onPointerDown={(event) => {
-            setDragging(true);
-            event.currentTarget.setPointerCapture(event.pointerId);
-            updateFromPointer(event);
-          }}
-          onPointerMove={(event) => {
-            if (dragging) updateFromPointer(event);
-          }}
-          onPointerUp={() => setDragging(false)}
-          onPointerCancel={() => setDragging(false)}
-        >
+        <div className="assistant-colour-wheel-area" style={{ position: "relative", zIndex: 10 }}>
           <div
-            className="assistant-colour-wheel-handle"
-            style={{ left: `${handleX}%`, top: `${handleY}%` }}
-          />
-          <div
-            className="assistant-colour-preview"
-            style={{ background: value }}
-          />
+            ref={wheelRef}
+            className="assistant-colour-wheel"
+            onPointerDown={(event) => {
+              event.currentTarget.setPointerCapture(event.pointerId);
+              updateFromPointer(event.clientX, event.clientY);
+            }}
+            onPointerMove={(event) => {
+              if (event.buttons === 1) {
+                updateFromPointer(event.clientX, event.clientY);
+              }
+            }}
+            onPointerUp={(event) => {
+              try {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              } catch {}
+            }}
+          >
+            <div
+              className="assistant-colour-wheel-handle"
+              style={{ left: `${handleX}%`, top: `${handleY}%`, pointerEvents: "none" }}
+            />
+            <div
+              className="assistant-colour-preview"
+              style={{ background: value, pointerEvents: "none" }}
+            />
+          </div>
         </div>
-      </div>
 
-      <input
-        className="assistant-colour-hex"
-        type="text"
-        value={value}
-        onChange={(event) => {
-          const next = event.target.value;
-          if (/^#[0-9a-fA-F]{6}$/.test(next)) {
-            onChange(next.toLowerCase());
-          } else {
-            onChange(next);
-          }
-        }}
-        spellCheck={false}
-      />
-    </div>
-  );
-}
+        <input
+          className="assistant-colour-hex"
+          type="text"
+          value={value}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (/^#[0-9a-fA-F]{6}$/.test(next)) {
+              onChange(next.toLowerCase());
+            } else {
+              onChange(next);
+            }
+          }}
+          spellCheck={false}
+        />
+      </div>
+    );
+  }
 
   return (
     <main
@@ -971,7 +881,6 @@ export default function Home() {
           BOTTOM HUD: INDICATORS + WAVEFORM + 8 INLINE BUTTONS
           ===================================================== */}
       <div className="cockpit-bottom-container">
-        {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
         {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
         <div className="cockpit-bottom-indicators">
           <div className={`voice-indicator ${hudState.listening && !hudState.speaking && !morningBriefStartedSpeaking ? "active" : ""}`}>
@@ -1270,7 +1179,10 @@ export default function Home() {
 
               <AssistantColourPicker
                 value={assistantColour}
-                onChange={setAssistantColour}
+                onChange={(c) => {
+                  setAssistantColour(c);
+                  document.documentElement.style.setProperty("--assistant-colour", c);
+                }}
               />
 
               <div className="settings-modal-actions">

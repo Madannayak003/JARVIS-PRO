@@ -1975,25 +1975,16 @@ class DashboardServer:
         # LOCAL — CUSTOMISE SETTINGS (NAME & COLOUR)
         # =====================================================
 
-        @app.get(
-            "/api/local/customise"
-        )
-        async def local_get_customise(
-            request: Request,
-        ):
+        # =====================================================
+        # LOCAL — CUSTOMISE SETTINGS (NAME & COLOUR)
+        # =====================================================
+
+        @app.get("/api/local/customise")
+        async def local_get_customise(request: Request):
             if not self._authorize_local(request):
-                return JSONResponse(
-                    {"ok": False, "error": "Local access required."},
-                    status_code=403,
-                )
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
 
-            settings_file = (
-                Path(__file__).resolve().parent.parent
-                / "data"
-                / "settings"
-                / "jarvis_settings.json"
-            )
-
+            settings_file = Path(__file__).resolve().parent.parent / "data" / "settings" / "jarvis_settings.json"
             try:
                 if not settings_file.exists():
                     return {
@@ -2013,10 +2004,44 @@ class DashboardServer:
                     "assistantColour": settings.get("assistantColour", "#ffaa30"),
                 }
             except Exception as exc:
-                return JSONResponse(
-                    {"ok": False, "error": str(exc)},
-                    status_code=500,
-                )
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
+
+        @app.post("/api/local/customise")
+        async def local_save_customise(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+
+            try:
+                body = await request.json()
+            except Exception:
+                return JSONResponse({"ok": False, "error": "Invalid JSON body."}, status_code=400)
+
+            settings_file = Path(__file__).resolve().parent.parent / "data" / "settings" / "jarvis_settings.json"
+            try:
+                settings_file.parent.mkdir(parents=True, exist_ok=True)
+                settings = {}
+
+                if settings_file.exists():
+                    try:
+                        with settings_file.open("r", encoding="utf-8") as f:
+                            settings = json.load(f)
+                    except Exception:
+                        settings = {}
+
+                if "assistantName" in body and body["assistantName"]:
+                    settings["assistantName"] = str(body["assistantName"]).strip()
+                if "userName" in body:
+                    settings["userName"] = str(body["userName"]).strip()
+                if "assistantColour" in body and body["assistantColour"]:
+                    settings["assistantColour"] = str(body["assistantColour"]).strip()
+
+                with settings_file.open("w", encoding="utf-8") as f:
+                    json.dump(settings, f, indent=2)
+                    f.write("\n")
+
+                return {"ok": True, "settings": settings}
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
 
         @app.post(
             "/api/local/customise"
