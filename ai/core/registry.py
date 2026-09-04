@@ -274,6 +274,7 @@ class ModelRegistry:
                     "memory",
                     "vision",
                     "screen_vision",
+                    "fast",
                 ],
 
                 streaming=True,
@@ -294,7 +295,47 @@ class ModelRegistry:
         )
 
         # --------------------------------------------------
-        # Gemini 3.5 Flash-Lite - Fast Model
+        # Gemini 3.5 Flash - Conversation Fallback
+        # --------------------------------------------------
+
+        self.register(
+
+            ModelDefinition(
+
+                name="gemini-3.5-flash",
+
+                provider="gemini",
+
+                capabilities=[
+                    "conversation",
+                    "planning",
+                    "coding",
+                    "editing",
+                    "reasoning",
+                    "memory",
+                    "fast",
+                    "screen_vision",
+                ],
+
+                streaming=True,
+
+                vision=True,
+
+                local=False,
+
+                enabled=True,
+
+                priority=20,
+
+                description=(
+                    "Gemini fallback model for "
+                    "conversation, reasoning and AI tasks."
+                ),
+            )
+        )
+
+        # --------------------------------------------------
+        # Gemini 3.5 Flash-Lite - Final Gemini Fallback
         # --------------------------------------------------
 
         self.register(
@@ -323,11 +364,11 @@ class ModelRegistry:
 
                 enabled=True,
 
-                priority=20,
+                priority=30,
 
                 description=(
-                    "Fast and cost-efficient Gemini model "
-                    "for lightweight AI tasks."
+                    "Final Gemini fallback for "
+                    "lightweight AI tasks."
                 ),
             )
         )
