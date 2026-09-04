@@ -369,6 +369,41 @@ export default function Home() {
   }, []);
 
   /* =========================================================
+     3D AVATAR STATE DISPATCHER (CONTINUOUS SPEECH LOCK)
+     ========================================================= */
+  useEffect(() => {
+    let state: "idle" | "listening" | "thinking" | "speaking" | "executing" = "idle";
+
+    const isSpeaking = 
+      hudState.speaking || 
+      morningBriefStartedSpeaking || 
+      hudState.status === "speaking";
+
+    if (isSpeaking) {
+      state = "speaking";
+    } else if (hudState.thinking || hudState.status === "thinking") {
+      state = "thinking";
+    } else if (hudState.executing) {
+      state = "executing";
+    } else if (hudState.listening || hudState.status === "listening") {
+      state = "listening";
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("jarvis-assistant-state", {
+        detail: { state, speaking: isSpeaking },
+      })
+    );
+  }, [
+    hudState.speaking,
+    hudState.status,
+    hudState.thinking,
+    hudState.executing,
+    hudState.listening,
+    morningBriefStartedSpeaking,
+  ]);
+
+  /* =========================================================
      FULLSCREEN
      ========================================================= */
   const toggleFullscreen = async () => {
