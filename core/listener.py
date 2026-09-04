@@ -16,13 +16,12 @@ COMMAND_QUEUE = Queue()
 
 recognizer = sr.Recognizer()
 
-recognizer.energy_threshold = 250
+recognizer.energy_threshold = 200
 recognizer.dynamic_energy_threshold = True
 
-recognizer.pause_threshold = 1.2
-recognizer.phrase_threshold = 0.5
-recognizer.non_speaking_duration = 1.0
-
+recognizer.pause_threshold = 1.1
+recognizer.phrase_threshold = 0.3
+recognizer.non_speaking_duration = 0.6
 
 # ============================================================
 # INTERNAL STATE
