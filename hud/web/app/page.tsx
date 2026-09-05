@@ -617,8 +617,11 @@ export default function Home() {
   /* =========================================================
     HUD COMMAND INPUT — INSTANT LOG UPDATE WITH RETRY
   ========================================================= */
-  const sendHudCommand = async () => {
-    const text = commandInput.trim();
+  const sendHudCommand = async (
+    directCommand?: string
+  ) => {
+    const text =
+      (directCommand ?? commandInput).trim();
 
     if (!text || commandSending) {
       return;
@@ -987,6 +990,16 @@ export default function Home() {
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
           setMorningBriefHeadlines([]);
+        }}
+
+        onCommand={(command) => {
+          void sendHudCommand(command);
+        }}
+
+        onFullscreen={toggleFullscreen}
+
+        onSettings={() => {
+          setModal("customise");
         }}
       />
 

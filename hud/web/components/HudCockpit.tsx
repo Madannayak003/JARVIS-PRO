@@ -33,6 +33,12 @@ type Props = {
 
   onMorningBriefClose: () => void;
 
+  onCommand: (command: string) => void;
+
+  onFullscreen: () => void;
+
+  onSettings: () => void;
+
 };
 
 
@@ -244,6 +250,9 @@ export default function HudCockpit({
   userName,
   morningBriefHeadlines,
   onMorningBriefClose,
+  onCommand,
+  onFullscreen,
+  onSettings,
 }: Props) {
 
   const system =
@@ -288,6 +297,10 @@ export default function HudCockpit({
 
       <header className="cockpit-header">
 
+        {/* ================================================= */}
+        {/* BRAND */}
+        {/* ================================================= */}
+
         <div className="cockpit-brand">
 
           <span className="brand-main">
@@ -301,31 +314,152 @@ export default function HudCockpit({
         </div>
 
 
+        {/* ================================================= */}
+        {/* HEADER QUICK NAV */}
+        {/* ================================================= */}
+
+        <nav
+          className="cockpit-header-nav cockpit-header-nav-left"
+          aria-label="JARVIS navigation"
+        >
+
+          <button
+            type="button"
+            onClick={() => onCommand("go home")}
+          >
+            HOME
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("open apps")}
+          >
+            APPS
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("weather")}
+          >
+            WEATHER
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("news")}
+          >
+            NEWS
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("play music")}
+          >
+            MUSIC
+          </button>
+
+        </nav>
+
+
+        {/* ================================================= */}
+        {/* CENTER TITLE */}
+        {/* ================================================= */}
+
         <div className="cockpit-title">
           {assistantName || "JARVIS"}
         </div>
 
 
-        <div className="cockpit-system-status" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          
-          {/* Live Clock Display */}
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <span className="status-label">TIME</span>
-            <span className="status-value">{currentTime || "--:--:--"}</span>
+        {/* ================================================= */}
+        {/* HEADER TOOLS */}
+        {/* ================================================= */}
+
+        <nav
+          className="cockpit-header-nav cockpit-header-nav-right"
+          aria-label="JARVIS tools"
+        >
+
+          <button
+            type="button"
+            onClick={() => onCommand("what is on my screen")}
+          >
+            SCREEN
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("take a screenshot")}
+          >
+            CAPTURE
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("create")}
+          >
+            CREATE
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("take a note")}
+          >
+            NOTES
+          </button>
+
+          <button
+            type="button"
+            onClick={onSettings}
+          >
+            SETTINGS
+          </button>
+
+        </nav>
+
+
+        {/* ================================================= */}
+        {/* SYSTEM STATUS */}
+        {/* ================================================= */}
+
+        <div className="cockpit-system-status">
+
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+            }}
+          >
+
+            <span className="status-label">
+              TIME
+            </span>
+
+            <span className="status-value">
+              {currentTime || "--:--:--"}
+            </span>
+
           </div>
 
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+            }}
+          >
+
             <span className="status-label">
               SYSTEM
             </span>
 
             <span className="status-value">
-
               {state.voice_mode
                 ?.toUpperCase()
                 || "ONLINE"}
-
             </span>
+
           </div>
 
         </div>
@@ -460,6 +594,191 @@ export default function HudCockpit({
 
           {/* Auto-scroll anchor target */}
           <div ref={logEndRef} />
+
+        </div>
+
+      </aside>
+
+      {/* ================================================= */}
+      {/* QUICK TOOLS */}
+      {/* ================================================= */}
+
+      <aside className="cockpit-quick-tools">
+
+        <div className="panel-heading">
+
+          <span className="panel-marker">
+            ◆
+          </span>
+
+          QUICK TOOLS
+
+        </div>
+
+
+        <div className="quick-tools-grid">
+
+          <button
+            type="button"
+            onClick={() => onCommand("open app")}
+          >
+            <span className="quick-tool-icon">▣</span>
+            <span>OPEN APP</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("open website")}
+          >
+            <span className="quick-tool-icon">◎</span>
+            <span>WEBSITE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("search")}
+          >
+            <span className="quick-tool-icon">⌕</span>
+            <span>SEARCH</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("calculate")}
+          >
+            <span className="quick-tool-icon">▦</span>
+            <span>CALCULATOR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("translate")}
+          >
+            <span className="quick-tool-icon">文</span>
+            <span>TRANSLATE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("search youtube")}
+          >
+            <span className="quick-tool-icon">▶</span>
+            <span>YOUTUBE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("open maps")}
+          >
+            <span className="quick-tool-icon">⌖</span>
+            <span>MAPS</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onCommand("open email")}
+          >
+            <span className="quick-tool-icon">✉</span>
+            <span>EMAIL</span>
+          </button>
+
+        </div>
+
+      </aside>
+
+
+      {/* ================================================= */}
+      {/* TODAY */}
+      {/* ================================================= */}
+
+      <aside className="cockpit-today">
+
+        <div className="panel-heading">
+
+          <span className="panel-marker">
+            ◆
+          </span>
+
+          TODAY
+
+          <span className="today-date">
+            {new Date().toLocaleDateString([], {
+              weekday: "short",
+              day: "2-digit",
+              month: "short",
+            })}
+          </span>
+
+        </div>
+
+
+        <div className="today-content">
+
+          <div className="today-item">
+
+            <span className="today-icon">
+              ◷
+            </span>
+
+            <div>
+
+              <div className="today-label">
+                UPCOMING
+              </div>
+
+              <div className="today-value">
+                No upcoming events
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div className="today-item">
+
+            <span className="today-icon">
+              ☑
+            </span>
+
+            <div>
+
+              <div className="today-label">
+                TASKS
+              </div>
+
+              <div className="today-value">
+                No pending tasks
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div className="today-item">
+
+            <span className="today-icon">
+              ◆
+            </span>
+
+            <div>
+
+              <div className="today-label">
+                BRIEF
+              </div>
+
+              <div className="today-value">
+
+                {morningBriefHeadlines.length > 0
+                  ? `${morningBriefHeadlines.length} headlines available`
+                  : "No brief loaded"}
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
