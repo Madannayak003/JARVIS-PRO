@@ -401,6 +401,25 @@ export default function Home() {
   useEffect(() => {
     let speakTimer: number | null = null;
 
+    const stopHudSpeaking = () => {
+      setHudState((prev) => ({
+        ...prev,
+        speaking: false,
+        status: prev.listening ? "listening" : "idle",
+      }));
+    };
+
+    const scheduleHudSpeakingStop = (delay: number) => {
+      if (speakTimer !== null) {
+        window.clearTimeout(speakTimer);
+      }
+
+      speakTimer = window.setTimeout(() => {
+        speakTimer = null;
+        stopHudSpeaking();
+      }, delay);
+  };
+
     const bridge = new HUDBridge(
       process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766",
       setHudState,
@@ -423,28 +442,13 @@ export default function Home() {
             morningBriefStartedSpeakingRef.current = true;
           }
 
-          // Explicitly enter SPEAKING state.
-          // This is important for Live Conversation too.
           setHudState((prev) => ({
             ...prev,
             speaking: true,
             status: "speaking",
           }));
 
-          if (speakTimer !== null) {
-            window.clearTimeout(speakTimer);
-          }
-
-          speakTimer = window.setTimeout(() => {
-            setMorningBriefStartedSpeaking(false);
-            morningBriefStartedSpeakingRef.current = false;
-
-            setHudState((prev) => ({
-              ...prev,
-              speaking: false,
-              status: prev.listening ? "listening" : "idle",
-            }));
-          }, 7000);
+          scheduleHudSpeakingStop(7000);
 
           return;
         }
@@ -488,17 +492,10 @@ export default function Home() {
             status: "speaking",
           }));
 
-          if (speakTimer !== null) {
-            window.clearTimeout(speakTimer);
-          }
-
-          speakTimer = window.setTimeout(() => {
-            setHudState((prev) => ({
-              ...prev,
-              speaking: false,
-              status: prev.listening ? "listening" : "idle",
-            }));
-          }, 4000);
+          // Each new response chunk extends the speaking window.
+          // The HUD returns to idle/listening only after speech
+          // activity has stopped for the full delay.
+          scheduleHudSpeakingStop(4000);
         }
 
         // Strict global deduplication check
@@ -528,7 +525,11 @@ export default function Home() {
 
     return () => {
       bridge.disconnect();
-      if (speakTimer !== null) window.clearTimeout(speakTimer);
+
+      if (speakTimer !== null) {
+        window.clearTimeout(speakTimer);
+        speakTimer = null;
+      }
     };
   }, []);
 

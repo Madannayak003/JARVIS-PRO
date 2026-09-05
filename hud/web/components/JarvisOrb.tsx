@@ -608,7 +608,7 @@ export default function JarvisOrb() {
       {/* CONTROL HINT */}
       {/* ================================================= */}
 
-      <div className="hud hud-hint">
+      {/* <div className="hud hud-hint">
 
         <div>
 
@@ -686,7 +686,7 @@ export default function JarvisOrb() {
 
         </div>
 
-      </div>
+      </div> */}
 
 
       {/* ================================================= */}
@@ -976,10 +976,11 @@ export default function JarvisOrb() {
               className="ultron-color-panel"
               aria-label="ULTRON color selection"
               style={{
-                width: "100%",
-                paddingTop: "4px",
-                borderTop:
-                  "1px solid rgba(255, 170, 0, 0.25)",
+                position: "fixed",
+                left: "220px",
+                top: "583px",
+                width: "105px",
+                zIndex: 50,
               }}
             >
 
@@ -987,15 +988,14 @@ export default function JarvisOrb() {
 
               <div
                 style={{
-                  paddingTop: "7px",
-                  paddingBottom: "6px",
+                  paddingBottom: "4px",
                 }}
               >
 
                 <span
                   className="ultron-color-label"
                   style={{
-                    fontSize: "11px",
+                    fontSize: "10px",
                     letterSpacing: "2px",
                     opacity: 0.9,
                   }}
@@ -1006,16 +1006,18 @@ export default function JarvisOrb() {
               </div>
 
 
-              {/* COLOR GRID */}
+              {/* ================================================= */}
+              {/* COLORS — 2 PER ROW */}
+              {/* ================================================= */}
 
               <div
                 className="ultron-color-row"
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    "repeat(4, minmax(0, 1fr))",
-                  gap: "6px",
-                  width: "100%",
+                  gridTemplateColumns: "36px 36px",
+                  gap: "5px",
+                  width: "78px",
+                  justifyContent: "start",
                 }}
               >
 
@@ -1049,18 +1051,17 @@ export default function JarvisOrb() {
                           }`
                         }
                         style={{
-                          minWidth: 0,
-                          width: "100%",
-                          padding:
-                            "5px 4px",
+                          width: "36px",
+                          height: "36px",
+                          minWidth: "36px",
+                          padding: "0",
+                          borderRadius: "50%",
                           display: "flex",
-                          alignItems:
-                            "center",
-                          justifyContent:
-                            "center",
-                          gap: "5px",
-                          whiteSpace:
-                            "nowrap",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "3px",
+                          whiteSpace: "nowrap",
                         }}
                         aria-label={
                           `ULTRON color ${color.name}`
@@ -1077,23 +1078,21 @@ export default function JarvisOrb() {
                         <span
                           className="ultron-color-dot"
                           style={{
-                            width: "7px",
-                            height: "7px",
-                            minWidth: "7px",
-                            borderRadius:
-                              "50%",
-                            backgroundColor:
-                              hex,
+                            width: "5px",
+                            height: "5px",
+                            minWidth: "5px",
+                            borderRadius: "50%",
+                            backgroundColor: hex,
                             boxShadow:
                               active
-                                ? `0 0 8px ${hex}`
-                                : `0 0 3px ${hex}`,
+                                ? `0 0 6px ${hex}`
+                                : `0 0 2px ${hex}`,
                           }}
                         />
 
                         <span
                           style={{
-                            fontSize: "9px",
+                            fontSize: "7px",
                             lineHeight: "1",
                           }}
                         >

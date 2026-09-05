@@ -124,7 +124,7 @@ body {
 
 .hud-controls {
   position: fixed;
-  bottom: 80px;
+  bottom: 20px;
   left: 24px;
   right: auto;
   z-index: 40;
@@ -243,9 +243,9 @@ body {
   position: fixed;
   left: 24px;
   right: auto;
-  bottom: 240px;
+  bottom: 220px;
   width: 190px;
-  height: 135px;
+  height: 150px;
   display: none;
 
   border: 1px solid var(--assistant-colour-45);
