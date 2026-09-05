@@ -1,5 +1,6 @@
 import threading
 import requests
+import re
 
 from core.live_execution import (
     is_live_execution,
@@ -26,6 +27,70 @@ from hud.integration import HUDIntegration
 
 
 ONLINE = False
+
+# =========================================================
+# TTS TEXT CLEANER
+# =========================================================
+#
+# Cleans Markdown only for spoken audio.
+# The original response remains untouched for:
+# - Activity Log
+# - Remote Dashboard
+# - UI
+# - Live Conversation
+# =========================================================
+
+def _clean_tts_text(text):
+
+    if not text:
+        return ""
+
+    text = str(text)
+
+    # Markdown links:
+    # [Google](https://google.com) -> Google
+    text = re.sub(
+        r"\[([^\]]+)\]\([^)]+\)",
+        r"\1",
+        text,
+    )
+
+    # Bold / italic markers
+    text = text.replace("**", "")
+    text = text.replace("__", "")
+
+    # Markdown headings
+    text = re.sub(
+        r"(?m)^\s*#{1,6}\s*",
+        "",
+        text,
+    )
+
+    # Markdown bullets
+    text = re.sub(
+        r"(?m)^\s*[-*+]\s+",
+        "",
+        text,
+    )
+
+    # Inline code/backticks
+    text = text.replace("`", "")
+
+    # Markdown blockquote
+    text = re.sub(
+        r"(?m)^\s*>\s?",
+        "",
+        text,
+    )
+
+    # Collapse excessive whitespace
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
+
+    return text.strip()
 
 VOICE_THREAD = None
 
@@ -268,8 +333,13 @@ def prepare_speech(
 
         try:
 
+            speech_text = _clean_tts_text(text)
+
+            if not speech_text:
+                return None
+
             return generate_audio(
-                text,
+                speech_text,
                 session,
             )
 
@@ -390,6 +460,15 @@ def speak(
         )
 
         return
+    
+    # -----------------------------------------------------
+    # Clean Markdown for TTS only
+    # -----------------------------------------------------
+
+    speech_text = _clean_tts_text(text)
+
+    if not speech_text:
+        return
 
     # -----------------------------------------------------
     # Resolve speech session
@@ -439,7 +518,7 @@ def speak(
         return
 
     print(
-        f"[VOICE] {text}"
+        f"[VOICE] {speech_text}"
     )
     
     # -----------------------------------------------------
@@ -457,7 +536,7 @@ def speak(
     if wait:
 
         _worker(
-            text,
+            speech_text,
             session
         )
 
@@ -472,7 +551,7 @@ def speak(
         target=_worker,
 
         args=(
-            text,
+            speech_text,
             session,
         ),
 
