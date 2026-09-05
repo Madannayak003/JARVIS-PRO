@@ -402,6 +402,12 @@ export default function Home() {
     let speakTimer: number | null = null;
 
     const stopHudSpeaking = () => {
+      // End the temporary morning-brief speaking lock.
+      // The brief overlay can remain visible, but speech itself
+      // must no longer keep the HUD in SPEAKING state.
+      setMorningBriefStartedSpeaking(false);
+      morningBriefStartedSpeakingRef.current = false;
+
       setHudState((prev) => ({
         ...prev,
         speaking: false,
@@ -438,19 +444,30 @@ export default function Home() {
 
         if (event.name === "speaking") {
           if (morningBriefActiveRef.current) {
-            setMorningBriefStartedSpeaking(true);
-            morningBriefStartedSpeakingRef.current = true;
-          }
+          setMorningBriefStartedSpeaking(true);
+          morningBriefStartedSpeakingRef.current = true;
 
+          // Morning Brief can contain several headlines and may
+          // speak for much longer than the normal response window.
+          // Do NOT use the normal fixed speaking timer here.
           setHudState((prev) => ({
             ...prev,
             speaking: true,
             status: "speaking",
           }));
 
-          scheduleHudSpeakingStop(7000);
-
           return;
+        }
+
+        setHudState((prev) => ({
+          ...prev,
+          speaking: true,
+          status: "speaking",
+        }));
+
+        scheduleHudSpeakingStop(7000);
+
+        return;
         }
 
         if (
@@ -990,6 +1007,9 @@ export default function Home() {
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
           setMorningBriefHeadlines([]);
+          setMorningBriefStartedSpeaking(false);
+          morningBriefActiveRef.current = false;
+          morningBriefStartedSpeakingRef.current = false;
         }}
 
         onCommand={(command) => {
