@@ -644,7 +644,7 @@ export default function HudCockpit({
 
           <button
             type="button"
-            onClick={() => onCommand("calculate")}
+            onClick={() => onCommand("open calculate")}
           >
             <span className="quick-tool-icon">▦</span>
             <span>CALCULATOR</span>
@@ -660,7 +660,7 @@ export default function HudCockpit({
 
           <button
             type="button"
-            onClick={() => onCommand("search youtube")}
+            onClick={() => onCommand("open youtube")}
           >
             <span className="quick-tool-icon">▶</span>
             <span>YOUTUBE</span>
@@ -676,7 +676,7 @@ export default function HudCockpit({
 
           <button
             type="button"
-            onClick={() => onCommand("open email")}
+            onClick={() => onCommand("open gmail")}
           >
             <span className="quick-tool-icon">✉</span>
             <span>EMAIL</span>
