@@ -1,19 +1,22 @@
 """
 =============================================================
-JARVIS PRO — GOOGLE TRANSLATE SKILL
+JARVIS PRO — TRANSLATION SKILL
 =============================================================
 
-Provides Google Translate opening.
+Provides:
+- Google Translate opening
+- AI-powered text translation using the existing JARVIS AI
+  service and provider routing.
 
-Google Translate uses its normal web interface, so no API key
-is required for this skill.
+No separate translation API key is required.
 """
 
 import webbrowser
 
 from core.registry import register
 from voice.manager import speak
-from urllib.parse import quote_plus
+from ai.core.service import ai_service
+
 
 GOOGLE_TRANSLATE_URL = "https://translate.google.com/"
 
@@ -47,7 +50,8 @@ def translate_open(data=None):
         )
 
         return False
-    
+
+
 # =============================================================
 # TRANSLATE TEXT
 # =============================================================
@@ -64,38 +68,55 @@ def translate_text(data=None):
     ).strip()
 
     if not text:
-        speak("Please tell me what to translate.")
+        speak(
+            "Please tell me what to translate."
+        )
         return False
 
     if not target:
-        speak("Please tell me the target language.")
+        speak(
+            "Please tell me the target language."
+        )
         return False
 
-    encoded_text = quote_plus(text)
-    encoded_target = quote_plus(target)
+    # ---------------------------------------------------------
+    # Log translation request
+    # ---------------------------------------------------------
 
-    url = (
-        "https://translate.google.com/"
-        "?sl=auto"
-        f"&tl={encoded_target}"
-        f"&text={encoded_text}"
-        "&op=translate"
+    print(
+        f"[TRANSLATE] Text: {text}"
     )
+
+    print(
+        f"[TRANSLATE] Target: {target}"
+    )
+
+    # ---------------------------------------------------------
+    # Translation prompt
+    # ---------------------------------------------------------
+
+    prompt = f"""
+Translate the following text into {target}.
+
+Return only the translated text.
+Do not add explanations.
+Do not add quotation marks.
+Do not mention the source language.
+
+Text:
+{text}
+""".strip()
+
+    # ---------------------------------------------------------
+    # Use existing JARVIS AI service
+    # ---------------------------------------------------------
 
     try:
 
-        opened = webbrowser.open_new_tab(url)
-
-        if opened:
-            speak(
-                f"Opening translation to {target}."
-            )
-            return True
-
-        speak(
-            "I could not open Google Translate."
+        response = ai_service.generate(
+            prompt=prompt,
+            capability="conversation",
         )
-        return False
 
     except Exception as error:
 
@@ -104,10 +125,61 @@ def translate_text(data=None):
         )
 
         speak(
-            "I could not open Google Translate."
+            "I could not translate that."
         )
 
         return False
+
+    # ---------------------------------------------------------
+    # Check AI response
+    # ---------------------------------------------------------
+
+    if not response.success:
+
+        print(
+            "[TRANSLATE ERROR]",
+            response.error
+        )
+
+        speak(
+            "I could not translate that."
+        )
+
+        return False
+
+    translated_text = str(
+        response.text or ""
+    ).strip()
+
+    if not translated_text:
+
+        print(
+            "[TRANSLATE ERROR] Empty translation result."
+        )
+
+        speak(
+            "I could not translate that."
+        )
+
+        return False
+
+    # ---------------------------------------------------------
+    # Translation result
+    # ---------------------------------------------------------
+
+    print(
+        f"[TRANSLATE RESULT] {translated_text}"
+    )
+
+    # ---------------------------------------------------------
+    # Speak translation
+    # ---------------------------------------------------------
+
+    speak(
+        translated_text
+    )
+
+    return True
 
 
 # =============================================================

@@ -20,9 +20,36 @@ CACHE.mkdir(
 )
 
 VOICE = "en-GB-RyanNeural"
+KANNADA_VOICE = "kn-IN-GaganNeural"
+HINDI_VOICE = "hi-IN-MadhurNeural"
 
 CACHE_MAX_AGE = 24 * 60 * 60
 
+
+# =========================================================
+# Select Voice
+# =========================================================
+
+def _get_voice(text):
+
+    if not text:
+        return VOICE
+
+    # Kannada Unicode block: U+0C80 - U+0CFF
+    if any(
+        "\u0C80" <= character <= "\u0CFF"
+        for character in text
+    ):
+        return KANNADA_VOICE
+
+    # Hindi / Devanagari Unicode block: U+0900 - U+097F
+    if any(
+        "\u0900" <= character <= "\u097F"
+        for character in text
+    ):
+        return HINDI_VOICE
+
+    return VOICE
 
 # =========================================================
 # Cache Cleanup
@@ -122,11 +149,13 @@ async def _generate(
     outfile,
 ):
 
+    voice = _get_voice(text)
+
     communicate = edge_tts.Communicate(
 
         text=text,
 
-        voice=VOICE,
+        voice=voice,
 
     )
 
