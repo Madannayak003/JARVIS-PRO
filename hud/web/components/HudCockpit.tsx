@@ -645,81 +645,93 @@ export default function HudCockpit({
 
       <aside className="cockpit-quick-tools">
 
-        <div className="panel-heading">
-
+        {/* <div className="panel-heading">
           <span className="panel-marker">
             ◆
           </span>
-
           QUICK TOOLS
-
-        </div>
-
+        </div> */}
 
         <div className="quick-tools-grid">
 
+          {/* GOOGLE */}
           <button
             type="button"
-            onClick={() => onCommand("open app")}
-          >
-            <span className="quick-tool-icon">▣</span>
-            <span>OPEN APP</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onCommand("open website")}
-          >
-            <span className="quick-tool-icon">◎</span>
-            <span>WEBSITE</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onCommand("search")}
+            onClick={() => onCommand("open google")}
+            aria-label="Open Google"
           >
             <span className="quick-tool-icon">⌕</span>
-            <span>SEARCH</span>
+            <span>GOOGLE</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onCommand("open calculate")}
-          >
-            <span className="quick-tool-icon">▦</span>
-            <span>CALCULATOR</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onCommand("translate")}
-          >
-            <span className="quick-tool-icon">文</span>
-            <span>TRANSLATE</span>
-          </button>
-
+          {/* YOUTUBE */}
           <button
             type="button"
             onClick={() => onCommand("open youtube")}
+            aria-label="Open YouTube"
           >
             <span className="quick-tool-icon">▶</span>
             <span>YOUTUBE</span>
           </button>
 
+          {/* EMAIL */}
           <button
             type="button"
-            onClick={() => onCommand("open maps")}
+            onClick={() => onCommand("open gmail")}
+            aria-label="Open Email"
+          >
+            <span className="quick-tool-icon">✉</span>
+            <span>EMAIL</span>
+          </button>
+
+          {/* MAPS */}
+          <button
+            type="button"
+            onClick={() => onCommand("open google maps")}
+            aria-label="Open Google Maps"
           >
             <span className="quick-tool-icon">⌖</span>
             <span>MAPS</span>
           </button>
 
+          {/* TRANSLATE */}
           <button
             type="button"
-            onClick={() => onCommand("open gmail")}
+            onClick={() => onCommand("open google translate")}
+            aria-label="Open Google Translate"
           >
-            <span className="quick-tool-icon">✉</span>
-            <span>EMAIL</span>
+            <span className="quick-tool-icon">文</span>
+            <span>TRANSLATE</span>
+          </button>
+
+          {/* WEBSITES */}
+          <button
+            type="button"
+            onClick={() => onCommand("open website list")}
+            aria-label="Open website list"
+          >
+            <span className="quick-tool-icon">◎</span>
+            <span>WEBSITES</span>
+          </button>
+
+          {/* CALCULATOR */}
+          <button
+            type="button"
+            onClick={() => onCommand("open calculator")}
+            aria-label="Open Calculator"
+          >
+            <span className="quick-tool-icon">▦</span>
+            <span>CALCULATOR</span>
+          </button>
+
+          {/* LOCK */}
+          <button
+            type="button"
+            onClick={() => onCommand("lock")}
+            aria-label="Lock PC"
+          >
+            <span className="quick-tool-icon">▣</span>
+            <span>LOCK</span>
           </button>
 
         </div>
