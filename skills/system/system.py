@@ -20,7 +20,7 @@ import subprocess
 from core.confirmation import ask
 from core.registry import register
 from voice.manager import speak
-
+from core.listener import request_shutdown
 
 # =========================================================
 # Helpers
@@ -134,6 +134,18 @@ def _lock() -> bool:
         speak("I couldn't lock the computer.")
 
         return False
+    
+    
+def _terminate_jarvis() -> bool:
+    """Terminate the JARVIS application without shutting down Windows."""
+
+    print("[SYSTEM] Terminating JARVIS.")
+
+    speak("Goodbye Sir.")
+
+    request_shutdown()
+
+    return True
 
 
 # =========================================================
@@ -178,6 +190,14 @@ def system_action(data):
         return False
 
     action = action.strip().lower()
+    
+    # =====================================================
+    # JARVIS Application Shutdown
+    # =====================================================
+
+    if action == "terminate_jarvis":
+
+        return _terminate_jarvis()
 
     # -----------------------------------------------------
     # Platform validation
@@ -275,6 +295,11 @@ def system_action(data):
 # =========================================================
 # Registry
 # =========================================================
+
+register(
+    "terminate_jarvis",
+    system_action,
+)
 
 register(
     "shutdown",

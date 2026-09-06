@@ -33,6 +33,12 @@ SHUTDOWN_URL = (
     "http://127.0.0.1:8766/shutdown"
 )
 
+# =============================================================
+# GLOBAL NATIVE WINDOW
+# =============================================================
+
+_native_window = None
+
 
 # =============================================================
 # INITIAL LOADING SCREEN
@@ -306,12 +312,46 @@ def request_jarvis_shutdown():
             f"[DESKTOP HUD] {error}"
         )
 
+# =============================================================
+# CLOSE NATIVE WINDOW
+# =============================================================
+
+def close_native_window():
+
+    global _native_window
+
+    window = _native_window
+
+    if window is None:
+        return
+
+    try:
+
+        print(
+            "[DESKTOP HUD] "
+            "Closing native JARVIS window..."
+        )
+
+        window.destroy()
+
+    except Exception as error:
+
+        print(
+            "[DESKTOP HUD] "
+            "Could not close native window:"
+        )
+
+        print(
+            f"[DESKTOP HUD] {error}"
+        )
 
 # =============================================================
 # NATIVE WINDOW
 # =============================================================
 
 def run():
+    
+    global _native_window
 
     # ---------------------------------------------------------
     # Stop signal for the background Next.js loader.
@@ -334,7 +374,7 @@ def run():
     )
 
 
-    window = webview.create_window(
+    _native_window = webview.create_window(
 
         WINDOW_TITLE,
 
@@ -356,6 +396,8 @@ def run():
         zoomable=False,
 
     )
+    
+    window = _native_window
 
 
     # =========================================================
@@ -418,6 +460,8 @@ def run():
     finally:
 
         stop_event.set()
+        
+        _native_window = None
 
 
     print(

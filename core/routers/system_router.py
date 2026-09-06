@@ -1,75 +1,103 @@
 SYSTEM = {
 
-    "shutdown":{
-        "action":"shutdown"
+    # ---------------------------------------------------------
+    # JARVIS APPLICATION SHUTDOWN
+    # ---------------------------------------------------------
+
+    "shutdown": {
+        "action": "terminate_jarvis"
     },
 
-    "restart":{
-        "action":"restart"
+    "terminate": {
+        "action": "terminate_jarvis"
     },
 
-    "sleep":{
-        "action":"sleep"
+    "go terminate": {
+        "action": "terminate_jarvis"
     },
 
-    "lock":{
-        "action":"lock"
+    "close jarvis": {
+        "action": "terminate_jarvis"
     },
 
-    "battery":{
-        "action":"battery"
+    "exit jarvis": {
+        "action": "terminate_jarvis"
     },
 
-    "battery status":{
-        "action":"battery"
-    },
-    
-    "show battery":{
-        "action":"battery"
-    },
-    
-    "show battery status":{
-        "action":"battery"
+    "quit jarvis": {
+        "action": "terminate_jarvis"
     },
 
-    "brightness up":{
-        "action":"brightness",
-        "direction":"up"
+    # ---------------------------------------------------------
+    # SYSTEM ACTIONS
+    # ---------------------------------------------------------
+
+    "restart": {
+        "action": "restart"
     },
 
-    "brightness down":{
-        "action":"brightness",
-        "direction":"down"
+    "sleep": {
+        "action": "sleep"
     },
 
-    "increase brightness":{
-        "action":"brightness",
-        "direction":"up"
+    "lock": {
+        "action": "lock"
     },
 
-    "decrease brightness":{
-        "action":"brightness",
-        "direction":"down"
-    },
-    
-    "increase volume":{
-        "action":"volume",
-        "direction":"up"
-    },
-    
-    "decrease volume":{
-        "action":"volume",
-        "direction":"down"
+    "battery": {
+        "action": "battery"
     },
 
-    "screenshot":{
-        "action":"screenshot"
+    "battery status": {
+        "action": "battery"
     },
 
-    "take screenshot":{
-        "action":"screenshot"
+    "show battery": {
+        "action": "battery"
     },
-    
+
+    "show battery status": {
+        "action": "battery"
+    },
+
+    "brightness up": {
+        "action": "brightness",
+        "direction": "up"
+    },
+
+    "brightness down": {
+        "action": "brightness",
+        "direction": "down"
+    },
+
+    "increase brightness": {
+        "action": "brightness",
+        "direction": "up"
+    },
+
+    "decrease brightness": {
+        "action": "brightness",
+        "direction": "down"
+    },
+
+    "increase volume": {
+        "action": "volume",
+        "direction": "up"
+    },
+
+    "decrease volume": {
+        "action": "volume",
+        "direction": "down"
+    },
+
+    "screenshot": {
+        "action": "screenshot"
+    },
+
+    "take screenshot": {
+        "action": "screenshot"
+    },
+
     "time": {
         "action": "time"
     },
@@ -85,7 +113,7 @@ SYSTEM = {
     "date": {
         "action": "date"
     },
-    
+
     "start live conversation": {
         "action": "start_live_conversation"
     },
@@ -119,16 +147,20 @@ def system_route(command):
         "lock computer",
         "lock pc",
         "lock laptop",
-        "lock screen"
+        "lock screen",
     ]:
         return [{"action": "lock"}]
 
-    # ---------- Shutdown ----------
+    # ---------- Windows Shutdown ----------
 
     if command in [
-        "shutdown",
         "shutdown computer",
-        "shutdown pc"
+        "shutdown pc",
+        "shutdown system",
+        "shut down computer",
+        "shut down system",
+        "power off computer",
+        "power off system",
     ]:
         return [{"action": "shutdown"}]
 
@@ -137,7 +169,7 @@ def system_route(command):
     if command in [
         "restart",
         "restart computer",
-        "restart pc"
+        "restart pc",
     ]:
         return [{"action": "restart"}]
 
@@ -146,9 +178,11 @@ def system_route(command):
     if command in [
         "sleep",
         "sleep computer",
-        "sleep pc"
+        "sleep pc",
     ]:
         return [{"action": "sleep"}]
+
+    # ---------- Exact system commands ----------
 
     if command in SYSTEM:
         return [SYSTEM[command]]

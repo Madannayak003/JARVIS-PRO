@@ -393,7 +393,6 @@ def request_jarvis_shutdown():
 
     global _shutdown_started
 
-
     with _shutdown_lock:
 
         if _shutdown_started:
@@ -402,14 +401,12 @@ def request_jarvis_shutdown():
 
         _shutdown_started = True
 
-
     print()
 
     print(
         "[MAIN] "
         "Complete JARVIS shutdown requested."
     )
-
 
     _shutdown_event.set()
 
@@ -424,9 +421,7 @@ def request_jarvis_shutdown():
             request_shutdown,
         )
 
-
         request_shutdown()
-
 
     except Exception as error:
 
@@ -437,6 +432,30 @@ def request_jarvis_shutdown():
 
         print(
             f"[MAIN] {error}"
+        )
+
+
+    # ---------------------------------------------------------
+    # Close native pywebview HUD
+    # ---------------------------------------------------------
+
+    try:
+
+        from hud.desktop_window import (
+            close_native_window,
+        )
+
+        close_native_window()
+
+    except Exception as error:
+
+        print(
+            "[MAIN HUD] "
+            "Native window shutdown error:"
+        )
+
+        print(
+            f"[MAIN HUD] {error}"
         )
 
 
