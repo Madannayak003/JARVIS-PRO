@@ -2136,8 +2136,8 @@ export default function JarvisOrb(
             >
 
               {avatarType === "robot"
-                ? "● ROBOT"
-                : "○ ROBOT"}
+                ? "● ROBO"
+                : "○ ROBO"}
 
             </button>
 

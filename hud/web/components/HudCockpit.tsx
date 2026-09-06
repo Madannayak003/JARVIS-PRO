@@ -706,7 +706,7 @@ export default function HudCockpit({
       {/* TODAY */}
       {/* ================================================= */}
 
-      <aside className="cockpit-today">
+      {/* <aside className="cockpit-today">
 
         <div className="panel-heading">
 
@@ -793,7 +793,7 @@ export default function HudCockpit({
 
         </div>
 
-      </aside>
+      </aside> */}
 
     </div>
 

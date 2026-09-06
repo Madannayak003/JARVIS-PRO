@@ -1114,42 +1114,6 @@ export default function Home() {
           BOTTOM HUD: INDICATORS + WAVEFORM + 8 INLINE BUTTONS
           ===================================================== */}
       <div className="cockpit-bottom-container">
-        {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
-        <div className="cockpit-bottom-indicators">
-          <div
-            className={`voice-indicator ${
-              hudState.listening &&
-              !hudState.speaking &&
-              hudState.status !== "speaking" &&
-              !morningBriefStartedSpeaking
-                ? "active"
-                : ""
-            }`}
-          >
-            <span className="indicator-dot" />
-            <span className="indicator-label">[ LISTENING ]</span>
-          </div>
-          <div className={`voice-indicator ${hudState.thinking ? "active" : ""}`}>
-            <span className="indicator-dot" />
-            <span className="indicator-label">[ THINKING ]</span>
-          </div>
-          <div
-            className={`voice-indicator ${
-              hudState.speaking ||
-              hudState.status === "speaking" ||
-              morningBriefStartedSpeaking
-                ? "active"
-                : ""
-            }`}
-          >
-            <span className="indicator-dot" />
-            <span className="indicator-label">[ SPEAKING ]</span>
-          </div>
-          <div className={`voice-indicator ${hudState.executing ? "active" : ""}`}>
-            <span className="indicator-dot" />
-            <span className="indicator-label">[ EXECUTING ]</span>
-          </div>
-        </div>
 
         {/* REACTIVE AUDIO WAVEFORM / SPECTRUM VISUALIZER */}
         <div
@@ -1187,6 +1151,43 @@ export default function Home() {
               />
             );
           })}
+        </div>
+        
+        {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
+        <div className="cockpit-bottom-indicators">
+          <div
+            className={`voice-indicator ${
+              hudState.listening &&
+              !hudState.speaking &&
+              hudState.status !== "speaking" &&
+              !morningBriefStartedSpeaking
+                ? "active"
+                : ""
+            }`}
+          >
+            <span className="indicator-dot" />
+            <span className="indicator-label">[ LISTENING ]</span>
+          </div>
+          <div className={`voice-indicator ${hudState.thinking ? "active" : ""}`}>
+            <span className="indicator-dot" />
+            <span className="indicator-label">[ THINKING ]</span>
+          </div>
+          <div
+            className={`voice-indicator ${
+              hudState.speaking ||
+              hudState.status === "speaking" ||
+              morningBriefStartedSpeaking
+                ? "active"
+                : ""
+            }`}
+          >
+            <span className="indicator-dot" />
+            <span className="indicator-label">[ SPEAKING ]</span>
+          </div>
+          <div className={`voice-indicator ${hudState.executing ? "active" : ""}`}>
+            <span className="indicator-dot" />
+            <span className="indicator-label">[ EXECUTING ]</span>
+          </div>
         </div>
 
         {/* ALL 8 BUTTONS IN ONE TRANSPARENT INLINE ROW */}

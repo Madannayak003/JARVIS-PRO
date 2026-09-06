@@ -1,5 +1,25 @@
 :root {
-  --assistant-colour: #ffaa30;
+  /* =========================================================
+     JARVIS PRO — DEFAULT CLEAN HUD PALETTE
+     ========================================================= */
+
+  /* General HUD */
+  --assistant-colour: #c9d1d9;
+
+  /* Activity identities */
+  --hud-user-colour: #fdfdfd;
+  --hud-jarvis-colour: #00d4ff;
+  --hud-system-colour: #ff6b00;
+
+  /* Neutral interface */
+  --hud-text: #c9d1d9;
+  --hud-muted: #737d88;
+  --hud-border: #343b43;
+
+  /* State colours */
+  --hud-success: #00ff66;
+  --hud-warning: #ffb020;
+  --hud-error: #ff4444;
 
   --assistant-colour-10: color-mix(
     in srgb,
@@ -452,7 +472,10 @@ body {
 .cockpit-left {
   left: 34px;
   width: 175px;
-  border-left: 0px solid var(--assistant-colour-20);
+  border-left: 2px solid var(--assistant-colour-20);
+  border-right: 2px solid var(--assistant-colour-20);
+  border-top: 2px solid var(--assistant-colour-20);
+  border-bottom: 2px solid var(--assistant-colour-20);
 }
 
 .cockpit-left::before,
@@ -460,7 +483,7 @@ body {
   content: "";
   position: absolute;
   width: 14px;
-  height: 14px;
+  height: 14;
   pointer-events: none;
 }
 
@@ -713,14 +736,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
   background: transparent !important;
   pointer-events: auto;
 }
 
 .cockpit-bottom-indicators {
   display: flex;
-  gap: 20px;
+  gap: 28px;
   user-select: none;
 }
 
@@ -739,8 +762,8 @@ body {
 
 .indicator-dot {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--assistant-colour-45);
   transition: all 200ms ease;
@@ -813,7 +836,7 @@ body {
   padding: 0 8px;
   background: transparent !important;
   border: 1px solid var(--assistant-colour-45);
-  border-radius: 2px;
+  border-radius: 33px;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 10px;
@@ -1462,13 +1485,11 @@ body {
 
 /* Reticle brackets on top-left and right of column */
 .cockpit-right {
-  position: absolute;
-  top: 80px;
+  top: 90px;
   right: 24px;
   width: 350px;
   padding: 0;
   background: transparent;
-  border: none;
   pointer-events: auto;
   box-sizing: border-box;
   z-index: 20;
@@ -1489,7 +1510,7 @@ body {
 .cockpit-right::after {
   content: "";
   position: absolute;
-  top: 620px;
+  top: 405px;
   right: 0;
   width: 14px;
   height: 14px;
@@ -1527,7 +1548,7 @@ body {
 /* 1. ACTIVITY LOG */
 .activity-log {
   width: 100%;
-  height: 170px;
+  height: 350px;
   padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1567,11 +1588,60 @@ body {
 }
 
 .activity-user .activity-message-meta {
-  opacity: 0.85;
+  opacity: 1;
+  color: var(--hud-user-colour);
+  text-shadow: 0 0 6px color-mix(
+    in srgb,
+    var(--hud-user-colour) 45%,
+    transparent
+  );
 }
 
 .activity-jarvis .activity-message-meta {
   opacity: 1;
+  color: var(--hud-jarvis-colour);
+  text-shadow: 0 0 6px color-mix(
+    in srgb,
+    var(--hud-jarvis-colour) 45%,
+    transparent
+  );
+}
+
+.activity-system .activity-message-meta {
+  opacity: 1;
+  color: var(--hud-system-colour);
+  text-shadow: 0 0 6px color-mix(
+    in srgb,
+    var(--hud-system-colour) 45%,
+    transparent
+  );
+}
+
+.activity-user .activity-message-text {
+  color: var(--hud-user-colour);
+  text-shadow: 0 0 4px color-mix(
+    in srgb,
+    var(--hud-user-colour) 25%,
+    transparent
+  );
+}
+
+.activity-jarvis .activity-message-text {
+  color: var(--hud-jarvis-colour);
+  text-shadow: 0 0 4px color-mix(
+    in srgb,
+    var(--hud-jarvis-colour) 25%,
+    transparent
+  );
+}
+
+.activity-system .activity-message-text {
+  color: var(--hud-system-colour);
+  text-shadow: 0 0 4px color-mix(
+    in srgb,
+    var(--hud-system-colour) 25%,
+    transparent
+  );
 }
 
 .activity-empty {
@@ -1596,7 +1666,7 @@ body {
 /* 2. QUICK TOOLS */
 .cockpit-quick-tools {
   position: absolute;
-  top: 330px;
+  top: 540px;
   right: 24px;
   width: 350px;
   padding: 0;
