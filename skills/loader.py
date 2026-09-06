@@ -28,6 +28,7 @@ SKILLS = [
     "browser.youtube",
     "browser_control.browser_controls",
     "navigation.maps",
+    "navigation.translate",
     "system.system",
     "system.brightness",
     "screen.screenshot",

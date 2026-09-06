@@ -140,6 +140,52 @@ def browser_route(command):
                 ]
 
             return None
+        
+    # -----------------------------------------------------
+    # Google Translate Text
+    # -----------------------------------------------------
+
+    if command.startswith("translate ") and " to " in command:
+
+        translation = command[
+            len("translate "):
+        ].strip()
+
+        text, target = translation.rsplit(
+            " to ",
+            1
+        )
+
+        text = text.strip()
+        target = target.strip()
+
+        if text and target:
+
+            return [
+                {
+                    "action": "translate_text",
+                    "text": text,
+                    "target": target,
+                }
+            ]
+
+        return None
+        
+    # -----------------------------------------------------
+    # Google Translate
+    # -----------------------------------------------------
+
+    if command in [
+        "translate",
+        "open translate",
+        "google translate",
+        "open google translate",
+    ]:
+        return [
+            {
+                "action": "translate_open"
+            }
+        ]
 
     if not command:
         return None
