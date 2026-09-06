@@ -56,6 +56,90 @@ def browser_route(command):
         return None
 
     command = str(command).strip().lower()
+    
+    # -----------------------------------------------------
+    # Google Maps
+    # -----------------------------------------------------
+
+    if command in [
+        "maps",
+        "open maps",
+        "open google maps",
+        "google maps",
+    ]:
+        return [
+            {
+                "action": "maps_open"
+            }
+        ]
+
+    # -----------------------------------------------------
+    # Google Maps Directions
+    # -----------------------------------------------------
+    
+    # -----------------------------------------------------
+    # Google Maps Directions - Origin to Destination
+    # -----------------------------------------------------
+
+    for prefix in [
+        "navigate from ",
+        "directions from ",
+        "route from ",
+        "go from ",
+    ]:
+
+        if command.startswith(prefix):
+
+            route = command[
+                len(prefix):
+            ].strip()
+
+            if " to " not in route:
+                return None
+
+            origin, destination = route.split(
+                " to ",
+                1
+            )
+
+            origin = origin.strip()
+            destination = destination.strip()
+
+            if origin and destination:
+
+                return [
+                    {
+                        "action": "maps_directions",
+                        "origin": origin,
+                        "destination": destination,
+                    }
+                ]
+
+            return None
+
+    for prefix in [
+        "navigate to ",
+        "directions to ",
+        "route to ",
+        "go to ",
+    ]:
+
+        if command.startswith(prefix):
+
+            destination = command[
+                len(prefix):
+            ].strip()
+
+            if destination:
+
+                return [
+                    {
+                        "action": "maps_directions",
+                        "destination": destination,
+                    }
+                ]
+
+            return None
 
     if not command:
         return None
