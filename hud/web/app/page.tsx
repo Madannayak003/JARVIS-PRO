@@ -58,6 +58,8 @@ const JARVIS_DASHBOARD_URL =
     ? `http://${window.location.hostname}:8765`
     : "http://127.0.0.1:8765");
 
+const DEFAULT_ASSISTANT_COLOUR = "#c9d1d9";
+
 export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
   const [connection, setConnection] = useState<HUDConnectionStatus>("connecting");
@@ -96,7 +98,7 @@ export default function Home() {
 
   const [assistantName, setAssistantName] = useState("JARVIS");
   const [userName, setUserName] = useState("MADAN.R");
-  const [assistantColour, setAssistantColour] = useState("#ffaa30");
+  const [assistantColour, setAssistantColour] = useState(DEFAULT_ASSISTANT_COLOUR);
 
   const [remoteInfo, setRemoteInfo] = useState<RemoteInfo | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
@@ -764,7 +766,7 @@ export default function Home() {
     const user = userName.trim();
     const colour = /^#[0-9a-fA-F]{6}$/.test(assistantColour)
       ? assistantColour.toLowerCase()
-      : "#ffaa30";
+      : DEFAULT_ASSISTANT_COLOUR;
 
     setAssistantName(name);
     setUserName(user);
@@ -904,7 +906,7 @@ export default function Home() {
     const resetToDefault = (e: React.SyntheticEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const DEFAULT_COLOR = "#ffaa30";
+      const DEFAULT_COLOR = DEFAULT_ASSISTANT_COLOUR;
       onChange(DEFAULT_COLOR);
       setAssistantColour(DEFAULT_COLOR);
       document.documentElement.style.setProperty("--assistant-colour", DEFAULT_COLOR);

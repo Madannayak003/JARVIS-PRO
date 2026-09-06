@@ -1312,6 +1312,9 @@ export default function JarvisOrb(
     );
 
 
+  const [controlMode, setControlMode] =
+    useState<"controls" | "model">("controls");
+
   // =====================================================
   // AVATAR INITIALIZATION / SWITCHING
   // =====================================================
@@ -1994,90 +1997,82 @@ export default function JarvisOrb(
         )}
 
 
-        {/* ================================================= */}
-        {/* GESTURE CONTROL */}
-        {/* ================================================= */}
+      {controlMode === "controls" && (
+        <>
+          {/* GESTURE CONTROL */}
 
-        <div
-          className="hud-row"
-          style={{
-            marginBottom: "8px",
-          }}
-        >
-
-          <button
-            type="button"
-            className="hud-btn"
-            aria-pressed={cameraOn}
-            onClick={toggleGestures}
-            disabled={camera === "starting"}
+          <div
+            className="hud-row"
+            style={{
+              marginBottom: "8px",
+            }}
           >
+            <button
+              type="button"
+              className="hud-btn"
+              aria-pressed={cameraOn}
+              onClick={toggleGestures}
+              disabled={camera === "starting"}
+            >
+              {camera === "starting"
+                ? "INITIALIZING…"
+                : cameraOn
+                  ? "● GESTURES ON"
+                  : "○ GESTURES OFF"}
+            </button>
+          </div>
 
-            {camera === "starting"
-              ? "INITIALIZING…"
-              : cameraOn
-                ? "● GESTURES ON"
-                : "○ GESTURES OFF"}
 
-          </button>
+          {/* ZOOM CONTROLS */}
 
-        </div>
-
-
-        {/* ================================================= */}
-        {/* ZOOM CONTROLS */}
-        {/* ================================================= */}
-
-        <div
-          className="hud-row"
-          style={{
-            display: "flex",
-            gap: "8px",
-            marginBottom: "10px",
-          }}
-        >
-
-          <button
-            type="button"
-            className="hud-btn"
-            onClick={() =>
-              sceneRef.current?.zoomIn()
-            }
-            aria-label="Zoom in"
+          <div
+            className="hud-row"
+            style={{
+              display: "flex",
+              gap: "8px",
+              marginBottom: "10px",
+            }}
           >
-            +
-          </button>
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={() =>
+                sceneRef.current?.zoomIn()
+              }
+              aria-label="Zoom in"
+            >
+              +
+            </button>
 
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={() =>
+                sceneRef.current?.zoomOut()
+              }
+              aria-label="Zoom out"
+            >
+              −
+            </button>
 
-          <button
-            type="button"
-            className="hud-btn"
-            onClick={() =>
-              sceneRef.current?.zoomOut()
-            }
-            aria-label="Zoom out"
-          >
-            −
-          </button>
-
-
-          <button
-            type="button"
-            className="hud-btn"
-            onClick={() =>
-              sceneRef.current?.resetView()
-            }
-          >
-            RESET
-          </button>
-
-        </div>
-
+            <button
+              type="button"
+              className="hud-btn"
+              onClick={() =>
+                sceneRef.current?.resetView()
+              }
+            >
+              RESET
+            </button>
+          </div>
+        </>
+      )} 
 
         {/* ================================================= */}
         {/* AVATAR SELECTOR */}
         {/* ================================================= */}
-
+      
+      {controlMode === "model" && (
         <div
           className="hud-avatar-selector"
           style={{
@@ -2221,7 +2216,7 @@ export default function JarvisOrb(
               aria-label="ULTRON color selection"
               style={{
                 position: "fixed",
-                left: "220px",
+                left: "240px",
                 top: "583px",
                 width: "105px",
                 zIndex: 50,
@@ -2356,6 +2351,50 @@ export default function JarvisOrb(
 
           )}
 
+        </div>
+        
+      )}
+
+        {/* ================================================= */}
+        {/* CONTROL / MODEL MODE */}
+        {/* ================================================= */}
+
+        <div
+          className="hud-row"
+          style={{
+            display: "flex",
+            gap: "8px",
+            marginBottom: "5px",
+          }}
+        >
+
+          <button
+            type="button"
+            className="hud-btn"
+            style={{
+              borderRadius: "30px",
+            }}
+            aria-pressed={controlMode === "controls"}
+            onClick={() => setControlMode("controls")}
+          >
+            {controlMode === "controls"
+              ? "● CONTROLS"
+              : "○ CONTROLS"}
+          </button>
+
+          <button
+            type="button"
+            className="hud-btn"
+            style={{
+              borderRadius: "30px",
+            }}
+            aria-pressed={controlMode === "model"}
+            onClick={() => setControlMode("model")}
+          >
+            {controlMode === "model"
+              ? "● MODEL"
+              : "○ MODEL"}
+          </button>
         </div>
 
       </div>

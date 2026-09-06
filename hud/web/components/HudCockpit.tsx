@@ -294,11 +294,38 @@ export default function HudCockpit({
     return () => clearInterval(timer);
   }, []);
 
-  // Reference for auto-scrolling to the latest log entry
-  const logEndRef = useRef<HTMLDivElement | null>(null);
+  // Reference for the activity log container
+  const activityLogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const log = activityLogRef.current;
+
+    if (!log) {
+      return;
+    }
+
+    const scrollToLatest = () => {
+      log.scrollTop = log.scrollHeight;
+    };
+
+    // Scroll when a new activity arrives.
+    requestAnimationFrame(scrollToLatest);
+
+    // Keep the log pinned to the newest text while
+    // ActivityMessage is typing the response.
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(scrollToLatest);
+    });
+
+    observer.observe(log, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
   }, [activities]);
 
 
@@ -537,8 +564,9 @@ export default function HudCockpit({
 
         </div>
 
-
-        <div className="activity-log">
+        <div
+         ref={activityLogRef}
+         className="activity-log">
 
           {activities.length === 0 ? (
 
@@ -606,10 +634,7 @@ export default function HudCockpit({
             )
 
           )}
-
-          {/* Auto-scroll anchor target */}
-          <div ref={logEndRef} />
-
+          
         </div>
 
       </aside>
@@ -700,101 +725,7 @@ export default function HudCockpit({
         </div>
 
       </aside>
-
-
-      {/* ================================================= */}
-      {/* TODAY */}
-      {/* ================================================= */}
-
-      {/* <aside className="cockpit-today">
-
-        <div className="panel-heading">
-
-          <span className="panel-marker">
-            ◆
-          </span>
-
-          TODAY
-
-          <span className="today-date">
-            {todayDate}
-          </span>
-
-        </div>
-
-
-        <div className="today-content">
-
-          <div className="today-item">
-
-            <span className="today-icon">
-              ◷
-            </span>
-
-            <div>
-
-              <div className="today-label">
-                UPCOMING
-              </div>
-
-              <div className="today-value">
-                No upcoming events
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div className="today-item">
-
-            <span className="today-icon">
-              ☑
-            </span>
-
-            <div>
-
-              <div className="today-label">
-                TASKS
-              </div>
-
-              <div className="today-value">
-                No pending tasks
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div className="today-item">
-
-            <span className="today-icon">
-              ◆
-            </span>
-
-            <div>
-
-              <div className="today-label">
-                BRIEF
-              </div>
-
-              <div className="today-value">
-
-                {morningBriefHeadlines.length > 0
-                  ? `${morningBriefHeadlines.length} headlines available`
-                  : "No brief loaded"}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </aside> */}
-
+      
     </div>
 
   );
