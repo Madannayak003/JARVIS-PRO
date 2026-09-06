@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export interface ExpressiveRobotSituation {
@@ -110,6 +111,10 @@ export function createExpressiveRobot(
   // avatar implementations.
   // ---------------------------------------------------
 
+  // The Expressive Robot must keep the same visual size
+  // in normal and fullscreen HUD modes. The final camera
+  // distance is calculated from the loaded model bounds
+  // instead of relying on a fixed distance.
   camera.position.set(
     0,
     1.35,
@@ -261,99 +266,249 @@ export function createExpressiveRobot(
 
   let lastSituationKey = "";
 
+  // Keep the latest JARVIS situation even while the GLB
+  // is still loading. It will be applied immediately
+  // after the model and AnimationMixer are ready.
+  let latestSituation:
+    ExpressiveRobotSituation = {};
+
   let disposed = false;
 
   // ---------------------------------------------------
   // CAMERA / VIEW
   // ---------------------------------------------------
-
-  let rotationY = 0;
-  let rotationX = 0;
-
-  let targetRotationY = 0;
-  let targetRotationX = 0;
+  //
+  // Use the same OrbitControls architecture as the
+  // working JARVIS ROBOT avatar. This is important:
+  // mouse drag and HandTracker both operate on the same
+  // camera state instead of maintaining two competing
+  // rotation systems.
+  // ---------------------------------------------------
 
   let zoom = 1;
 
-  // Wider default framing for the Expressive Robot.
-  // This keeps the full body visible instead of
-  // filling the entire HUD.
+  // Keep the current, already-correct Expressive Robot
+  // size/framing while using OrbitControls for movement.
   const DEFAULT_CAMERA_Z = 5.2;
-
   const DEFAULT_CAMERA_Y = 1.35;
   const DEFAULT_LOOK_AT_Y = 0.95;
 
-  function applyCamera() {
+  // Target percentage of the available viewport height.
+  const TARGET_SCREEN_HEIGHT = 0.52;
 
-    const x =
-      Math.sin(rotationY) *
-      DEFAULT_CAMERA_Z /
-      zoom;
+  let adaptiveCameraZ =
+    DEFAULT_CAMERA_Z;
 
-    const z =
-      Math.cos(rotationY) *
-      DEFAULT_CAMERA_Z /
-      zoom;
-
-    camera.position.x =
-      x;
-
-    camera.position.z =
-      z;
-
-    camera.position.y =
-      DEFAULT_CAMERA_Y +
-      rotationX;
-
-    camera.lookAt(
-      0,
-      DEFAULT_LOOK_AT_Y,
-      0
+  const controls =
+    new OrbitControls(
+      camera,
+      renderer.domElement,
     );
+
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enablePan = false;
+  controls.minDistance = 2.35;
+  controls.maxDistance = 8.5;
+  controls.target.set(
+    0,
+    DEFAULT_LOOK_AT_Y,
+    0,
+  );
+  controls.update();
+
+  const spherical =
+    new THREE.Spherical();
+
+  const offset =
+    new THREE.Vector3();
+
+  function updateAdaptiveCamera() {
+
+    if (!model) {
+      adaptiveCameraZ =
+        DEFAULT_CAMERA_Z;
+
+      return;
+    }
+
+    const bounds =
+      new THREE.Box3().setFromObject(
+        model,
+      );
+
+    const modelHeight =
+      Math.max(
+        bounds.max.y - bounds.min.y,
+        0.001,
+      );
+
+    const halfFov =
+      THREE.MathUtils.degToRad(
+        34 / 2,
+      );
+
+    const fittedDistance =
+      modelHeight /
+      (
+        2 *
+        Math.tan(halfFov) *
+        TARGET_SCREEN_HEIGHT
+      );
+
+    adaptiveCameraZ =
+      THREE.MathUtils.clamp(
+        fittedDistance,
+        3.5,
+        12,
+      );
+  }
+
+  function applyAdaptiveDistance() {
+
+    offset
+      .copy(camera.position)
+      .sub(controls.target);
+
+    if (
+      offset.lengthSq() <
+      0.000001
+    ) {
+      offset.set(
+        0,
+        DEFAULT_CAMERA_Y -
+          DEFAULT_LOOK_AT_Y,
+        adaptiveCameraZ,
+      );
+    }
+
+    spherical.setFromVector3(
+      offset,
+    );
+
+    spherical.radius =
+      THREE.MathUtils.clamp(
+        adaptiveCameraZ / zoom,
+        controls.minDistance,
+        controls.maxDistance,
+      );
+
+    spherical.makeSafe();
+
+    offset.setFromSpherical(
+      spherical,
+    );
+
+    camera.position
+      .copy(controls.target)
+      .add(offset);
+
+    controls.update();
   }
 
   function rotateBy(
     deltaTheta: number,
-    deltaPhi: number
+    deltaPhi: number,
   ) {
 
-    targetRotationY +=
+    offset
+      .copy(camera.position)
+      .sub(controls.target);
+
+    spherical.setFromVector3(
+      offset,
+    );
+
+    spherical.theta -=
       deltaTheta;
 
-    targetRotationX =
+    spherical.phi =
       THREE.MathUtils.clamp(
-        targetRotationX +
-          deltaPhi,
-        -0.8,
-        0.8
+        spherical.phi - deltaPhi,
+        0.12,
+        Math.PI - 0.12,
       );
+
+    spherical.makeSafe();
+
+    offset.setFromSpherical(
+      spherical,
+    );
+
+    camera.position
+      .copy(controls.target)
+      .add(offset);
+
+    controls.update();
   }
 
   function zoomBy(
-    factor: number
+    factor: number,
   ) {
 
     zoom =
       THREE.MathUtils.clamp(
         zoom * factor,
         0.65,
-        2.4
+        2.4,
       );
+
+    offset
+      .copy(camera.position)
+      .sub(controls.target);
+
+    if (
+      offset.lengthSq() <
+      0.000001
+    ) {
+      offset.set(
+        0,
+        DEFAULT_CAMERA_Y -
+          DEFAULT_LOOK_AT_Y,
+        adaptiveCameraZ,
+      );
+    }
+
+    offset.setLength(
+      THREE.MathUtils.clamp(
+        adaptiveCameraZ / zoom,
+        controls.minDistance,
+        controls.maxDistance,
+      ),
+    );
+
+    camera.position
+      .copy(controls.target)
+      .add(offset);
+
+    controls.update();
   }
 
   function zoomIn() {
-    zoomBy(1.15);
+    zoomBy(0.68);
   }
 
   function zoomOut() {
-    zoomBy(0.87);
+    zoomBy(1.47);
   }
 
   function resetView() {
 
-    targetRotationY = 0;
-    targetRotationX = 0;
     zoom = 1;
+
+    controls.target.set(
+      0,
+      DEFAULT_LOOK_AT_Y,
+      0,
+    );
+
+    camera.position.set(
+      0,
+      DEFAULT_CAMERA_Y,
+      adaptiveCameraZ,
+    );
+
+    controls.update();
   }
 
   // ---------------------------------------------------
@@ -363,6 +518,19 @@ export function createExpressiveRobot(
   function findAction(
     name: string
   ) {
+
+    // Keep the official RobotExpressive animation names
+    // as the source of truth.
+    if (
+      !BASE_STATES.includes(
+        name as BaseState
+      ) &&
+      !EMOTES.includes(
+        name as Emote
+      )
+    ) {
+      return null;
+    }
 
     return actions[name] ?? null;
   }
@@ -508,9 +676,27 @@ export function createExpressiveRobot(
       Object.keys(
         faceDictionary
       ).find(
-        (name) =>
-          name.toLowerCase() ===
-          wanted
+        (name) => {
+          const normalized =
+            name
+              .toLowerCase()
+              .replace(
+                /[ _-]/g,
+                ""
+              );
+
+          const target =
+            wanted.replace(
+              /[ _-]/g,
+              ""
+            );
+
+          return (
+            normalized === target ||
+            normalized.includes(target) ||
+            target.includes(normalized)
+          );
+        }
       );
 
     return key
@@ -525,6 +711,14 @@ export function createExpressiveRobot(
 
     if (
       !faceInfluences
+    ) {
+      return;
+    }
+
+    if (
+      !EXPRESSIONS.includes(
+        expression
+      )
     ) {
       return;
     }
@@ -574,7 +768,13 @@ export function createExpressiveRobot(
     situation: ExpressiveRobotSituation
   ) {
 
-    if (!model) {
+    // Always remember the latest JARVIS state.
+    // The model may still be loading.
+    latestSituation = {
+      ...situation,
+    };
+
+    if (!model || !mixer) {
       return;
     }
 
@@ -698,6 +898,8 @@ export function createExpressiveRobot(
 
       clearExpressions();
 
+      // Standing is more natural for processing than
+      // making the robot walk in place.
       playBaseState(
         "Standing"
       );
@@ -715,6 +917,8 @@ export function createExpressiveRobot(
 
       clearExpressions();
 
+      // Use Walking for an active task. This is the
+      // closest continuous action in RobotExpressive.
       playBaseState(
         "Walking"
       );
@@ -734,6 +938,155 @@ export function createExpressiveRobot(
 
       playBaseState(
         "Idle"
+      );
+
+      return;
+    }
+
+    // -------------------------------------------------
+    // EVENT / ACTION MAPPING
+    // -------------------------------------------------
+    //
+    // These allow richer JARVIS events to trigger the
+    // RobotExpressive emotes without exposing manual
+    // animation buttons in the HUD.
+    // -------------------------------------------------
+
+    const actionText =
+      [
+        lastEvent,
+        notification,
+        taskStatus,
+        status,
+      ].join(" ");
+
+    if (
+      actionText.includes("wave") ||
+      actionText.includes("greeting") ||
+      actionText.includes("hello")
+    ) {
+
+      clearExpressions();
+
+      playEmote(
+        "Wave"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("jump")
+    ) {
+
+      clearExpressions();
+
+      playEmote(
+        "Jump"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("yes") ||
+      actionText.includes("confirm") ||
+      actionText.includes("approved")
+    ) {
+
+      clearExpressions();
+
+      playEmote(
+        "Yes"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("no") ||
+      actionText.includes("deny") ||
+      actionText.includes("denied")
+    ) {
+
+      clearExpressions();
+
+      playEmote(
+        "No"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("punch")
+    ) {
+
+      clearExpressions();
+
+      playEmote(
+        "Punch"
+      );
+
+      return;
+    }
+
+    // -------------------------------------------------
+    // AUTOMATIC FACE EXPRESSIONS
+    // -------------------------------------------------
+
+    if (
+      actionText.includes("surpris") ||
+      actionText.includes("wow") ||
+      actionText.includes("unexpected")
+    ) {
+
+      clearExpressions();
+
+      setExpression(
+        "Surprised",
+        0.90
+      );
+
+      playBaseState(
+        "Standing"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("angry") ||
+      actionText.includes("frustrat")
+    ) {
+
+      clearExpressions();
+
+      setExpression(
+        "Angry",
+        0.80
+      );
+
+      playBaseState(
+        "Standing"
+      );
+
+      return;
+    }
+
+    if (
+      actionText.includes("sad")
+    ) {
+
+      clearExpressions();
+
+      setExpression(
+        "Sad",
+        0.80
+      );
+
+      playBaseState(
+        "Standing"
       );
 
       return;
@@ -791,6 +1144,8 @@ export function createExpressiveRobot(
         0,
         0
       );
+
+      updateAdaptiveCamera();
 
       // -------------------------------------------------
       // ANIMATION MIXER
@@ -862,23 +1217,27 @@ export function createExpressiveRobot(
         }
       );
 
-      // Start in JARVIS idle mode.
+      // Recalculate the correct camera distance using
+      // the loaded model's actual bounds, then frame it
+      // with the same camera architecture as the other
+      // JARVIS avatars.
+      updateAdaptiveCamera();
 
+      resetView();
+
+      // Start in JARVIS idle mode.
       playBaseState(
         "Idle"
       );
 
-      // Re-apply any situation
-      // received before model load.
+      // Apply the latest JARVIS situation immediately.
+      // This is important because the model can finish
+      // loading after JARVIS has already entered a state.
+      lastSituationKey = "";
 
-      if (
-        lastSituationKey
-      ) {
-
-        lastSituationKey =
-          "";
-
-      }
+      setSituation(
+        latestSituation
+      );
 
     },
 
@@ -892,6 +1251,58 @@ export function createExpressiveRobot(
       );
 
     }
+  );
+
+  // ---------------------------------------------------
+  // EXISTING JARVIS STATE BRIDGE
+  // ---------------------------------------------------
+  //
+  // The working JARVIS avatar already publishes
+  // "jarvis-assistant-state". Listen to the same event
+  // so EXPRESSIVE automatically follows the real JARVIS
+  // state without requiring manual animation buttons.
+  // ---------------------------------------------------
+
+  const handleJarvisState = (
+    event: Event
+  ) => {
+
+    const customEvent =
+      event as CustomEvent<{
+        state?: string;
+      }>;
+
+    const next =
+      String(
+        customEvent.detail?.state ?? ""
+      ).toLowerCase();
+
+    if (
+      next === "idle" ||
+      next === "listening" ||
+      next === "thinking" ||
+      next === "speaking" ||
+      next === "executing"
+    ) {
+
+      setSituation({
+        status: next,
+        listening:
+          next === "listening",
+        thinking:
+          next === "thinking",
+        speaking:
+          next === "speaking",
+        executing:
+          next === "executing",
+      });
+
+    }
+  };
+
+  window.addEventListener(
+    "jarvis-assistant-state",
+    handleJarvisState
   );
 
   // ---------------------------------------------------
@@ -923,6 +1334,8 @@ export function createExpressiveRobot(
           nextHeight;
 
         camera.updateProjectionMatrix();
+
+        updateAdaptiveCamera();
 
         renderer.setSize(
           nextWidth,
@@ -963,30 +1376,14 @@ export function createExpressiveRobot(
     previousTime =
       now;
 
-    targetRotationY =
-      THREE.MathUtils.clamp(
-        targetRotationY,
-        -Math.PI,
-        Math.PI
-      );
-
-    rotationY +=
-      (
-        targetRotationY -
-        rotationY
-      ) * 0.12;
-
-    rotationX +=
-      (
-        targetRotationX -
-        rotationX
-      ) * 0.12;
-
-    applyCamera();
-
+    // OrbitControls is the single camera controller for
+    // the Expressive Robot. Mouse, wheel, +/− buttons,
+    // and HandTracker all update the same camera state.
     mixer?.update(
       delta
     );
+
+    controls.update();
 
     renderer.render(
       scene,
@@ -1018,7 +1415,14 @@ export function createExpressiveRobot(
 
     resizeObserver.disconnect();
 
+    window.removeEventListener(
+      "jarvis-assistant-state",
+      handleJarvisState
+    );
+
     mixer?.stopAllAction();
+
+    controls.dispose();
 
     renderer.dispose();
 
