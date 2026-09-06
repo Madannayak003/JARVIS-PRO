@@ -260,10 +260,12 @@ export default function HudCockpit({
 
   // Live Clock State
   const [currentTime, setCurrentTime] = useState("");
+  const [todayDate, setTodayDate] = useState("");
 
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
+
       setCurrentTime(
         now.toLocaleTimeString([], {
           hour: "2-digit",
@@ -272,10 +274,23 @@ export default function HudCockpit({
           hour12: false,
         })
       );
+
+      setTodayDate(
+        now.toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short",
+        })
+      );
     };
 
     updateClock();
-    const timer = setInterval(updateClock, 1000);
+
+    const timer = setInterval(
+      updateClock,
+      1000
+    );
+
     return () => clearInterval(timer);
   }, []);
 
@@ -702,11 +717,7 @@ export default function HudCockpit({
           TODAY
 
           <span className="today-date">
-            {new Date().toLocaleDateString([], {
-              weekday: "short",
-              day: "2-digit",
-              month: "short",
-            })}
+            {todayDate}
           </span>
 
         </div>
