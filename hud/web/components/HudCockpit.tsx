@@ -39,6 +39,9 @@ type Props = {
 
   onSettings: () => void;
 
+  showActivityLog: boolean;
+  showSystemMonitor: boolean;
+  showQuickTools: boolean;
 };
 
 
@@ -284,6 +287,9 @@ export default function HudCockpit({
   onCommand,
   onFullscreen,
   onSettings,
+  showActivityLog,
+  showSystemMonitor,
+  showQuickTools,
 }: Props) {
 
   const system =
@@ -544,6 +550,7 @@ export default function HudCockpit({
       {/* LEFT — SYSTEM MONITOR */}
       {/* ============================================= */}
 
+    {showSystemMonitor && (
       <aside className="cockpit-panel cockpit-left">
 
         <div className="panel-heading">
@@ -577,12 +584,14 @@ export default function HudCockpit({
         </div>
 
       </aside>
+    )}
 
 
       {/* ============================================= */}
       {/* RIGHT — REAL ACTIVITY LOG */}
       {/* ============================================= */}
 
+    {showActivityLog && (
       <aside className="cockpit-panel cockpit-right">
 
         <div className="panel-heading">
@@ -669,11 +678,13 @@ export default function HudCockpit({
         </div>
 
       </aside>
+    )}
 
       {/* ================================================= */}
       {/* QUICK TOOLS */}
       {/* ================================================= */}
 
+    {showQuickTools && (
       <aside className="cockpit-quick-tools">
 
         {/* <div className="panel-heading">
@@ -768,6 +779,7 @@ export default function HudCockpit({
         </div>
 
       </aside>
+    )}
       
     </div>
 

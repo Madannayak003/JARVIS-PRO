@@ -101,6 +101,10 @@ export default function Home() {
   const [assistantColour, setAssistantColour] = useState(DEFAULT_ASSISTANT_COLOUR);
   const [assistantVoice, setAssistantVoice] = useState("Ryan");
 
+  const [showActivityLog, setShowActivityLog] = useState(true);
+  const [showSystemMonitor, setShowSystemMonitor] = useState(true);
+  const [showQuickTools, setShowQuickTools] = useState(true);
+
   const [remoteInfo, setRemoteInfo] = useState<RemoteInfo | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [shortcutLoading, setShortcutLoading] = useState(false);
@@ -128,6 +132,17 @@ export default function Home() {
         }
       if (typeof settings.assistantVoice === "string") {
         setAssistantVoice(settings.assistantVoice);
+      }
+      if (typeof settings.showActivityLog === "boolean") {
+        setShowActivityLog(settings.showActivityLog);
+      }
+
+      if (typeof settings.showSystemMonitor === "boolean") {
+        setShowSystemMonitor(settings.showSystemMonitor);
+      }
+
+      if (typeof settings.showQuickTools === "boolean") {
+        setShowQuickTools(settings.showQuickTools);
       }
       }
     } catch (error) {
@@ -1028,6 +1043,9 @@ export default function Home() {
         activities={activities}
         assistantName={assistantName}
         userName={userName}
+        showActivityLog={showActivityLog}
+        showSystemMonitor={showSystemMonitor}
+        showQuickTools={showQuickTools}
         morningBriefHeadlines={morningBriefHeadlines}
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
@@ -1427,9 +1445,9 @@ export default function Home() {
         </div>
       )}
 
-      {/*
-          SETTINGS MODAL
-          ===================================================== */}
+      {/*===================================================
+        SETTINGS MODAL
+      =====================================================*/}
       {modal === "settings" && (
         <div
           className="settings-modal-backdrop"
@@ -1440,30 +1458,191 @@ export default function Home() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="settings-modal-heading">
-              <span>◆</span>
-              SETTINGS
+              <span className="settings-heading-icon">◆</span>
+              <span>SETTINGS</span>
+
+              <button
+                type="button"
+                className="settings-modal-close"
+                aria-label="Close settings"
+                onClick={() => setModal(null)}
+              >
+                ×
+              </button>
             </div>
 
-            <div className="customise-form">
-              <label>
-                ASSISTANT VOICE
-                <select
-                  value={assistantVoice}
-                  onChange={(event) => setAssistantVoice(event.target.value)}
-                >
-                  <option value="Ryan">Ryan</option>
-                  <option value="Thomas">Thomas</option>
-                  <option value="Connor">Connor</option>
-                  <option value="William">William</option>
-                  <option value="Guy">Guy</option>
-                  <option value="Aria">Aria</option>
-                  <option value="Jenny">Jenny</option>
-                  <option value="Prabhat">Prabhat</option>
-                  <option value="Neerja">Neerja</option>
-                </select>
-              </label>
+            <div className="settings-form">
 
+              {/* ASSISTANT VOICE */}
+              <div className="settings-control-section">
+                <div className="settings-control-header">
+                  <span className="settings-control-icon">◖│◗</span>
+
+                  <div>
+                    <div className="settings-control-title">
+                      ASSISTANT VOICE
+                    </div>
+
+                    <div className="settings-control-description">
+                      Select your preferred English voice for JARVIS
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-select-wrap">
+                  <span className="settings-select-icon">♟</span>
+
+                  <select
+                    value={assistantVoice}
+                    onChange={(event) =>
+                      setAssistantVoice(event.target.value)
+                    }
+                    className="settings-voice-select"
+                  >
+                    <option value="Ryan">Ryan</option>
+                    <option value="Thomas">Thomas</option>
+                    <option value="Connor">Connor</option>
+                    <option value="William">William</option>
+                    <option value="Guy">Guy</option>
+                    <option value="Aria">Aria</option>
+                    <option value="Jenny">Jenny</option>
+                    <option value="Prabhat">Prabhat</option>
+                    <option value="Neerja">Neerja</option>
+                  </select>
+
+                  <span className="settings-select-arrow">⌄</span>
+                </div>
+              </div>
+
+              {/* HUD VISIBILITY */}
+              <div className="settings-visibility-section">
+
+                <div className="settings-control-header">
+                  <span className="settings-control-icon">◉</span>
+
+                  <div>
+                    <div className="settings-control-title">
+                      HUD VISIBILITY
+                    </div>
+
+                    <div className="settings-control-description">
+                      Show or hide HUD panels in the cockpit
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIVITY LOG */}
+                <label className="settings-toggle-row">
+                  <span className="settings-toggle-icon">☷</span>
+
+                  <span className="settings-toggle-name">
+                    ACTIVITY LOG
+                  </span>
+
+                  <span className="settings-toggle-description">
+                    Show the conversation activity log panel
+                  </span>
+
+                  <span className="settings-toggle-state">
+                    {showActivityLog ? "ON" : "OFF"}
+                  </span>
+
+                  <span
+                    className={`settings-switch ${
+                      showActivityLog
+                        ? "settings-switch-on"
+                        : "settings-switch-off"
+                    }`}
+                  >
+                    <span className="settings-switch-knob" />
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={showActivityLog}
+                    onChange={(event) =>
+                      setShowActivityLog(event.target.checked)
+                    }
+                    className="settings-hidden-checkbox"
+                  />
+                </label>
+
+                {/* SYSTEM MONITOR */}
+                <label className="settings-toggle-row">
+                  <span className="settings-toggle-icon">▣</span>
+
+                  <span className="settings-toggle-name">
+                    SYSTEM MONITOR
+                  </span>
+
+                  <span className="settings-toggle-description">
+                    Show the system monitor panel
+                  </span>
+
+                  <span className="settings-toggle-state">
+                    {showSystemMonitor ? "ON" : "OFF"}
+                  </span>
+
+                  <span
+                    className={`settings-switch ${
+                      showSystemMonitor
+                        ? "settings-switch-on"
+                        : "settings-switch-off"
+                    }`}
+                  >
+                    <span className="settings-switch-knob" />
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={showSystemMonitor}
+                    onChange={(event) =>
+                      setShowSystemMonitor(event.target.checked)
+                    }
+                    className="settings-hidden-checkbox"
+                  />
+                </label>
+
+                {/* QUICK TOOLS */}
+                <label className="settings-toggle-row">
+                  <span className="settings-toggle-icon">▦</span>
+
+                  <span className="settings-toggle-name">
+                    QUICK TOOLS
+                  </span>
+
+                  <span className="settings-toggle-description">
+                    Show the quick tools panel
+                  </span>
+
+                  <span className="settings-toggle-state">
+                    {showQuickTools ? "ON" : "OFF"}
+                  </span>
+
+                  <span
+                    className={`settings-switch ${
+                      showQuickTools
+                        ? "settings-switch-on"
+                        : "settings-switch-off"
+                    }`}
+                  >
+                    <span className="settings-switch-knob" />
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={showQuickTools}
+                    onChange={(event) =>
+                      setShowQuickTools(event.target.checked)
+                    }
+                    className="settings-hidden-checkbox"
+                  />
+                </label>
+              </div>
+
+              {/* ACTIONS */}
               <div className="settings-modal-actions">
+
                 <button
                   type="button"
                   className="settings-modal-button settings-modal-button-primary"
@@ -1487,7 +1666,8 @@ export default function Home() {
 
                       if (!response.ok || !result.ok) {
                         throw new Error(
-                          result?.error || "Failed to save assistant voice."
+                          result?.error ||
+                            "Failed to save assistant voice."
                         );
                       }
 
@@ -1496,9 +1676,10 @@ export default function Home() {
                       }
 
                       try {
-                        const saved = window.localStorage.getItem(
-                          "jarvis-pro-settings"
-                        );
+                        const saved =
+                          window.localStorage.getItem(
+                            "jarvis-pro-settings"
+                          );
 
                         const settings = saved
                           ? JSON.parse(saved)
@@ -1509,6 +1690,9 @@ export default function Home() {
                           JSON.stringify({
                             ...settings,
                             assistantVoice,
+                            showActivityLog,
+                            showSystemMonitor,
+                            showQuickTools,
                           })
                         );
                       } catch {}
@@ -1516,18 +1700,19 @@ export default function Home() {
                       setModal(null);
                     } catch (error) {
                       console.error(
-                        "[HUD] Assistant voice save failed:",
+                        "[HUD] Settings save failed:",
                         error
                       );
 
                       alert(
                         error instanceof Error
                           ? error.message
-                          : "Could not save assistant voice."
+                          : "Could not save settings."
                       );
                     }
                   }}
                 >
+                  <span className="settings-button-icon">✓</span>
                   APPLY
                 </button>
 
@@ -1536,8 +1721,10 @@ export default function Home() {
                   className="settings-modal-button"
                   onClick={() => setModal(null)}
                 >
+                  <span className="settings-button-icon">×</span>
                   CANCEL
                 </button>
+
               </div>
             </div>
           </section>
