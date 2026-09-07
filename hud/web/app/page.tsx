@@ -17,6 +17,30 @@ import {
   type HUDState,
 } from "@/lib/hudBridge";
 
+function getDefaultAssistantColour() {
+  if (typeof document === "undefined") {
+    return "";
+  }
+
+  const root = document.documentElement;
+
+  const inlineColour = root.style.getPropertyValue("--assistant-colour").trim();
+
+  if (inlineColour) {
+    root.style.removeProperty("--assistant-colour");
+  }
+
+  const defaultColour = getComputedStyle(root)
+    .getPropertyValue("--assistant-colour")
+    .trim();
+
+  if (inlineColour) {
+    root.style.setProperty("--assistant-colour", inlineColour);
+  }
+
+  return defaultColour;
+}
+
 const EMPTY_STATE: HUDState = {
   status: "idle",
   voice_mode: "online",
@@ -58,7 +82,6 @@ const JARVIS_DASHBOARD_URL =
     ? `http://${window.location.hostname}:8765`
     : "http://127.0.0.1:8765");
 
-const DEFAULT_ASSISTANT_COLOUR = "#ffab17";
 
 export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
@@ -96,9 +119,9 @@ export default function Home() {
   const [microphoneEnabled, setMicrophoneEnabled] = useState(true);
   const [liveConversationEnabled, setLiveConversationEnabled] = useState(false);
 
-  const [assistantName, setAssistantName] = useState("JARVIS");
-  const [userName, setUserName] = useState("MADAN.R");
-  const [assistantColour, setAssistantColour] = useState(DEFAULT_ASSISTANT_COLOUR);
+  const [assistantName, setAssistantName] = useState("");
+  const [userName, setUserName] = useState("");
+  const [assistantColour, setAssistantColour] = useState("");
   const [assistantVoice, setAssistantVoice] = useState("Ryan");
 
   const [showActivityLog, setShowActivityLog] = useState(true);
@@ -130,24 +153,24 @@ export default function Home() {
           setAssistantColour(settings.assistantColour);
           document.documentElement.style.setProperty("--assistant-colour", settings.assistantColour);
         }
-      if (typeof settings.assistantVoice === "string") {
-        setAssistantVoice(settings.assistantVoice);
-      }
-      if (typeof settings.showActivityLog === "boolean") {
-        setShowActivityLog(settings.showActivityLog);
-      }
+        if (typeof settings.assistantVoice === "string") {
+          setAssistantVoice(settings.assistantVoice);
+        }
+        if (typeof settings.showActivityLog === "boolean") {
+          setShowActivityLog(settings.showActivityLog);
+        }
 
-      if (typeof settings.showSystemMonitor === "boolean") {
-        setShowSystemMonitor(settings.showSystemMonitor);
-      }
+        if (typeof settings.showSystemMonitor === "boolean") {
+          setShowSystemMonitor(settings.showSystemMonitor);
+        }
 
-      if (typeof settings.showQuickTools === "boolean") {
-        setShowQuickTools(settings.showQuickTools);
+        if (typeof settings.showQuickTools === "boolean") {
+          setShowQuickTools(settings.showQuickTools);
+        }
+        }
+      } catch (error) {
+        console.error("[HUD] Local settings fallback failed:", error);
       }
-      }
-    } catch (error) {
-      console.error("[HUD] Local settings fallback failed:", error);
-    }
 
     const loadWithRetry = async (fn: () => Promise<void>, retries = 5, delay = 1000) => {
       for (let i = 0; i < retries; i++) {
@@ -802,9 +825,11 @@ export default function Home() {
   const applyAssistantSettings = async () => {
     const name = assistantName.trim() || "JARVIS";
     const user = userName.trim();
+
+    const cssDefaultColour = getDefaultAssistantColour();
     const colour = /^#[0-9a-fA-F]{6}$/.test(assistantColour)
       ? assistantColour.toLowerCase()
-      : DEFAULT_ASSISTANT_COLOUR;
+      : cssDefaultColour;
 
     setAssistantName(name);
     setUserName(user);
@@ -944,10 +969,16 @@ export default function Home() {
     const resetToDefault = (e: React.SyntheticEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const DEFAULT_COLOR = DEFAULT_ASSISTANT_COLOUR;
-      onChange(DEFAULT_COLOR);
-      setAssistantColour(DEFAULT_COLOR);
-      document.documentElement.style.setProperty("--assistant-colour", DEFAULT_COLOR);
+
+      const defaultColour = getDefaultAssistantColour();
+
+      onChange(defaultColour);
+      setAssistantColour(defaultColour);
+
+      document.documentElement.style.setProperty(
+        "--assistant-colour",
+        defaultColour
+      );
     };
 
     return (
@@ -967,7 +998,6 @@ export default function Home() {
               pointerEvents: "auto",
             }}
             onPointerDown={resetToDefault}
-            onClick={resetToDefault}
           >
             DEFAULT
           </button>
@@ -1024,9 +1054,13 @@ export default function Home() {
   return (
     <main
       className="jarvis-hud"
-      style={{
-        "--assistant-colour": assistantColour,
-      } as React.CSSProperties}
+      style={
+        assistantColour
+          ? ({
+              "--assistant-colour": assistantColour,
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       {/* =====================================================
           ULTRON ENGINE
