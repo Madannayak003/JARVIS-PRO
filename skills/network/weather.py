@@ -8,20 +8,26 @@ Uses Open-Meteo for weather data and geocoding.
 No API key required.
 """
 
+import asyncio
 import requests
 
 from core.registry import register
 from voice.manager import speak
-
+from services.location import location_service
 
 # =========================================================
 # Configuration
 # =========================================================
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 
 REQUEST_TIMEOUT = 5
+
+NOMINATIM_HEADERS = {
+    "User-Agent": "JARVIS-PRO/1.0"
+}
 
 
 # =========================================================
@@ -69,6 +75,238 @@ WEATHER_CODES = {
     99: "a thunderstorm with heavy hail",
 }
 
+# =========================================================
+# Location Name Normalization
+# =========================================================
+
+LOCATION_ALIASES = {
+    "banglore": "Bangalore",
+    "bangalore": "Bangalore",
+    "bengaluru": "Bengaluru",
+
+    "mysore": "Mysore",
+    "mysuru": "Mysuru",   
+    
+}
+
+
+def _normalize_location_name(location):
+    """
+    Normalize common speech-recognition location variants.
+
+    This is intentionally kept small so JARVIS does not
+    depend on a large hardcoded city dictionary.
+    """
+
+    normalized = str(location).strip()
+
+    if not normalized:
+        return normalized
+
+    alias = LOCATION_ALIASES.get(
+        normalized.lower()
+    )
+
+    if alias:
+        return alias
+
+    return normalized
+
+# =========================================================
+# Nominatim Result Selection
+# =========================================================
+
+PREFERRED_PLACE_TYPES = {
+    "city",
+    "town",
+    "village",
+    "hamlet",
+    "municipality",
+    "administrative",
+}
+
+
+def _select_nominatim_result(results, requested_location):
+    """
+    Select the most appropriate Nominatim result.
+
+    Prefer geographic places, but also accept a POI when
+    its address explicitly identifies the requested location
+    as a village/town/city.
+    """
+
+    if not results:
+        return None
+
+    requested = str(
+        requested_location
+    ).strip().lower()
+
+    geographic_types = {
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "municipality",
+        "administrative",
+    }
+
+    # -----------------------------------------------------
+    # 1. Exact geographic result
+    # -----------------------------------------------------
+
+    for result in results:
+
+        name = str(
+            result.get("name", "")
+        ).strip().lower()
+
+        addresstype = str(
+            result.get("addresstype", "")
+        ).strip().lower()
+
+        result_type = str(
+            result.get("type", "")
+        ).strip().lower()
+
+        if name == requested:
+
+            if (
+                addresstype in geographic_types
+                or result_type in geographic_types
+            ):
+                return result
+
+    # -----------------------------------------------------
+    # 2. Geographic result whose name matches the request
+    # -----------------------------------------------------
+
+    for result in results:
+
+        name = str(
+            result.get("name", "")
+        ).strip().lower()
+
+        addresstype = str(
+            result.get("addresstype", "")
+        ).strip().lower()
+
+        result_type = str(
+            result.get("type", "")
+        ).strip().lower()
+
+        if (
+            addresstype in geographic_types
+            or result_type in geographic_types
+        ):
+
+            if (
+                requested in name
+                or name in requested
+            ):
+                return result
+
+    # -----------------------------------------------------
+    # 3. POI whose address identifies the requested
+    #    geographic locality.
+    # -----------------------------------------------------
+
+    for result in results:
+
+        address = result.get(
+            "address",
+            {}
+        )
+
+        locality_candidates = [
+            address.get("village"),
+            address.get("town"),
+            address.get("city"),
+            address.get("municipality"),
+            address.get("hamlet"),
+        ]
+
+        for locality in locality_candidates:
+
+            if not locality:
+                continue
+
+            locality_lower = str(
+                locality
+            ).strip().lower()
+
+            if (
+                requested == locality_lower
+                or requested in locality_lower
+                or locality_lower in requested
+            ):
+
+                return result
+
+    # -----------------------------------------------------
+    # 4. Final fallback
+    # -----------------------------------------------------
+
+    return results[0]
+
+# =========================================================
+# Nominatim Geocoding
+# =========================================================
+
+def _query_nominatim(query):
+    """
+    Query Nominatim and return search results.
+    """
+
+    response = requests.get(
+        NOMINATIM_URL,
+        params={
+            "q": query,
+            "format": "jsonv2",
+            "limit": 5,
+            "countrycodes": "in",
+            "addressdetails": 1,
+        },
+        headers=NOMINATIM_HEADERS,
+        timeout=REQUEST_TIMEOUT,
+    )
+
+    response.raise_for_status()
+
+    return response.json()
+
+def _has_geographic_result(results):
+    """
+    Check whether Nominatim returned an actual geographic
+    place rather than only points of interest.
+    """
+
+    geographic_types = {
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "municipality",
+        "administrative",
+    }
+
+    for result in results:
+
+        addresstype = str(
+            result.get("addresstype", "")
+        ).lower()
+
+        result_type = str(
+            result.get("type", "")
+        ).lower()
+
+        if (
+            addresstype in PREFERRED_PLACE_TYPES
+            or result_type in geographic_types
+        ):
+            return True
+
+    return False
 
 # =========================================================
 # Resolve Location
@@ -77,6 +315,11 @@ WEATHER_CODES = {
 def _resolve_location(location=None):
     """
     Resolve a location name into latitude/longitude.
+
+    Resolution priority:
+
+        1. Open-Meteo
+        2. Nominatim / OpenStreetMap
 
     Examples:
         Bangalore
@@ -93,13 +336,35 @@ def _resolve_location(location=None):
     if not location:
         return _detect_current_location()
 
+    # -----------------------------------------------------
+    # Normalize common speech-recognition variants
+    # -----------------------------------------------------
+
+    original_location = location
+
+    location = _normalize_location_name(
+        location
+    )
+
+    if location != original_location:
+
+        print(
+            "[WEATHER LOCATION] "
+            f"Normalized '{original_location}' "
+            f"to '{location}'."
+        )
+
+    # -----------------------------------------------------
+    # Primary geocoder: Open-Meteo
+    # -----------------------------------------------------
+
     try:
 
         response = requests.get(
             GEOCODING_URL,
             params={
                 "name": location,
-                "count": 1,
+                "count": 5,
                 "language": "en",
                 "format": "json",
             },
@@ -110,24 +375,212 @@ def _resolve_location(location=None):
 
         data = response.json()
 
-        results = data.get("results", [])
+        results = data.get(
+            "results",
+            []
+        )
 
-        if not results:
-            return None
+        if results:
 
-        result = results[0]
+            # -----------------------------------------------------
+            # Prefer India results.
+            #
+            # Open-Meteo can return a similarly named place in
+            # another country. For JARVIS's current location
+            # context, reject those results.
+            # -----------------------------------------------------
 
-        return {
-            "name": result.get("name", location),
-            "country": result.get("country", ""),
-            "latitude": result["latitude"],
-            "longitude": result["longitude"],
-        }
+            india_results = [
+                candidate
+                for candidate in results
+                if str(
+                    candidate.get(
+                        "country_code",
+                        ""
+                    )
+                ).lower() == "in"
+            ]
+
+            if india_results:
+
+                results = india_results
+
+            else:
+
+                print(
+                    "[WEATHER GEOCODING] "
+                    "Open-Meteo returned no Indian result. "
+                    "Trying Nominatim."
+                )
+
+                results = []
+
+            if results:
+
+                result = results[0]
+
+                requested_lower = location.lower()
+
+                # -------------------------------------------------
+                # Prefer exact name match.
+                # -------------------------------------------------
+
+                for candidate in results:
+
+                    candidate_name = str(
+                        candidate.get("name", "")
+                    ).strip().lower()
+
+                    if candidate_name == requested_lower:
+
+                        result = candidate
+                        break
+
+                print(
+                    "[WEATHER GEOCODING] "
+                    "Resolved using Open-Meteo."
+                )
+
+                return {
+                    "name": result.get(
+                        "name",
+                        location,
+                    ),
+                    "country": result.get(
+                        "country",
+                        "",
+                    ),
+                    "latitude": result["latitude"],
+                    "longitude": result["longitude"],
+                }
+
+        print(
+            "[WEATHER GEOCODING] "
+            "Open-Meteo returned no suitable result. "
+            "Trying Nominatim."
+        )
 
     except Exception as e:
 
         print(
             f"[WEATHER GEOCODING ERROR] {e}"
+        )
+
+        print(
+            "[WEATHER GEOCODING] "
+            "Trying Nominatim fallback."
+        )
+
+    # -----------------------------------------------------
+    # Secondary geocoder: Nominatim
+    # -----------------------------------------------------
+
+    try:
+
+        # -------------------------------------------------
+        # First Nominatim query
+        # -------------------------------------------------
+
+        nominatim_queries = [
+            location,
+        ]
+
+        results = _query_nominatim(
+            location
+        )
+
+        # -------------------------------------------------
+        # If only POIs were returned, try more geographic
+        # search forms.
+        # -------------------------------------------------
+
+        if not _has_geographic_result(results):
+
+            geographic_queries = [
+                f"{location}, Karnataka, India",
+                f"{location} village, Karnataka, India",
+            ]
+            
+            for query in geographic_queries:
+
+                print(
+                    "[WEATHER GEOCODING] "
+                    f"Trying Nominatim query: {query}"
+                )
+
+                candidate_results = _query_nominatim(
+                    query
+                )
+
+                if _has_geographic_result(
+                    candidate_results
+                ):
+
+                    results = candidate_results
+                    break
+
+        # -------------------------------------------------
+        # Select the best geographic result.
+        # -------------------------------------------------
+
+        result = _select_nominatim_result(
+            results,
+            location,
+        )
+
+        if result is None:
+
+            print(
+                "[WEATHER GEOCODING] "
+                "Nominatim returned no suitable result."
+            )
+
+            return None
+
+        address = result.get(
+            "address",
+            {}
+        )
+
+        print(
+            "[WEATHER GEOCODING] "
+            "Resolved using Nominatim: "
+            f"{result.get('display_name', location)}"
+        )
+
+        # -------------------------------------------------
+        # Best human-readable location name
+        # -------------------------------------------------
+
+        name = (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or address.get("municipality")
+            or result.get("name")
+            or location
+        )
+
+        country = address.get(
+            "country",
+            ""
+        )
+
+        return {
+            "name": name,
+            "country": country,
+            "latitude": float(
+                result["lat"]
+            ),
+            "longitude": float(
+                result["lon"]
+            ),
+        }
+
+    except Exception as e:
+
+        print(
+            f"[WEATHER NOMINATIM ERROR] {e}"
         )
 
         return None
@@ -139,14 +592,57 @@ def _resolve_location(location=None):
 
 def _detect_current_location():
     """
-    Try to determine the current location using IP geolocation.
+    Determine the current location.
 
-    Uses ipapi.co first and falls back to ipwho.is if the
-    primary provider is unavailable or rate-limited.
+    Priority:
+        1. Windows device location
+        2. IP geolocation fallback
+
+    Windows location provides latitude/longitude and
+    accuracy information. IP geolocation is retained
+    as a fallback when Windows location is unavailable.
     """
 
     # -----------------------------------------------------
-    # Primary: ipapi.co
+    # Primary: Windows Location
+    # -----------------------------------------------------
+
+    try:
+        location = asyncio.run(
+            location_service.get_location()
+        )
+
+        if location:
+            latitude = location.get("latitude")
+            longitude = location.get("longitude")
+
+            if latitude is not None and longitude is not None:
+
+                print(
+                    "[WEATHER LOCATION] "
+                    f"Windows location: "
+                    f"{latitude}, {longitude} | "
+                    f"Accuracy: "
+                    f"{location.get('accuracy')} m | "
+                    f"Source: "
+                    f"{location.get('source')}"
+                )
+
+                return {
+                    "name": "your current location",
+                    "country": "",
+                    "latitude": float(latitude),
+                    "longitude": float(longitude),
+                }
+
+    except Exception as e:
+
+        print(
+            f"[WEATHER WINDOWS LOCATION ERROR] {e}"
+        )
+
+    # -----------------------------------------------------
+    # Fallback: IP geolocation
     # -----------------------------------------------------
 
     try:
@@ -164,6 +660,11 @@ def _detect_current_location():
         longitude = data.get("longitude")
 
         if latitude is not None and longitude is not None:
+
+            print(
+                "[WEATHER LOCATION] "
+                "Using IP geolocation fallback."
+            )
 
             return {
                 "name": data.get(
@@ -185,7 +686,7 @@ def _detect_current_location():
         )
 
     # -----------------------------------------------------
-    # Fallback: ipwho.is
+    # Second fallback: ipwho.is
     # -----------------------------------------------------
 
     try:
@@ -200,6 +701,7 @@ def _detect_current_location():
         data = response.json()
 
         if data.get("success") is False:
+
             raise RuntimeError(
                 data.get(
                     "message",
@@ -211,9 +713,15 @@ def _detect_current_location():
         longitude = data.get("longitude")
 
         if latitude is None or longitude is None:
+
             raise RuntimeError(
                 "Location coordinates were not returned."
             )
+
+        print(
+            "[WEATHER LOCATION] "
+            "Using ipwho.is fallback."
+        )
 
         return {
             "name": data.get(
