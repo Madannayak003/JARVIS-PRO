@@ -48,16 +48,6 @@ class OllamaProvider(BaseProvider):
             "Developer AI Provider : Sending request..."
         )
 
-        print("=" * 80)
-        print("SYSTEM")
-        print("=" * 80)
-        print(system)
-
-        print("=" * 80)
-        print("USER")
-        print("=" * 80)
-        print(prompt.user_prompt)
-        print("=" * 80)
 
         response = ai_service.generate(
 

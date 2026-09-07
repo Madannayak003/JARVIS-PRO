@@ -76,11 +76,6 @@ class Generator:
         # Debug (Phase 6)
         # ---------------------------------------
 
-        print("\n" + "=" * 80)
-        print("RAW AI RESPONSE")
-        print("=" * 80)
-        print(response)
-        print("=" * 80 + "\n")
 
         # ---------------------------------------
         # Parse Response
