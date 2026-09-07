@@ -29,8 +29,8 @@ ROUTERS = [
     media_route,
     file_route,
     vision_route,
-    contact_route,
     email_route,
+    contact_route,
     whatsapp_route,
     file_selection_route
 

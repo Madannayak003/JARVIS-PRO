@@ -17,6 +17,13 @@ from services.email_contact_manager import (
     resolve_email_contact,
 )
 
+from services.email_contact_manager import (
+    resolve_email_contact,
+    add_email_contact,
+    remove_email_contact,
+    list_email_contacts,
+)
+
 
 # =========================================================
 # Pending Email Draft
@@ -270,6 +277,139 @@ def send_email(data=None):
         recipient
     )
 
+# =========================================================
+# Remember Email Contact
+# =========================================================
+
+def remember_email_contact(data=None):
+
+    data = data or {}
+
+    alias = str(
+        data.get("alias", "")
+    ).strip()
+
+    email = str(
+        data.get("email", "")
+    ).strip()
+
+    if not alias:
+
+        speak(
+            "Please provide the email contact name."
+        )
+
+        return False
+
+    if not email:
+
+        speak(
+            "Please provide the email address."
+        )
+
+        return False
+
+    try:
+
+        add_email_contact(
+            alias,
+            email,
+        )
+
+    except Exception as error:
+
+        print(
+            f"[EMAIL CONTACT ERROR] {error}"
+        )
+
+        speak(
+            "I could not save that email contact."
+        )
+
+        return False
+
+    speak(
+        f"Email contact {alias} saved successfully."
+    )
+
+    return True
+
+
+# =========================================================
+# Forget Email Contact
+# =========================================================
+
+def forget_email_contact(data=None):
+
+    data = data or {}
+
+    alias = str(
+        data.get("alias", "")
+    ).strip()
+
+    if not alias:
+
+        speak(
+            "Please provide the email contact name."
+        )
+
+        return False
+
+    removed = remove_email_contact(
+        alias
+    )
+
+    if not removed:
+
+        speak(
+            f"I could not find an email contact named {alias}."
+        )
+
+        return False
+
+    speak(
+        f"Email contact {alias} removed successfully."
+    )
+
+    return True
+
+
+# =========================================================
+# Show Email Contacts
+# =========================================================
+
+def show_email_contacts(data=None):
+
+    contacts = list_email_contacts()
+
+    if not contacts:
+
+        speak(
+            "There are no saved email contacts."
+        )
+
+        return True
+
+    print(
+        "[EMAIL CONTACTS]"
+    )
+
+    for alias, email in contacts.items():
+
+        print(
+            f"[EMAIL CONTACT] {alias}: {email}"
+        )
+
+    contact_text = ", ".join(
+        f"{alias}: {email}"
+        for alias, email in contacts.items()
+    )
+
+    speak(
+        f"Your saved email contacts are: {contact_text}"
+    )
+
+    return True
 
 # =========================================================
 # Register Skills
@@ -278,6 +418,21 @@ def send_email(data=None):
 register(
     "send_email",
     send_email
+)
+
+register(
+    "remember_email_contact",
+    remember_email_contact
+)
+
+register(
+    "forget_email_contact",
+    forget_email_contact
+)
+
+register(
+    "show_email_contacts",
+    show_email_contacts
 )
 
 
