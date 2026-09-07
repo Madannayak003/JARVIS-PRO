@@ -55,6 +55,7 @@ SKILLS = [
     "automation.home_automation",
     "communication.whatsapp",
     "communication.contact",
+    "communication.email",
     "screen.screenshot_ai",
     "screen.screen_vision_skill",
     "camera.camera",

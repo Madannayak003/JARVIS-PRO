@@ -230,6 +230,9 @@ test/
 # JARVIS PRO WebView2 runtime profile
 hud/webview_data/
 
+# Google OAuth credentials
+credentials.json
+token.json
 # ----------------------------------------------------------
 # extr files
 # ----------------------------------------------------------

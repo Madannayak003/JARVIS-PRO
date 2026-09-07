@@ -10,6 +10,7 @@ from core.routers.spotify_router import spotify_route
 from core.routers.greeting_router import greeting_route
 from core.routers.whatsapp_router import whatsapp_route
 from core.routers.contact_router import contact_route
+from core.routers.email_router import email_route
 from core.routers.file_selection_router import file_selection_route
 from core.routers.memory_router import memory_route
 from core.routers.web_router import web_route
@@ -29,6 +30,7 @@ ROUTERS = [
     file_route,
     vision_route,
     contact_route,
+    email_route,
     whatsapp_route,
     file_selection_route
 
