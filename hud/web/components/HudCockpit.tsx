@@ -74,16 +74,44 @@ function SystemBar({
       ? Math.max(0, Math.min(100, value))
       : null;
 
-  const isHigh =
+    const isBattery =
+    label === "BAT";
+
+  const isGreen =
     numeric !== null &&
-    numeric > 85;
+    (
+      isBattery
+        ? numeric >= 85
+        : numeric < 35
+    );
+
+  const isYellow =
+    numeric !== null &&
+    numeric >= 35 &&
+    numeric <= 85;
+
+  const isRed =
+    numeric !== null &&
+    (
+      isBattery
+        ? numeric < 35
+        : numeric > 85
+    );
 
   return (
     <div
       className={
         `cockpit-system-row${
-          isHigh
-            ? " cockpit-system-high"
+          isGreen
+            ? " cockpit-status-green"
+            : ""
+        }${
+          isYellow
+            ? " cockpit-status-yellow"
+            : ""
+        }${
+          isRed
+            ? " cockpit-status-red"
             : ""
         }`
       }
@@ -123,7 +151,6 @@ function SystemBar({
 
       </div>
 
-
       <div className="cockpit-system-info">
 
         <span className="cockpit-system-name">
@@ -131,9 +158,13 @@ function SystemBar({
         </span>
 
         <span className="cockpit-system-state">
-          {isHigh
-            ? "HIGH LOAD"
-            : "NOMINAL"}
+          {isGreen
+            ? "GOOD"
+            : isYellow
+              ? "MEDIUM"
+              : isRed
+                ? (isBattery ? "LOW" : "HIGH LOAD")
+                : "NOMINAL"}
         </span>
 
       </div>

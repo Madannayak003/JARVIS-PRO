@@ -58,7 +58,7 @@ const JARVIS_DASHBOARD_URL =
     ? `http://${window.location.hostname}:8765`
     : "http://127.0.0.1:8765");
 
-const DEFAULT_ASSISTANT_COLOUR = "#c9d1d9";
+const DEFAULT_ASSISTANT_COLOUR = "#ffab17";
 
 export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
