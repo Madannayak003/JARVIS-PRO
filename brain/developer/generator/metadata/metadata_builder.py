@@ -5,7 +5,6 @@ Developer Generator
 Metadata Builder
 """
 
-from archive.developer_legacy import project
 from brain.developer.generator.models.generated_project import GeneratedProject
 
 
