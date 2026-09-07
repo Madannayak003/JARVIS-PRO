@@ -140,7 +140,14 @@ def _resolve_location(location=None):
 def _detect_current_location():
     """
     Try to determine the current location using IP geolocation.
+
+    Uses ipapi.co first and falls back to ipwho.is if the
+    primary provider is unavailable or rate-limited.
     """
+
+    # -----------------------------------------------------
+    # Primary: ipapi.co
+    # -----------------------------------------------------
 
     try:
 
@@ -156,8 +163,57 @@ def _detect_current_location():
         latitude = data.get("latitude")
         longitude = data.get("longitude")
 
+        if latitude is not None and longitude is not None:
+
+            return {
+                "name": data.get(
+                    "city",
+                    "your location",
+                ),
+                "country": data.get(
+                    "country_name",
+                    "",
+                ),
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+            }
+
+    except Exception as e:
+
+        print(
+            f"[WEATHER PRIMARY LOCATION ERROR] {e}"
+        )
+
+    # -----------------------------------------------------
+    # Fallback: ipwho.is
+    # -----------------------------------------------------
+
+    try:
+
+        response = requests.get(
+            "https://ipwho.is/",
+            timeout=REQUEST_TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        if data.get("success") is False:
+            raise RuntimeError(
+                data.get(
+                    "message",
+                    "Location lookup failed",
+                )
+            )
+
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
         if latitude is None or longitude is None:
-            return None
+            raise RuntimeError(
+                "Location coordinates were not returned."
+            )
 
         return {
             "name": data.get(
@@ -165,7 +221,7 @@ def _detect_current_location():
                 "your location",
             ),
             "country": data.get(
-                "country_name",
+                "country",
                 "",
             ),
             "latitude": float(latitude),
@@ -175,11 +231,10 @@ def _detect_current_location():
     except Exception as e:
 
         print(
-            f"[WEATHER LOCATION ERROR] {e}"
+            f"[WEATHER FALLBACK LOCATION ERROR] {e}"
         )
 
-        return None
-
+    return None
 
 # =========================================================
 # Get Weather

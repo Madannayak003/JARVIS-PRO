@@ -404,16 +404,16 @@ export default function HudCockpit({
 
           <button
             type="button"
-            onClick={() => onCommand("go home")}
+            onClick={() => onCommand("shutdown")}
           >
-            HOME
+            SHUTDOWN
           </button>
 
           <button
             type="button"
-            onClick={() => onCommand("open apps")}
+            onClick={() => onCommand("running apps")}
           >
-            APPS
+            RUNNING
           </button>
 
           <button
@@ -467,16 +467,16 @@ export default function HudCockpit({
 
           <button
             type="button"
-            onClick={() => onCommand("take a screenshot")}
+            onClick={() => onCommand("take photo")}
           >
             CAPTURE
           </button>
 
           <button
             type="button"
-            onClick={() => onCommand("create")}
+            onClick={() => onCommand("recent files")}
           >
-            CREATE
+            FILES
           </button>
 
           <button

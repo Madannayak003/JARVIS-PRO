@@ -2573,16 +2573,18 @@ body {
    JARVIS HEADER — QUICK NAV ICONS
    ========================================================= */
 
-/* HOME */
+/* SHUTDOWN */
+
 .cockpit-header-nav-left button:nth-child(1)::before {
-  content: "⌂";
+  content: "⏻";
   display: block;
   font-size: 17px;
   line-height: 16px;
   margin-bottom: 2px;
 }
 
-/* APPS */
+/* RUNNING */
+
 .cockpit-header-nav-left button:nth-child(2)::before {
   content: "▦";
   display: block;
@@ -2641,9 +2643,10 @@ body {
   margin-bottom: 2px;
 }
 
-/* CREATE */
+/* FILES */
+
 .cockpit-header-nav-right button:nth-child(3)::before {
-  content: "✎";
+  content: "▤";
   display: block;
   font-size: 17px;
   line-height: 16px;

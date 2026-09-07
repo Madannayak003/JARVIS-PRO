@@ -14,11 +14,13 @@ from core.routers.email_router import email_route
 from core.routers.file_selection_router import file_selection_route
 from core.routers.memory_router import memory_route
 from core.routers.web_router import web_route
+from core.routers.weather_router import weather_route
 
 ROUTERS = [
 
     memory_route,
     news_route,
+    weather_route,
     web_route,
     automation_route,
     spotify_route,
