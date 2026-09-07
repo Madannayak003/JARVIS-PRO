@@ -25,10 +25,6 @@ import webview
 
 HUD_URL = "http://127.0.0.1:3000"
 
-WEBVIEW_STORAGE_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "webview_data",
-)
 
 WINDOW_TITLE = "JARVIS PRO"
 
@@ -462,7 +458,6 @@ def run():
         webview.start(
             debug=False,
             private_mode=False,
-            storage_path=WEBVIEW_STORAGE_PATH,
         )
 
     finally:
