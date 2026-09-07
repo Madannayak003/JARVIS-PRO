@@ -41,7 +41,7 @@ export type HUDActivity = {
   timestamp: string;
 };
 
-type SettingsModal = "remote" | "customise" | null;
+type SettingsModal = "remote" | "customise" | "settings" | null;
 
 type RemoteInfo = {
   ok: boolean;
@@ -99,6 +99,7 @@ export default function Home() {
   const [assistantName, setAssistantName] = useState("JARVIS");
   const [userName, setUserName] = useState("MADAN.R");
   const [assistantColour, setAssistantColour] = useState(DEFAULT_ASSISTANT_COLOUR);
+  const [assistantVoice, setAssistantVoice] = useState("Ryan");
 
   const [remoteInfo, setRemoteInfo] = useState<RemoteInfo | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
@@ -125,6 +126,9 @@ export default function Home() {
           setAssistantColour(settings.assistantColour);
           document.documentElement.style.setProperty("--assistant-colour", settings.assistantColour);
         }
+      if (typeof settings.assistantVoice === "string") {
+        setAssistantVoice(settings.assistantVoice);
+      }
       }
     } catch (error) {
       console.error("[HUD] Local settings fallback failed:", error);
@@ -153,6 +157,25 @@ export default function Home() {
             setAssistantColour(data.assistantColour);
             document.documentElement.style.setProperty("--assistant-colour", data.assistantColour);
           }
+        }
+      }
+    });
+
+    loadWithRetry(async () => {
+      const res = await fetch(
+        `${JARVIS_DASHBOARD_URL}/api/local/voice`,
+        { cache: "no-store" }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+
+        if (
+          data.ok &&
+          typeof data.voice === "string" &&
+          isMounted
+        ) {
+          setAssistantVoice(data.voice);
         }
       }
     });
@@ -1021,7 +1044,7 @@ export default function Home() {
         onFullscreen={toggleFullscreen}
 
         onSettings={() => {
-          setModal("customise");
+          setModal("settings");
         }}
       />
 
@@ -1397,6 +1420,123 @@ export default function Home() {
                   onClick={() => setModal(null)}
                 >
                   DISMISS
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/*
+          SETTINGS MODAL
+          ===================================================== */}
+      {modal === "settings" && (
+        <div
+          className="settings-modal-backdrop"
+          onClick={() => setModal(null)}
+        >
+          <section
+            className="settings-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="settings-modal-heading">
+              <span>◆</span>
+              SETTINGS
+            </div>
+
+            <div className="customise-form">
+              <label>
+                ASSISTANT VOICE
+                <select
+                  value={assistantVoice}
+                  onChange={(event) => setAssistantVoice(event.target.value)}
+                >
+                  <option value="Ryan">Ryan</option>
+                  <option value="Thomas">Thomas</option>
+                  <option value="Connor">Connor</option>
+                  <option value="William">William</option>
+                  <option value="Guy">Guy</option>
+                  <option value="Aria">Aria</option>
+                  <option value="Jenny">Jenny</option>
+                  <option value="Prabhat">Prabhat</option>
+                  <option value="Neerja">Neerja</option>
+                </select>
+              </label>
+
+              <div className="settings-modal-actions">
+                <button
+                  type="button"
+                  className="settings-modal-button settings-modal-button-primary"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(
+                        `${JARVIS_DASHBOARD_URL}/api/local/voice`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          cache: "no-store",
+                          body: JSON.stringify({
+                            voice: assistantVoice,
+                          }),
+                        }
+                      );
+
+                      const result = await response.json();
+
+                      if (!response.ok || !result.ok) {
+                        throw new Error(
+                          result?.error || "Failed to save assistant voice."
+                        );
+                      }
+
+                      if (typeof result.voice === "string") {
+                        setAssistantVoice(result.voice);
+                      }
+
+                      try {
+                        const saved = window.localStorage.getItem(
+                          "jarvis-pro-settings"
+                        );
+
+                        const settings = saved
+                          ? JSON.parse(saved)
+                          : {};
+
+                        window.localStorage.setItem(
+                          "jarvis-pro-settings",
+                          JSON.stringify({
+                            ...settings,
+                            assistantVoice,
+                          })
+                        );
+                      } catch {}
+
+                      setModal(null);
+                    } catch (error) {
+                      console.error(
+                        "[HUD] Assistant voice save failed:",
+                        error
+                      );
+
+                      alert(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not save assistant voice."
+                      );
+                    }
+                  }}
+                >
+                  APPLY
+                </button>
+
+                <button
+                  type="button"
+                  className="settings-modal-button"
+                  onClick={() => setModal(null)}
+                >
+                  CANCEL
                 </button>
               </div>
             </div>

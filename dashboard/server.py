@@ -464,6 +464,83 @@ def _decrypt_cbc(
         "utf-8"
     )
 
+# =============================================================
+# ENGLISH VOICE SETTINGS
+# =============================================================
+
+VOICE_SETTINGS_FILE = (
+    BASE_DIR
+    / "data"
+    / "settings"
+    / "jarvis_settings.json"
+)
+
+
+def _load_english_voice() -> str:
+    try:
+        if not VOICE_SETTINGS_FILE.exists():
+            return "Ryan"
+
+        with VOICE_SETTINGS_FILE.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            settings = json.load(file)
+
+        voice = str(
+            settings.get(
+                "assistantVoice",
+                "Ryan",
+            )
+        ).strip()
+
+        from voice.online_edge import ENGLISH_VOICES
+
+        if voice in ENGLISH_VOICES:
+            return voice
+
+    except Exception as exc:
+        print(
+            "[VOICE SETTINGS] Load failed:",
+            exc,
+        )
+
+    return "Ryan"
+
+
+def _save_english_voice(
+    voice_name: str,
+) -> None:
+
+    VOICE_SETTINGS_FILE.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    settings = {}
+
+    if VOICE_SETTINGS_FILE.exists():
+        try:
+            with VOICE_SETTINGS_FILE.open(
+                "r",
+                encoding="utf-8",
+            ) as file:
+                settings = json.load(file)
+        except Exception:
+            settings = {}
+
+    settings["assistantVoice"] = voice_name
+
+    with VOICE_SETTINGS_FILE.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            settings,
+            file,
+            indent=2,
+        )
+        file.write("\n")
 
 # =============================================================
 # DASHBOARD SERVER
@@ -625,6 +702,37 @@ class DashboardServer:
             print(
                 "[REMOTE] Voice output bridge failed:",
                 e
+            )
+            
+        # -----------------------------------------------------
+        # Restore saved English voice
+        # -----------------------------------------------------
+
+        try:
+
+            from voice.online_edge import (
+                set_english_voice,
+            )
+
+            saved_voice = (
+                _load_english_voice()
+            )
+
+            set_english_voice(
+                saved_voice
+            )
+
+            print(
+                "[VOICE SETTINGS] "
+                f"Restored: {saved_voice}"
+            )
+
+        except Exception as exc:
+
+            print(
+                "[VOICE SETTINGS] "
+                "Restore failed:",
+                exc,
             )
             
     # =========================================================
@@ -2100,6 +2208,154 @@ class DashboardServer:
             except Exception as exc:
                 return JSONResponse(
                     {"ok": False, "error": str(exc)},
+                    status_code=500,
+                )
+                
+        # =====================================================
+        # LOCAL — ASSISTANT VOICE STATUS
+        # =====================================================
+
+        @app.get(
+            "/api/local/voice"
+        )
+        async def local_voice_status(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+                from voice.online_edge import (
+                    get_english_voice,
+                )
+
+                voice = get_english_voice()
+
+                return {
+                    "ok": True,
+                    "voice": voice,
+                }
+
+            except Exception as exc:
+                print(
+                    "[LOCAL VOICE STATUS ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status_code=500,
+                )
+
+
+        # =====================================================
+        # LOCAL — ASSISTANT VOICE SET
+        # =====================================================
+
+        @app.post(
+            "/api/local/voice"
+        )
+        async def local_voice(
+            request: Request,
+        ):
+
+            if not self._authorize_local(
+                request
+            ):
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Local access required.",
+                    },
+                    status_code=403,
+                )
+
+            try:
+                body = await request.json()
+            except Exception:
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": "Invalid JSON body.",
+                    },
+                    status_code=400,
+                )
+
+            voice_name = str(
+                body.get(
+                    "voice",
+                    "",
+                )
+            ).strip()
+
+            try:
+                from voice.online_edge import (
+                    set_english_voice,
+                    get_english_voice,
+                    ENGLISH_VOICES,
+                )
+
+                if voice_name not in ENGLISH_VOICES:
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": "Invalid English voice.",
+                        },
+                        status_code=400,
+                    )
+
+                if not set_english_voice(
+                    voice_name
+                ):
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "error": "Unable to set English voice.",
+                        },
+                        status_code=500,
+                    )
+
+                _save_english_voice(
+                    voice_name
+                )
+
+                current_voice = (
+                    get_english_voice()
+                )
+
+                print(
+                    "[LOCAL VOICE] Set to:",
+                    current_voice,
+                )
+
+                return {
+                    "ok": True,
+                    "voice": current_voice,
+                }
+
+            except Exception as exc:
+                print(
+                    "[LOCAL VOICE ERROR]",
+                    exc,
+                )
+
+                return JSONResponse(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
                     status_code=500,
                 )
 

@@ -23,6 +23,18 @@ VOICE = "en-GB-RyanNeural"
 KANNADA_VOICE = "kn-IN-GaganNeural"
 HINDI_VOICE = "hi-IN-MadhurNeural"
 
+ENGLISH_VOICES = {
+    "Ryan": "en-GB-RyanNeural",
+    "Thomas": "en-GB-ThomasNeural",
+    "Connor": "en-IE-ConnorNeural",
+    "William": "en-AU-WilliamNeural",
+    "Guy": "en-US-GuyNeural",
+    "Aria": "en-US-AriaNeural",
+    "Jenny": "en-US-JennyNeural",
+    "Prabhat": "en-IN-PrabhatNeural",
+    "Neerja": "en-IN-NeerjaNeural",
+}
+
 CACHE_MAX_AGE = 24 * 60 * 60
 
 
@@ -50,6 +62,42 @@ def _get_voice(text):
         return HINDI_VOICE
 
     return VOICE
+
+# =========================================================
+# English Voice Selection
+# =========================================================
+
+def set_english_voice(voice_name):
+    global VOICE
+
+    voice_name = str(
+        voice_name or ""
+    ).strip()
+
+    voice_id = ENGLISH_VOICES.get(
+        voice_name
+    )
+
+    if not voice_id:
+        return False
+
+    VOICE = voice_id
+
+    print(
+        "[EDGE TTS] English voice:",
+        voice_name
+    )
+
+    return True
+
+
+def get_english_voice():
+    for name, voice_id in ENGLISH_VOICES.items():
+
+        if voice_id == VOICE:
+            return name
+
+    return "Ryan"
 
 # =========================================================
 # Cache Cleanup
