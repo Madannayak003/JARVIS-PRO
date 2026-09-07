@@ -65,6 +65,26 @@ def dispatch(
     if not command:
         return
     
+    # =====================================================
+    # PENDING EMAIL COMPOSITION
+    # =====================================================
+
+    from skills.communication.email import (
+        has_pending_email,
+        handle_email_reply,
+    )
+
+    if has_pending_email():
+
+        print(
+            "[EMAIL] Handling pending email reply."
+        )
+
+        handle_email_reply(
+            command
+        )
+
+        return
     
     # =====================================================
     # LIVE CONVERSATION CONTROL
