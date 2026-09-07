@@ -34,8 +34,8 @@ PERSONAL_LINKS = {
     # Personal Websites
     # -----------------------------------------------------
 
-    "website": "https://madanr.netlify.app/",
-    "portfolio": "https://madanr.netlify.app/",
+    "website": "https://madanr.vercel.app/",
+    "portfolio": "https://madanr.vercel.app/",
 
     "iot": "",
     "iot_website": "",
