@@ -222,10 +222,12 @@ voice/cache/
 yolo11n.pt
 
 # ----------------------------------------------------------
-# test folder
+# test and backup folder
 # ----------------------------------------------------------
 
 test/
+
+Backup/
 
 # JARVIS PRO WebView2 runtime profile
 hud/webview_data/
