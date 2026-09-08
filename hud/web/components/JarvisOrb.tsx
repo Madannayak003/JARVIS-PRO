@@ -2221,147 +2221,49 @@ export default function JarvisOrb(
           {/* ================================================= */}
           {/* ULTRON COLOR CONTROLS */}
           {/* ================================================= */}
-
           {avatarType === "orb" && (
-
             <div
               className="ultron-color-panel"
               aria-label="ULTRON color selection"
-              style={{
-                position: "fixed",
-                left: "240px",
-                top: "583px",
-                width: "105px",
-                zIndex: 50,
-              }}
             >
-
               {/* COLOR TITLE */}
-
-              <div
-                style={{
-                  paddingBottom: "4px",
-                }}
-              >
-
-                <span
-                  className="ultron-color-label"
-                  style={{
-                    fontSize: "10px",
-                    letterSpacing: "2px",
-                    opacity: 0.9,
-                  }}
-                >
+              <div className="ultron-color-title-wrap">
+                <span className="ultron-color-label">
                   ULTRON COLOR
                 </span>
-
               </div>
 
-
-              {/* ================================================= */}
               {/* COLORS — 2 PER ROW */}
-              {/* ================================================= */}
+              <div className="ultron-color-row">
+                {ULTRON_COLORS.map((color) => {
+                  const active = ultronColor === color.value;
+                  const hex = `#${color.value.toString(16).padStart(6, "0")}`;
 
-              <div
-                className="ultron-color-row"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "36px 36px",
-                  gap: "5px",
-                  width: "78px",
-                  justifyContent: "start",
-                }}
-              >
-
-                {ULTRON_COLORS.map(
-                  (color) => {
-
-                    const active =
-                      ultronColor ===
-                      color.value;
-
-
-                    const hex =
-                      `#${color.value
-                        .toString(16)
-                        .padStart(
-                          6,
-                          "0"
-                        )}`;
-
-
-                    return (
-
-                      <button
-                        key={color.name}
-                        type="button"
-                        className={
-                          `hud-btn ultron-color-btn${
-                            active
-                              ? " active"
-                              : ""
-                          }`
-                        }
+                  return (
+                    <button
+                      key={color.name}
+                      type="button"
+                      className={`hud-btn ultron-color-btn${active ? " active" : ""}`}
+                      aria-label={`ULTRON color ${color.name}`}
+                      aria-pressed={active}
+                      title={color.name}
+                      onClick={() => changeUltronColor(color.value)}
+                    >
+                      <span
+                        className="ultron-color-dot"
                         style={{
-                          width: "36px",
-                          height: "36px",
-                          minWidth: "36px",
-                          padding: "0",
-                          borderRadius: "50%",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "3px",
-                          whiteSpace: "nowrap",
+                          backgroundColor: hex,
+                          boxShadow: active ? `0 0 6px ${hex}` : `0 0 2px ${hex}`,
                         }}
-                        aria-label={
-                          `ULTRON color ${color.name}`
-                        }
-                        aria-pressed={active}
-                        title={color.name}
-                        onClick={() =>
-                          changeUltronColor(
-                            color.value
-                          )
-                        }
-                      >
-
-                        <span
-                          className="ultron-color-dot"
-                          style={{
-                            width: "5px",
-                            height: "5px",
-                            minWidth: "5px",
-                            borderRadius: "50%",
-                            backgroundColor: hex,
-                            boxShadow:
-                              active
-                                ? `0 0 6px ${hex}`
-                                : `0 0 2px ${hex}`,
-                          }}
-                        />
-
-                        <span
-                          style={{
-                            fontSize: "7px",
-                            lineHeight: "1",
-                          }}
-                        >
-                          {color.name}
-                        </span>
-
-                      </button>
-
-                    );
-
-                  }
-                )}
-
+                      />
+                      <span className="ultron-color-name">
+                        {color.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-
             </div>
-
           )}
 
         </div>

@@ -282,6 +282,67 @@ body {
   z-index: 3;
 }
 
+.ultron-color-panel {
+  position: fixed;
+  bottom: 27px;
+  left: 250px;
+  width: 100px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.ultron-color-title-wrap {
+  padding-bottom: 4px;
+}
+
+.ultron-color-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.9;
+  color: var(--assistant-colour);
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--assistant-colour-45);
+}
+
+.ultron-color-row {
+  display: grid;
+  grid-template-columns: repeat(2, 34px);
+  gap: 5px;
+  width: 73px;
+  justify-content: start;
+}
+
+.ultron-color-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  white-space: nowrap !important;
+  cursor: pointer;
+}
+
+.ultron-color-dot {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  border-radius: 50%;
+  display: block;
+}
+
+.ultron-color-name {
+  font-size: 6.5px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--assistant-colour);
+}
+
 /* =========================================================
    JARVIS PRO — MAIN VIEWPORT & HEADER
    ========================================================= */
@@ -2670,7 +2731,40 @@ body {
     font-size: 8px !important;
   }
 
-  /* 7. Bottom Left Controls */
+  /* 7. ULTRON COLOR */
+  .ultron-color-panel {
+    bottom: 27px !important;
+    left: 135px !important;
+    width: 100px !important;
+    transform: scale(0.85) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .ultron-color-label {
+    font-size: 8px !important;
+  }
+
+  .ultron-color-row {
+    gap: 12px !important;
+  }
+
+  .ultron-color-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+  }
+
+  .ultron-color-dot {
+    width: 4px !important;
+    height: 4px !important;
+    min-width: 4px !important;
+  }
+
+  .ultron-color-name {
+    font-size: 5.5px !important;
+  }
+
+  /* 8. Bottom Left Controls */
   .hud-controls {
     bottom: 14px !important;
     left: 10px !important;
