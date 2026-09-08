@@ -229,6 +229,13 @@ test/
 
 Backup/
 
+# ----------------------------------------------------------
+# Local archive / bin
+# ----------------------------------------------------------
+
+bin/
+
+
 # JARVIS PRO WebView2 runtime profile
 hud/webview_data/
 

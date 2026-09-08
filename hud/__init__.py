@@ -7,8 +7,8 @@ The HUD is a display layer only.
 It does not contain JARVIS intelligence or command logic.
 """
 
-from .app import HUDApplication
+from .adapter import HUDAdapter
 
 __all__ = [
-    "HUDApplication",
+    "HUDAdapter",
 ]
