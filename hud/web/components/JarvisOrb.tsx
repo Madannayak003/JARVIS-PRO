@@ -1714,6 +1714,19 @@ export default function JarvisOrb(
         e: KeyboardEvent
       ) => {
 
+        const target = e.target as HTMLElement | null;
+
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          target?.isContentEditable
+        ) {
+
+          return;
+
+        }
+
         switch (
           e.key
         ) {
