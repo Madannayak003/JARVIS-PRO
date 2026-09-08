@@ -28,8 +28,8 @@ HUD_URL = "http://127.0.0.1:3000"
 
 WINDOW_TITLE = "JARVIS PRO"
 
-WINDOW_WIDTH = 1500
-WINDOW_HEIGHT = 850
+WINDOW_WIDTH = 900
+WINDOW_HEIGHT = 600
 
 SHUTDOWN_URL = (
     "http://127.0.0.1:8766/shutdown"
@@ -387,8 +387,8 @@ def run():
         height=WINDOW_HEIGHT,
 
         min_size=(
-            1000,
-            650,
+            900,
+            600,
         ),
 
         resizable=True,

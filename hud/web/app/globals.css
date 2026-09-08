@@ -21,53 +21,14 @@
   --hud-warning: #ffb020;
   --hud-error: #ff4444;
 
-  --assistant-colour-10: color-mix(
-    in srgb,
-    var(--assistant-colour) 10%,
-    transparent
-  );
-
-  --assistant-colour-15: color-mix(
-    in srgb,
-    var(--assistant-colour) 15%,
-    transparent
-  );
-
-  --assistant-colour-20: color-mix(
-    in srgb,
-    var(--assistant-colour) 20%,
-    transparent
-  );
-
-  --assistant-colour-30: color-mix(
-    in srgb,
-    var(--assistant-colour) 30%,
-    transparent
-  );
-
-  --assistant-colour-45: color-mix(
-    in srgb,
-    var(--assistant-colour) 45%,
-    transparent
-  );
-
-  --assistant-colour-65: color-mix(
-    in srgb,
-    var(--assistant-colour) 65%,
-    transparent
-  );
-
-  --assistant-colour-70: color-mix(
-    in srgb,
-    var(--assistant-colour) 70%,
-    transparent
-  );
-
-  --assistant-colour-80: color-mix(
-    in srgb,
-    var(--assistant-colour) 80%,
-    transparent
-  );
+  --assistant-colour-10: color-mix(in srgb, var(--assistant-colour) 10%, transparent);
+  --assistant-colour-15: color-mix(in srgb, var(--assistant-colour) 15%, transparent);
+  --assistant-colour-20: color-mix(in srgb, var(--assistant-colour) 20%, transparent);
+  --assistant-colour-30: color-mix(in srgb, var(--assistant-colour) 30%, transparent);
+  --assistant-colour-45: color-mix(in srgb, var(--assistant-colour) 45%, transparent);
+  --assistant-colour-65: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
+  --assistant-colour-70: color-mix(in srgb, var(--assistant-colour) 70%, transparent);
+  --assistant-colour-80: color-mix(in srgb, var(--assistant-colour) 80%, transparent);
 }
 
 * {
@@ -251,11 +212,7 @@ body {
   margin-top: 6px;
   width: 120px;
   height: 1px;
-  background: linear-gradient(
-    to right,
-    var(--assistant-colour-80),
-    transparent
-  );
+  background: linear-gradient(to right, var(--assistant-colour-80), transparent);
 }
 
 .hud-error {
@@ -265,7 +222,7 @@ body {
   text-shadow: 0 0 8px rgba(255, 60, 30, 0.7);
 }
 
-/* ——— Camera preview panel ——— */
+/* Camera preview panel */
 .camera-panel {
   position: fixed;
   left: 24px;
@@ -430,12 +387,12 @@ body {
 .hud-bridge-status {
   position: absolute;
   top: 76px;
-  right: 24px;
+  right: 34px;
   z-index: 30;
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 1px;
   opacity: 0.55;
 }
@@ -470,43 +427,9 @@ body {
 }
 
 .cockpit-left {
-
   left: 14px;
-
   width: 300px;
-
-  /* border-left: 2px solid var(--assistant-colour-20);
-
-  border-right: 2px solid var(--assistant-colour-20);
-
-  border-top: 2px solid var(--assistant-colour-20);
-
-  border-bottom: 2px solid var(--assistant-colour-20); */
-
 }
-
-/* .cockpit-left::before,
-.cockpit-left::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14;
-  pointer-events: none;
-}
-
-.cockpit-left::before {
-  top: 0;
-  left: 0;
-  border-top: 2px solid var(--assistant-colour-65);
-  border-left: 2px solid var(--assistant-colour-65);
-}
-
-.cockpit-left::after {
-  bottom: 0;
-  right: 0;
-  border-bottom: 2px solid var(--assistant-colour-65);
-  border-right: 2px solid var(--assistant-colour-65);
-} */
 
 .cockpit-left .panel-heading {
   height: 32px;
@@ -531,35 +454,21 @@ body {
 }
 
 .cockpit-left .panel-body {
-
   display: flex;
-
   flex-direction: row;
-
   align-items: center;
-
   justify-content: space-between;
-
   gap: 18px;
-
 }
 
 .cockpit-left .cockpit-system-row {
-
   flex: 1;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
-
   gap: 10px;
-
   margin-bottom: 0;
-
   padding: 2px;
-
 }
 
 /* System Gauges */
@@ -679,12 +588,10 @@ body {
 
 .cockpit-status-green .cockpit-gauge,
 .cockpit-status-green .cockpit-gauge-fill {
-
   background: conic-gradient(
     #33ff66 var(--gauge-value, 0%),
     rgba(255, 255, 255, 0.045) var(--gauge-value, 0%)
   );
-
   box-shadow:
     0 0 10px rgba(50, 255, 100, 0.55),
     0 0 20px rgba(50, 255, 100, 0.18);
@@ -692,11 +599,8 @@ body {
 
 .cockpit-status-green .cockpit-gauge-value,
 .cockpit-status-green .cockpit-system-name {
-
   color: #33ff66;
-
-  text-shadow:
-    0 0 6px rgba(50, 255, 100, 0.75);
+  text-shadow: 0 0 6px rgba(50, 255, 100, 0.75);
 }
 
 .cockpit-status-green .cockpit-system-state {
@@ -704,15 +608,12 @@ body {
   opacity: 0.85;
 }
 
-
 .cockpit-status-yellow .cockpit-gauge,
 .cockpit-status-yellow .cockpit-gauge-fill {
-
   background: conic-gradient(
     #ffd633 var(--gauge-value, 0%),
     rgba(255, 255, 255, 0.045) var(--gauge-value, 0%)
   );
-
   box-shadow:
     0 0 10px rgba(255, 214, 51, 0.5),
     0 0 20px rgba(255, 214, 51, 0.16);
@@ -720,11 +621,8 @@ body {
 
 .cockpit-status-yellow .cockpit-gauge-value,
 .cockpit-status-yellow .cockpit-system-name {
-
   color: #ffd633;
-
-  text-shadow:
-    0 0 6px rgba(255, 214, 51, 0.7);
+  text-shadow: 0 0 6px rgba(255, 214, 51, 0.7);
 }
 
 .cockpit-status-yellow .cockpit-system-state {
@@ -732,15 +630,12 @@ body {
   opacity: 0.85;
 }
 
-
 .cockpit-status-red .cockpit-gauge,
 .cockpit-status-red .cockpit-gauge-fill {
-
   background: conic-gradient(
     #ff3333 var(--gauge-value, 0%),
     rgba(255, 255, 255, 0.045) var(--gauge-value, 0%)
   );
-
   box-shadow:
     0 0 10px rgba(255, 40, 40, 0.55),
     0 0 20px rgba(255, 40, 40, 0.18);
@@ -748,11 +643,8 @@ body {
 
 .cockpit-status-red .cockpit-gauge-value,
 .cockpit-status-red .cockpit-system-name {
-
   color: #ff4444;
-
-  text-shadow:
-    0 0 6px rgba(255, 50, 50, 0.75);
+  text-shadow: 0 0 6px rgba(255, 50, 50, 0.75);
 }
 
 .cockpit-status-red .cockpit-system-state {
@@ -1010,60 +902,42 @@ body {
   position: fixed;
   inset: 0;
   z-index: 1000;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-
   padding: 16px;
 }
 
 .settings-modal {
   position: relative;
-
   width: min(480px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
-
   overflow-y: auto;
-
   background: linear-gradient(
     180deg,
     rgba(14, 14, 14, 0.98),
     rgba(4, 4, 4, 0.99)
   );
-
   border: 1px solid var(--assistant-colour);
   border-radius: 3px;
-
   box-shadow:
     0 0 0 1px rgba(255, 193, 7, 0.08),
     0 0 20px rgba(255, 193, 7, 0.12),
     inset 0 0 25px rgba(255, 193, 7, 0.02);
-
   color: #ffffff;
 }
 
-/* ---------------------------------------------------------
-   HEADER
-   --------------------------------------------------------- */
-
 .settings-modal-heading {
   position: relative;
-
   display: flex;
   align-items: center;
-
   height: 44px;
   padding: 0 16px;
-
   border-bottom: 1px solid var(--assistant-colour-20);
-
   color: var(--assistant-colour);
-
   font-family: "Courier New", monospace;
   font-size: 12px;
   font-weight: 700;
@@ -1081,19 +955,14 @@ body {
   top: 50%;
   right: 14px;
   transform: translateY(-50%);
-
   width: 26px;
   height: 26px;
-
   border: 0;
   background: transparent;
-
   color: var(--assistant-colour);
-
   font-size: 20px;
   font-weight: 300;
   line-height: 1;
-
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -1103,10 +972,6 @@ body {
   text-shadow: 0 0 8px var(--assistant-colour);
   transform: translateY(-50%) scale(1.1);
 }
-
-/* ---------------------------------------------------------
-   FORM & SECTIONS
-   --------------------------------------------------------- */
 
 .settings-form {
   padding: 16px 18px;
@@ -1132,11 +997,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 22px;
   min-width: 22px;
   margin-top: 1px;
-
   color: var(--assistant-colour);
   font-size: 15px;
   font-weight: 700;
@@ -1160,24 +1023,17 @@ body {
   line-height: 1.3;
 }
 
-/* ---------------------------------------------------------
-   VOICE SELECT
-   --------------------------------------------------------- */
-
+/* Voice Select */
 .settings-select-wrap {
   position: relative;
   display: flex;
   align-items: center;
-
   height: 34px;
-
   border: 1px solid var(--assistant-colour);
   background: rgba(255, 193, 7, 0.03);
-
   box-shadow:
     0 0 8px rgba(255, 193, 7, 0.06),
     inset 0 0 10px rgba(255, 193, 7, 0.02);
-
   transition: all 0.18s ease;
 }
 
@@ -1190,7 +1046,6 @@ body {
   position: absolute;
   left: 10px;
   z-index: 2;
-
   color: var(--assistant-colour);
   font-size: 13px;
   pointer-events: none;
@@ -1201,13 +1056,11 @@ body {
   width: 100%;
   height: 100%;
   padding: 0 34px;
-
   appearance: none;
   -webkit-appearance: none;
   border: 0;
   outline: none;
   background: transparent;
-
   color: #ffffff;
   font-family: Arial, sans-serif;
   font-size: 11.5px;
@@ -1229,21 +1082,16 @@ body {
   text-shadow: 0 0 6px var(--assistant-colour);
 }
 
-/* ---------------------------------------------------------
-   VISIBILITY ROWS
-   --------------------------------------------------------- */
-
+/* Visibility Rows */
 .settings-toggle-row {
   position: relative;
   display: grid;
   grid-template-columns: 24px 110px minmax(0, 1fr) 28px 36px;
   align-items: center;
-
   min-height: 38px;
   padding: 0 10px;
   margin-top: 6px;
-
-  border: 1px solid rgba(255, 193, 7, 0.20);
+  border: 1px solid rgba(255, 193, 7, 0.2);
   background: rgba(255, 193, 7, 0.02);
   cursor: pointer;
   transition: all 0.16s ease;
@@ -1294,21 +1142,16 @@ body {
   text-align: center;
 }
 
-/* ---------------------------------------------------------
-   CUSTOM TOGGLE SWITCH
-   --------------------------------------------------------- */
-
+/* Custom Toggle Switch */
 .settings-switch {
   position: relative;
   display: flex;
   align-items: center;
-
   width: 32px;
   height: 17px;
   border-radius: 10px;
   border: 1px solid rgba(255, 193, 7, 0.45);
   background: rgba(255, 255, 255, 0.08);
-
   transition: all 0.16s ease;
 }
 
@@ -1346,10 +1189,7 @@ body {
   pointer-events: none;
 }
 
-/* ---------------------------------------------------------
-   ACTION BUTTONS
-   --------------------------------------------------------- */
-
+/* Modal Actions */
 .settings-modal-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1363,10 +1203,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-
   border: 1px solid var(--assistant-colour);
   background: transparent;
-
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 10px;
@@ -1382,7 +1220,7 @@ body {
 }
 
 .settings-modal-button-primary {
-  background: rgba(255, 193, 7, 0.10);
+  background: rgba(255, 193, 7, 0.1);
   box-shadow: inset 0 0 10px rgba(255, 193, 7, 0.05);
 }
 
@@ -1480,10 +1318,7 @@ body {
   letter-spacing: 1.2px;
 }
 
-/* =========================================================
-   ASSISTANT COLOUR PICKER
-   ========================================================= */
-
+/* Color Picker */
 .assistant-colour-picker {
   display: flex;
   flex-direction: column;
@@ -1610,10 +1445,7 @@ body {
   box-shadow: 0 0 6px var(--assistant-colour-30);
 }
 
-/* =========================================================
-   REMOTE ACCESS MODAL OVERRIDES
-   ========================================================= */
-
+/* Remote Access Modal Overrides */
 .settings-modal:has(.remote-modal-content) {
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
@@ -1748,25 +1580,7 @@ body {
 }
 
 /* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 520px) {
-  .settings-toggle-description {
-    display: none;
-  }
-
-  .settings-toggle-row {
-    grid-template-columns: 24px 1fr 28px 34px;
-  }
-
-  .settings-toggle-state {
-    border-left: 0;
-  }
-}
-
-/* =========================================================
-   MORNING BRIEF OVERLAY
+   MORNING BRIEF OVERLAY (FULLSCREEN DEFAULT)
    ========================================================= */
 
 .morning-brief-overlay {
@@ -1908,7 +1722,7 @@ body {
 }
 
 /* =========================================================
-   HEADER NAVIGATION
+   HEADER NAVIGATION (FULLSCREEN DEFAULT)
    ========================================================= */
 
 .cockpit-header-nav {
@@ -1934,28 +1748,21 @@ body {
   height: 46px;
   min-width: 54px;
   padding: 4px 8px 3px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
-
   border: none;
   background: transparent;
-
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 7px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.08em;
-
   cursor: pointer;
-
-  text-shadow:
-    0 0 5px var(--assistant-colour-45);
-
+  text-shadow: 0 0 5px var(--assistant-colour-45);
   transition:
     color 150ms ease,
     text-shadow 150ms ease,
@@ -1964,32 +1771,111 @@ body {
 
 .cockpit-header-nav button:hover {
   border: none;
-  background: transparent;
-  box-shadow: none;
-
+  background: color-mix(in srgb, var(--assistant-colour) 8%, transparent);
+  box-shadow: 0 0 8px var(--assistant-colour-20);
   color: #fff;
-
-  text-shadow:
-    0 0 8px var(--assistant-colour-80);
-
+  text-shadow: 0 0 8px var(--assistant-colour-80);
   transform: translateY(-1px);
 }
 
-.cockpit-header-nav button:hover {
-  border-color: var(--assistant-colour-80);
-  background: color-mix(in srgb, var(--assistant-colour) 8%, transparent);
-  box-shadow: 0 0 8px var(--assistant-colour-20);
-  transform: translateY(-1px);
+.cockpit-header-nav button::before {
+  color: var(--assistant-colour);
+  text-shadow: 0 0 6px var(--assistant-colour-45);
+}
+
+.cockpit-header-nav button:hover::before {
+  text-shadow: 0 0 10px var(--assistant-colour-70);
+}
+
+/* Left quick nav icons */
+.cockpit-header-nav-left button:nth-child(1)::before {
+  content: "⏻";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-left button:nth-child(2)::before {
+  content: "▦";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-left button:nth-child(3)::before {
+  content: "☁";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-left button:nth-child(4)::before {
+  content: "▣";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-left button:nth-child(5)::before {
+  content: "♫";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+/* Right quick nav icons */
+.cockpit-header-nav-right button:nth-child(1)::before {
+  content: "▱";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-right button:nth-child(2)::before {
+  content: "▣";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-right button:nth-child(3)::before {
+  content: "▤";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-right button:nth-child(4)::before {
+  content: "▤";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
+}
+
+.cockpit-header-nav-right button:nth-child(5)::before {
+  content: "⚙";
+  display: block;
+  font-size: 17px;
+  line-height: 16px;
+  margin-bottom: 2px;
 }
 
 /* =========================================================
-   EXACT IMAGE 2 REPRODUCTION:
-   ACTIVITY LOG / QUICK TOOLS / TODAY (RIGHT COLUMN)
+   ACTIVITY LOG / QUICK TOOLS (FULLSCREEN DEFAULT)
    ========================================================= */
 
 .cockpit-right {
   position: absolute;
-  top: 90px;
+  top: 100px;
   right: 24px;
   width: 340px;
   padding: 0;
@@ -2003,7 +1889,6 @@ body {
   z-index: 20;
 }
 
-/* TOP-LEFT L-BRACKET */
 .cockpit-right::before {
   content: "";
   position: absolute;
@@ -2016,7 +1901,6 @@ body {
   pointer-events: none;
 }
 
-/* BOTTOM-RIGHT L-BRACKET */
 .cockpit-right::after {
   content: "";
   position: absolute;
@@ -2029,10 +1913,8 @@ body {
   pointer-events: none;
 }
 
-/* Common Section Headers (Image 2 style: minimal underline & diamond bullet) */
 .cockpit-right .panel-heading,
-.cockpit-quick-tools .panel-heading,
-.cockpit-today .panel-heading {
+.cockpit-quick-tools .panel-heading {
   height: 28px;
   display: flex;
   align-items: center;
@@ -2047,18 +1929,16 @@ body {
 }
 
 .cockpit-right .panel-heading::before,
-.cockpit-quick-tools .panel-heading::before,
-.cockpit-today .panel-heading::before {
+.cockpit-quick-tools .panel-heading::before {
   margin-right: 8px;
   font-size: 8px;
   color: var(--assistant-colour);
   text-shadow: 0 0 6px var(--assistant-colour-65);
 }
 
-/* 1. ACTIVITY LOG */
 .activity-log {
   width: 100%;
-  height: 250px;
+  height: 350px;
   padding: 0 10px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -2067,8 +1947,6 @@ body {
   pointer-events: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--assistant-colour-45) transparent;
-  -webkit-mask-image: none;
-  mask-image: none;
 }
 
 .activity-message {
@@ -2100,58 +1978,34 @@ body {
 .activity-user .activity-message-meta {
   opacity: 1;
   color: var(--hud-user-colour);
-  text-shadow: 0 0 6px color-mix(
-    in srgb,
-    var(--hud-user-colour) 45%,
-    transparent
-  );
+  text-shadow: 0 0 6px color-mix(in srgb, var(--hud-user-colour) 45%, transparent);
 }
 
 .activity-jarvis .activity-message-meta {
   opacity: 1;
   color: var(--hud-jarvis-colour);
-  text-shadow: 0 0 6px color-mix(
-    in srgb,
-    var(--hud-jarvis-colour) 45%,
-    transparent
-  );
+  text-shadow: 0 0 6px color-mix(in srgb, var(--hud-jarvis-colour) 45%, transparent);
 }
 
 .activity-system .activity-message-meta {
   opacity: 1;
   color: var(--hud-system-colour);
-  text-shadow: 0 0 6px color-mix(
-    in srgb,
-    var(--hud-system-colour) 45%,
-    transparent
-  );
+  text-shadow: 0 0 6px color-mix(in srgb, var(--hud-system-colour) 45%, transparent);
 }
 
 .activity-user .activity-message-text {
   color: var(--hud-user-colour);
-  text-shadow: 0 0 4px color-mix(
-    in srgb,
-    var(--hud-user-colour) 25%,
-    transparent
-  );
+  text-shadow: 0 0 4px color-mix(in srgb, var(--hud-user-colour) 25%, transparent);
 }
 
 .activity-jarvis .activity-message-text {
   color: var(--hud-jarvis-colour);
-  text-shadow: 0 0 4px color-mix(
-    in srgb,
-    var(--hud-jarvis-colour) 25%,
-    transparent
-  );
+  text-shadow: 0 0 4px color-mix(in srgb, var(--hud-jarvis-colour) 25%, transparent);
 }
 
 .activity-system .activity-message-text {
   color: var(--hud-system-colour);
-  text-shadow: 0 0 4px color-mix(
-    in srgb,
-    var(--hud-system-colour) 25%,
-    transparent
-  );
+  text-shadow: 0 0 4px color-mix(in srgb, var(--hud-system-colour) 25%, transparent);
 }
 
 .activity-empty {
@@ -2173,11 +2027,10 @@ body {
   background: var(--assistant-colour-45);
 }
 
-/* 2. QUICK TOOLS */
 .cockpit-quick-tools {
   position: absolute;
-  bottom: 80px;
-  right: 24px;
+  bottom: 100px;
+  right: 14px;
   width: 350px;
   padding: 0;
   border: none;
@@ -2241,50 +2094,9 @@ body {
 }
 
 /* =========================================================
-   RESPONSIVE OVERRIDES
+   QUICK TOOLS ICONS
    ========================================================= */
 
-@media (max-width: 900px) {
-  .cockpit-right {
-    top: 18px;
-    right: 10px;
-    width: calc(100vw - 20px);
-    max-width: 350px;
-  }
-
-  .activity-log {
-    height: 155px;
-  }
-
-  .cockpit-quick-tools {
-    top: 235px;
-    right: 10px;
-    width: calc(100vw - 20px);
-    max-width: 350px;
-  }
-}
-
-@media (max-width: 600px) {
-  .cockpit-right {
-    top: 18px;
-    right: 10px;
-    width: calc(100vw - 20px);
-    max-width: none;
-  }
-
-  .cockpit-quick-tools {
-    top: 235px;
-    right: 10px;
-    width: calc(100vw - 20px);
-    max-width: none;
-  }
-}
-
-/* =========================================================
-   QUICK TOOLS — ACTUAL SERVICE LOGOS
-   ========================================================= */
-
-/* Base icon */
 .quick-tools-grid button .quick-tool-icon {
   width: 26px;
   height: 22px;
@@ -2299,11 +2111,7 @@ body {
   box-shadow: none;
 }
 
-
-/* =========================================================
-   1. GOOGLE — GOOGLE "G"
-   ========================================================= */
-
+/* Google */
 .quick-tools-grid button:nth-child(1) .quick-tool-icon {
   width: 23px;
   height: 23px;
@@ -2319,15 +2127,10 @@ body {
   font-size: 20px;
   font-weight: 800;
   color: #4285f4;
-  text-shadow:
-    0 0 6px rgba(66, 133, 244, 0.45);
+  text-shadow: 0 0 6px rgba(66, 133, 244, 0.45);
 }
 
-
-/* =========================================================
-   2. YOUTUBE — QUICK TOOL LOGO
-   ========================================================= */
-
+/* YouTube */
 .quick-tools-grid button:nth-child(2) .quick-tool-icon {
   width: 24px;
   height: 17px;
@@ -2340,8 +2143,7 @@ body {
   font-size: 0;
   text-shadow: none;
   position: relative;
-  box-shadow:
-    0 0 7px rgba(255, 0, 0, 0.45);
+  box-shadow: 0 0 7px rgba(255, 0, 0, 0.45);
 }
 
 .quick-tools-grid button:nth-child(2) .quick-tool-icon::after {
@@ -2354,11 +2156,7 @@ body {
   margin-left: 2px;
 }
 
-
-/* =========================================================
-   3. EMAIL — GMAIL STYLE
-   ========================================================= */
-
+/* Email */
 .quick-tools-grid button:nth-child(3) .quick-tool-icon {
   width: 25px;
   height: 18px;
@@ -2367,8 +2165,7 @@ body {
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
-  box-shadow:
-    0 0 6px rgba(234, 67, 53, 0.35);
+  box-shadow: 0 0 6px rgba(234, 67, 53, 0.35);
 }
 
 .quick-tools-grid button:nth-child(3) .quick-tool-icon::before {
@@ -2395,19 +2192,14 @@ body {
   transform: rotate(45deg);
 }
 
-
-/* =========================================================
-   4. GOOGLE MAPS — LOCATION PIN
-   ========================================================= */
-
+/* Maps */
 .quick-tools-grid button:nth-child(4) .quick-tool-icon {
   width: 21px;
   height: 25px;
   background: #34a853;
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
-  box-shadow:
-    0 0 7px rgba(52, 168, 83, 0.45);
+  box-shadow: 0 0 7px rgba(52, 168, 83, 0.45);
 }
 
 .quick-tools-grid button:nth-child(4) .quick-tool-icon::after {
@@ -2421,11 +2213,7 @@ body {
   top: 7px;
 }
 
-
-/* =========================================================
-   5. GOOGLE TRANSLATE
-   ========================================================= */
-
+/* Translate */
 .quick-tools-grid button:nth-child(5) .quick-tool-icon {
   width: 25px;
   height: 23px;
@@ -2442,8 +2230,7 @@ body {
   font-size: 17px;
   font-weight: 700;
   color: #4285f4;
-  text-shadow:
-    0 0 6px rgba(66, 133, 244, 0.45);
+  text-shadow: 0 0 6px rgba(66, 133, 244, 0.45);
 }
 
 .quick-tools-grid button:nth-child(5) .quick-tool-icon::after {
@@ -2457,19 +2244,14 @@ body {
   color: #34a853;
 }
 
-
-/* =========================================================
-   6. WEBSITES — GLOBE
-   ========================================================= */
-
+/* Websites */
 .quick-tools-grid button:nth-child(6) .quick-tool-icon {
   width: 23px;
   height: 23px;
   border: 2px solid #4285f4;
   border-radius: 50%;
   box-sizing: border-box;
-  box-shadow:
-    0 0 7px rgba(66, 133, 244, 0.4);
+  box-shadow: 0 0 7px rgba(66, 133, 244, 0.4);
 }
 
 .quick-tools-grid button:nth-child(6) .quick-tool-icon::before {
@@ -2492,19 +2274,14 @@ body {
   border-radius: 50%;
 }
 
-
-/* =========================================================
-   7. CALCULATOR — CALCULATOR ICON
-   ========================================================= */
-
+/* Calculator */
 .quick-tools-grid button:nth-child(7) .quick-tool-icon {
   width: 19px;
   height: 24px;
   border: 2px solid #4285f4;
   border-radius: 2px;
   box-sizing: border-box;
-  box-shadow:
-    0 0 7px rgba(66, 133, 244, 0.4);
+  box-shadow: 0 0 7px rgba(66, 133, 244, 0.4);
 }
 
 .quick-tools-grid button:nth-child(7) .quick-tool-icon::before {
@@ -2530,11 +2307,7 @@ body {
   color: #4285f4;
 }
 
-
-/* =========================================================
-   8. LOCK — WINDOWS STYLE LOCK
-   ========================================================= */
-
+/* Lock */
 .quick-tools-grid button:nth-child(8) .quick-tool-icon {
   width: 17px;
   height: 14px;
@@ -2542,8 +2315,7 @@ body {
   border: 2px solid #4285f4;
   border-radius: 2px;
   box-sizing: border-box;
-  box-shadow:
-    0 0 7px rgba(66, 133, 244, 0.4);
+  box-shadow: 0 0 7px rgba(66, 133, 244, 0.4);
 }
 
 .quick-tools-grid button:nth-child(8) .quick-tool-icon::before {
@@ -2569,160 +2341,351 @@ body {
   border-radius: 2px;
 }
 
-/* =========================================================
-   JARVIS HEADER — QUICK NAV ICONS
-   ========================================================= */
-
-/* SHUTDOWN */
-
-.cockpit-header-nav-left button:nth-child(1)::before {
-  content: "⏻";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
+@media (max-width: 520px) {
+  .settings-toggle-description {
+    display: none;
+  }
+  .settings-toggle-row {
+    grid-template-columns: 24px 1fr 28px 34px;
+  }
+  .settings-toggle-state {
+    border-left: 0;
+  }
 }
-
-/* RUNNING */
-
-.cockpit-header-nav-left button:nth-child(2)::before {
-  content: "▦";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
-
-/* WEATHER */
-.cockpit-header-nav-left button:nth-child(3)::before {
-  content: "☁";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
-
-/* NEWS */
-.cockpit-header-nav-left button:nth-child(4)::before {
-  content: "▣";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
-
-/* MUSIC */
-.cockpit-header-nav-left button:nth-child(5)::before {
-  content: "♫";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
-
 
 /* =========================================================
-   RIGHT HEADER TOOLS
+   CLEAN ADAPTIVE FIX: 900x600 COMPACT HUD
+   (Only applies when window is squeezed or launched at 900x600)
    ========================================================= */
 
-/* SCREEN */
-.cockpit-header-nav-right button:nth-child(1)::before {
-  content: "▱";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
+@media (max-width: 1150px) and (max-height: 720px) {
 
-/* CAPTURE */
-.cockpit-header-nav-right button:nth-child(2)::before {
-  content: "▣";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
+  /* 1. Header */
+  .cockpit-header {
+    height: 44px !important;
+    padding: 0 12px !important;
+  }
 
-/* FILES */
+  .cockpit-brand {
+    gap: 4px !important;
+  }
 
-.cockpit-header-nav-right button:nth-child(3)::before {
-  content: "▤";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
+  .cockpit-brand .brand-main {
+    font-size: 13px !important;
+    letter-spacing: 1px !important;
+  }
 
-/* NOTES */
-.cockpit-header-nav-right button:nth-child(4)::before {
-  content: "▤";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
+  .cockpit-brand .brand-pro {
+    font-size: 7.5px !important;
+  }
 
-/* SETTINGS */
-.cockpit-header-nav-right button:nth-child(5)::before {
-  content: "⚙";
-  display: block;
-  font-size: 17px;
-  line-height: 16px;
-  margin-bottom: 2px;
-}
+  .cockpit-title {
+    font-size: 13.5px !important;
+    letter-spacing: 2px !important;
+  }
 
+  .cockpit-header-nav {
+    height: 44px !important;
+    gap: 2px !important;
+  }
 
-/* =========================================================
-   HEADER BUTTON LAYOUT
-   ========================================================= */
+  .cockpit-header-nav-left {
+    left: 115px !important;
+  }
 
-.cockpit-header-nav button {
-  height: 46px;
+  .cockpit-header-nav-right {
+    right: 190px !important;
+  }
 
-  min-width: 54px;
+  .cockpit-header-nav button {
+    height: 34px !important;
+    min-width: 34px !important;
+    font-size: 5.5px !important;
+    padding: 2px 1px !important;
+    gap: 0px !important;
+  }
 
-  padding:
-    4px 8px 3px;
+  .cockpit-header-nav button::before {
+    font-size: 11px !important;
+    line-height: 11px !important;
+  }
 
-  display: flex;
-  flex-direction: column;
+  .cockpit-system-status {
+    font-size: 9.5px !important;
+    gap: 8px !important;
+    letter-spacing: 0.5px !important;
+  }
 
-  align-items: center;
-  justify-content: center;
+  /* 2. Left System Monitor */
+  .cockpit-panel.cockpit-left {
+    top: 50px !important;
+    left: 8px !important;
+    width: 200px !important;
+    padding: 4px !important;
+  }
 
-  gap: 1px;
-}
+  .cockpit-left .panel-heading {
+    height: 20px !important;
+    font-size: 8.5px !important;
+    margin-bottom: 4px !important;
+  }
 
+  .cockpit-left .panel-body {
+    gap: 4px !important;
+    padding: 0 !important;
+  }
 
-/* Keep labels compact */
+  .cockpit-gauge {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+  }
 
-.cockpit-header-nav button {
-  font-size: 7px;
+  .cockpit-gauge-value {
+    font-size: 8.5px !important;
+  }
 
-  line-height: 1;
+  .cockpit-gauge-unit {
+    font-size: 5px !important;
+  }
 
-  letter-spacing: 0.08em;
-}
+  .cockpit-system-name {
+    font-size: 8px !important;
+  }
 
+  .cockpit-system-state {
+    font-size: 6.5px !important;
+  }
 
-/* =========================================================
-   ICON GLOW
-   ========================================================= */
+  /* 3. Center Headlines Overlay */
+  .morning-brief-overlay {
+    position: absolute !important;
+    top: 70px !important;
+    left: 215px !important;
+    right: 235px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    padding: 8px 12px !important;
+    background: rgba(4, 4, 6, 0.92) !important;
+    border: 1px solid var(--assistant-colour-30) !important;
+    backdrop-filter: blur(6px) !important;
+    z-index: 50 !important;
+  }
 
-.cockpit-header-nav button::before {
-  color:
-    var(--assistant-colour);
+  .morning-brief-header {
+    height: 20px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 1.5px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+  }
 
-  text-shadow:
-    0 0 6px
-    var(--assistant-colour-45);
-}
+  .morning-brief-list {
+    max-height: 240px !important;
+    gap: 6px !important;
+  }
 
+  .morning-brief-item {
+    grid-template-columns: 55px 1fr !important;
+    gap: 6px !important;
+    font-size: 8px !important;
+    padding-bottom: 4px !important;
+    line-height: 1.25 !important;
+  }
 
-/* Hover */
+  .morning-brief-category {
+    font-size: 7px !important;
+  }
 
-.cockpit-header-nav button:hover::before {
-  text-shadow:
-    0 0 10px
-    var(--assistant-colour-70);
+  /* 4. Right Side: Bridge Status, Activity Log (220px) & Quick Tools */
+  .hud-bridge-status {
+    top: 50px !important;
+    right: 12px !important;
+    font-size: 7.5px !important;
+    gap: 4px !important;
+    z-index: 35 !important;
+    opacity: 0.7 !important;
+    pointer-events: none !important;
+  }
+
+  .hud-bridge-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  .cockpit-right {
+    top: 68px !important;
+    right: 10px !important;
+    width: 220px !important;
+    z-index: 20 !important;
+  }
+
+  .cockpit-right .panel-heading {
+    height: 20px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 1.5px !important;
+    margin-bottom: 4px !important;
+    padding: 0 4px !important;
+  }
+
+  .activity-log {
+    height: 220px !important;
+    padding: 4px 6px !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    scrollbar-width: thin !important;
+  }
+
+  .activity-log::-webkit-scrollbar {
+    width: 3px !important;
+  }
+
+  .activity-log::-webkit-scrollbar-thumb {
+    background: var(--assistant-colour-45) !important;
+    border-radius: 2px !important;
+  }
+
+  .activity-message {
+    width: 100% !important;
+    padding: 0 0 6px 0 !important;
+    border-bottom: 1px solid rgba(255, 171, 23, 0.15) !important;
+  }
+
+  .activity-message-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 2px !important;
+    font-size: 7.5px !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+  }
+
+  .activity-message-text {
+    font-size: 8px !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0.02em !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  .cockpit-quick-tools {
+    top: auto !important;
+    bottom: 80px !important;
+    right: 10px !important;
+    width: 200px !important;
+  }
+
+  .cockpit-quick-tools .panel-heading {
+    display: none !important;
+  }
+
+  .quick-tools-grid {
+    row-gap: 5px !important;
+    column-gap: 3px !important;
+  }
+
+  .quick-tools-grid button {
+    height: 30px !important;
+    font-size: 5.5px !important;
+    gap: 1px !important;
+  }
+
+  .quick-tools-grid button .quick-tool-icon {
+    transform: scale(0.74) !important;
+    transform-origin: center center !important;
+  }
+
+  /* 5. Command Input */
+  .hud-command-input {
+    right: 10px !important;
+    bottom: 14px !important;
+    width: 190px !important;
+    z-index: 90 !important;
+  }
+
+  .hud-command-label {
+    display: none !important;
+  }
+
+  .hud-command-row input {
+    height: 23px !important;
+    font-size: 8px !important;
+    padding: 0 6px !important;
+  }
+
+  .hud-command-row button {
+    flex: 0 0 23px !important;
+    width: 23px !important;
+    height: 23px !important;
+    font-size: 8px !important;
+  }
+
+  /* 6. Bottom Center Dock */
+  .cockpit-bottom-container {
+    bottom: 14px !important;
+    gap: 14px !important;
+    max-width: 460px !important;
+  }
+
+  .cockpit-bottom-indicators {
+    gap: 10px !important;
+  }
+
+  .voice-indicator {
+    font-size: 8.5px !important;
+    letter-spacing: 0.5px !important;
+    gap: 3px !important;
+  }
+
+  .indicator-dot {
+    width: 5px !important;
+    height: 5px !important;
+  }
+
+  .hud-waveform {
+    width: 130px !important;
+    height: 20px !important;
+    gap: 2px !important;
+  }
+
+  .hud-bottom-toolbar {
+    gap: 2px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .hud-bar-btn {
+    height: 20px !important;
+    font-size: 6.5px !important;
+    padding: 0 4px !important;
+    gap: 2px !important;
+    letter-spacing: 0.03em !important;
+    border-radius: 12px !important;
+  }
+
+  .btn-icon {
+    font-size: 8px !important;
+  }
+
+  /* 7. Bottom Left Controls */
+  .hud-controls {
+    bottom: 14px !important;
+    left: 10px !important;
+    gap: 3px !important;
+    z-index: 90 !important;
+  }
+
+  .hud-row {
+    gap: 2px !important;
+  }
+
+  .hud-btn {
+    height: 20px !important;
+    min-width: 26px !important;
+    font-size: 7.5px !important;
+    padding: 0 3px !important;
+  }
 }
