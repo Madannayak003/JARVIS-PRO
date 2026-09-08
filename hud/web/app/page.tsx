@@ -724,12 +724,7 @@ export default function Home() {
       userActivity,
     ].slice(-30));
 
-    const currentHost =
-      typeof window !== "undefined"
-        ? window.location.hostname
-        : "127.0.0.1";
-
-    const dashboardEndpoint = `http://${currentHost}:8765/api/command`;
+    const dashboardEndpoint = `${JARVIS_DASHBOARD_URL}/api/command`;
 
     let success = false;
     let lastError = "Command could not be processed by backend.";

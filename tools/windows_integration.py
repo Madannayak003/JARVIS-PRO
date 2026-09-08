@@ -36,7 +36,7 @@ PROJECT_ROOT = (
 
 MAIN_PY = (
     PROJECT_ROOT
-    / "main.py"
+    / "run_jarvis.py"
 )
 
 
@@ -122,7 +122,7 @@ def create_desktop_shortcut() -> str:
 
     The shortcut launches:
 
-        python main.py
+        python run_jarvis.py
 
     from the actual JARVIS PRO project directory.
     """

@@ -92,7 +92,7 @@ def create_desktop_shortcut() -> str:
 
     # Get absolute path to main.py instead of sys.argv[0] so shortcut always boots the core
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    target_script = os.path.join(project_dir, "main.py")
+    target_script = os.path.join(project_dir, "run_jarvis.py")
     icon_path = os.path.join(project_dir, "config", "jarvis.ico")
     
     pythonw_executable = sys.executable.replace("python.exe", "pythonw.exe")
