@@ -17,7 +17,7 @@ import re
 
 from voice.manager import speak
 
-from archive.plugins import register as plugin_register
+from core.plugins import register as plugin_register
 from core.registry import register as ai_register
 
 from ai.memory_store import (

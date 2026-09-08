@@ -1,4 +1,4 @@
-from archive.plugins import execute
+from core.plugins import execute
 
 def route(query):
     return execute(query)
