@@ -1079,6 +1079,44 @@ class DashboardServer:
 
             return
 
+        # =====================================================
+        # LIVE TEXT BRIDGE
+        #
+        # When Live Conversation is active, typed Command
+        # Input is sent directly into the active Gemini Live
+        # session.
+        #
+        # If Live is inactive OR the Live session is unavailable,
+        # execution falls through to the normal JARVIS dispatcher.
+        # =====================================================
+
+        try:
+
+            from voice.live_conversation import (
+                live_conversation_status,
+                send_live_text,
+            )
+
+            if live_conversation_status():
+
+                if send_live_text(text):
+
+                    return
+
+        except Exception as exc:
+
+            print(
+                "[LIVE TEXT BRIDGE] Failed:",
+                exc,
+            )
+
+        # =====================================================
+        # NORMAL JARVIS COMMAND
+        #
+        # This is the fallback whenever Gemini Live is not active
+        # or the Live text bridge cannot accept the command.
+        # =====================================================
+
         try:
 
             result = (

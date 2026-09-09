@@ -398,6 +398,18 @@ class LiveConversation:
 
         self._session_resumption_lock = threading.Lock()
 
+        # -----------------------------------------------------
+        # Typed Command Input -> Gemini Live bridge.
+        #
+        # These point only to the currently active Gemini
+        # connection. They are replaced automatically whenever
+        # Live performs a connection rollover.
+        # -----------------------------------------------------
+
+        self._session = None
+        self._session_loop = None
+        self._session_lock = threading.Lock()
+
     # =========================================================
     # STATE
     # =========================================================
@@ -518,6 +530,75 @@ class LiveConversation:
             self._session_resumption_handle = handle
             
             
+    # =========================================================
+    # TYPED TEXT -> GEMINI LIVE
+    # =========================================================
+
+    def send_text(
+        self,
+        text: str,
+    ) -> bool:
+        """
+        Send typed Command Input into the currently active
+        Gemini Live session.
+
+        This method may be called from a normal JARVIS/dashboard
+        worker thread, so the Gemini Live asyncio session is
+        accessed through its owning event loop.
+        """
+
+        text = str(text or "").strip()
+
+        if not text:
+            return False
+
+        with self._session_lock:
+            session = self._session
+            loop = self._session_loop
+
+        if (
+            session is None
+            or loop is None
+            or loop.is_closed()
+        ):
+            print(
+                "[LIVE] Cannot send typed text: "
+                "Live session is not active."
+            )
+            return False
+
+        async def _send():
+            await session.send_realtime_input(
+                text=text,
+            )
+
+        try:
+
+            future = asyncio.run_coroutine_threadsafe(
+                _send(),
+                loop,
+            )
+
+            future.result(
+                timeout=5,
+            )
+
+            print(
+                "[LIVE TEXT] Sent to Gemini Live:",
+                text,
+            )
+
+            return True
+
+        except Exception as exc:
+
+            print(
+                "[LIVE] Failed to send typed text:",
+                exc,
+            )
+
+            return False
+
     # =========================================================
     # START
     # =========================================================
@@ -934,6 +1015,10 @@ class LiveConversation:
                                 "[LIVE] Gemini Live connected."
                             )
 
+                            with self._session_lock:
+                                self._session = session
+                                self._session_loop = loop
+
                             if connection_number == 1:
 
                                 print(
@@ -1095,6 +1180,11 @@ class LiveConversation:
 
                             finally:
 
+                                with self._session_lock:
+                                    if self._session is session:
+                                        self._session = None
+                                        self._session_loop = None
+
                                 sender_task.cancel()
 
                                 await asyncio.gather(
@@ -1173,6 +1263,10 @@ class LiveConversation:
                 )
 
         finally:
+
+            with self._session_lock:
+                self._session = None
+                self._session_loop = None
             
             # =================================================
             # HUD SPEAKING CLEANUP
@@ -2052,6 +2146,20 @@ class LiveConversation:
 # =============================================================
 
 _live = LiveConversation()
+
+
+# =============================================================
+# LIVE TEXT BRIDGE
+# =============================================================
+
+def send_live_text(
+    text: str,
+) -> bool:
+    """
+    Send typed Command Input to the active Gemini Live session.
+    """
+
+    return _live.send_text(text)
 
 
 # =============================================================
