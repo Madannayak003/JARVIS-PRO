@@ -1494,6 +1494,13 @@ class LiveConversation:
         
         output_text_parts = []
 
+        # True when an existing JARVIS skill already produced the
+        # authoritative response for this Live turn.
+        # In that case the normal voice/HUD path has already logged
+        # the response, so Live must not log it a second time.
+        
+        jarvis_authoritative_response = False
+
         try:
             
             print(
@@ -1693,6 +1700,8 @@ class LiveConversation:
                                             "[LIVE] JARVIS skill response:",
                                             authoritative_response,
                                         )
+                                        
+                                        jarvis_authoritative_response = True
 
                                         result = {
                                             "success": True,
@@ -1951,15 +1960,18 @@ class LiveConversation:
                                 complete_output,
                             )
 
-                            try:
-                                HUDIntegration.response(
-                                    complete_output
-                                )
-                            except Exception as exc:
-                                print(
-                                    "[HUD LIVE RESPONSE LOG] Failed:",
-                                    exc,
-                                )
+                            if not jarvis_authoritative_response:
+
+                                try:
+                                    HUDIntegration.response(
+                                        complete_output,
+                                        speaker="live",
+                                    )
+                                except Exception as exc:
+                                    print(
+                                        "[HUD LIVE RESPONSE LOG] Failed:",
+                                        exc,
+                                    )
                     self._hud_stop_speaking()
 
                     print(

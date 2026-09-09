@@ -60,7 +60,7 @@ const EMPTY_STATE: HUDState = {
 
 export type HUDActivity = {
   id: string;
-  speaker: "user" | "jarvis" | "system";
+  speaker: "user" | "jarvis" | "live" | "sys" | "system";
   text: string;
   timestamp: string;
 };
@@ -545,7 +545,9 @@ export default function Home() {
           event.name === "command"
             ? "user"
             : event.name === "response"
-            ? "jarvis"
+            ? event.data?.speaker === "live"
+              ? "live"
+              : "jarvis"
             : "system";
 
         const text = String(

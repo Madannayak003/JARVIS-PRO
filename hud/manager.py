@@ -303,14 +303,15 @@ class HUDManager:
     # Response
     # =====================================================
 
-    def response(self, text):
+    def response(self, text, speaker="jarvis"):
 
         self.state.last_response = str(text)
 
         self._publish(
             HUD_RESPONSE,
             {
-                "text": str(text)
+                "text": str(text),
+                "speaker": str(speaker),
             }
         )
 

@@ -253,13 +253,15 @@ class HUDIntegration:
     @classmethod
     def response(
         cls,
-        text
+        text,
+        speaker="jarvis",
     ):
 
         cls._emit(
             HUDEvent.RESPONSE,
             {
-                "text": str(text)
+                "text": str(text),
+                "speaker": str(speaker),
             }
         )
 

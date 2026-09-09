@@ -770,8 +770,19 @@ class DashboardServer:
                 HUDIntegration
             )
 
+            from core.live_execution import (
+                is_live_execution
+            )
+
+            speaker = (
+                "live"
+                if is_live_execution()
+                else "jarvis"
+            )
+
             HUDIntegration.response(
-                text
+                text,
+                speaker=speaker
             )
 
         except Exception as exc:
@@ -786,15 +797,10 @@ class DashboardServer:
         # -----------------------------------------------------
 
         self._broadcast_threadsafe({
-
             "type": "log",
-
-            "speaker": "jarvis",
-
+            "speaker": speaker,
             "text": text,
-
             "ts": time.time(),
-
         })
 
     # =========================================================

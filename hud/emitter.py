@@ -78,7 +78,8 @@ class HUDEmitter:
         if event == HUDEvent.RESPONSE:
 
             HUDAdapter.response(
-                data.get("text", "")
+                data.get("text", ""),
+                data.get("speaker", "jarvis")
             )
             return
 

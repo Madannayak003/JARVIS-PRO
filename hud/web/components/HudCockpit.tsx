@@ -639,17 +639,13 @@ export default function HudCockpit({
 
                     <span>
 
-                      {activity.speaker ===
-                        "user"
-
+                      {activity.speaker === "user"
                         ? "USER"
-
-                        : activity.speaker ===
-                          "jarvis"
-
-                          ? assistantName
-
-                          : "SYS"}
+                        : activity.speaker === "live"
+                          ? `${assistantName} • LIVE`
+                          : activity.speaker === "jarvis"
+                            ? assistantName
+                            : "SYS"}
 
                     </span>
 

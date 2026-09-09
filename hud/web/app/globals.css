@@ -2069,6 +2069,18 @@ body {
   text-shadow: 0 0 4px color-mix(in srgb, var(--hud-system-colour) 25%, transparent);
 }
 
+.activity-live {
+  color: #00e5ff;
+}
+
+.activity-live .activity-message-meta {
+  color: #00e5ff;
+}
+
+.activity-live .activity-message-text {
+  color: #00e5ff;
+}
+
 .activity-empty {
   padding: 10px 0;
   font-size: 10px;

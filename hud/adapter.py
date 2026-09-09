@@ -59,10 +59,11 @@ class HUDAdapter:
         )
 
     @staticmethod
-    def response(text):
+    def response(text, speaker="jarvis"):
 
         hud.response(
-            text
+            text,
+            speaker
         )
 
     # =====================================================
