@@ -2,8 +2,10 @@
 
 import "../app/ai-chat.css";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import {
-  FormEvent,
   KeyboardEvent,
   useEffect,
   useRef,
@@ -732,7 +734,13 @@ export default function AIChatBot({
                     </div>
 
                     <div className="ai-chat-message-bubble">
-                      {item.content}
+                      {item.role === "assistant" ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {item.content}
+                        </ReactMarkdown>
+                      ) : (
+                        item.content
+                      )}
                     </div>
                   </div>
                 )
