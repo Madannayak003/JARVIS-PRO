@@ -55,6 +55,7 @@ from chatbot.ai_chat_api import (
     list_chats,
     get_chat,
     delete_chat,
+    rename_chat,
     send_message,
     get_model,
     set_model,
@@ -2506,6 +2507,67 @@ class DashboardServer:
 
             result = get_chat(
                 session_id
+            )
+
+            if not result.get("success"):
+                return JSONResponse(
+                    result,
+                    status_code=404,
+                )
+
+            return result
+        
+        
+        @app.post(
+            "/api/ai-chat/{session_id}/rename"
+        )
+        async def ai_chat_rename(
+            session_id: str,
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            try:
+                body = await request.json()
+
+            except Exception:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            title = str(
+                body.get(
+                    "title",
+                    "",
+                )
+            ).strip()
+
+            if not title:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Chat name cannot be empty.",
+                    },
+                    status_code=400,
+                )
+
+            result = rename_chat(
+                session_id=session_id,
+                title=title,
             )
 
             if not result.get("success"):

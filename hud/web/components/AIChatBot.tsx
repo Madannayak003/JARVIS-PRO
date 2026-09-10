@@ -95,6 +95,23 @@ export default function AIChatBot({
   const [quotaError, setQuotaError] =
     useState<string | null>(null);
 
+  const [openMenuId, setOpenMenuId] =
+    useState<string | null>(null);
+
+  const [renameChatId, setRenameChatId] =
+    useState<string | null>(null);
+
+  const [renameTitle, setRenameTitle] =
+    useState("");
+
+  const [deleteChatId, setDeleteChatId] =
+    useState<string | null>(null);
+
+  const [chatActionLoading, setChatActionLoading] =
+    useState(false);
+
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -467,6 +484,212 @@ export default function AIChatBot({
     }
   };
 
+
+  const copyCode = async (code: string) => {
+    try {
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        const textarea =
+          document.createElement("textarea");
+
+        textarea.value = code;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        const copied =
+          document.execCommand("copy");
+
+        document.body.removeChild(textarea);
+
+        if (!copied) {
+          throw new Error(
+            "Browser copy operation failed."
+          );
+        }
+      }
+
+      setCopiedCode(code);
+
+      window.setTimeout(() => {
+        setCopiedCode((current) =>
+          current === code ? null : current
+        );
+      }, 1500);
+
+    } catch (error) {
+      console.error(
+        "[AI CHAT] Code copy failed:",
+        error
+      );
+    }
+  };
+
+  /* =========================================================
+    CHAT HISTORY ACTIONS
+    ========================================================= */
+
+  const startRenameChat = (chat: ChatSession) => {
+    setOpenMenuId(null);
+    setRenameChatId(chat.id);
+    setRenameTitle(chat.title || "New Chat");
+  };
+
+  const cancelRenameChat = () => {
+    if (chatActionLoading) {
+      return;
+    }
+
+    setRenameChatId(null);
+    setRenameTitle("");
+  };
+
+  const saveRenameChat = async () => {
+    const chatId = renameChatId;
+    const title = renameTitle.trim();
+
+    if (!chatId || !title || chatActionLoading) {
+      return;
+    }
+
+    try {
+      setChatActionLoading(true);
+
+      const response = await fetch(
+        `${DASHBOARD_URL}/api/ai-chat/${chatId}/rename`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+          body: JSON.stringify({
+            title,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.error ||
+            "Unable to rename chat."
+        );
+      }
+
+      setSessions((previous) =>
+        previous.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                title: data.title || title,
+              }
+            : chat
+        )
+      );
+
+      setCurrentSession((previous) =>
+        previous?.id === chatId
+          ? {
+              ...previous,
+              title: data.title || title,
+            }
+          : previous
+      );
+
+      setRenameChatId(null);
+      setRenameTitle("");
+    } catch (error) {
+      console.error(
+        "[AI CHAT] Rename failed:",
+        error
+      );
+    } finally {
+      setChatActionLoading(false);
+    }
+  };
+
+  const confirmDeleteChat = (chatId: string) => {
+    setOpenMenuId(null);
+    setDeleteChatId(chatId);
+  };
+
+  const cancelDeleteChat = () => {
+    if (chatActionLoading) {
+      return;
+    }
+
+    setDeleteChatId(null);
+  };
+
+  const deleteChat = async () => {
+    const chatId = deleteChatId;
+
+    if (!chatId || chatActionLoading) {
+      return;
+    }
+
+    try {
+      setChatActionLoading(true);
+
+      const response = await fetch(
+        `${DASHBOARD_URL}/api/ai-chat/${chatId}`,
+        {
+          method: "DELETE",
+          cache: "no-store",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.error ||
+            "Unable to delete chat."
+        );
+      }
+
+      const remainingChats =
+        sessions.filter(
+          (chat) => chat.id !== chatId
+        );
+
+      setSessions(remainingChats);
+      setDeleteChatId(null);
+
+      /*
+      * If the deleted chat was the currently
+      * open conversation, move somewhere safe.
+      */
+      if (currentSession?.id === chatId) {
+        if (remainingChats.length > 0) {
+          await loadChat(
+            remainingChats[0].id
+          );
+        } else {
+          await createNewChat();
+        }
+      }
+    } catch (error) {
+      console.error(
+        "[AI CHAT] Delete failed:",
+        error
+      );
+    } finally {
+      setChatActionLoading(false);
+    }
+  };
+
   /* =========================================================
      KEYBOARD
      ========================================================= */
@@ -543,27 +766,77 @@ export default function AIChatBot({
               </div>
             ) : (
               sessions.map((chat) => (
-                <button
-                  type="button"
+                <div
                   key={chat.id}
                   className={
-                    "ai-chat-history-item " +
+                    "ai-chat-history-row " +
                     (currentSession?.id === chat.id
                       ? "active"
                       : "")
                   }
-                  onClick={() =>
-                    void loadChat(chat.id)
-                  }
                 >
-                  <span className="ai-chat-history-icon">
-                    ▸
-                  </span>
+                  <button
+                    type="button"
+                    className="ai-chat-history-item"
+                    onClick={() => {
+                      setOpenMenuId(null);
+                      void loadChat(chat.id);
+                    }}
+                  >
+                    <span className="ai-chat-history-icon">
+                      ▸
+                    </span>
 
-                  <span className="ai-chat-history-text">
-                    {chat.title || "New Chat"}
-                  </span>
-                </button>
+                    <span className="ai-chat-history-text">
+                      {chat.title || "New Chat"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="ai-chat-history-menu-button"
+                    aria-label={`Options for ${
+                      chat.title || "New Chat"
+                    }`}
+                    title="Chat options"
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      setOpenMenuId(
+                        openMenuId === chat.id
+                          ? null
+                          : chat.id
+                      );
+                    }}
+                  >
+                    ⋯
+                  </button>
+
+                  {openMenuId === chat.id && (
+                    <div className="ai-chat-history-menu">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          startRenameChat(chat)
+                        }
+                      >
+                        <span>✎</span>
+                        Rename
+                      </button>
+
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() =>
+                          confirmDeleteChat(chat.id)
+                        }
+                      >
+                        <span>⌫</span>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               ))
             )}
           </div>
@@ -580,6 +853,148 @@ export default function AIChatBot({
           </div>
         </div>
       </aside>
+
+      {/* =====================================================
+          RENAME CHAT DIALOG
+          ===================================================== */}
+
+      {renameChatId && (
+        <div
+          className="ai-chat-dialog-backdrop"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              cancelRenameChat();
+            }
+          }}
+        >
+          <div
+            className="ai-chat-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rename-chat-title"
+          >
+            <div className="ai-chat-dialog-title">
+              Rename chat
+            </div>
+
+            <div className="ai-chat-dialog-text">
+              Choose a name for this conversation.
+            </div>
+
+            <input
+              className="ai-chat-dialog-input"
+              value={renameTitle}
+              maxLength={60}
+              autoFocus
+              disabled={chatActionLoading}
+              onChange={(event) =>
+                setRenameTitle(
+                  event.target.value
+                )
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void saveRenameChat();
+                }
+
+                if (event.key === "Escape") {
+                  cancelRenameChat();
+                }
+              }}
+            />
+
+            <div className="ai-chat-dialog-actions">
+              <button
+                type="button"
+                className="ai-chat-dialog-cancel"
+                onClick={cancelRenameChat}
+                disabled={chatActionLoading}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="ai-chat-dialog-primary"
+                onClick={() =>
+                  void saveRenameChat()
+                }
+                disabled={
+                  chatActionLoading ||
+                  !renameTitle.trim()
+                }
+              >
+                {chatActionLoading
+                  ? "Saving..."
+                  : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          DELETE CHAT CONFIRMATION
+          ===================================================== */}
+
+      {deleteChatId && (
+        <div
+          className="ai-chat-dialog-backdrop"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              cancelDeleteChat();
+            }
+          }}
+        >
+          <div
+            className="ai-chat-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-chat-title"
+          >
+            <div
+              id="delete-chat-title"
+              className="ai-chat-dialog-title"
+            >
+              Delete chat?
+            </div>
+
+            <div className="ai-chat-dialog-text">
+              This conversation will be permanently
+              deleted from your AI chat history.
+            </div>
+
+            <div className="ai-chat-dialog-actions">
+              <button
+                type="button"
+                className="ai-chat-dialog-cancel"
+                onClick={cancelDeleteChat}
+                disabled={chatActionLoading}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="ai-chat-dialog-danger"
+                onClick={() =>
+                  void deleteChat()
+                }
+                disabled={chatActionLoading}
+              >
+                {chatActionLoading
+                  ? "Deleting..."
+                  : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* =====================================================
           MAIN
@@ -735,7 +1150,59 @@ export default function AIChatBot({
 
                     <div className="ai-chat-message-bubble">
                       {item.role === "assistant" ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            code({ className, children, ...props }) {
+                              const match = /language-(\w+)/.exec(
+                                className || ""
+                              );
+
+                              const code = String(children).replace(
+                                /\n$/,
+                                ""
+                              );
+
+                              if (!match) {
+                                return (
+                                  <code
+                                    className={className}
+                                    {...props}
+                                  >
+                                    {children}
+                                  </code>
+                                );
+                              }
+
+                              return (
+                                <div className="ai-chat-code-block">
+                                  <div className="ai-chat-code-header">
+                                    <span>
+                                      {match[1]}
+                                    </span>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        void copyCode(code);
+                                      }}
+                                    >
+                                      {copiedCode === code
+                                        ? "Copied ✓"
+                                        : "Copy"}
+                                    </button>
+                                  </div>
+
+                                  <pre>
+                                    <code className={className}>
+                                      {children}
+                                    </code>
+                                  </pre>
+                                </div>
+                              );
+                            },
+                          }}
+                        >
                           {item.content}
                         </ReactMarkdown>
                       ) : (
@@ -788,9 +1255,17 @@ export default function AIChatBot({
             <textarea
               ref={inputRef}
               value={message}
-              onChange={(event) =>
-                setMessage(event.target.value)
-              }
+              onChange={(event) => {
+                setMessage(event.target.value);
+
+                const textarea = event.target;
+
+                textarea.style.height = "auto";
+                textarea.style.height = `${Math.min(
+                  textarea.scrollHeight,
+                  180
+                )}px`;
+              }}
               onKeyDown={handleKeyDown}
               placeholder="Message independent AI..."
               rows={1}

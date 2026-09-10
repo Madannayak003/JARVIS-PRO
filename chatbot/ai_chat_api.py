@@ -132,6 +132,42 @@ def delete_chat(session_id: str):
     }
 
 
+def rename_chat(
+    session_id: str,
+    title: str,
+) -> dict:
+    """Rename an AI chat session."""
+
+    title = str(title).strip()
+
+    if not title:
+        return {
+            "success": False,
+            "error": "Chat name cannot be empty.",
+        }
+
+    if len(title) > 60:
+        title = title[:60]
+
+    success = chat_sessions.rename_session(
+        session_id=session_id,
+        title=title,
+    )
+
+    if not success:
+        return {
+            "success": False,
+            "error": "Chat session not found.",
+        }
+
+    session = chat_sessions.get_session(session_id)
+
+    return {
+        "success": True,
+        "session_id": session_id,
+        "title": session.title if session else title,
+    }
+
 # ==========================================================
 # Message API
 # ==========================================================

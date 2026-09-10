@@ -334,6 +334,37 @@ class AIChatSessionManager:
             _save_data(data)
 
             return True
+        
+    # ------------------------------------------------------
+    # RENAME
+    # ------------------------------------------------------
+        
+    def rename_session(
+        self,
+        session_id: str,
+        title: str,
+    ) -> bool:
+        """Rename an existing chat session."""
+
+        title = str(title).strip()
+
+        if not title:
+            return False
+
+        with self._lock:
+            data = _load_data()
+
+            for raw in data["sessions"]:
+                if raw.get("id") != session_id:
+                    continue
+
+                raw["title"] = title[:60]
+                raw["updated_at"] = _utc_now()
+
+                _save_data(data)
+                return True
+
+        return False
 
     # ---------------------------------------------------------
     # CLEAR ALL
