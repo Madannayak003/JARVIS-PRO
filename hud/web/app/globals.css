@@ -117,14 +117,14 @@ body {
 
 .hud-controls {
   position: fixed;
-  bottom: 20px;
-  left: 24px;
+  bottom: 14px;
+  left: 10px;
   right: auto;
   z-index: 40;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 2px;
   pointer-events: auto;
 }
 
@@ -134,7 +134,7 @@ body {
   padding: 0 10px;
   background: transparent;
   border: 1px solid var(--assistant-colour-45);
-  border-radius: 3px;
+  border-radius: 50px;
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   font-size: 13px;
@@ -173,7 +173,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
 }
 
 .hud-hint {
@@ -805,7 +805,7 @@ body {
 .cockpit-bottom-container {
   position: fixed;
   bottom: 18px;
-  left: 50%;
+  left: 47%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
@@ -2794,4 +2794,73 @@ body {
     font-size: 7.5px !important;
     padding: 0 3px !important;
   }
+}
+
+.ai-chat-model-select {
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 190, 255, 0.35);
+  outline: none;
+  background: #020a10;
+  color: #8edfff;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.ai-chat-model-select:hover {
+  border-color: #00c8ff;
+}
+
+.ai-chat-model-select:focus {
+  border-color: #00c8ff;
+  box-shadow: 0 0 10px rgba(0, 200, 255, 0.12);
+}
+
+.ai-chat-model-select:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ai-chat-model-select option {
+  background: #020a10;
+  color: #d8f7ff;
+}
+
+.ai-chat-quota-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 12px 22px 0;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 170, 50, 0.45);
+  background: rgba(80, 50, 5, 0.25);
+  color: #f1d58a;
+  font-size: 10px;
+}
+
+.ai-chat-quota-warning div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-chat-quota-warning strong {
+  color: #f3b51b;
+  letter-spacing: 1px;
+}
+
+.ai-chat-quota-warning span {
+  color: #cdbd91;
+}
+
+.ai-chat-quota-warning button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(243, 181, 27, 0.35);
+  background: transparent;
+  color: #f3b51b;
+  font: inherit;
+  cursor: pointer;
 }

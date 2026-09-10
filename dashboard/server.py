@@ -50,6 +50,16 @@ from core.runtime import handle_priority
 
 from hud.integration import HUDIntegration
 
+from chatbot.ai_chat_api import (
+    create_chat,
+    list_chats,
+    get_chat,
+    delete_chat,
+    send_message,
+    get_model,
+    set_model,
+)
+
 from tools.windows_integration import (
     get_autostart_status,
     set_autostart,
@@ -2362,6 +2372,258 @@ class DashboardServer:
                     },
                     status_code=500,
                 )
+                
+        # =====================================================
+        # AI CHATBOT
+        # =====================================================
+
+        @app.post(
+            "/api/ai-chat/new"
+        )
+        async def ai_chat_new(
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            return create_chat()
+
+
+        @app.get(
+            "/api/ai-chat/chats"
+        )
+        async def ai_chat_list(
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            return list_chats()
+        
+        
+        @app.get("/api/ai-chat/model")
+        async def ai_chat_model(request: Request):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            return get_model()
+
+
+        @app.post("/api/ai-chat/{session_id}/model")
+        async def ai_chat_set_model(
+            session_id: str,
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            try:
+                body = await request.json()
+            except Exception:
+                body = {}
+
+            model = str(
+                body.get("model", "")
+            ).strip()
+
+            if not model:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Model is required.",
+                    },
+                    status_code=400,
+                )
+
+            result = set_model(
+                session_id=session_id,
+                model=model,
+            )
+
+            if not result.get("success"):
+                return JSONResponse(
+                    result,
+                    status_code=400,
+                )
+
+            return result
+
+
+        @app.get(
+            "/api/ai-chat/{session_id}"
+        )
+        async def ai_chat_get(
+            session_id: str,
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            result = get_chat(
+                session_id
+            )
+
+            if not result.get("success"):
+                return JSONResponse(
+                    result,
+                    status_code=404,
+                )
+
+            return result
+
+
+        @app.delete(
+            "/api/ai-chat/{session_id}"
+        )
+        async def ai_chat_delete(
+            session_id: str,
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            result = delete_chat(
+                session_id
+            )
+
+            if not result.get("success"):
+                return JSONResponse(
+                    result,
+                    status_code=404,
+                )
+
+            return result
+
+
+        @app.post(
+            "/api/ai-chat/message"
+        )
+        async def ai_chat_message(
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            try:
+                body = await request.json()
+
+            except Exception:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            session_id = str(
+                body.get(
+                    "session_id",
+                    "",
+                )
+            ).strip()
+
+            message = str(
+                body.get(
+                    "message",
+                    "",
+                )
+            ).strip()
+
+            if not session_id:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Session ID is required.",
+                    },
+                    status_code=400,
+                )
+
+            if not message:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Message cannot be empty.",
+                    },
+                    status_code=400,
+                )
+
+            result = await asyncio.to_thread(
+                send_message,
+                session_id,
+                message,
+            )
+
+            if not result.get("success"):
+                return JSONResponse(
+                    result,
+                    status_code=400,
+                )
+
+            return result
 
         # =====================================================
         # COMMAND
