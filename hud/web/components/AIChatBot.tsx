@@ -302,20 +302,38 @@ export default function AIChatBot({
       if (!response.ok || !data?.success) {
         const errorText =
           data?.error ||
-          data?.message ||
-          "AI response failed.";
+          data?.raw_error ||
+          `Request failed with status ${response.status}.`;
+
+        const rawError = String(
+          data?.raw_error || data?.error || errorText
+        );
+
+        if (
+          response.status === 503 ||
+          rawError.includes("503") ||
+          rawError.includes("UNAVAILABLE") ||
+          rawError.toLowerCase().includes("high demand")
+        ) {
+          setQuotaError(
+            `The selected model "${selectedModel}" is temporarily unavailable because it is experiencing high demand. Please try again later or select another model.`
+          );
+
+          return;
+        }
 
         if (
           response.status === 429 ||
-          String(errorText).includes("RESOURCE_EXHAUSTED")
+          data?.error_code === "MODEL_QUOTA_EXCEEDED" ||
+          rawError.includes("429") ||
+          rawError.includes("RESOURCE_EXHAUSTED") ||
+          rawError.toLowerCase().includes("quota")
         ) {
           setQuotaError(
-            `The ${session!.model || selectedModel} model has reached its current Gemini quota. Please choose another model above and try again.`
+            `The selected model "${selectedModel}" has reached its current Gemini quota or rate limit. Please select another model or try again later.`
           );
 
-          throw new Error(
-            "Model quota reached. Choose another model."
-          );
+          return;
         }
 
         throw new Error(errorText);
