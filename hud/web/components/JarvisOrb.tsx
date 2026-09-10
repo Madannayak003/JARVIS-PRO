@@ -2229,7 +2229,6 @@ export default function JarvisOrb(
               {/* COLOR TITLE */}
               <div className="ultron-color-title-wrap">
                 <span className="ultron-color-label">
-                  ULTRON COLOR
                 </span>
               </div>
 

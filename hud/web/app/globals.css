@@ -129,7 +129,7 @@ body {
 }
 
 .hud-btn {
-  min-width: 40px;
+  min-width: 10px;
   height: 30px;
   padding: 0 10px;
   background: transparent;
@@ -225,10 +225,10 @@ body {
 /* Camera preview panel */
 .camera-panel {
   position: fixed;
-  left: 24px;
+  left: 14px;
   right: auto;
-  bottom: 220px;
-  width: 190px;
+  bottom: 190px;
+  width: 200px;
   height: 150px;
   display: none;
   border: 1px solid var(--assistant-colour-45);
@@ -284,8 +284,8 @@ body {
 
 .ultron-color-panel {
   position: fixed;
-  bottom: 27px;
-  left: 250px;
+  bottom: 20px;
+  left: 220px;
   width: 100px;
   z-index: 50;
   pointer-events: auto;
