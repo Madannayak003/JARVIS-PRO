@@ -83,7 +83,7 @@ def start_web_hud() -> bool:
 
     npm_command = "npm.cmd" if os.name == "nt" else "npm"
 
-    log_directory = PROJECT_ROOT / "logs"
+    log_directory = PROJECT_ROOT / "data" / "logs"
     log_directory.mkdir(parents=True, exist_ok=True)
     web_log_path = log_directory / "hud_web.log"
 

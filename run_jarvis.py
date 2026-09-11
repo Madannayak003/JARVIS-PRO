@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-LOG_PATH = PROJECT_ROOT / "logs" / "shortcut_startup.log"
+LOG_PATH = PROJECT_ROOT / "data" / "logs" / "shortcut_startup.log"
 
 
 def main() -> int:
