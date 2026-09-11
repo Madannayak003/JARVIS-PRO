@@ -7,7 +7,7 @@ import wave
 
 import sounddevice as sd
 
-from config.paths import RECORDINGS
+from core.paths import RECORDINGS
 
 FFMPEG_PATH = r"C:\Users\madan\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0-full_build\bin\ffmpeg.exe"
 

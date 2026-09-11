@@ -4,7 +4,7 @@ import datetime
 from core.registry import register
 from voice.manager import speak
 from core.camera_manager import camera
-from config.paths import CAPTURES
+from core.paths import CAPTURES
 
 import cv2
 import datetime
@@ -12,7 +12,7 @@ import datetime
 from core.registry import register
 from voice.manager import speak
 from core.camera_manager import camera
-from config.paths import CAPTURES
+from core.paths import CAPTURES
 
 
 def capture(data):

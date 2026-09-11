@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from config.paths import (
+from core.paths import (
     CAPTURES,
     RECORDINGS,
     SCREENSHOTS,
