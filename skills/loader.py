@@ -51,6 +51,7 @@ SKILLS = [
     "communication.github",
     "communication.chatgpt",
     "media.spotify",
+    "media.image_generation",
     "assistant.greetings",
     "automation.home_automation",
     "communication.whatsapp",
