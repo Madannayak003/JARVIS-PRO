@@ -81,7 +81,53 @@ def media_route(command):
 
     command = command.lower().strip()
 
+    # -------------------------------------------------
+    # Exact media commands
+    # -------------------------------------------------
+
     if command in MEDIA:
         return [MEDIA[command]]
+
+    # -------------------------------------------------
+    # Image generation
+    # -------------------------------------------------
+
+    image_prefixes = (
+        "create an image of ",
+        "create image of ",
+        "create an image ",
+        "create image ",
+        "create image of ",
+        "generate an image of ",
+        "generate image of ",
+        "generate an image ",
+        "generate image ",
+        "make an image of ",
+        "make image of ",
+        "make an image ",
+        "make image ",
+        "draw an image of ",
+        "draw image of ",
+        "draw an image ",
+        "draw image ",
+    )
+
+    for prefix in image_prefixes:
+
+        if command.startswith(prefix):
+
+            prompt = command[
+                len(prefix):
+            ].strip()
+
+            if not prompt:
+                return None
+
+            return [
+                {
+                    "action": "create_image",
+                    "prompt": prompt,
+                }
+            ]
 
     return None
