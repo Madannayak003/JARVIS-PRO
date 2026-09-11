@@ -61,6 +61,10 @@ from chatbot.ai_chat_api import (
     set_model,
 )
 
+from chatbot.ai_chat_clipboard import (
+    copy_text_to_system_clipboard,
+)
+
 from tools.windows_integration import (
     get_autostart_status,
     set_autostart,
@@ -2686,6 +2690,73 @@ class DashboardServer:
                 )
 
             return result
+        
+        @app.post(
+            "/api/ai-chat/clipboard"
+        )
+        async def ai_chat_clipboard(
+            request: Request,
+        ):
+            if not (
+                self._authorize(request)
+                or self._authorize_local(request)
+            ):
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Unauthorized.",
+                    },
+                    status_code=401,
+                )
+
+            try:
+                body = await request.json()
+
+            except Exception:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid request.",
+                    },
+                    status_code=400,
+                )
+
+            text = str(
+                body.get(
+                    "text",
+                    "",
+                )
+            )
+
+            if not text:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": "Clipboard text cannot be empty.",
+                    },
+                    status_code=400,
+                )
+
+            success = copy_text_to_system_clipboard(
+                text
+            )
+
+            if not success:
+                return JSONResponse(
+                    {
+                        "success": False,
+                        "error": (
+                            "Unable to copy text "
+                            "to the Windows clipboard."
+                        ),
+                    },
+                    status_code=500,
+                )
+
+            return {
+                "success": True,
+                "message": "Copied to system clipboard.",
+            }
 
         # =====================================================
         # COMMAND

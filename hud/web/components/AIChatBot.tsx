@@ -5,6 +5,9 @@ import "../app/ai-chat.css";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
 import {
   KeyboardEvent,
   useEffect,
@@ -485,47 +488,77 @@ export default function AIChatBot({
   };
 
 
+  /* =========================================================
+     CODE COPY
+     ========================================================= */
+
   const copyCode = async (code: string) => {
+    if (!code) {
+      return;
+    }
+
     try {
-      if (
-        navigator.clipboard &&
-        window.isSecureContext
-      ) {
-        await navigator.clipboard.writeText(code);
-      } else {
-        const textarea =
-          document.createElement("textarea");
+      /*
+       * First use the JARVIS backend.
+       *
+       * This works in the native JARVIS window because Python
+       * writes directly to the Windows system clipboard.
+       */
+      try {
+        const response = await fetch(
+          `${DASHBOARD_URL}/api/ai-chat/clipboard`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+            body: JSON.stringify({
+              text: code,
+            }),
+          }
+        );
 
-        textarea.value = code;
-        textarea.style.position = "fixed";
-        textarea.style.left = "-9999px";
-        textarea.style.top = "0";
+        const data = await response.json();
 
-        document.body.appendChild(textarea);
+        if (response.ok && data?.success) {
+          setCopiedCode(code);
 
-        textarea.focus();
-        textarea.select();
+          window.setTimeout(() => {
+            setCopiedCode((current) =>
+              current === code ? null : current
+            );
+          }, 1500);
 
-        const copied =
-          document.execCommand("copy");
-
-        document.body.removeChild(textarea);
-
-        if (!copied) {
-          throw new Error(
-            "Browser copy operation failed."
-          );
+          return;
         }
+      } catch (error) {
+        console.warn(
+          "[AI CHAT] Native clipboard unavailable. Using browser clipboard.",
+          error
+        );
       }
 
-      setCopiedCode(code);
+      /*
+       * Browser fallback.
+       */
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(code);
 
-      window.setTimeout(() => {
-        setCopiedCode((current) =>
-          current === code ? null : current
-        );
-      }, 1500);
+        setCopiedCode(code);
 
+        window.setTimeout(() => {
+          setCopiedCode((current) =>
+            current === code ? null : current
+          );
+        }, 1500);
+
+        return;
+      }
+
+      throw new Error(
+        "Clipboard is not available."
+      );
     } catch (error) {
       console.error(
         "[AI CHAT] Code copy failed:",
@@ -1163,6 +1196,11 @@ export default function AIChatBot({
                                 ""
                               );
 
+                              /*
+                              * Inline code:
+                              *
+                              * `example`
+                              */
                               if (!match) {
                                 return (
                                   <code
@@ -1174,16 +1212,27 @@ export default function AIChatBot({
                                 );
                               }
 
+                              /*
+                              * Fenced code block:
+                              *
+                              * ```python
+                              * print("Hello")
+                              * ```
+                              */
                               return (
                                 <div className="ai-chat-code-block">
                                   <div className="ai-chat-code-header">
-                                    <span>
+                                    <span className="ai-chat-code-language">
                                       {match[1]}
                                     </span>
 
                                     <button
                                       type="button"
-                                      onClick={() => {
+                                      className="ai-chat-code-copy-button"
+                                      onPointerDown={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+
                                         void copyCode(code);
                                       }}
                                     >
@@ -1193,11 +1242,29 @@ export default function AIChatBot({
                                     </button>
                                   </div>
 
-                                  <pre>
-                                    <code className={className}>
-                                      {children}
-                                    </code>
-                                  </pre>
+                                  <div className="ai-chat-code-scroll">
+                                    <SyntaxHighlighter
+                                      language={match[1]}
+                                      style={oneDark}
+                                      PreTag="div"
+                                      customStyle={{
+                                        margin: 0,
+                                        padding: "16px",
+                                        background: "transparent",
+                                        fontSize: "13px",
+                                        lineHeight: "1.65",
+                                        overflow: "visible",
+                                      }}
+                                      codeTagProps={{
+                                        style: {
+                                          fontFamily:
+                                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                        },
+                                      }}
+                                    >
+                                      {code}
+                                    </SyntaxHighlighter>
+                                  </div>
                                 </div>
                               );
                             },
