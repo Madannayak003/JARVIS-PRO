@@ -1,19 +1,44 @@
+/* =========================================================
+   JARVIS PRO — AI CHAT
+   ========================================================= */
+
+
 "use client";
 
 import "../app/ai-chat.css";
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-
-import {
+import React, {
   KeyboardEvent,
+  memo,
+  useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
+// Register lightweight language grammars to keep main thread fast
+import javascript from "react-syntax-highlighter/dist/esm/languages/prism/javascript";
+import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
+import tsx from "react-syntax-highlighter/dist/esm/languages/prism/tsx";
+import jsx from "react-syntax-highlighter/dist/esm/languages/prism/jsx";
+import python from "react-syntax-highlighter/dist/esm/languages/prism/python";
+import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
+import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+import css from "react-syntax-highlighter/dist/esm/languages/prism/css";
+
+SyntaxHighlighter.registerLanguage("javascript", javascript);
+SyntaxHighlighter.registerLanguage("typescript", typescript);
+SyntaxHighlighter.registerLanguage("tsx", tsx);
+SyntaxHighlighter.registerLanguage("jsx", jsx);
+SyntaxHighlighter.registerLanguage("python", python);
+SyntaxHighlighter.registerLanguage("bash", bash);
+SyntaxHighlighter.registerLanguage("json", json);
+SyntaxHighlighter.registerLanguage("css", css);
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -37,42 +62,111 @@ const DASHBOARD_URL =
     ? `http://${window.location.hostname}:8765`
     : "http://127.0.0.1:8765");
 
-console.log("[AI CHAT] DASHBOARD_URL:", DASHBOARD_URL);
-
 const DEFAULT_MODEL = "gemini-3.6-flash";
 
 const CHAT_MODELS = [
-  {
-    id: "gemini-3.8-flash",
-    name: "Gemini 3.8 Flash",
-    description: "Best overall",
-  },
-  {
-    id: "gemini-3.7-flash",
-    name: "Gemini 3.7 Flash",
-    description: "Coding & agents",
-  },
-  {
-    id: "gemini-3.6-flash",
-    name: "Gemini 3.6 Flash",
-    description: "Balanced",
-  },
-  {
-    id: "gemini-3.5-flash",
-    name: "Gemini 3.5 Flash",
-    description: "General purpose",
-  },
-  {
-    id: "gemini-3.5-flash-lite",
-    name: "Gemini 3.5 Flash-Lite",
-    description: "Fast & lightweight",
-  },
-  {
-    id: "gemini-3.1-flash-lite",
-    name: "Gemini 3.1 Flash-Lite",
-    description: "Low latency",
-  },
-] as const;;
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", description: "Best overall" },
+  { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", description: "Coding & agents" },
+  { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", description: "Balanced" },
+  { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash", description: "General purpose" },
+  { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite", description: "Fast & lightweight" },
+  { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash-Lite", description: "Low latency" },
+] as const;
+
+/* =========================================================
+   MEMOIZED MESSAGE ROW (Prevents Markdown Re-parsing)
+   ========================================================= */
+
+interface MessageItemProps {
+  item: ChatMessage;
+  onCopy: (code: string) => void;
+  copiedCode: string | null;
+}
+
+const ChatMessageItem = memo(({ item, onCopy, copiedCode }: MessageItemProps) => {
+  return (
+    <div className={`ai-chat-message-row ${item.role}`}>
+      <div className="ai-chat-message-label">
+        {item.role === "user" ? "YOU" : "AI"}
+      </div>
+
+      <div className="ai-chat-message-bubble">
+        {item.role === "assistant" ? (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              code({ className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "");
+                const code = String(children).replace(/\n$/, "");
+
+                if (!match) {
+                  return (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                }
+
+                return (
+                  <div className="ai-chat-code-block">
+                    <div className="ai-chat-code-header">
+                      <span className="ai-chat-code-language">{match[1]}</span>
+                      <button
+                        type="button"
+                        className="ai-chat-code-copy-button"
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onCopy(code);
+                        }}
+                      >
+                        {copiedCode === code ? "Copied ✓" : "Copy"}
+                      </button>
+                    </div>
+
+                    <div className="ai-chat-code-scroll">
+                      <SyntaxHighlighter
+                        language={match[1]}
+                        style={oneDark}
+                        PreTag="div"
+                        customStyle={{
+                          margin: 0,
+                          padding: "16px",
+                          background: "transparent",
+                          fontSize: "13px",
+                          lineHeight: "1.65",
+                          overflow: "visible",
+                        }}
+                        codeTagProps={{
+                          style: {
+                            fontFamily:
+                              "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                          },
+                        }}
+                      >
+                        {code}
+                      </SyntaxHighlighter>
+                    </div>
+                  </div>
+                );
+              },
+            }}
+          >
+            {item.content}
+          </ReactMarkdown>
+        ) : (
+          item.content
+        )}
+      </div>
+    </div>
+  );
+});
+
+ChatMessageItem.displayName = "ChatMessageItem";
+
+/* =========================================================
+   MAIN COMPONENT
+   ========================================================= */
 
 export default function AIChatBot({
   open,
@@ -82,57 +176,92 @@ export default function AIChatBot({
   onClose?: () => void;
 }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [currentSession, setCurrentSession] =
-    useState<ChatSession | null>(null);
+  const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
-  const [selectedModel, setSelectedModel] =
-    useState(DEFAULT_MODEL);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+  const [modelUpdating, setModelUpdating] = useState(false);
+  const [quotaError, setQuotaError] = useState<string | null>(null);
 
-  const [modelUpdating, setModelUpdating] =
-    useState(false);
-
-  const [quotaError, setQuotaError] =
-    useState<string | null>(null);
-
-  const [openMenuId, setOpenMenuId] =
-    useState<string | null>(null);
-
-  const [renameChatId, setRenameChatId] =
-    useState<string | null>(null);
-
-  const [renameTitle, setRenameTitle] =
-    useState("");
-
-  const [deleteChatId, setDeleteChatId] =
-    useState<string | null>(null);
-
-  const [chatActionLoading, setChatActionLoading] =
-    useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renameChatId, setRenameChatId] = useState<string | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [deleteChatId, setDeleteChatId] = useState<string | null>(null);
+  const [chatActionLoading, setChatActionLoading] = useState(false);
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const isNearBottomRef = useRef(true);
+
+  const messages = currentSession?.messages || [];
 
   /* =========================================================
-     LOAD CHAT HISTORY
+     VIRTUALIZATION (Smooth 60FPS with dynamic height)
      ========================================================= */
 
-  const loadChats = async () => {
+  const virtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => messagesRef.current,
+    estimateSize: () => 90,
+    overscan: 5,
+  });
+
+  /* =========================================================
+     JITTER-FREE AUTO-SCROLL
+     ========================================================= */
+
+  const handleScroll = useCallback(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    // User is near bottom if within 120px threshold
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceToBottom < 120;
+  }, []);
+
+  useEffect(() => {
+    if (!messagesRef.current || !isNearBottomRef.current) return;
+
+    // Smoothly push view down only when user is actually pinned to the bottom
+    requestAnimationFrame(() => {
+      if (messages.length > 0) {
+        virtualizer.scrollToIndex(messages.length - 1, {
+          align: "end",
+          behavior: "smooth",
+        });
+      }
+    });
+  }, [messages.length, loading, virtualizer]);
+
+  /* =========================================================
+     HISTORY & API
+     ========================================================= */
+
+  const loadChat = useCallback(async (sessionId: string) => {
+    try {
+      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/${sessionId}`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (data?.success && data.chat) {
+        setCurrentSession(data.chat);
+        isNearBottomRef.current = true;
+      }
+    } catch (error) {
+      console.error("[AI CHAT] Failed to load chat:", error);
+    }
+  }, []);
+
+  const loadChats = useCallback(async () => {
     try {
       setLoadingHistory(true);
-
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/chats`,
-        {
-          cache: "no-store",
-        }
-      );
-
+      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/chats`, {
+        cache: "no-store",
+      });
       const data = await response.json();
 
       if (data?.success) {
@@ -148,144 +277,88 @@ export default function AIChatBot({
     } finally {
       setLoadingHistory(false);
     }
-  };
-
-  /* =========================================================
-     LOAD SINGLE CHAT
-     ========================================================= */
-
-  const loadChat = async (sessionId: string) => {
-    try {
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/${sessionId}`,
-        {
-          cache: "no-store",
-        }
-      );
-
-      const data = await response.json();
-
-      if (data?.success && data.chat) {
-        setCurrentSession(data.chat);
-      }
-    } catch (error) {
-      console.error("[AI CHAT] Failed to load chat:", error);
-    }
-  };
-
-  /* =========================================================
-     INITIAL LOAD
-     ========================================================= */
+  }, [currentSession, loadChat]);
 
   useEffect(() => {
     void loadChats();
-  }, []);
-
-  /* =========================================================
-     AUTO SCROLL
-     ========================================================= */
-
-  useEffect(() => {
-    const container = messagesRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    container.scrollTop = container.scrollHeight;
-  }, [currentSession?.messages, loading]);
-
-  /* =========================================================
-     NEW CHAT
-     ========================================================= */
+  }, [loadChats]);
 
   const createNewChat = async () => {
     try {
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/new`,
-        {
-          method: "POST",
-          cache: "no-store",
-        }
-      );
-
+      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/new`, {
+        method: "POST",
+        cache: "no-store",
+      });
       const data = await response.json();
 
       if (!data?.success || !data.chat) {
-        throw new Error(
-          data?.error || "Unable to create new chat."
-        );
+        throw new Error(data?.error || "Unable to create new chat.");
       }
 
       setCurrentSession(data.chat);
-
-      setSessions((previous) => [
-        data.chat,
-        ...previous.filter(
-          (chat) => chat.id !== data.chat.id
-        ),
-      ]);
-
+      setSessions((prev) => [data.chat, ...prev.filter((c) => c.id !== data.chat.id)]);
       setMessage("");
-
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
+      isNearBottomRef.current = true;
+      requestAnimationFrame(() => inputRef.current?.focus());
     } catch (error) {
       console.error("[AI CHAT] New chat failed:", error);
     }
   };
 
-  /* =========================================================
-     SEND MESSAGE
-     ========================================================= */
+  const copyCode = useCallback(async (code: string) => {
+    if (!code) return;
+    try {
+      try {
+        const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/clipboard`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          body: JSON.stringify({ text: code }),
+        });
+        const data = await response.json();
+        if (response.ok && data?.success) {
+          setCopiedCode(code);
+          setTimeout(() => setCopiedCode((c) => (c === code ? null : c)), 1500);
+          return;
+        }
+      } catch {}
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        setTimeout(() => setCopiedCode((c) => (c === code ? null : c)), 1500);
+      }
+    } catch (error) {
+      console.error("[AI CHAT] Code copy failed:", error);
+    }
+  }, []);
 
   const sendMessage = async () => {
     const text = message.trim();
-
-    if (!text || loading) {
-      return;
-    }
+    if (!text || loading) return;
 
     let session = currentSession;
 
     if (!session) {
       try {
-        const response = await fetch(
-          `${DASHBOARD_URL}/api/ai-chat/new`,
-          {
-            method: "POST",
-            cache: "no-store",
-          }
-        );
-
-        const data = await response.json();
-
-        if (!data?.success || !data.chat) {
-          throw new Error(
-            data?.error || "Unable to create chat."
-          );
-        }
-
+        const res = await fetch(`${DASHBOARD_URL}/api/ai-chat/new`, {
+          method: "POST",
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (!data?.success || !data.chat) throw new Error("Unable to create chat.");
         session = data.chat;
-
         setCurrentSession(session);
-
-        setSessions((previous) => [
-          session!,
-          ...previous,
-        ]);
-      } catch (error) {
-        console.error(
-          "[AI CHAT] Automatic chat creation failed:",
-          error
-        );
+        setSessions((prev) => [session!, ...prev]);
+      } catch (err) {
+        console.error("[AI CHAT] Auto chat creation failed:", err);
         return;
       }
     }
 
     setMessage("");
     setLoading(true);
+    isNearBottomRef.current = true;
 
     const optimisticUserMessage: ChatMessage = {
       role: "user",
@@ -293,74 +366,31 @@ export default function AIChatBot({
       timestamp: new Date().toISOString(),
     };
 
-    setCurrentSession((previous) =>
-      previous
-        ? {
-            ...previous,
-            messages: [
-              ...(previous.messages || []),
-              optimisticUserMessage,
-            ],
-          }
-        : previous
+    setCurrentSession((prev) =>
+      prev ? { ...prev, messages: [...(prev.messages || []), optimisticUserMessage] } : prev
     );
 
     try {
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/message`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-          body: JSON.stringify({
-            session_id: session!.id,
-            message: text,
-          }),
-        }
-      );
+      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ session_id: session!.id, message: text }),
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data?.success) {
-        const errorText =
-          data?.error ||
-          data?.raw_error ||
-          `Request failed with status ${response.status}.`;
-
-        const rawError = String(
-          data?.raw_error || data?.error || errorText
-        );
-
-        if (
-          response.status === 503 ||
-          rawError.includes("503") ||
-          rawError.includes("UNAVAILABLE") ||
-          rawError.toLowerCase().includes("high demand")
-        ) {
-          setQuotaError(
-            `The selected model "${selectedModel}" is temporarily unavailable because it is experiencing high demand. Please try again later or select another model.`
-          );
-
+        const raw = String(data?.raw_error || data?.error || response.statusText);
+        if (response.status === 503 || raw.includes("503") || raw.includes("UNAVAILABLE")) {
+          setQuotaError(`Model "${selectedModel}" is experiencing high demand. Please try again later.`);
           return;
         }
-
-        if (
-          response.status === 429 ||
-          data?.error_code === "MODEL_QUOTA_EXCEEDED" ||
-          rawError.includes("429") ||
-          rawError.includes("RESOURCE_EXHAUSTED") ||
-          rawError.toLowerCase().includes("quota")
-        ) {
-          setQuotaError(
-            `The selected model "${selectedModel}" has reached its current Gemini quota or rate limit. Please select another model or try again later.`
-          );
-
+        if (response.status === 429 || raw.includes("429") || raw.includes("RESOURCE_EXHAUSTED")) {
+          setQuotaError(`Model "${selectedModel}" exceeded quota limit.`);
           return;
         }
-
-        throw new Error(errorText);
+        throw new Error(data?.error || `Request failed (${response.status})`);
       }
 
       const assistantMessage: ChatMessage = {
@@ -369,444 +399,160 @@ export default function AIChatBot({
         timestamp: new Date().toISOString(),
       };
 
-      setCurrentSession((previous) =>
-        previous
+      setCurrentSession((prev) =>
+        prev
           ? {
-              ...previous,
-              messages: [
-                ...(previous.messages || []),
-                assistantMessage,
-              ],
-              title:
-                previous.title === "New Chat"
-                  ? text.slice(0, 60)
-                  : previous.title,
-              updated_at:
-                new Date().toISOString(),
+              ...prev,
+              messages: [...(prev.messages || []), assistantMessage],
+              title: prev.title === "New Chat" ? text.slice(0, 60) : prev.title,
+              updated_at: new Date().toISOString(),
             }
-          : previous
+          : prev
       );
 
       await loadChats();
     } catch (error) {
       console.error("[AI CHAT] Send failed:", error);
-
       const errorMessage: ChatMessage = {
         role: "assistant",
-        content:
-          error instanceof Error
-            ? `Unable to respond: ${error.message}`
-            : "Unable to respond.",
+        content: error instanceof Error ? `Unable to respond: ${error.message}` : "Unable to respond.",
         timestamp: new Date().toISOString(),
       };
 
-      setCurrentSession((previous) =>
-        previous
-          ? {
-              ...previous,
-              messages: [
-                ...(previous.messages || []),
-                errorMessage,
-              ],
-            }
-          : previous
+      setCurrentSession((prev) =>
+        prev ? { ...prev, messages: [...(prev.messages || []), errorMessage] } : prev
       );
     } finally {
       setLoading(false);
-
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
 
-  /* =========================================================
-    MODEL SELECTION
-    ========================================================= */
-
   const changeModel = async (model: string) => {
-    if (!currentSession || modelUpdating) {
-      return;
-    }
-
+    if (!currentSession || modelUpdating) return;
     try {
       setModelUpdating(true);
       setQuotaError(null);
-
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/${currentSession.id}/model`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-          body: JSON.stringify({
-            model,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.error ||
-            "Unable to change AI model."
-        );
-      }
+      const res = await fetch(`${DASHBOARD_URL}/api/ai-chat/${currentSession.id}/model`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ model }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) throw new Error(data?.error || "Failed to update model");
 
       setSelectedModel(model);
-
-      setCurrentSession((previous) =>
-        previous
-          ? {
-              ...previous,
-              model,
-            }
-          : previous
+      setCurrentSession((prev) => (prev ? { ...prev, model } : prev));
+      setSessions((prev) =>
+        prev.map((c) => (c.id === currentSession.id ? { ...c, model } : c))
       );
-
-      setSessions((previous) =>
-        previous.map((chat) =>
-          chat.id === currentSession.id
-            ? {
-                ...chat,
-                model,
-              }
-            : chat
-        )
-      );
-    } catch (error) {
-      console.error(
-        "[AI CHAT] Model change failed:",
-        error
-      );
+    } catch (err) {
+      console.error("[AI CHAT] Model change failed:", err);
     } finally {
       setModelUpdating(false);
     }
   };
 
-
-  /* =========================================================
-     CODE COPY
-     ========================================================= */
-
-  const copyCode = async (code: string) => {
-    if (!code) {
-      return;
-    }
-
-    try {
-      /*
-       * First use the JARVIS backend.
-       *
-       * This works in the native JARVIS window because Python
-       * writes directly to the Windows system clipboard.
-       */
-      try {
-        const response = await fetch(
-          `${DASHBOARD_URL}/api/ai-chat/clipboard`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            cache: "no-store",
-            body: JSON.stringify({
-              text: code,
-            }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok && data?.success) {
-          setCopiedCode(code);
-
-          window.setTimeout(() => {
-            setCopiedCode((current) =>
-              current === code ? null : current
-            );
-          }, 1500);
-
-          return;
-        }
-      } catch (error) {
-        console.warn(
-          "[AI CHAT] Native clipboard unavailable. Using browser clipboard.",
-          error
-        );
-      }
-
-      /*
-       * Browser fallback.
-       */
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(code);
-
-        setCopiedCode(code);
-
-        window.setTimeout(() => {
-          setCopiedCode((current) =>
-            current === code ? null : current
-          );
-        }, 1500);
-
-        return;
-      }
-
-      throw new Error(
-        "Clipboard is not available."
-      );
-    } catch (error) {
-      console.error(
-        "[AI CHAT] Code copy failed:",
-        error
-      );
-    }
-  };
-
-  /* =========================================================
-    CHAT HISTORY ACTIONS
-    ========================================================= */
-
-  const startRenameChat = (chat: ChatSession) => {
-    setOpenMenuId(null);
-    setRenameChatId(chat.id);
-    setRenameTitle(chat.title || "New Chat");
-  };
-
-  const cancelRenameChat = () => {
-    if (chatActionLoading) {
-      return;
-    }
-
-    setRenameChatId(null);
-    setRenameTitle("");
-  };
-
   const saveRenameChat = async () => {
     const chatId = renameChatId;
     const title = renameTitle.trim();
-
-    if (!chatId || !title || chatActionLoading) {
-      return;
-    }
+    if (!chatId || !title || chatActionLoading) return;
 
     try {
       setChatActionLoading(true);
+      const res = await fetch(`${DASHBOARD_URL}/api/ai-chat/${chatId}/rename`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ title }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) throw new Error("Unable to rename");
 
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/${chatId}/rename`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-          body: JSON.stringify({
-            title,
-          }),
-        }
+      setSessions((prev) =>
+        prev.map((c) => (c.id === chatId ? { ...c, title: data.title || title } : c))
       );
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.error ||
-            "Unable to rename chat."
-        );
-      }
-
-      setSessions((previous) =>
-        previous.map((chat) =>
-          chat.id === chatId
-            ? {
-                ...chat,
-                title: data.title || title,
-              }
-            : chat
-        )
+      setCurrentSession((prev) =>
+        prev?.id === chatId ? { ...prev, title: data.title || title } : prev
       );
-
-      setCurrentSession((previous) =>
-        previous?.id === chatId
-          ? {
-              ...previous,
-              title: data.title || title,
-            }
-          : previous
-      );
-
       setRenameChatId(null);
       setRenameTitle("");
-    } catch (error) {
-      console.error(
-        "[AI CHAT] Rename failed:",
-        error
-      );
+    } catch (err) {
+      console.error(err);
     } finally {
       setChatActionLoading(false);
     }
-  };
-
-  const confirmDeleteChat = (chatId: string) => {
-    setOpenMenuId(null);
-    setDeleteChatId(chatId);
-  };
-
-  const cancelDeleteChat = () => {
-    if (chatActionLoading) {
-      return;
-    }
-
-    setDeleteChatId(null);
   };
 
   const deleteChat = async () => {
     const chatId = deleteChatId;
-
-    if (!chatId || chatActionLoading) {
-      return;
-    }
+    if (!chatId || chatActionLoading) return;
 
     try {
       setChatActionLoading(true);
+      const res = await fetch(`${DASHBOARD_URL}/api/ai-chat/${chatId}`, {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) throw new Error("Delete failed");
 
-      const response = await fetch(
-        `${DASHBOARD_URL}/api/ai-chat/${chatId}`,
-        {
-          method: "DELETE",
-          cache: "no-store",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.error ||
-            "Unable to delete chat."
-        );
-      }
-
-      const remainingChats =
-        sessions.filter(
-          (chat) => chat.id !== chatId
-        );
-
-      setSessions(remainingChats);
+      const remaining = sessions.filter((c) => c.id !== chatId);
+      setSessions(remaining);
       setDeleteChatId(null);
 
-      /*
-      * If the deleted chat was the currently
-      * open conversation, move somewhere safe.
-      */
       if (currentSession?.id === chatId) {
-        if (remainingChats.length > 0) {
-          await loadChat(
-            remainingChats[0].id
-          );
+        if (remaining.length > 0) {
+          await loadChat(remaining[0].id);
         } else {
           await createNewChat();
         }
       }
-    } catch (error) {
-      console.error(
-        "[AI CHAT] Delete failed:",
-        error
-      );
+    } catch (err) {
+      console.error(err);
     } finally {
       setChatActionLoading(false);
     }
   };
 
-  /* =========================================================
-     KEYBOARD
-     ========================================================= */
-
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLTextAreaElement>
-  ) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       void sendMessage();
     }
   };
 
-  /* =========================================================
-     EXAMPLE PROMPTS
-     ========================================================= */
-
-  const useExample = (text: string) => {
-    setMessage(text);
-
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-  };
-
-  /* =========================================================
-     RENDER
-     ========================================================= */
-
-    if (!open) {
-      return null;
-    }
+  if (!open) return null;
 
   return (
     <section className="ai-chat-window">
-      {/* =====================================================
-          SIDEBAR
-          ===================================================== */}
-
+      {/* SIDEBAR */}
       <aside className="ai-chat-sidebar">
         <div className="ai-chat-brand">
           <div className="ai-chat-brand-title">
             <span className="ai-chat-robot">▣</span>
             AI Chat
           </div>
-
-          <div className="ai-chat-brand-subtitle">
-            INDEPENDENT GEMINI CHAT
-          </div>
+          <div className="ai-chat-brand-subtitle">INDEPENDENT GEMINI CHAT</div>
         </div>
 
-        <button
-          type="button"
-          className="ai-chat-new-button"
-          onClick={() => void createNewChat()}
-        >
-          <span>＋</span>
-          New Chat
+        <button type="button" className="ai-chat-new-button" onClick={() => void createNewChat()}>
+          <span>＋</span> New Chat
         </button>
 
         <div className="ai-chat-sidebar-section">
-          <div className="ai-chat-section-title">
-            CHAT HISTORY
-          </div>
-
+          <div className="ai-chat-section-title">CHAT HISTORY</div>
           <div className="ai-chat-history">
             {loadingHistory ? (
-              <div className="ai-chat-empty">
-                Loading history...
-              </div>
+              <div className="ai-chat-empty">Loading history...</div>
             ) : sessions.length === 0 ? (
-              <div className="ai-chat-empty">
-                No conversations yet.
-              </div>
+              <div className="ai-chat-empty">No conversations yet.</div>
             ) : (
               sessions.map((chat) => (
                 <div
                   key={chat.id}
-                  className={
-                    "ai-chat-history-row " +
-                    (currentSession?.id === chat.id
-                      ? "active"
-                      : "")
-                  }
+                  className={`ai-chat-history-row ${currentSession?.id === chat.id ? "active" : ""}`}
                 >
                   <button
                     type="button"
@@ -816,30 +562,17 @@ export default function AIChatBot({
                       void loadChat(chat.id);
                     }}
                   >
-                    <span className="ai-chat-history-icon">
-                      ▸
-                    </span>
-
-                    <span className="ai-chat-history-text">
-                      {chat.title || "New Chat"}
-                    </span>
+                    <span className="ai-chat-history-icon">▸</span>
+                    <span className="ai-chat-history-text">{chat.title || "New Chat"}</span>
                   </button>
 
                   <button
                     type="button"
                     className="ai-chat-history-menu-button"
-                    aria-label={`Options for ${
-                      chat.title || "New Chat"
-                    }`}
-                    title="Chat options"
-                    onClick={(event) => {
-                      event.stopPropagation();
-
-                      setOpenMenuId(
-                        openMenuId === chat.id
-                          ? null
-                          : chat.id
-                      );
+                    aria-label={`Options for ${chat.title || "New Chat"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(openMenuId === chat.id ? null : chat.id);
                     }}
                   >
                     ⋯
@@ -849,23 +582,23 @@ export default function AIChatBot({
                     <div className="ai-chat-history-menu">
                       <button
                         type="button"
-                        onClick={() =>
-                          startRenameChat(chat)
-                        }
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          setRenameChatId(chat.id);
+                          setRenameTitle(chat.title || "New Chat");
+                        }}
                       >
-                        <span>✎</span>
-                        Rename
+                        <span>✎</span> Rename
                       </button>
-
                       <button
                         type="button"
                         className="danger"
-                        onClick={() =>
-                          confirmDeleteChat(chat.id)
-                        }
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          setDeleteChatId(chat.id);
+                        }}
                       >
-                        <span>⌫</span>
-                        Delete
+                        <span>⌫</span> Delete
                       </button>
                     </div>
                   )}
@@ -880,207 +613,84 @@ export default function AIChatBot({
             <span className="ai-chat-status-dot" />
             Independent AI
           </div>
-
-          <div className="ai-chat-model-small">
-            Gemini
-          </div>
+          <div className="ai-chat-model-small">Gemini</div>
         </div>
       </aside>
 
-      {/* =====================================================
-          RENAME CHAT DIALOG
-          ===================================================== */}
-
+      {/* RENAME DIALOG */}
       {renameChatId && (
-        <div
-          className="ai-chat-dialog-backdrop"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
-              cancelRenameChat();
-            }
-          }}
-        >
-          <div
-            className="ai-chat-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rename-chat-title"
-          >
-            <div className="ai-chat-dialog-title">
-              Rename chat
-            </div>
-
-            <div className="ai-chat-dialog-text">
-              Choose a name for this conversation.
-            </div>
-
+        <div className="ai-chat-dialog-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setRenameChatId(null)}>
+          <div className="ai-chat-dialog" role="dialog" aria-modal="true">
+            <div className="ai-chat-dialog-title">Rename chat</div>
+            <div className="ai-chat-dialog-text">Choose a name for this conversation.</div>
             <input
               className="ai-chat-dialog-input"
               value={renameTitle}
               maxLength={60}
               autoFocus
               disabled={chatActionLoading}
-              onChange={(event) =>
-                setRenameTitle(
-                  event.target.value
-                )
-              }
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void saveRenameChat();
-                }
-
-                if (event.key === "Escape") {
-                  cancelRenameChat();
-                }
+              onChange={(e) => setRenameTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void saveRenameChat();
+                if (e.key === "Escape") setRenameChatId(null);
               }}
             />
-
             <div className="ai-chat-dialog-actions">
-              <button
-                type="button"
-                className="ai-chat-dialog-cancel"
-                onClick={cancelRenameChat}
-                disabled={chatActionLoading}
-              >
+              <button type="button" className="ai-chat-dialog-cancel" onClick={() => setRenameChatId(null)} disabled={chatActionLoading}>
                 Cancel
               </button>
-
-              <button
-                type="button"
-                className="ai-chat-dialog-primary"
-                onClick={() =>
-                  void saveRenameChat()
-                }
-                disabled={
-                  chatActionLoading ||
-                  !renameTitle.trim()
-                }
-              >
-                {chatActionLoading
-                  ? "Saving..."
-                  : "Save"}
+              <button type="button" className="ai-chat-dialog-primary" onClick={() => void saveRenameChat()} disabled={chatActionLoading || !renameTitle.trim()}>
+                {chatActionLoading ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* =====================================================
-          DELETE CHAT CONFIRMATION
-          ===================================================== */}
-
+      {/* DELETE DIALOG */}
       {deleteChatId && (
-        <div
-          className="ai-chat-dialog-backdrop"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
-              cancelDeleteChat();
-            }
-          }}
-        >
-          <div
-            className="ai-chat-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-chat-title"
-          >
-            <div
-              id="delete-chat-title"
-              className="ai-chat-dialog-title"
-            >
-              Delete chat?
-            </div>
-
-            <div className="ai-chat-dialog-text">
-              This conversation will be permanently
-              deleted from your AI chat history.
-            </div>
-
+        <div className="ai-chat-dialog-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setDeleteChatId(null)}>
+          <div className="ai-chat-dialog" role="dialog" aria-modal="true">
+            <div className="ai-chat-dialog-title">Delete chat?</div>
+            <div className="ai-chat-dialog-text">This conversation will be permanently removed.</div>
             <div className="ai-chat-dialog-actions">
-              <button
-                type="button"
-                className="ai-chat-dialog-cancel"
-                onClick={cancelDeleteChat}
-                disabled={chatActionLoading}
-              >
+              <button type="button" className="ai-chat-dialog-cancel" onClick={() => setDeleteChatId(null)} disabled={chatActionLoading}>
                 Cancel
               </button>
-
-              <button
-                type="button"
-                className="ai-chat-dialog-danger"
-                onClick={() =>
-                  void deleteChat()
-                }
-                disabled={chatActionLoading}
-              >
-                {chatActionLoading
-                  ? "Deleting..."
-                  : "Delete"}
+              <button type="button" className="ai-chat-dialog-danger" onClick={() => void deleteChat()} disabled={chatActionLoading}>
+                {chatActionLoading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* =====================================================
-          MAIN
-          ===================================================== */}
-
+      {/* MAIN CHAT */}
       <main className="ai-chat-main">
-        {/* HEADER */}
-
         <header className="ai-chat-header">
           <div>
-            <div className="ai-chat-header-title">
-              AI Assistant
-            </div>
-
-            <div className="ai-chat-header-subtitle">
-              Independent Gemini Chat
-            </div>
+            <div className="ai-chat-header-title">AI Assistant</div>
+            <div className="ai-chat-header-subtitle">Independent Gemini Chat</div>
           </div>
 
           <div className="ai-chat-header-controls">
             <select
               className="ai-chat-model-select"
-              value={
-                currentSession?.model ||
-                selectedModel
-              }
+              value={currentSession?.model || selectedModel}
               disabled={modelUpdating}
-              onChange={(event) =>
-                void changeModel(event.target.value)
-              }
+              onChange={(e) => void changeModel(e.target.value)}
             >
-              {CHAT_MODELS.map((model) => (
-                <option
-                  key={model.id}
-                  value={model.id}
-                >
-                  {model.name}
+              {CHAT_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
                 </option>
               ))}
             </select>
-
             <div className="ai-chat-ready">
-              <span />
-              Ready
+              <span /> Ready
             </div>
-
             {onClose && (
-              <button
-                type="button"
-                className="ai-chat-close"
-                onClick={onClose}
-                aria-label="Close AI Chat"
-              >
+              <button type="button" className="ai-chat-close" onClick={onClose} aria-label="Close AI Chat">
                 ×
               </button>
             )}
@@ -1093,245 +703,100 @@ export default function AIChatBot({
               <strong>MODEL QUOTA REACHED</strong>
               <span>{quotaError}</span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setQuotaError(null)}
-            >
-              ×
-            </button>
+            <button type="button" onClick={() => setQuotaError(null)}>×</button>
           </div>
         )}
 
-        {/* CHAT */}
-
+        {/* VIRTUALIZED MESSAGES */}
         <div
           ref={messagesRef}
           className="ai-chat-messages"
+          onScroll={handleScroll}
         >
-          {!currentSession ||
-          !currentSession.messages ||
-          currentSession.messages.length === 0 ? (
+          {messages.length === 0 ? (
             <div className="ai-chat-welcome">
-              <div className="ai-chat-welcome-icon">
-                ◉
-              </div>
-
-              <div className="ai-chat-welcome-title">
-                Welcome to AI Assistant
-              </div>
-
-              <div className="ai-chat-welcome-text">
-                Ask me anything.
-              </div>
-
-              <div className="ai-chat-welcome-note">
-                This chatbot is independent from JARVIS.
-              </div>
-
+              <div className="ai-chat-welcome-icon">◉</div>
+              <div className="ai-chat-welcome-title">Welcome to AI Assistant</div>
+              <div className="ai-chat-welcome-text">Ask me anything.</div>
+              <div className="ai-chat-welcome-note">This chatbot is independent from JARVIS.</div>
               <div className="ai-chat-examples">
-                <button
-                  type="button"
-                  onClick={() =>
-                    useExample(
-                      "Explain quantum computing"
-                    )
-                  }
-                >
-                  Explain quantum computing
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    useExample(
-                      "Write a Python function"
-                    )
-                  }
-                >
-                  Write a Python function
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    useExample(
-                      "Explain this concept simply"
-                    )
-                  }
-                >
-                  Explain this concept simply
-                </button>
+                {["Explain quantum computing", "Write a Python function", "Explain this concept simply"].map((ex) => (
+                  <button
+                    key={ex}
+                    type="button"
+                    onClick={() => {
+                      setMessage(ex);
+                      requestAnimationFrame(() => inputRef.current?.focus());
+                    }}
+                  >
+                    {ex}
+                  </button>
+                ))}
               </div>
             </div>
           ) : (
-            <div className="ai-chat-message-list">
-              {currentSession.messages.map(
-                (item, index) => (
+            <div
+              className="ai-chat-virtual-track"
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const item = messages[virtualRow.index];
+                return (
                   <div
-                    key={`${index}-${item.timestamp || ""}`}
-                    className={
-                      "ai-chat-message-row " +
-                      item.role
-                    }
+                    key={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    data-index={virtualRow.index}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
                   >
-                    <div className="ai-chat-message-label">
-                      {item.role === "user"
-                        ? "YOU"
-                        : "AI"}
-                    </div>
-
-                    <div className="ai-chat-message-bubble">
-                      {item.role === "assistant" ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            code({ className, children, ...props }) {
-                              const match = /language-(\w+)/.exec(
-                                className || ""
-                              );
-
-                              const code = String(children).replace(
-                                /\n$/,
-                                ""
-                              );
-
-                              /*
-                              * Inline code:
-                              *
-                              * `example`
-                              */
-                              if (!match) {
-                                return (
-                                  <code
-                                    className={className}
-                                    {...props}
-                                  >
-                                    {children}
-                                  </code>
-                                );
-                              }
-
-                              /*
-                              * Fenced code block:
-                              *
-                              * ```python
-                              * print("Hello")
-                              * ```
-                              */
-                              return (
-                                <div className="ai-chat-code-block">
-                                  <div className="ai-chat-code-header">
-                                    <span className="ai-chat-code-language">
-                                      {match[1]}
-                                    </span>
-
-                                    <button
-                                      type="button"
-                                      className="ai-chat-code-copy-button"
-                                      onPointerDown={(event) => {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-
-                                        void copyCode(code);
-                                      }}
-                                    >
-                                      {copiedCode === code
-                                        ? "Copied ✓"
-                                        : "Copy"}
-                                    </button>
-                                  </div>
-
-                                  <div className="ai-chat-code-scroll">
-                                    <SyntaxHighlighter
-                                      language={match[1]}
-                                      style={oneDark}
-                                      PreTag="div"
-                                      customStyle={{
-                                        margin: 0,
-                                        padding: "16px",
-                                        background: "transparent",
-                                        fontSize: "13px",
-                                        lineHeight: "1.65",
-                                        overflow: "visible",
-                                      }}
-                                      codeTagProps={{
-                                        style: {
-                                          fontFamily:
-                                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                        },
-                                      }}
-                                    >
-                                      {code}
-                                    </SyntaxHighlighter>
-                                  </div>
-                                </div>
-                              );
-                            },
-                          }}
-                        >
-                          {item.content}
-                        </ReactMarkdown>
-                      ) : (
-                        item.content
-                      )}
-                    </div>
+                    <ChatMessageItem
+                      item={item}
+                      onCopy={copyCode}
+                      copiedCode={copiedCode}
+                    />
                   </div>
-                )
-              )}
+                );
+              })}
+            </div>
+          )}
 
-              {loading && (
-                <div className="ai-chat-message-row assistant">
-                  <div className="ai-chat-message-label">
-                    AI
-                  </div>
-
-                  <div className="ai-chat-message-bubble ai-chat-thinking">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-              )}
+          {loading && (
+            <div className="ai-chat-message-row assistant">
+              <div className="ai-chat-message-label">AI</div>
+              <div className="ai-chat-message-bubble ai-chat-thinking">
+                <span /><span /><span />
+              </div>
             </div>
           )}
         </div>
 
         {/* COMPOSER */}
-
         <div className="ai-chat-composer">
           <div className="ai-chat-input-shell">
-            <button
-              type="button"
-              className="ai-chat-input-tool"
-              title="Settings"
-              aria-label="Settings"
-            >
+            <button type="button" className="ai-chat-input-tool" title="Settings" aria-label="Settings">
               ⚙
             </button>
-
-            <button
-              type="button"
-              className="ai-chat-input-tool"
-              title="Attach file"
-              aria-label="Attach file"
-            >
+            <button type="button" className="ai-chat-input-tool" title="Attach file" aria-label="Attach file">
               ⌕
             </button>
 
             <textarea
               ref={inputRef}
               value={message}
-              onChange={(event) => {
-                setMessage(event.target.value);
-
-                const textarea = event.target;
-
-                textarea.style.height = "auto";
-                textarea.style.height = `${Math.min(
-                  textarea.scrollHeight,
-                  180
-                )}px`;
+              onChange={(e) => {
+                setMessage(e.target.value);
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
               }}
               onKeyDown={handleKeyDown}
               placeholder="Message independent AI..."
@@ -1349,10 +814,8 @@ export default function AIChatBot({
               ➤
             </button>
           </div>
-
           <div className="ai-chat-composer-note">
-            Independent Gemini conversation ·
-            No JARVIS context
+            Independent Gemini conversation · No JARVIS context
           </div>
         </div>
       </main>
