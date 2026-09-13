@@ -44,6 +44,13 @@ type AvatarType =
   | "full-body"
   | "expressive";
 
+  
+const VOICE_AVATAR_PROFILES: Record<string, AvatarType> = {
+  Ryan: "orb",
+  Thomas: "robot",
+  William: "full-body",
+  Connor: "expressive",
+};
 
 type UltronColor = {
   name: string;
@@ -133,13 +140,13 @@ const ULTRON_COLORS: UltronColor[] = [
 ];
 
 
-export default function JarvisOrb(
-  {
-    expressiveSituation,
-  }: {
-    expressiveSituation?: ExpressiveRobotSituation;
-  }
-) {
+export default function JarvisOrb({
+  expressiveSituation,
+  assistantVoice = "Ryan",
+}: {
+  expressiveSituation?: ExpressiveRobotSituation;
+  assistantVoice?: string;
+}) {
 
   const containerRef =
     useRef<HTMLDivElement>(null);
@@ -176,8 +183,8 @@ export default function JarvisOrb(
     useState<string | null>(null);
 
 
-  const [avatarType, setAvatarType] =
-    useState<AvatarType>("robot");
+  const avatarType: AvatarType =
+    VOICE_AVATAR_PROFILES[assistantVoice] ?? "orb";
 
 
   const [ultronColor, setUltronColor] =
@@ -990,9 +997,7 @@ export default function JarvisOrb(
               aria-pressed={
                 avatarType === "orb"
               }
-              onClick={() =>
-                setAvatarType("orb")
-              }
+              onClick={() => {}}
             >
 
               {avatarType === "orb"
@@ -1012,9 +1017,7 @@ export default function JarvisOrb(
               aria-pressed={
                 avatarType === "robot"
               }
-              onClick={() =>
-                setAvatarType("robot")
-              }
+              onClick={() => {}}
             >
 
               {avatarType === "robot"
@@ -1045,9 +1048,7 @@ export default function JarvisOrb(
               aria-pressed={
                 avatarType === "full-body"
               }
-              onClick={() =>
-                setAvatarType("full-body")
-              }
+              onClick={() => {}}
             >
 
               {avatarType === "full-body"
@@ -1078,9 +1079,7 @@ export default function JarvisOrb(
               aria-pressed={
                 avatarType === "expressive"
               }
-              onClick={() =>
-                setAvatarType("expressive")
-              }
+              onClick={() => {}}
             >
 
               {avatarType === "expressive"

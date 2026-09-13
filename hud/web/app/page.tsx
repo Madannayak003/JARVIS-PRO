@@ -1065,7 +1065,7 @@ export default function Home() {
           ULTRON ENGINE
           ===================================================== */}
       <div className="ultron-layer">
-        <JarvisOrb />
+        <JarvisOrb assistantVoice={assistantVoice} />
       </div>
 
       {/* =====================================================
