@@ -118,7 +118,7 @@ body {
 .hud-controls {
   position: fixed;
   bottom: 14px;
-  left: 10px;
+  left: 24px;
   right: auto;
   z-index: 40;
   display: flex;
@@ -169,50 +169,8 @@ body {
   gap: 8px;
 }
 
-.hud-avatar-selector {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.hud-hint {
-  bottom: 24px;
-  left: 24px;
-  font-size: 11px;
-  line-height: 1.7;
-  letter-spacing: 0.1em;
-  opacity: 0.55;
-  text-shadow: 0 0 8px var(--assistant-colour-65);
-  pointer-events: none;
-}
-
-.hud-hint .key {
-  display: inline-block;
-  padding: 0 4px;
-  border: 1px solid var(--assistant-colour-45);
-  border-radius: 3px;
-  margin-right: 4px;
-  font-size: 10px;
-}
-
-.hud-title {
-  top: 24px;
-  left: 24px;
-  font-size: 13px;
-  letter-spacing: 0.35em;
-  opacity: 0.7;
-  text-shadow: 0 0 10px var(--assistant-colour-80);
-  pointer-events: none;
-}
-
-.hud-title::after {
-  content: "";
-  display: block;
-  margin-top: 6px;
-  width: 120px;
-  height: 1px;
-  background: linear-gradient(to right, var(--assistant-colour-80), transparent);
+.hud-controls-toggle {
+  width: 145px;
 }
 
 .hud-error {
@@ -225,10 +183,10 @@ body {
 /* Camera preview panel */
 .camera-panel {
   position: fixed;
-  left: 14px;
+  left: 24px;
   right: auto;
-  bottom: 190px;
-  width: 200px;
+  bottom: 150px;
+  width: 225px;
   height: 150px;
   display: none;
   border: 1px solid var(--assistant-colour-45);
@@ -284,8 +242,8 @@ body {
 
 .ultron-color-panel {
   position: fixed;
-  bottom: 20px;
-  left: 220px;
+  bottom: 21px;
+  left: 180px;
   width: 100px;
   z-index: 50;
   pointer-events: auto;

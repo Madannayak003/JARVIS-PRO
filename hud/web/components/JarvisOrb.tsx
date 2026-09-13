@@ -132,11 +132,6 @@ const ULTRON_COLORS: UltronColor[] = [
     value: 0x20ff80,
   },
 
-  {
-    name: "WHITE",
-    value: 0xffffff,
-  },
-
 ];
 
 
@@ -1041,7 +1036,7 @@ export default function JarvisOrb({
 
           <button
             type="button"
-            className="hud-btn"
+            className="hud-btn hud-controls-toggle"
             style={{
               borderRadius: "30px",
             }}
