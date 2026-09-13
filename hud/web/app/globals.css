@@ -813,39 +813,142 @@ body {
   box-shadow: 0 0 8px var(--assistant-colour);
 }
 
-/* Audio Spectrum Visualizer */
-.hud-waveform {
+/* =========================================================
+   SIRI FLUID WAVE REACTOR
+   ========================================================= */
+
+.siri-container {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 auto;
+  user-select: none;
+}
+
+
+/* Visualizer wrapper */
+.siri-stage {
+  position: relative;
+  width: 100%;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 16px;
-  width: 280px;
-  background: transparent;
 }
 
-.wave-bar {
-  width: 2px;
-  height: 3px;
-  border-radius: 1px;
-  background: var(--assistant-colour-45);
-  transition: height 0.15s ease;
+/* Thin horizontal baseline */
+.siri-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 15%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.18) 85%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  z-index: 1;
 }
 
-.waveform-live .wave-bar {
-  background: var(--assistant-colour);
-  box-shadow: 0 0 6px var(--assistant-colour-65);
-  animation: wavePulse 0.8s ease-in-out infinite alternate;
+/* SVG container */
+.siri-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
-.waveform-live .wave-bar:nth-child(2n) { animation-delay: 0.15s; }
-.waveform-live .wave-bar:nth-child(3n) { animation-delay: 0.3s; }
-.waveform-live .wave-bar:nth-child(4n) { animation-delay: 0.45s; }
+/* Wave layers default idle state */
+.siri-path {
+  transform-origin: center center;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  transform: scaleY(0.12);
+  opacity: 0.2;
+}
 
-@keyframes wavePulse {
-  0% { height: 3px; }
-  50% { height: 16px; }
-  100% { height: 6px; }
+/* ---------------------------------------------------------
+   LISTENING / ACTIVE STATE
+   --------------------------------------------------------- */
+
+.siri-container.is-listening .siri-path {
+  opacity: 0.95;
+}
+
+.siri-container.is-listening .siri-path--green {
+  animation: siriPulseGreen 2.2s ease-in-out infinite;
+}
+
+.siri-container.is-listening .siri-path--blue {
+  animation: siriPulseBlue 2.6s ease-in-out infinite alternate;
+}
+
+.siri-container.is-listening .siri-path--cyan {
+  animation: siriPulseCyan 1.9s ease-in-out infinite alternate;
+}
+
+.siri-container.is-listening .siri-path--purple {
+  animation: siriPulsePurple 2.4s ease-in-out infinite;
+}
+
+.siri-container.is-listening .siri-path--core {
+  animation: siriPulseCore 1.6s ease-in-out infinite alternate;
+}
+
+/* Wave Dynamics */
+@keyframes siriPulseGreen {
+  0%, 100% {
+    transform: scaleY(0.9) translateX(0px);
+  }
+  50% {
+    transform: scaleY(1.35) translateX(10px);
+  }
+}
+
+@keyframes siriPulseCyan {
+  0% {
+    transform: scaleY(0.85) translateX(0px);
+  }
+  100% {
+    transform: scaleY(1.4) translateX(-8px);
+  }
+}
+
+@keyframes siriPulseBlue {
+  0% {
+    transform: scaleY(0.7) translateX(-5px);
+  }
+  100% {
+    transform: scaleY(1.5) translateX(12px);
+  }
+}
+
+@keyframes siriPulsePurple {
+  0%, 100% {
+    transform: scaleY(0.9) translateX(0px);
+  }
+  50% {
+    transform: scaleY(1.25) translateX(-6px);
+  }
+}
+
+@keyframes siriPulseCore {
+  0% {
+    transform: scaleY(0.8) scaleX(0.95);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleY(1.45) scaleX(1.1);
+    opacity: 1;
+  }
 }
 
 .hud-bottom-toolbar {

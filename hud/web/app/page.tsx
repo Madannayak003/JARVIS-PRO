@@ -1196,42 +1196,108 @@ export default function Home() {
           ===================================================== */}
       <div className="cockpit-bottom-container">
 
-        {/* REACTIVE AUDIO WAVEFORM / SPECTRUM VISUALIZER */}
+        {/* =====================================================
+            SIRI FLUID WAVE REACTOR
+            ===================================================== */}
         <div
-          className={`hud-waveform ${
+          className={`siri-container ${
             hudState.listening &&
             !hudState.speaking &&
             hudState.status !== "speaking"
-              ? "waveform-live"
+              ? "is-listening"
               : ""
           }`}
           aria-hidden="true"
         >
-          {Array.from({ length: 16 }, (_, index) => {
-            const level =
-              waveformLevels[index] ?? 0;
+          <div className="siri-stage">
+            {/* Horizon line */}
+            <div className="siri-line" />
 
-            const active =
-              hudState.listening &&
-              !hudState.speaking &&
-              hudState.status !== "speaking";
+            {/* Siri Multi-wave SVG */}
+            <svg
+              className="siri-svg"
+              viewBox="0 0 1000 120"
+              preserveAspectRatio="none"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                {/* Gradients matching image exact colors */}
+                <linearGradient id="greenWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#00e676" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#00e676" stopOpacity="0.95" />
+                  <stop offset="100%" stopColor="#00b0ff" stopOpacity="0.8" />
+                </linearGradient>
 
-            const height = active
-              ? `${Math.max(2, level * 24)}px`
-              : "2px";
+                <linearGradient id="cyanWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="#00e5ff" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#2979ff" stopOpacity="0.8" />
+                </linearGradient>
 
-            return (
-              <span
-                key={index}
-                className="wave-bar"
-                style={{
-                  height,
-                  transition:
-                    "height 70ms linear",
-                }}
+                <linearGradient id="purpleWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#2979ff" stopOpacity="0.8" />
+                  <stop offset="70%" stopColor="#7c4dff" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#e040fb" stopOpacity="0" />
+                </linearGradient>
+
+                <linearGradient id="coreGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#00e5ff" stopOpacity="0" />
+                </linearGradient>
+
+                <filter id="softGlow" x="-20%" y="-50%" width="140%" height="200%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Layer 1: Left Green Lobe */}
+              <path
+                className="siri-path siri-path--green"
+                filter="url(#softGlow)"
+                fill="url(#greenWave)"
+                d="M 280,60 Q 360,25 420,60 Q 360,95 280,60 Z"
               />
-            );
-          })}
+
+              {/* Layer 2: Deep Blue Under-Lobe */}
+              <path
+                className="siri-path siri-path--blue"
+                filter="url(#softGlow)"
+                fill="#1565c0"
+                opacity="0.7"
+                d="M 430,60 Q 550,15 620,60 Q 550,105 430,60 Z"
+              />
+
+              {/* Layer 3: Center-Right Cyan Lobe */}
+              <path
+                className="siri-path siri-path--cyan"
+                filter="url(#softGlow)"
+                fill="url(#cyanWave)"
+                d="M 440,60 Q 535,28 610,60 Q 535,92 440,60 Z"
+              />
+
+              {/* Layer 4: Right Purple/Magenta Tail */}
+              <path
+                className="siri-path siri-path--purple"
+                filter="url(#softGlow)"
+                fill="url(#purpleWave)"
+                d="M 540,60 Q 610,38 680,60 Q 610,82 540,60 Z"
+              />
+
+              {/* Layer 5: Bright Center Core Glow */}
+              <path
+                className="siri-path siri-path--core"
+                filter="url(#softGlow)"
+                fill="url(#coreGlow)"
+                d="M 470,60 Q 535,46 590,60 Q 535,74 470,60 Z"
+              />
+            </svg>
+          </div>
         </div>
         
         {/* RUNTIME INDICATORS WITH BRACKETS & GLOW DOTS */}
