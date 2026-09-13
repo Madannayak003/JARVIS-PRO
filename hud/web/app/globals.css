@@ -819,10 +819,10 @@ body {
 
 .siri-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   margin: 0 auto;
   user-select: none;
 }
@@ -832,7 +832,7 @@ body {
 .siri-stage {
   position: relative;
   width: 100%;
-  height: 80px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -861,7 +861,7 @@ body {
 .siri-svg {
   position: absolute;
   width: 100%;
-  height: 100%;
+  height: 120%;
   z-index: 2;
   mix-blend-mode: screen;
   pointer-events: none;
@@ -870,7 +870,7 @@ body {
 /* Wave layers default idle state */
 .siri-path {
   transform-origin: center center;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transition: transform 0.2s ease, opacity 0.4s ease;
   transform: scaleY(0.12);
   opacity: 0.2;
 }
@@ -884,23 +884,23 @@ body {
 }
 
 .siri-container.is-listening .siri-path--green {
-  animation: siriPulseGreen 2.2s ease-in-out infinite;
+  animation: siriPulseGreen 3.2s ease-in-out infinite;
 }
 
 .siri-container.is-listening .siri-path--blue {
-  animation: siriPulseBlue 2.6s ease-in-out infinite alternate;
+  animation: siriPulseBlue 1.6s ease-in-out infinite alternate;
 }
 
 .siri-container.is-listening .siri-path--cyan {
-  animation: siriPulseCyan 1.9s ease-in-out infinite alternate;
+  animation: siriPulseCyan 1.2s ease-in-out infinite alternate;
 }
 
 .siri-container.is-listening .siri-path--purple {
-  animation: siriPulsePurple 2.4s ease-in-out infinite;
+  animation: siriPulsePurple 2.0s ease-in-out infinite;
 }
 
 .siri-container.is-listening .siri-path--core {
-  animation: siriPulseCore 1.6s ease-in-out infinite alternate;
+  animation: siriPulseCore 1.9s ease-in-out infinite alternate;
 }
 
 /* Wave Dynamics */

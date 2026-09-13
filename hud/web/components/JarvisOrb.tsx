@@ -26,10 +26,13 @@ import {
 } from "@/lib/expressiveRobot";
 
 import {
+  createFlyingRobot,
+} from "@/lib/flyingRobot";
+
+import {
   HandTracker,
   type TrackerStatus,
 } from "@/lib/handTracker";
-
 
 type CameraState =
   | "off"
@@ -37,38 +40,25 @@ type CameraState =
   | "on"
   | "error";
 
-
 type AvatarType =
   | "orb"
   | "robot"
   | "full-body"
-  | "expressive";
+  | "expressive"
+  | "flying-robot";
 
-  
 const VOICE_AVATAR_PROFILES: Record<string, AvatarType> = {
   Ryan: "orb",
   Thomas: "robot",
   William: "full-body",
   Connor: "expressive",
+  Aria: "flying-robot"
 };
 
 type UltronColor = {
   name: string;
   value: number;
 };
-
-
-// =====================================================
-// SCENE API
-// =====================================================
-//
-// All avatar scenes support the normal camera controls.
-// Only the ULTRON orb supports setUltronColor.
-//
-// EXPRESSIVE ROBOT additionally supports
-// setSituation(), which will be connected to the
-// real JARVIS situation/state.
-// =====================================================
 
 type SceneApi =
   OrbSceneApi & {
@@ -80,7 +70,6 @@ type SceneApi =
       situation: ExpressiveRobotSituation
     ) => void;
   };
-
 
 // =====================================================
 // TRACKER MODE LABELS
@@ -94,7 +83,6 @@ const MODE_LABEL: Record<
   spin: "SPIN",
   zoom: "ZOOM",
 };
-
 
 // =====================================================
 // ULTRON COLOR PRESETS
@@ -207,67 +195,20 @@ export default function JarvisOrb({
 
     let scene: SceneApi;
 
-
-    // ---------------------------------------------------
-    // ULTRON ORB
-    // ---------------------------------------------------
-
     if (avatarType === "orb") {
-
-      scene =
-        createOrbScene(
-          container
-        );
-
+      scene = createOrbScene(container);
+    } else if (avatarType === "full-body") {
+      scene = createJarvisFullBody(container);
+    } else if (avatarType === "expressive") {
+      scene = createExpressiveRobot(container);
+    }else if (avatarType === "flying-robot") {
+      scene = createFlyingRobot(container);
+    } else {
+      scene = createJarvisAvatar(container);
     }
-
-    // ---------------------------------------------------
-    // FULL BODY
-    // ---------------------------------------------------
-
-    else if (
-      avatarType === "full-body"
-    ) {
-
-      scene =
-        createJarvisFullBody(
-          container
-        );
-
-    }
-
-    // ---------------------------------------------------
-    // EXPRESSIVE ROBOT
-    // ---------------------------------------------------
-
-    else if (
-      avatarType === "expressive"
-    ) {
-
-      scene =
-        createExpressiveRobot(
-          container
-        );
-
-    }
-
-    // ---------------------------------------------------
-    // NORMAL ROBOT
-    // ---------------------------------------------------
-
-    else {
-
-      scene =
-        createJarvisAvatar(
-          container
-        );
-
-    }
-
 
     sceneRef.current =
       scene;
-
 
     // ---------------------------------------------------
     // Apply current ULTRON color
@@ -284,7 +225,6 @@ export default function JarvisOrb({
 
     }
 
-
     // ---------------------------------------------------
     // Apply current EXPRESSIVE situation
     // ---------------------------------------------------
@@ -300,7 +240,6 @@ export default function JarvisOrb({
       );
 
     }
-
 
     // ---------------------------------------------------
     // Cleanup
