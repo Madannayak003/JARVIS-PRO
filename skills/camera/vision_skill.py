@@ -360,6 +360,105 @@ def vision_position(data=None):
             _stop_vision()
 
 
+def vision_locate(data=None):
+    started = False
+
+    try:
+        if not vision_loop.running:
+            if not _start_vision():
+                return {
+                    "error": "Unable to start vision."
+                }
+
+            started = True
+
+        if not isinstance(data, dict):
+            data = {}
+
+        object_name = data.get("object")
+
+        if not object_name:
+            return {
+                "error": "Object name is required."
+            }
+
+        print(
+            f"[VISION] Locating: {object_name}"
+        )
+
+        return vision_query.locate(
+            object_name
+        )
+
+    except Exception as e:
+
+        print(
+            "[VISION ERROR] Locate:",
+            e
+        )
+
+        return {
+            "error": str(e)
+        }
+
+    finally:
+
+        if started:
+            _stop_vision()
+            
+
+def vision_target(data=None):
+    started = False
+
+    try:
+        if not vision_loop.running:
+            if not _start_vision():
+                return {
+                    "error": "Unable to start vision."
+                }
+
+            started = True
+
+        if not isinstance(data, dict):
+            data = {}
+
+        object_name = data.get("object")
+
+        if not object_name:
+            return {
+                "error": "Object name is required."
+            }
+
+        position = data.get("position")
+        region = data.get("region")
+
+        print(
+            f"[VISION] Selecting target: "
+            f"{object_name}"
+        )
+
+        return vision_query.target_info(
+            object_name,
+            position=position,
+            region=region,
+        )
+
+    except Exception as e:
+
+        print(
+            "[VISION ERROR] Target:",
+            e
+        )
+
+        return {
+            "error": str(e)
+        }
+
+    finally:
+
+        if started:
+            _stop_vision()
+
 # =========================================================
 # Registry
 # =========================================================
@@ -397,6 +496,18 @@ register(
 register(
     "vision_position",
     vision_position,
+    category="camera",
+)
+
+register(
+    "vision_locate",
+    vision_locate,
+    category="camera",
+)
+
+register(
+    "vision_target",
+    vision_target,
     category="camera",
 )
 

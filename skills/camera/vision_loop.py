@@ -1,3 +1,20 @@
+"""
+JARVIS PRO
+Vision Processing Loop
+
+Stage 2.3:
+Continuous YOLO scene processing with temporal stability.
+
+Responsibilities:
+- Capture frames through VisionEngine
+- Run YOLO detection
+- Analyze the scene
+- Stabilize detections across frames
+- Publish a reliable latest scene
+
+CameraManager remains untouched.
+"""
+
 import threading
 import time
 
@@ -7,7 +24,11 @@ from skills.camera.scene_analyzer import scene_analyzer
 
 class VisionLoop:
 
-    def __init__(self, interval=0.5):
+    def __init__(
+        self,
+        interval=0.5,
+        stability_frames=2,
+    ):
 
         self.interval = interval
 
@@ -19,6 +40,19 @@ class VisionLoop:
         # Used to signal that the first scene is ready
         self.scene_ready = threading.Event()
 
+        # --------------------------------------------------
+        # Temporal stability
+        # --------------------------------------------------
+
+        self.stability_frames = max(
+            1,
+            int(stability_frames),
+        )
+
+        self._candidate_scene = None
+        self._candidate_signature = None
+        self._candidate_count = 0
+
     # --------------------------------------------------
     # Start
     # --------------------------------------------------
@@ -27,23 +61,31 @@ class VisionLoop:
 
         if self.running:
 
-            print("[VISION LOOP] Already running.")
+            print(
+                "[VISION LOOP] Already running."
+            )
 
-            # If already running, wait briefly for a scene
-            self.scene_ready.wait(timeout=5)
+            self.scene_ready.wait(
+                timeout=5
+            )
 
             return True
 
-        print("[VISION LOOP] Starting...")
+        print(
+            "[VISION LOOP] Starting..."
+        )
 
         # Clear previous state
         self.latest_scene = None
         self.scene_ready.clear()
 
+        self._reset_stability()
+
         if not vision.start():
 
             print(
-                "[VISION LOOP] Vision failed to start."
+                "[VISION LOOP] "
+                "Vision failed to start."
             )
 
             return False
@@ -53,32 +95,136 @@ class VisionLoop:
         self.thread = threading.Thread(
             target=self._run,
             name="VisionLoop",
-            daemon=True
+            daemon=True,
         )
 
         self.thread.start()
 
         print(
             "[VISION LOOP] Started. "
-            "Waiting for first scene..."
+            "Waiting for first stable scene..."
         )
 
-        # Wait until the first YOLO scene is available.
-        # This prevents vision_query from seeing None.
-        if not self.scene_ready.wait(timeout=10):
+        if not self.scene_ready.wait(
+            timeout=10
+        ):
 
             print(
                 "[VISION LOOP] WARNING: "
-                "First scene was not ready within 10 seconds."
+                "First stable scene was not ready "
+                "within 10 seconds."
             )
 
         else:
 
             print(
-                "[VISION LOOP] First scene ready."
+                "[VISION LOOP] "
+                "First stable scene ready."
             )
 
         return True
+
+    # --------------------------------------------------
+    # Detection Signature
+    # --------------------------------------------------
+
+    def _scene_signature(self, scene):
+
+        if not scene:
+
+            return ()
+
+        objects = scene.get(
+            "objects",
+            []
+        )
+
+        signature = []
+
+        for obj in objects:
+
+            label = str(
+                obj.get(
+                    "label",
+                    ""
+                )
+            ).lower().strip()
+
+            position = str(
+                obj.get(
+                    "position",
+                    ""
+                )
+            ).lower().strip()
+
+            region = str(
+                obj.get(
+                    "region",
+                    ""
+                )
+            ).lower().strip()
+
+            if not label:
+
+                continue
+
+            signature.append(
+                (
+                    label,
+                    position,
+                    region,
+                )
+            )
+
+        return tuple(
+            sorted(signature)
+        )
+
+    # --------------------------------------------------
+    # Stability
+    # --------------------------------------------------
+
+    def _reset_stability(self):
+
+        self._candidate_scene = None
+        self._candidate_signature = None
+        self._candidate_count = 0
+
+    def _update_stability(self, scene):
+
+        signature = self._scene_signature(
+            scene
+        )
+
+        # No objects detected.
+        if not signature:
+
+            self._candidate_scene = scene
+            self._candidate_signature = signature
+            self._candidate_count += 1
+
+        elif (
+            signature
+            == self._candidate_signature
+        ):
+
+            self._candidate_count += 1
+
+        else:
+
+            self._candidate_scene = scene
+            self._candidate_signature = signature
+            self._candidate_count = 1
+
+        # Stable enough to publish.
+        if (
+            self._candidate_count
+            >= self.stability_frames
+        ):
+
+            return self._candidate_scene
+
+        return None
 
     # --------------------------------------------------
     # Processing Loop
@@ -86,7 +232,9 @@ class VisionLoop:
 
     def _run(self):
 
-        print("[VISION LOOP] Worker started.")
+        print(
+            "[VISION LOOP] Worker started."
+        )
 
         while self.running:
 
@@ -102,21 +250,30 @@ class VisionLoop:
 
                     continue
 
-                detections = vision.detect(
-                    frame
-                )
+                detections = vision.track(frame)
 
                 scene = scene_analyzer.analyze(
                     detections,
-                    frame.shape[1]
+                    frame.shape[1],
+                    frame.shape[0],
                 )
 
-                self.latest_scene = scene
+                stable_scene = (
+                    self._update_stability(
+                        scene
+                    )
+                )
 
-                # Signal first successful scene
-                if not self.scene_ready.is_set():
+                if stable_scene is not None:
 
-                    self.scene_ready.set()
+                    self.latest_scene = (
+                        stable_scene
+                    )
+
+                    # Signal first stable scene
+                    if not self.scene_ready.is_set():
+
+                        self.scene_ready.set()
 
             except Exception as e:
 
@@ -125,7 +282,6 @@ class VisionLoop:
                     e
                 )
 
-            # Don't sleep after stop was requested
             if self.running:
 
                 time.sleep(
@@ -152,7 +308,13 @@ class VisionLoop:
 
         return {
             "running": self.running,
-            "scene": self.latest_scene
+            "scene": self.latest_scene,
+            "stability_frames": (
+                self.stability_frames
+            ),
+            "candidate_count": (
+                self._candidate_count
+            ),
         }
 
     # --------------------------------------------------
@@ -173,12 +335,8 @@ class VisionLoop:
             "[VISION LOOP] Stopping..."
         )
 
-        # Tell worker to stop
         self.running = False
 
-        # Wait for worker to completely exit.
-        # Do NOT release the camera while YOLO is still
-        # processing a frame.
         if (
             self.thread
             and self.thread.is_alive()
@@ -188,7 +346,6 @@ class VisionLoop:
                 timeout=15
             )
 
-        # Safety check
         if (
             self.thread
             and self.thread.is_alive()
@@ -201,11 +358,12 @@ class VisionLoop:
 
         self.thread = None
 
-        # Now it is safe to stop the vision/camera system
         vision.stop()
 
         self.latest_scene = None
         self.scene_ready.clear()
+
+        self._reset_stability()
 
         print(
             "[VISION LOOP] Stopped."

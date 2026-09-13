@@ -438,6 +438,76 @@ def _match_object_existence(command):
         "action": "vision_check",
         "object": object_name,
     }
+    
+    
+# =========================================================
+# YOLO OBJECT LOCATION
+# =========================================================
+
+def _match_object_location(command):
+
+    match = re.fullmatch(
+        r"(?:where is|where's|where can i find|which side is)"
+        r"\s+(?:my|the|a|an)?\s*(.+?)(?:\?)?",
+        command,
+        re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    object_name = match.group(1).strip()
+
+    if not object_name:
+        return None
+
+    object_name = _normalize_object(object_name)
+
+    return {
+        "action": "vision_locate",
+        "object": object_name,
+    }
+
+
+# =========================================================
+# YOLO OBJECT TARGET
+# =========================================================
+
+def _match_object_target(command):
+
+    match = re.fullmatch(
+        r"(?:find|locate|show me|which)"
+        r"\s+(?:the|my|a|an)?\s*(.+?)"
+        r"(?:\s+on my\s+(left|right|center|middle)"
+        r"|\s+in the\s+(left|right|center|middle))?"
+        r"(?:\?)?",
+        command,
+        re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    object_name = match.group(1).strip()
+    position = match.group(2) or match.group(3)
+
+    if not object_name:
+        return None
+
+    object_name = _normalize_object(object_name)
+
+    if position == "middle":
+        position = "center"
+
+    plan = {
+        "action": "vision_target",
+        "object": object_name,
+    }
+
+    if position:
+        plan["position"] = position
+
+    return plan
 
 
 # =========================================================
@@ -561,9 +631,32 @@ def vision_route(command):
     if plan:
 
         return [plan]
+    
+    # =====================================================
+    # 5. YOLO OBJECT LOCATION
+    # =====================================================
+
+    plan = _match_object_location(
+        command
+    )
+
+    if plan:
+        return [plan]
+
 
     # =====================================================
-    # 5. YOLO POSITION
+    # 6. YOLO OBJECT TARGET
+    # =====================================================
+
+    plan = _match_object_target(
+        command
+    )
+
+    if plan:
+        return [plan]
+
+    # =====================================================
+    # 7. YOLO POSITION
     # =====================================================
 
     plan = _match_position(
@@ -575,7 +668,7 @@ def vision_route(command):
         return [plan]
 
     # =====================================================
-    # 6. YOLO SCENE DESCRIPTION
+    # 8. YOLO SCENE DESCRIPTION
     # =====================================================
 
     plan = _match_static(

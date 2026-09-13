@@ -81,6 +81,17 @@ class VisionEngine:
         results = detector.detect(frame)
 
         return results
+    
+    def track(self, frame=None):
+        if frame is None:
+            frame = self.get_frame()
+
+        if frame is None:
+            return []
+
+        results = detector.track(frame)
+
+        return results
 
     # --------------------------------------------------
     # Capture + Detect
