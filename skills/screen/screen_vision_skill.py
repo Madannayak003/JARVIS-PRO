@@ -63,29 +63,27 @@ def screen_vision_analyze(data=None):
     try:
 
         response = ai_service.generate(
-
             prompt=(
-                "Look at my current computer screen and "
-                "tell me naturally what I am looking at. "
-                "Identify the main application or window, "
-                "important visible content, useful text, "
-                "and anything relevant to what I am doing. "
-                "Do not describe every small visual detail. "
-                "Focus on what would actually help me."
+                "Analyze this screen.\n\n"
+                "Identify:\n"
+                "1. The main application or window.\n"
+                "2. What the user appears to be doing.\n"
+                "3. Important visible text, errors, or status.\n"
+                "4. Anything actionable or relevant.\n\n"
+                "Be concise.\n"
+                "Only mention information clearly visible on screen.\n"
+                "Do not describe decorative details."
             ),
-
             system_prompt=(
-                "You are JARVIS PRO's live screen vision "
-                "assistant. Analyze the provided current "
-                "desktop image accurately. Respond naturally "
-                "like a professional personal assistant "
-                "speaking to the user. Do not sound robotic "
-                "or like an object detector. Only describe "
-                "information that is actually visible."
+                "You are JARVIS PRO's fast live screen-vision assistant. "
+                "Accurately understand the supplied desktop image. "
+                "Respond naturally and concisely. "
+                "Prioritize useful information over visual detail. "
+                "Never invent information that is not visible."
             ),
-
             capability="screen_vision",
-
+            provider="gemini",
+            model="gemini-3.5-flash-lite",
             images=[image],
         )
 
