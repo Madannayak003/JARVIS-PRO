@@ -193,8 +193,8 @@ export default function JarvisOrb({
     );
 
 
-  const [controlMode, setControlMode] =
-    useState<"controls" | "model">("controls");
+  const [controlsVisible, setControlsVisible] =
+    useState(true);
 
   // =====================================================
   // AVATAR INITIALIZATION / SWITCHING
@@ -891,7 +891,7 @@ export default function JarvisOrb({
         )}
 
 
-      {controlMode === "controls" && (
+      {controlsVisible && (
         <>
           {/* GESTURE CONTROL */}
 
@@ -966,7 +966,7 @@ export default function JarvisOrb({
         {/* AVATAR SELECTOR */}
         {/* ================================================= */}
       
-      {controlMode === "model" && (
+      {controlsVisible && avatarType === "orb" && (
         <div
           className="hud-avatar-selector"
           style={{
@@ -974,122 +974,6 @@ export default function JarvisOrb({
             marginTop: "2px",
           }}
         >
-
-          {/* ORB / ROBOT */}
-
-          <div
-            className="hud-row"
-            style={{
-              display: "flex",
-              gap: "8px",
-              width: "100%",
-              marginBottom: "6px",
-            }}
-          >
-
-            <button
-              type="button"
-              className="hud-btn"
-              style={{
-                flex: 1,
-                minWidth: 0,
-              }}
-              aria-pressed={
-                avatarType === "orb"
-              }
-              onClick={() => {}}
-            >
-
-              {avatarType === "orb"
-                ? "● ORB"
-                : "○ ORB"}
-
-            </button>
-
-
-            <button
-              type="button"
-              className="hud-btn"
-              style={{
-                flex: 1,
-                minWidth: 0,
-              }}
-              aria-pressed={
-                avatarType === "robot"
-              }
-              onClick={() => {}}
-            >
-
-              {avatarType === "robot"
-                ? "● ROBO"
-                : "○ ROBO"}
-
-            </button>
-
-          </div>
-
-
-          {/* FULL BODY */}
-
-          <div
-            className="hud-row"
-            style={{
-              width: "100%",
-              marginBottom: "6px",
-            }}
-          >
-
-            <button
-              type="button"
-              className="hud-btn"
-              style={{
-                width: "100%",
-              }}
-              aria-pressed={
-                avatarType === "full-body"
-              }
-              onClick={() => {}}
-            >
-
-              {avatarType === "full-body"
-                ? "● FULL BODY"
-                : "○ FULL BODY"}
-
-            </button>
-
-          </div>
-
-
-          {/* EXPRESSIVE ROBOT */}
-
-          <div
-            className="hud-row"
-            style={{
-              width: "100%",
-              marginBottom: "10px",
-            }}
-          >
-
-            <button
-              type="button"
-              className="hud-btn"
-              style={{
-                width: "100%",
-              }}
-              aria-pressed={
-                avatarType === "expressive"
-              }
-              onClick={() => {}}
-            >
-
-              {avatarType === "expressive"
-                ? "● EXPRESSIVE"
-                : "○ EXPRESSIVE"}
-
-            </button>
-
-          </div>
-
 
           {/* ================================================= */}
           {/* ULTRON COLOR CONTROLS */}
@@ -1161,27 +1045,14 @@ export default function JarvisOrb({
             style={{
               borderRadius: "30px",
             }}
-            aria-pressed={controlMode === "controls"}
-            onClick={() => setControlMode("controls")}
+            aria-pressed={controlsVisible}
+            onClick={() => setControlsVisible((visible) => !visible)}
           >
-            {controlMode === "controls"
+            {controlsVisible
               ? "● CONTROLS"
               : "○ CONTROLS"}
           </button>
-
-          <button
-            type="button"
-            className="hud-btn"
-            style={{
-              borderRadius: "30px",
-            }}
-            aria-pressed={controlMode === "model"}
-            onClick={() => setControlMode("model")}
-          >
-            {controlMode === "model"
-              ? "● MODEL"
-              : "○ MODEL"}
-          </button>
+          
         </div>
 
       </div>
