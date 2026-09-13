@@ -2703,8 +2703,8 @@ body {
 
   /* 7. ULTRON COLOR */
   .ultron-color-panel {
-    bottom: 27px !important;
-    left: 135px !important;
+    bottom: 28px !important;
+    left: 100px !important;
     width: 100px !important;
     transform: scale(0.85) !important;
     transform-origin: bottom left !important;
@@ -2748,8 +2748,12 @@ body {
 
   .hud-btn {
     height: 20px !important;
-    min-width: 26px !important;
+    min-width: 20px !important;
     font-size: 7.5px !important;
     padding: 0 3px !important;
+  }
+
+  .hud-controls-toggle {
+    width: 80px !important;
   }
 }
