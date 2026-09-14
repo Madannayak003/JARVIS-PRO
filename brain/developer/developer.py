@@ -5,7 +5,13 @@ Developer
 Public API
 """
 
+import os
+import platform
+import shutil
+import subprocess
+import webbrowser
 from datetime import datetime, timezone
+from pathlib import Path
 
 from brain.developer.editor.editor import (
     Editor,
@@ -24,61 +30,113 @@ from brain.developer.pipeline import (
 )
 
 
+def _launch_project_assets(folder_path: str) -> None:
+    """
+    1. Opens the project directory in File Explorer.
+    2. Opens HTML files in default browser.
+    3. Conforms sketch folder structure and silently launches Arduino IDE without terminal spam.
+    """
+    if not folder_path or not os.path.exists(folder_path):
+        return
+
+    sys_platform = platform.system()
+    abs_folder = os.path.abspath(folder_path)
+
+    # 1. Open project folder in explorer
+    try:
+        if sys_platform == "Windows":
+            os.startfile(abs_folder)
+        elif sys_platform == "Darwin":
+            subprocess.Popen(["open", abs_folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            subprocess.Popen(["xdg-open", abs_folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+    # 2. Collect project files
+    html_files = []
+    ino_files = []
+
+    for root, _, files in os.walk(abs_folder):
+        for file in files:
+            full_path = os.path.join(root, file)
+            ext = os.path.splitext(file)[1].lower()
+            if ext == ".html":
+                html_files.append(full_path)
+            elif ext == ".ino":
+                ino_files.append(full_path)
+
+    # 3. Launch HTML in browser (prefer index.html)
+    if html_files:
+        target_html = next(
+            (f for f in html_files if os.path.basename(f).lower() == "index.html"),
+            html_files[0]
+        )
+        try:
+            webbrowser.open(Path(target_html).as_uri())
+        except Exception:
+            pass
+
+    # 4. Launch Arduino / ESP sketch cleanly
+    if ino_files:
+        target_ino = ino_files[0]
+        sketch_name = os.path.splitext(os.path.basename(target_ino))[0]
+        parent_dir = os.path.dirname(target_ino)
+        parent_name = os.path.basename(parent_dir)
+
+        # Ensure folder name matches .ino file so Arduino IDE doesn't show moving popup
+        if parent_name != sketch_name:
+            proper_dir = os.path.join(parent_dir, sketch_name)
+            os.makedirs(proper_dir, exist_ok=True)
+            new_ino_path = os.path.join(proper_dir, os.path.basename(target_ino))
+            shutil.move(target_ino, new_ino_path)
+            target_ino = new_ino_path
+
+        if sys_platform == "Windows":
+            # DETACHED_PROCESS (0x00000008) + CREATE_NEW_PROCESS_GROUP (0x00000200)
+            DETACHED_FLAGS = 0x00000008 | 0x00000200
+
+            # Use 'cmd /c start' to launch completely detached from terminal IO
+            subprocess.Popen(
+                f'cmd.exe /c start "" "{target_ino}"',
+                shell=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=DETACHED_FLAGS,
+                close_fds=True,
+            )
+        elif sys_platform == "Darwin":
+            subprocess.Popen(
+                ["open", "-a", "Arduino IDE", target_ino],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            subprocess.Popen(
+                ["arduino", target_ino],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+
 class Developer:
     """
     Public entry point for the Developer subsystem.
-
-    Routes Developer requests to the correct workflow:
-
-        CREATE
-            ↓
-        DeveloperPipeline
-            ↓
-        Generator
-            ↓
-        Validator
-            ↓
-        Workspace
-
-        EDIT
-            ↓
-        Editor
-            ↓
-        Developer Memory
     """
 
     def __init__(self):
-
         self.editor = Editor()
-
         self.pipeline = DeveloperPipeline()
-
         self.memory = DeveloperMemory()
-
-    # ==================================================
-    # Execute
-    # ==================================================
 
     def execute(
         self,
         user_request: str,
         project_path: str = "",
     ):
-        """
-        Execute a Developer request.
-
-        CREATE requests do not require an active project.
-
-        EDIT requests require an existing project path.
-        """
-
         if not user_request:
-
             return None
-
-        # --------------------------------------------------
-        # Analyze request first
-        # --------------------------------------------------
 
         analysis = self.pipeline.analyzer.analyze(
             user_request,
@@ -97,190 +155,99 @@ class Developer:
         )
 
         if intent_name == "CREATE":
-
-            print(
-                "[DEVELOPER] Create request detected."
-            )
-
             context = self.pipeline.process(
                 user_request,
             )
 
-            # ----------------------------------------------
-            # Workspace Result
-            # ----------------------------------------------
-
             result = context.workspace_result
 
             if result is None:
-
                 return None
-
-            # ----------------------------------------------
-            # Remember Successfully Created Project
-            # ----------------------------------------------
 
             if (
                 result.success
                 and result.project_path
             ):
-
                 project_path = str(
                     result.project_path
                 )
 
-                print(
-                    "[DEVELOPER] Active project:",
-                    project_path,
-                )
-
-                # Configure memory for this project
                 self.memory.configure(
                     project_path,
                 )
-
-                # Load existing project memory
                 self.memory.load()
-
-                # Store active project
                 self.memory.update_session(
                     "project_path",
                     project_path,
                 )
-
-                # Store basic project information
                 self.memory.add_project(
                     "name",
                     result.project_name,
                 )
-
                 self.memory.add_project(
                     "path",
                     project_path,
                 )
-
-                # Persist memory
                 self.memory.save()
 
-                print(
-                    "[DEVELOPER] Project memory updated."
-                )
+                _launch_project_assets(project_path)
 
             return result
 
-        # ==================================================
-        # EDIT
-        # ==================================================
-
         if not project_path:
-
-            print(
-                "[DEVELOPER] "
-                "Edit request requires an active project."
-            )
-
             return None
-
-        # ----------------------------------------------
-        # Configure Developer Memory
-        # ----------------------------------------------
 
         self.memory.configure(
             project_path,
         )
-
         self.memory.load()
-
-        # ----------------------------------------------
-        # Store active project
-        # ----------------------------------------------
-
         self.memory.update_session(
             "project_path",
             project_path,
         )
-
-        # ----------------------------------------------
-        # Execute Editor
-        # ----------------------------------------------
 
         result = self.editor.execute(
             user_request,
             project_path,
         )
 
-        # ----------------------------------------------
-        # Collect modified files
-        # ----------------------------------------------
-
         files = [
-
             patch.path
-
             for patch in result.patches
-
         ] if result is not None else []
 
-        # ----------------------------------------------
-        # Determine edit type
-        # ----------------------------------------------
-
         edit_type = ""
-
         try:
-
             edit_type = (
                 self.editor.analyzer._detect_action(
                     user_request,
                 )
             )
-
         except Exception:
-
             edit_type = ""
 
-        # ----------------------------------------------
-        # Build edit record
-        # ----------------------------------------------
-
         record = EditRecord(
-
             request=user_request,
-
             edit_type=edit_type,
-
             files=files,
-
             timestamp=datetime.now(
                 timezone.utc,
             ).isoformat(),
-
             success=(
                 result.success
                 if result is not None
                 else False
             ),
-
             notes=(
                 result.message
                 if result is not None
                 else "Developer execution failed."
             ),
-
         )
-
-        # ----------------------------------------------
-        # Save edit history
-        # ----------------------------------------------
 
         self.memory.add_edit(
             record.__dict__,
         )
-
-        # ----------------------------------------------
-        # Save project memory
-        # ----------------------------------------------
-
         self.memory.save()
 
         return result
