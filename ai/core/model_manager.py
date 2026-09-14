@@ -58,14 +58,14 @@ class ModelManager:
         ],
 
         "coding": [
-            "gemini-3.6-flash",
             "gemini-3.5-flash",
+            "gemini-3.6-flash",
             "gemini-3.5-flash-lite",
         ],
 
         "developer": [
-            "gemini-3.6-flash",
             "gemini-3.5-flash",
+            "gemini-3.6-flash",
             "gemini-3.5-flash-lite",
         ],
 
