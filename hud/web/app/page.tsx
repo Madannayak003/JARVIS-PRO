@@ -584,14 +584,6 @@ export default function Home() {
 
         // Strict global deduplication check
         setActivities((previous) => {
-          const isDuplicate = previous.some(
-            (item) => item.text === text && item.speaker === speaker
-          );
-
-          if (isDuplicate) {
-            return previous;
-          }
-
           const activity: HUDActivity = {
             id: `${event.timestamp}-${Math.random()}`,
             speaker,
