@@ -402,7 +402,7 @@ class ModelRegistry:
 
                 local=False,
 
-                enabled=True,
+                enabled=False,
 
                 priority=30,
 
