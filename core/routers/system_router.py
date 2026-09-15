@@ -1,3 +1,5 @@
+import re
+
 SYSTEM = {
 
     # ---------------------------------------------------------
@@ -181,6 +183,46 @@ def system_route(command):
         "sleep pc",
     ]:
         return [{"action": "sleep"}]
+    
+    # ---------- Fixed Volume ----------
+
+    match = re.fullmatch(
+        r"(?:set|change)\s+(?:the\s+)?volume\s+(?:to\s+)?(\d{1,3})(?:\s*(?:percent|%))?",
+        command,
+    )
+
+    if match:
+        percent = int(match.group(1))
+
+        if 0 <= percent <= 100:
+            return [
+                {
+                    "action": "volume",
+                    "percent": percent,
+                }
+            ]
+
+        return None
+
+    # ---------- Fixed Brightness ----------
+
+    match = re.fullmatch(
+        r"(?:set|change)\s+(?:the\s+)?brightness\s+(?:to\s+)?(\d{1,3})(?:\s*(?:percent|%))?",
+        command,
+    )
+
+    if match:
+        percent = int(match.group(1))
+
+        if 0 <= percent <= 100:
+            return [
+                {
+                    "action": "brightness",
+                    "percent": percent,
+                }
+            ]
+
+        return None
 
     # ---------- Exact system commands ----------
 
