@@ -33,8 +33,8 @@ def _get_volume_interface():
     """
     Get the Windows master-volume interface.
 
-    The interface is initialized lazily so importing this
-    skill does not unnecessarily access the audio device.
+    Uses the EndpointVolume interface exposed by the
+    current Pycaw AudioDevice wrapper.
     """
 
     global _volume
@@ -42,20 +42,15 @@ def _get_volume_interface():
     if _volume is not None:
         return _volume
 
-    devices = AudioUtilities.GetSpeakers()
+    device = AudioUtilities.GetSpeakers()
 
-    interface = devices.Activate(
-        IAudioEndpointVolume._iid_,
-        CLSCTX_ALL,
-        None,
+    if hasattr(device, "EndpointVolume"):
+        _volume = device.EndpointVolume
+        return _volume
+
+    raise RuntimeError(
+        "Pycaw AudioDevice does not expose EndpointVolume."
     )
-
-    _volume = cast(
-        interface,
-        POINTER(IAudioEndpointVolume),
-    )
-
-    return _volume
 
 
 # =========================================================
