@@ -672,88 +672,231 @@ body {
 }
 
 /* =========================================================
-   HUD COMMAND INPUT
+   HUD COMMAND INPUT — COMPACT
    ========================================================= */
 
 .hud-command-input {
   position: fixed;
   right: 24px;
   bottom: 15px;
-  width: min(330px, calc(100vw - 20px));
+
+  width: 350px;
+  max-width: calc(100vw - 48px);
+
   z-index: 120;
+
   color: var(--assistant-colour);
   font-family: "Courier New", monospace;
   background: transparent;
 }
 
 .hud-command-label {
-  margin-bottom: 6px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--assistant-colour);
-  text-shadow: 0 0 6px var(--assistant-colour-45);
+  display: none;
 }
+
+/* COMMAND BAR */
 
 .hud-command-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+
   width: 100%;
+  height: 46px;
+
+  padding: 4px 5px 4px 13px;
+  box-sizing: border-box;
+
+  background: rgba(18, 18, 18, 0.94);
+
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 24px;
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.40);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  gap: 5px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
+
+.hud-command-row:focus-within {
+  border-color: rgba(255, 255, 255, 0.28);
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* INPUT */
 
 .hud-command-row input {
   flex: 1;
   min-width: 0;
-  height: 34px;
-  padding: 0 10px;
+
+  height: 36px;
+  padding: 0 6px;
+
   box-sizing: border-box;
+
   background: transparent;
-  border: 1px solid var(--assistant-colour-45);
-  border-radius: 3px;
-  outline: none;
-  color: var(--assistant-colour);
+
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  color: #ffffff;
+
   font-family: "Courier New", monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+
   caret-color: var(--assistant-colour);
-  box-shadow: inset 0 0 8px var(--assistant-colour-20);
 }
 
 .hud-command-row input::placeholder {
-  color: var(--assistant-colour);
-  opacity: 0.42;
+  color: #ffffff;
+  opacity: 0.40;
 }
 
-.hud-command-row input:focus {
-  border-color: var(--assistant-colour);
-  box-shadow: 0 0 10px var(--assistant-colour-30);
-}
+/* =========================================================
+   SEND BUTTON
+   ========================================================= */
 
-.hud-command-row button {
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid var(--assistant-colour-45);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--assistant-colour);
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  font-weight: 700;
+.hud-command-row button[aria-label="Send command"] {
+  flex: 0 0 32px !important;
+
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+
+  height: 32px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+
+  border: none !important;
+  border-radius: 50% !important;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  color: rgba(255, 255, 255, 0.65);
+
+  font-size: 12px;
+
   cursor: pointer;
-  transition: all 0.15s ease;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.hud-command-row button:hover:not(:disabled) {
-  border-color: var(--assistant-colour);
-  box-shadow: 0 0 10px var(--assistant-colour-45);
+.hud-command-row button[aria-label="Send command"]:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+
+  transform: scale(1.04);
 }
 
-.hud-command-row button:disabled {
-  opacity: 0.35;
+.hud-command-row button[aria-label="Send command"]:disabled {
+  opacity: 0.28;
   cursor: not-allowed;
+}
+
+/* =========================================================
+   LIVE BUTTON — SMALL FILLED BLUE DOT
+   ========================================================= */
+
+.hud-command-row .hud-live-circle {
+  flex: 0 0 32px !important;
+
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+
+  height: 32px !important;
+
+  margin: 0 0 0 1px !important;
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+
+  border: none !important;
+  border-radius: 50% !important;
+
+  background: rgba(47, 128, 237, 0.16) !important;
+
+  color: #2f80ed !important;
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* SMALL SOLID DOT */
+
+.hud-command-row .hud-live-circle .btn-icon {
+  display: block;
+
+  width: 9px;
+  height: 9px;
+
+  margin: 0;
+
+  border-radius: 50%;
+
+  background: #2f80ed;
+
+  font-size: 0;
+  line-height: 0;
+
+  box-shadow:
+    0 0 7px rgba(47, 128, 237, 0.55);
+}
+
+/* HOVER */
+
+.hud-command-row .hud-live-circle:hover {
+  background: rgba(47, 128, 237, 0.24) !important;
+
+  transform: scale(1.04);
+}
+
+/* ACTIVE */
+
+.hud-command-row .hud-live-circle.is-active {
+  background: rgba(47, 128, 237, 0.20) !important;
+
+  box-shadow:
+    0 0 10px rgba(47, 128, 237, 0.20);
+}
+
+.hud-command-row .hud-live-circle.is-active .btn-icon {
+  background: #2f80ed;
+
+  box-shadow:
+    0 0 9px rgba(47, 128, 237, 0.75);
+}
+
+/* NEVER SHOW LIVE TEXT */
+
+.hud-command-row .hud-live-circle > span:not(.btn-icon) {
+  display: none !important;
 }
 
 /* =========================================================

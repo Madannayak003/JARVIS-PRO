@@ -1134,6 +1134,28 @@ export default function Home() {
           >
             ▶
           </button>
+          <button
+            type="button"
+            className={`hud-bar-btn ${liveConversationEnabled ? "is-active" : ""}`}
+            onClick={async () => {
+              const next = !liveConversationEnabled;
+              setLiveConversationEnabled(next);
+              try {
+                const res = await fetch(
+                  `${JARVIS_DASHBOARD_URL}/api/live/${next ? "start" : "stop"}`,
+                  { method: "POST", cache: "no-store" }
+                );
+                const result = await res.json();
+                if (!res.ok || !result.ok) throw new Error(result.error);
+                setLiveConversationEnabled(next);
+              } catch (err) {
+                console.error(err);
+                setLiveConversationEnabled(!next);
+              }
+            }}
+          >
+            <span className="btn-icon">◉</span>
+          </button>
         </div>
       </div>
 
@@ -1381,31 +1403,6 @@ export default function Home() {
             <span className="btn-icon">🎙</span>
             <span>MIC {microphoneEnabled ? "ON" : "OFF"}</span>
           </button>
-
-          <button
-            type="button"
-            className={`hud-bar-btn ${liveConversationEnabled ? "is-active" : ""}`}
-            onClick={async () => {
-              const next = !liveConversationEnabled;
-              setLiveConversationEnabled(next);
-              try {
-                const res = await fetch(
-                  `${JARVIS_DASHBOARD_URL}/api/live/${next ? "start" : "stop"}`,
-                  { method: "POST", cache: "no-store" }
-                );
-                const result = await res.json();
-                if (!res.ok || !result.ok) throw new Error(result.error);
-                setLiveConversationEnabled(next);
-              } catch (err) {
-                console.error(err);
-                setLiveConversationEnabled(!next);
-              }
-            }}
-          >
-            <span className="btn-icon">◉</span>
-            <span>LIVE {liveConversationEnabled ? "ON" : "OFF"}</span>
-          </button>
-
           <button
             type="button"
             className={`hud-bar-btn ${morningBrief ? "is-active" : ""}`}
