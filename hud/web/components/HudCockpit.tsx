@@ -65,6 +65,81 @@ function formatValue(
 }
 
 
+function formatUptime(
+  uptime: unknown,
+) {
+
+  if (
+    typeof uptime !== "number" ||
+    !Number.isFinite(uptime)
+  ) {
+
+    return "--:--:--";
+
+  }
+
+  const totalSeconds = Math.floor(uptime);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor(
+    (totalSeconds % 3600) / 60
+  );
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, "0"))
+    .join(":");
+
+}
+
+
+function SystemInfoCard({
+  status,
+  uptime,
+}: {
+  status: unknown;
+  uptime: string;
+}) {
+
+  const systemStatus = formatValue(
+    status,
+    "--"
+  ).toUpperCase();
+
+  return (
+    <div className="cockpit-system-row cockpit-system-info-card">
+
+      <div className="cockpit-system-info-block">
+
+        <span className="cockpit-system-name">
+          SYSTEM STATUS
+        </span>
+
+        <span className="cockpit-system-state cockpit-system-live-state">
+          <span className="cockpit-system-status-dot" />
+          {systemStatus}
+        </span>
+
+      </div>
+
+      <div className="cockpit-system-info-block">
+
+        <span className="cockpit-system-name">
+          UPTIME
+        </span>
+
+        <span className="cockpit-system-state cockpit-system-uptime">
+          {uptime}
+        </span>
+
+      </div>
+
+    </div>
+  );
+
+}
+
+
 function SystemBar({
   label,
   value,
@@ -579,6 +654,11 @@ export default function HudCockpit({
           <SystemBar
             label="BAT"
             value={system.battery}
+          />
+
+          <SystemInfoCard
+            status={state.voice_mode}
+            uptime={formatUptime(system.uptime)}
           />
 
         </div>

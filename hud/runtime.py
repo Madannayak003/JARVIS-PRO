@@ -33,6 +33,8 @@ class HUDRuntime:
 
         self._stop_event = threading.Event()
 
+        self._started_at = time.monotonic()
+
     # =====================================================
     # Start
     # =====================================================
@@ -120,15 +122,17 @@ class HUDRuntime:
 
     def _update_telemetry(self):
 
-        if not telemetry.available():
-
-            return
-
-        data = telemetry.read()
+        data = (
+            telemetry.read()
+            if telemetry.available()
+            else {"timestamp": time.time()}
+        )
 
         if not isinstance(data, dict):
 
             return
+
+        data["uptime"] = self.uptime()
 
         hud.system_update(
             data
@@ -136,6 +140,15 @@ class HUDRuntime:
 
     # =====================================================
     # Status
+    # =====================================================
+
+    def uptime(self):
+
+        return max(
+            0,
+            time.monotonic() - self._started_at
+        )
+
     # =====================================================
 
     def is_running(self):

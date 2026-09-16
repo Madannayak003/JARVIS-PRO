@@ -137,6 +137,16 @@ export default function Home() {
   const [commandInput, setCommandInput] = useState("");
   const [commandSending, setCommandSending] = useState(false);
 
+  // 1. Inside your component, add an input ref:
+  const commandInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 2. Automatically restore cursor focus whenever sending completes:
+  useEffect(() => {
+    if (!commandSending) {
+      commandInputRef.current?.focus();
+    }
+  }, [commandSending]);
+
   /* =========================================================
      LOAD SETTINGS
      ========================================================= */
@@ -1101,8 +1111,12 @@ export default function Home() {
           ===================================================== */}
       <div className="hud-command-input">
         <div className="hud-command-label">◆ COMMAND INPUT</div>
-        <div className="hud-command-row">
+        <div 
+          className="hud-command-row"
+          onClick={() => commandInputRef.current?.focus()}
+        >
           <input
+            ref={commandInputRef}
             type="text"
             value={commandInput}
             onChange={(event) => setCommandInput(event.target.value)}
@@ -1118,6 +1132,8 @@ export default function Home() {
             spellCheck={false}
             disabled={commandSending}
           />
+
+          {/* SEND BUTTON */}
           <button
             type="button"
             onClick={() => void sendHudCommand()}
@@ -1126,9 +1142,12 @@ export default function Home() {
           >
             ▶
           </button>
+
+          {/* LIVE BUTTON (Updated to hud-live-circle) */}
           <button
             type="button"
-            className={`hud-bar-btn ${liveConversationEnabled ? "is-active" : ""}`}
+            className={`hud-live-circle ${liveConversationEnabled ? "is-active" : ""}`}
+            aria-label="Toggle live conversation"
             onClick={async () => {
               const next = !liveConversationEnabled;
               setLiveConversationEnabled(next);
@@ -1146,7 +1165,7 @@ export default function Home() {
               }
             }}
           >
-            <span className="btn-icon">◉</span>
+            <span className="btn-icon" />
           </button>
         </div>
       </div>
@@ -1354,7 +1373,7 @@ export default function Home() {
         {/* ALL 8 BUTTONS IN ONE TRANSPARENT INLINE ROW */}
         <nav className="hud-bottom-toolbar" aria-label="HUD Cockpit Controls">
           <button type="button" className="hud-bar-btn" onClick={openRemoteControl}>
-            <span className="btn-icon">⚙</span>
+            <span className="btn-icon"></span>
             <span>REMOTE</span>
           </button>
 
@@ -1392,7 +1411,7 @@ export default function Home() {
               }
             }}
           >
-            <span className="btn-icon">🎙</span>
+            <span className="btn-icon"></span>
             <span>MIC {microphoneEnabled ? "ON" : "OFF"}</span>
           </button>
           <button
@@ -1439,7 +1458,7 @@ export default function Home() {
               } catch {}
             }}
           >
-            <span className="btn-icon">⚡</span>
+            <span className="btn-icon"></span>
             <span>AUTO-START {autoStart ? "ON" : "OFF"}</span>
           </button>
 
@@ -1449,12 +1468,12 @@ export default function Home() {
             onClick={createDesktopShortcut}
             disabled={shortcutLoading}
           >
-            <span className="btn-icon">🔗</span>
+            <span className="btn-icon"></span>
             <span>{shortcutLoading ? "SHORTCUT..." : "SHORTCUT"}</span>
           </button>
 
           <button type="button" className="hud-bar-btn" onClick={openCustomise}>
-            <span className="btn-icon">🛠</span>
+            <span className="btn-icon"></span>
             <span>CUSTOMISE</span>
           </button>
         </nav>
