@@ -691,14 +691,32 @@ export default function HudCockpit({
         </div> */}
 
         <div className="quick-tools-grid">
-
           {/* GOOGLE */}
           <button
             type="button"
             onClick={() => onCommand("open google")}
             aria-label="Open Google"
           >
-            <span className="quick-tool-icon">⌕</span>
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path
+                  fill="#4285F4"
+                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                />
+              </svg>
+            </span>
             <span>GOOGLE</span>
           </button>
 
@@ -708,7 +726,15 @@ export default function HudCockpit({
             onClick={() => onCommand("open youtube")}
             aria-label="Open YouTube"
           >
-            <span className="quick-tool-icon">▶</span>
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path
+                  fill="#FF0000"
+                  d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"
+                />
+                <polygon fill="#FFFFFF" points="9.545,15.568 15.818,12 9.545,8.432" />
+              </svg>
+            </span>
             <span>YOUTUBE</span>
           </button>
 
@@ -718,7 +744,18 @@ export default function HudCockpit({
             onClick={() => onCommand("open gmail")}
             aria-label="Open Email"
           >
-            <span className="quick-tool-icon">✉</span>
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path
+                  fill="#4285F4"
+                  d="M22 6.5v11a2.5 2.5 0 0 1-2.5 2.5H19V8.58l-7 5.25-7-5.25V20H4.5A2.5 2.5 0 0 1 2 17.5v-11a2.5 2.5 0 0 1 3.97-2.02L12 8.94l6.03-4.46A2.5 2.5 0 0 1 22 6.5z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M20 4.5h-2.5L12 8.94 6.5 4.5H4a2.5 2.5 0 0 0-2 1v1l10 7.5 10-7.5v-1a2.5 2.5 0 0 0-2-1z"
+                />
+              </svg>
+            </span>
             <span>EMAIL</span>
           </button>
 
@@ -728,7 +765,15 @@ export default function HudCockpit({
             onClick={() => onCommand("open google maps")}
             aria-label="Open Google Maps"
           >
-            <span className="quick-tool-icon">⌖</span>
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path
+                  fill="#EA4335"
+                  d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                />
+                <circle fill="#FFFFFF" cx="12" cy="9" r="3" />
+              </svg>
+            </span>
             <span>MAPS</span>
           </button>
 
@@ -738,7 +783,18 @@ export default function HudCockpit({
             onClick={() => onCommand("open google translate")}
             aria-label="Open Google Translate"
           >
-            <span className="quick-tool-icon">文</span>
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path
+                  fill="#1A73E8"
+                  d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.11 5.02L4 19l5-5 3.11 3.11.76-2.04z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"
+                />
+              </svg>
+            </span>
             <span>TRANSLATE</span>
           </button>
 
@@ -748,7 +804,22 @@ export default function HudCockpit({
             onClick={() => onCommand("open website list")}
             aria-label="Open website list"
           >
-            <span className="quick-tool-icon">◎</span>
+            <span className="quick-tool-icon">
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="#00d4ff"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </span>
             <span>WEBSITES</span>
           </button>
 
@@ -758,7 +829,27 @@ export default function HudCockpit({
             onClick={() => onCommand("open calculator")}
             aria-label="Open Calculator"
           >
-            <span className="quick-tool-icon">▦</span>
+            <span className="quick-tool-icon">
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="#4285F4"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="4" y="2" width="16" height="20" rx="3" />
+                <rect x="7" y="5" width="10" height="4" rx="1" fill="#4285F4" fillOpacity="0.2" />
+                <circle cx="8" cy="13" r="1" fill="#4285F4" />
+                <circle cx="12" cy="13" r="1" fill="#4285F4" />
+                <circle cx="16" cy="13" r="1" fill="#4285F4" />
+                <circle cx="8" cy="17" r="1" fill="#4285F4" />
+                <circle cx="12" cy="17" r="1" fill="#4285F4" />
+                <circle cx="16" cy="17" r="1" fill="#4285F4" />
+              </svg>
+            </span>
             <span>CALCULATOR</span>
           </button>
 
@@ -768,10 +859,24 @@ export default function HudCockpit({
             onClick={() => onCommand("lock")}
             aria-label="Lock PC"
           >
-            <span className="quick-tool-icon">▣</span>
+            <span className="quick-tool-icon">
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="#00e5ff"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="5" y="11" width="14" height="10" rx="2" fill="#00e5ff" fillOpacity="0.15" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                <circle cx="12" cy="16" r="1.5" fill="#00e5ff" />
+              </svg>
+            </span>
             <span>LOCK</span>
           </button>
-
         </div>
 
       </aside>
