@@ -106,6 +106,21 @@ Natural wording is supported, so the examples below are representative phrases
 rather than a strict command grammar. Some actions require a configured account,
 browser session, Windows permission, network connection, or optional dependency.
 
+### Browser setup
+
+JARVIS Browser uses a dedicated, persistent Chromium profile rather than your
+normal Chrome profile. By default it is created at
+`%LOCALAPPDATA%\JARVIS\ChromeProfile`; it stays local to each Windows user and
+stores that user's browser login sessions. It is not repository data and must
+not be committed to Git.
+
+Install Google Chrome, Microsoft Edge, or Chromium. JARVIS automatically finds
+Chrome first, then Edge, then Chromium. To select a particular executable or
+profile directory, set `JARVIS_BROWSER_EXECUTABLE` or
+`JARVIS_BROWSER_PROFILE_DIR`. `JARVIS_BROWSER_CDP_PORT` optionally changes the
+preferred local-only debugging port (default: `9223`); JARVIS chooses another
+local port if that one is occupied.
+
 ## Skills and Commands
 
 | Skill module | Registered actions / capability | Example voice commands |

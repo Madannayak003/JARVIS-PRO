@@ -1,10 +1,11 @@
 from playwright.sync_api import sync_playwright
 import threading
-import os
 import time
-import requests
-import subprocess
 from concurrent.futures import ThreadPoolExecutor
+
+from skills.browser.browser_config import BrowserConfigurationError
+from skills.browser.browser_resolver import BrowserExecutableNotFoundError
+from skills.browser.browser_runtime import BrowserRuntime, BrowserRuntimeError
 
 # =========================================================
 # GLOBAL BROWSER LOCK
@@ -120,6 +121,7 @@ class BrowserController:
         self.playwright = None
         self.browser = None
         self.page = None
+        self.runtime = None
         
         # -------------------------------------------------
         # Previous browser page
@@ -259,8 +261,40 @@ class BrowserController:
 
             pass
 
+        # This runtime owns a dedicated browser process. It never attaches to
+        # an arbitrary CDP endpoint that happens to already use a local port.
+        try:
+
+            if self.runtime is None:
+                self.runtime = BrowserRuntime()
+
+            endpoint = self.runtime.ensure_running()
+
+            print(
+                "[Browser] Starting JARVIS Browser..."
+            )
+
+        except (
+            BrowserConfigurationError,
+            BrowserExecutableNotFoundError,
+            BrowserRuntimeError,
+            OSError,
+            ValueError,
+        ) as error:
+
+            print(
+                "[Browser ERROR] "
+                f"{error}"
+            )
+
+            if self.runtime:
+                self.runtime.stop()
+            self.runtime = None
+
+            return False
+
         # -------------------------------------------------
-        # Start Playwright
+        # Start Playwright only after the owned CDP endpoint is ready.
         # -------------------------------------------------
 
         if not self.playwright:
@@ -274,100 +308,6 @@ class BrowserController:
             )
 
         # -------------------------------------------------
-        # Check existing JARVIS Chrome
-        # -------------------------------------------------
-
-        try:
-
-            requests.get(
-                "http://127.0.0.1:9223/json/version",
-                timeout=1,
-            )
-
-            chrome_running = True
-
-        except Exception:
-
-            chrome_running = False
-
-        # -------------------------------------------------
-        # Start JARVIS Chrome automatically
-        # -------------------------------------------------
-
-        if not chrome_running:
-
-            chrome_path = (
-                r"C:\Program Files\Google\Chrome"
-                r"\Application\chrome.exe"
-            )
-
-            profile_path = os.path.join(
-                os.environ["LOCALAPPDATA"],
-                "JARVIS",
-                "ChromeProfile",
-            )
-
-            os.makedirs(
-                profile_path,
-                exist_ok=True,
-            )
-
-            print(
-                "[Browser] Starting JARVIS Chrome..."
-            )
-
-            try:
-
-                subprocess.Popen(
-                    [
-                        chrome_path,
-                        "--remote-debugging-port=9223",
-                        f"--user-data-dir={profile_path}",
-                    ],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-
-            except Exception as e:
-
-                print(
-                    "[Browser ERROR] "
-                    f"Could not start Chrome: {e}"
-                )
-
-                return False
-
-            # -------------------------------------------------
-            # Wait for Chrome debugging
-            # -------------------------------------------------
-
-            for _ in range(20):
-
-                try:
-
-                    requests.get(
-                        "http://127.0.0.1:9223/json/version",
-                        timeout=1,
-                    )
-
-                    chrome_running = True
-
-                    break
-
-                except Exception:
-
-                    time.sleep(0.5)
-
-            if not chrome_running:
-
-                print(
-                    "[Browser ERROR] "
-                    "Chrome debugging did not start"
-                )
-
-                return False
-
-        # -------------------------------------------------
         # Connect through CDP
         # -------------------------------------------------
 
@@ -377,7 +317,7 @@ class BrowserController:
                 self.playwright
                 .chromium
                 .connect_over_cdp(
-                    "http://127.0.0.1:9223"
+                    endpoint
                 )
             )
 
@@ -448,6 +388,8 @@ class BrowserController:
 
             self.browser = None
             self.page = None
+            if self.runtime:
+                self.runtime.stop()
 
             return False
 
@@ -1815,6 +1757,11 @@ class BrowserController:
 
         try:
 
+            # The runtime owns Chromium. Stop its whole owned process tree
+            # before dropping the CDP connection.
+            if self.runtime:
+                self.runtime.stop()
+
             if self.page:
 
                 try:
@@ -1851,6 +1798,7 @@ class BrowserController:
             self.previous_page = None
             self.browser = None
             self.playwright = None
+            self.runtime = None
 
         return True
 
