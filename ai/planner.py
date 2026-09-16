@@ -12,6 +12,36 @@ from core.action_memory import set_memory
 
 from core.app_resolver import resolve_app
 
+
+# Commands that already express an operation should continue through the
+# existing deterministic routes or the AI planner. A short input with none
+# of these indicators is an object/topic, not an implicit web-search request.
+_ACTION_WORDS = {
+    "open", "launch", "go", "show", "visit", "search", "find", "look",
+    "tell", "explain", "describe", "what", "who", "where", "when", "why",
+    "how", "is", "are", "can", "could", "do", "does", "play", "start",
+    "stop", "create", "make", "write", "save", "add", "delete", "remove",
+    "edit", "run", "send", "remember", "recall", "get", "turn", "increase",
+    "decrease", "mute", "enable", "disable", "set", "read", "list",
+}
+
+
+def _looks_like_bare_topic(command: str) -> bool:
+    """Return True for a short topic/object with no requested operation."""
+
+    import re
+
+    text = " ".join((command or "").lower().split())
+    if not text or text.endswith(("?", ".", "!")):
+        return False
+
+    words = re.findall(r"[a-z0-9][a-z0-9_.+#-]*", text)
+    if not 1 <= len(words) <= 3:
+        return False
+
+    return not any(word in _ACTION_WORDS for word in words)
+
+
 def create_plan(command, stop_event):
 
     # command = command.strip().lower()
@@ -146,6 +176,19 @@ def create_plan(command, stop_event):
     
     if plan:
         return plan
+
+    # Do not guess an action for a standalone topic. This prevents the AI
+    # planner from treating an object such as "esp32" as a Google search while
+    # preserving explicit commands and informational questions.
+    if _looks_like_bare_topic(command):
+        return [{
+            "action": "clarify",
+            "question": f"What would you like me to do with {original_command}?",
+            "context": {
+                "subject": original_command,
+                "type": "generic_action",
+            },
+        }]
     
     # -------------------------------
     # Smart Search Platform Memory V2
@@ -166,13 +209,22 @@ def create_plan(command, stop_event):
 
         for platform, action in PLATFORM_MAP.items():
 
-            if f" on {platform}" in query or f" in {platform}" in query:
+            if (
+                f" on {platform}" in query
+                or f" in {platform}" in query
+                or query.endswith(f" {platform}")
+            ):
 
                 clean_query = (
                     query.replace(f" on {platform}", "")
                         .replace(f" in {platform}", "")
                         .strip()
                 )
+
+                if clean_query.endswith(f" {platform}"):
+                    clean_query = clean_query[
+                        :-len(platform)
+                    ].strip()
 
                 return [{
                     "action": action,
@@ -221,7 +273,10 @@ def create_plan(command, stop_event):
             "action": "clarify",
             "question": "Where would you like me to search? Google, YouTube, GitHub or ChatGPT?",
             "context": {
-                "pending_search": query
+                "pending_search": query,
+                "accepted_answers": list(
+                    PLATFORM_MAP
+                ),
             }
         }]
     

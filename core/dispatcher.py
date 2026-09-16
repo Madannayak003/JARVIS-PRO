@@ -9,7 +9,7 @@ from core.action_memory import (
 )
 
 from core.executor import execute_ai_plan
-from ai.memory_pipeline import learn
+from ai.memory_manager import learn as learn_explicit_memory
 from ai.memory_view import show_all
 from ai.memory_intent import handle as memory_forget
 from ai.memory_profile import profile_summary
@@ -64,7 +64,70 @@ def dispatch(
 
     if not command:
         return
-    
+
+    # =====================================================
+    # PENDING CLARIFICATION
+    # =====================================================
+    #
+    # A clarification reply must be consumed before email, fast routing, or
+    # the normal planner can reinterpret it as a brand-new request.
+    # =====================================================
+
+    clarification_reply = (
+        conversation_coordinator.consume_clarification_reply(
+            command
+        )
+    )
+
+    if clarification_reply:
+
+        status = clarification_reply.get("status")
+
+        if status == "new_request":
+
+            # The user explicitly abandoned the question in favour of a new
+            # command. Do not let stale clarification state capture a later
+            # turn after that command finishes.
+            conversation_coordinator.clarification.clear()
+            conversation_coordinator.context.clear_pending()
+
+        if status == "cancelled":
+
+            print("[CLARIFICATION] Cancelled.")
+
+            return
+
+        if status == "resolved":
+
+            merged_request = clarification_reply.get("merged_request")
+
+            if not merged_request:
+
+                print(
+                    "[CLARIFICATION] Missing original request; "
+                    "continuing with the answer."
+                )
+
+                merged_request = command
+
+            print(
+                "[CLARIFICATION] Resolved request:",
+                merged_request,
+            )
+
+            print(
+                "[CLARIFICATION] Context after resolution:",
+                conversation_coordinator.context.snapshot(),
+            )
+
+            task_manager.start(
+                "planner",
+                planner_worker,
+                merged_request,
+            )
+
+            return
+
     # =====================================================
     # PENDING EMAIL COMPOSITION
     # =====================================================
@@ -1352,7 +1415,10 @@ def dispatch(
     # ACTION MEMORY
     # =====================================================
 
-    memory_result = learn(
+    # Only the existing rule-based explicit-memory recognizer belongs in the
+    # dispatcher. Broad AI memory extraction must not consume normal commands
+    # before the planner gets a chance to route or clarify them.
+    memory_result = learn_explicit_memory(
         command
     )
 

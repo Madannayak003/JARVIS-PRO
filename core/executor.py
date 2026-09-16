@@ -3,9 +3,24 @@ from core.context import set_value
 from core.action_memory import set_memory
 
 
-def execute_ai_plan(plan, stop_event):
+def execute_ai_plan(
+    plan,
+    stop_event,
+    original_request=None,
+):
     
-    for step in plan:
+    for raw_step in plan:
+
+        # Keep the planner's original request available to a clarification
+        # action without mutating the plan object shared by callers.
+        step = dict(raw_step)
+
+        if (
+            step.get("action") == "clarify"
+            and original_request
+            and not step.get("original_request")
+        ):
+            step["original_request"] = original_request
 
         if stop_event and stop_event.is_set():
             print("[EXECUTOR] Cancelled")

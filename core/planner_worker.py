@@ -23,4 +23,8 @@ def planner_worker(command, stop_event):
     if not plan:
         return
 
-    execute_ai_plan(plan, stop_event)
+    execute_ai_plan(
+        plan,
+        stop_event,
+        original_request=command,
+    )

@@ -31,6 +31,22 @@ from ai.core.schemas import (
 from ai.providers.base import AIProvider
 
 
+def _is_quota_error(error) -> bool:
+    text = str(error or "").lower()
+    return any(
+        marker in text
+        for marker in (
+            "429",
+            "resource_exhausted",
+            "quota exceeded",
+            "quotaexceeded",
+            "rate limit",
+            "rate_limit",
+            "too many requests",
+        )
+    )
+
+
 class GeminiProvider(AIProvider):
     """
     Google Gemini implementation of AIProvider.
@@ -338,9 +354,10 @@ class GeminiProvider(AIProvider):
 
         except Exception as e:
 
-            print(
-                f"[GEMINI ERROR] {e}"
-            )
+            if not _is_quota_error(e):
+                print(
+                    f"[GEMINI ERROR] {e}"
+                )
 
             return AIResponse(
 
@@ -528,9 +545,10 @@ class GeminiProvider(AIProvider):
 
         except Exception as e:
 
-            print(
-                f"[GEMINI STREAM ERROR] {e}"
-            )
+            if not _is_quota_error(e):
+                print(
+                    f"[GEMINI STREAM ERROR] {e}"
+                )
 
             yield AIStreamChunk(
 

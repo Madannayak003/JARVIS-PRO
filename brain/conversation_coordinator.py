@@ -37,6 +37,7 @@ from typing import Any, Optional
 from brain.conversation_understanding import (
     ConversationUnderstandingEngine,
     ConversationUnderstanding,
+    ConversationRelation,
 )
 
 from brain.conversation_context import (
@@ -596,6 +597,123 @@ class ConversationCoordinator:
             self.context.clear_pending()
 
         return result
+
+    # ========================================================
+    # Consume Clarification Reply
+    # ========================================================
+
+    @staticmethod
+    def _is_explicit_new_request(text: str) -> bool:
+        """Keep an unambiguous command from being consumed as an answer."""
+
+        normalized = " ".join((text or "").lower().split())
+
+        return normalized.startswith((
+            "new command",
+            "new request",
+            "new task",
+            "forget that and",
+            "ignore that and",
+        ))
+
+    @staticmethod
+    def _normalized_answer(text: str) -> str:
+        """Normalize common reply wording without tying it to a topic."""
+
+        normalized = " ".join((text or "").lower().split())
+
+        for prefix in ("search on ", "search ", "on ", "in "):
+            if normalized.startswith(prefix):
+                return normalized[len(prefix):].strip()
+
+        return normalized
+
+    def consume_clarification_reply(
+        self,
+        user_input: str,
+    ) -> Optional[dict]:
+        """Resolve a pending clarification before normal routing can run.
+
+        A response is merged with the preserved original task by the caller.
+        Explicit cancellation clears the pending state, while an explicit new
+        request is deliberately left for ordinary dispatch.
+        """
+
+        if not self.clarification.is_waiting():
+            return None
+
+        if self._is_explicit_new_request(user_input):
+            return {"status": "new_request"}
+
+        understanding = self.understanding.understand(
+            user_input=user_input,
+            state=self.clarification,
+        )
+
+        self.context.set_user_input(user_input or "")
+
+        if understanding.relation is ConversationRelation.CANCELLATION:
+            self.context.set_relation(understanding.relation.value)
+            self.clarification.clear()
+            self.context.clear_pending()
+            return {"status": "cancelled"}
+
+        # The dispatcher reached this method only because a clarification is
+        # active. Confirmation words and longer natural-language replies are
+        # still answers even though the general-purpose classifier may label
+        # them as confirmation or a new request outside this narrow context.
+        self.context.set_relation(
+            ConversationRelation.CLARIFICATION_ANSWER.value
+        )
+
+        resolved = self.resolve_clarification(user_input)
+
+        if resolved is None:
+            return None
+
+        original_request = (
+            resolved.get("task")
+            or resolved.get("metadata", {}).get("original_request")
+            or resolved.get("metadata", {}).get("subject")
+        )
+
+        answer = str(user_input or "").strip()
+
+        metadata = resolved.get("metadata", {})
+        accepted_answers = {
+            str(value).lower()
+            for value in metadata.get("accepted_answers", [])
+        }
+
+        # A structured clarification can state the valid reply values. If the
+        # reply is not one of them, it is clearly a new command rather than an
+        # answer that should keep recreating the same clarification.
+        if accepted_answers:
+            normalized_answer = self._normalized_answer(answer)
+
+            if normalized_answer not in accepted_answers:
+                return {"status": "new_request"}
+
+            pending_search = metadata.get("pending_search")
+
+            if pending_search:
+                return {
+                    "status": "resolved",
+                    "resolved": resolved,
+                    "merged_request": (
+                        f"search {pending_search} on {normalized_answer}"
+                    ),
+                }
+
+        merged_request = " ".join(
+            part for part in (original_request, answer) if part
+        )
+
+        return {
+            "status": "resolved",
+            "resolved": resolved,
+            "merged_request": merged_request,
+        }
 
     # ========================================================
     # Clear

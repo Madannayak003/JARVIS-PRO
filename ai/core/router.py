@@ -625,17 +625,25 @@ class AIRouter:
 
                 last_error = str(e)
 
-                print(
-                    "[AI ROUTER] Provider exception:",
-                    model.provider,
-                    e,
-                )
+                quota_error = self._is_quota_error(e)
+
+                if quota_error and model.provider.lower() == "gemini":
+                    print(
+                        "[AI ROUTER] Gemini quota exhausted:",
+                        model.name,
+                    )
+                else:
+                    print(
+                        "[AI ROUTER] Provider exception:",
+                        model.provider,
+                        e,
+                    )
 
                 # ------------------------------------------
                 # Quota/rate-limit protection
                 # ------------------------------------------
 
-                if self._is_quota_error(e):
+                if quota_error:
 
                     self._cooldown_model(
                         model.provider,
@@ -671,18 +679,24 @@ class AIRouter:
                 model.name,
             )
 
-            print(
-                "[AI ROUTER] Error:",
-                response.error,
-            )
+            quota_error = self._is_quota_error(response.error)
+
+            if quota_error and model.provider.lower() == "gemini":
+                print(
+                    "[AI ROUTER] Gemini quota exhausted:",
+                    model.name,
+                )
+            else:
+                print(
+                    "[AI ROUTER] Error:",
+                    response.error,
+                )
 
             # ----------------------------------------------
             # Quota/rate-limit protection
             # ----------------------------------------------
 
-            if self._is_quota_error(
-                response.error
-            ):
+            if quota_error:
 
                 self._cooldown_model(
                     model.provider,
@@ -877,18 +891,26 @@ class AIRouter:
                                 model.name,
                             )
 
-                            print(
-                                "[AI ROUTER] Error:",
-                                last_error,
+                            quota_error = self._is_quota_error(
+                                last_error
                             )
+
+                            if quota_error and model.provider.lower() == "gemini":
+                                print(
+                                    "[AI ROUTER] Gemini quota exhausted:",
+                                    model.name,
+                                )
+                            else:
+                                print(
+                                    "[AI ROUTER] Error:",
+                                    last_error,
+                                )
 
                             # ----------------------------------
                             # Quota/rate-limit protection
                             # ----------------------------------
 
-                            if self._is_quota_error(
-                                last_error
-                            ):
+                            if quota_error:
 
                                 self._cooldown_model(
                                     model.provider,
@@ -946,17 +968,25 @@ class AIRouter:
 
                     last_error = str(e)
 
-                    print(
-                        "[AI ROUTER] Streaming exception:",
-                        model.provider,
-                        e,
-                    )
+                    quota_error = self._is_quota_error(e)
+
+                    if quota_error and model.provider.lower() == "gemini":
+                        print(
+                            "[AI ROUTER] Gemini quota exhausted:",
+                            model.name,
+                        )
+                    else:
+                        print(
+                            "[AI ROUTER] Streaming exception:",
+                            model.provider,
+                            e,
+                        )
 
                     # --------------------------------------
                     # Quota/rate-limit protection
                     # --------------------------------------
 
-                    if self._is_quota_error(e):
+                    if quota_error:
 
                         self._cooldown_model(
                             model.provider,
