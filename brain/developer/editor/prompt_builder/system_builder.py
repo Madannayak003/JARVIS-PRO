@@ -49,6 +49,10 @@ class SystemBuilder:
 
                 "Never return partial files.",
 
+                "Every selected file is supplied in full, including large single-file HTML documents with embedded CSS and JavaScript.",
+
+                "For an embedded <style> or <script> edit, preserve all other parts of that same HTML file verbatim unless the request requires a change.",
+
                 "Return ONLY modified '# FILE:' blocks.",
 
                 "Never explain your work.",

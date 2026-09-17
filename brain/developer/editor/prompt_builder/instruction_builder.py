@@ -59,6 +59,8 @@ class InstructionBuilder:
                 
                 "Return COMPLETE files, not snippets.",
 
+                "For a single HTML file with embedded <style> or <script> content, return the complete HTML file after making the requested focused edit.",
+
                 "Return NOTHING except valid '# FILE:' blocks.",
 
                 "Do not include explanations.",

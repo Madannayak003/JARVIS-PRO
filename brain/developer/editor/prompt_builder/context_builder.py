@@ -15,8 +15,6 @@ class ContextBuilder:
     Builds the edit context for the LLM.
     """
 
-    MAX_PREVIEW_LENGTH = 8000
-
     # --------------------------------------------------
 
     def build(
@@ -123,18 +121,12 @@ class ContextBuilder:
                 continue
 
             # ------------------------------------------
-            # Limit prompt size
+            # The editor requires complete-file responses.
+            # Never show the model a preview while asking
+            # it to preserve the complete original file.
+            # FileReader already enforces the editor's
+            # maximum supported file size.
             # ------------------------------------------
-
-            if len(content) > self.MAX_PREVIEW_LENGTH:
-
-                content = (
-
-                    content[: self.MAX_PREVIEW_LENGTH]
-
-                    + "\n\n... (truncated) ..."
-
-                )
 
             lines.append(f"```{extension}")
 
