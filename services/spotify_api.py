@@ -24,6 +24,11 @@ SCOPE = (
 )
 
 def spotify_client():
+    if not CLIENT_ID or not CLIENT_SECRET:
+        raise RuntimeError(
+            "Spotify credentials are not configured."
+        )
+
     return spotipy.Spotify(
         auth_manager=SpotifyOAuth(
             client_id=CLIENT_ID,

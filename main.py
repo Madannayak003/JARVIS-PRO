@@ -26,6 +26,9 @@ import threading
 import time
 from pathlib import Path
 
+# Load local configuration before importing application components.
+import config  # noqa: F401
+
 # =============================================================
 # JARVIS CORE
 # =============================================================

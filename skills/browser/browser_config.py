@@ -44,16 +44,19 @@ class BrowserSettings:
 
     @classmethod
     def from_environment(cls) -> "BrowserSettings":
-        host = os.environ.get("JARVIS_BROWSER_CDP_HOST", DEFAULT_CDP_HOST).strip()
+        host = (
+            os.environ.get("JARVIS_BROWSER_CDP_HOST")
+            or DEFAULT_CDP_HOST
+        ).strip()
         if host != DEFAULT_CDP_HOST:
             raise BrowserConfigurationError(
                 "JARVIS_BROWSER_CDP_HOST must be 127.0.0.1 so the browser "
                 "debugging endpoint remains local-only."
             )
 
-        raw_port = os.environ.get(
-            "JARVIS_BROWSER_CDP_PORT",
-            str(DEFAULT_CDP_PORT),
+        raw_port = (
+            os.environ.get("JARVIS_BROWSER_CDP_PORT")
+            or str(DEFAULT_CDP_PORT)
         )
         try:
             port = int(raw_port)

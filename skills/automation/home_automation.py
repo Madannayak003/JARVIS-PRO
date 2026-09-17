@@ -12,8 +12,9 @@ the ESP32 address.
 
 import requests
 from core.registry import register
+from config.environment import get_env
 
-ESP32_IP = "192.168.31.226"
+ESP32_IP = get_env("JARVIS_ESP32_IP", "192.168.31.226")
 
 BASE_URL = f"http://{ESP32_IP}"
 

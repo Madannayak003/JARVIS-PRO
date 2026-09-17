@@ -14,7 +14,6 @@ Supports:
 - Stop-event interruption
 """
 
-import os
 import time
 from pathlib import Path
 from typing import Iterator, Optional
@@ -29,6 +28,7 @@ from ai.core.schemas import (
 )
 
 from ai.providers.base import AIProvider
+from config.environment import get_env
 
 
 def _is_quota_error(error) -> bool:
@@ -63,10 +63,7 @@ class GeminiProvider(AIProvider):
         model: str = DEFAULT_MODEL,
     ):
 
-        self.api_key = (
-            api_key
-            or os.getenv("GEMINI_API_KEY")
-        )
+        self.api_key = api_key or get_env("GEMINI_API_KEY")
 
         self.model = model
 

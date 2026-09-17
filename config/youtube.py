@@ -1,8 +1,8 @@
-import os
 from googleapiclient.discovery import build
 
+from config.environment import get_env
 
-YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+YOUTUBE_API_KEY = get_env("YOUTUBE_API_KEY")
 
 
 def get_youtube():

@@ -1,5 +1,11 @@
-CLIENT_ID = "0f3af78b5c0744ca84039a3a45adc63c"
+from config.environment import get_env
 
-CLIENT_SECRET = "9e55dd0caf924e98b7096ae099c01545"
 
-REDIRECT_URI = "http://127.0.0.1:8888/callback"
+CLIENT_ID = get_env("SPOTIFY_CLIENT_ID")
+
+CLIENT_SECRET = get_env("SPOTIFY_CLIENT_SECRET")
+
+REDIRECT_URI = get_env(
+    "SPOTIFY_REDIRECT_URI",
+    "http://127.0.0.1:8888/callback",
+)

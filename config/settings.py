@@ -2,6 +2,8 @@
 # JARVIS PRO SETTINGS
 # ===========================
 
+from config.environment import get_env
+
 APP_NAME = "JARVIS"
 
 VERSION = "1.0"
@@ -28,4 +30,7 @@ AI_PROVIDER = "ollama"
 
 OLLAMA_MODEL = "qwen2.5:3b"
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = get_env(
+    "OLLAMA_API_URL",
+    "http://localhost:11434/api/generate",
+)

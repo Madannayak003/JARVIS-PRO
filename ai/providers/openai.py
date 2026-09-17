@@ -12,7 +12,6 @@ Supports:
 - Stop-event interruption
 """
 
-import os
 from typing import Iterator, Optional
 
 from openai import OpenAI
@@ -24,6 +23,7 @@ from ai.core.schemas import (
 )
 
 from ai.providers.base import AIProvider
+from config.environment import get_env
 
 
 class OpenAIProvider(AIProvider):
@@ -39,10 +39,7 @@ class OpenAIProvider(AIProvider):
         model: str = DEFAULT_MODEL,
     ):
 
-        self.api_key = (
-            api_key
-            or os.getenv("OPENAI_API_KEY")
-        )
+        self.api_key = api_key or get_env("OPENAI_API_KEY")
 
         self.model = model
 

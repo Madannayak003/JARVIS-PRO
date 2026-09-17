@@ -9,7 +9,7 @@ Provides:
 """
 
 import json
-from typing import Iterator
+from typing import Iterator, Optional
 
 import requests
 
@@ -20,6 +20,7 @@ from ai.core.schemas import (
 )
 
 from ai.providers.base import AIProvider
+from config.environment import get_env
 
 
 class OllamaProvider(AIProvider):
@@ -34,11 +35,15 @@ class OllamaProvider(AIProvider):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
-        url: str = DEFAULT_URL,
+        url: Optional[str] = None,
     ):
 
         self.model = model
-        self.url = url
+        self.url = (
+            url
+            if url is not None
+            else get_env("OLLAMA_API_URL", self.DEFAULT_URL)
+        )
 
     # ======================================================
     # Provider Information
@@ -57,8 +62,9 @@ class OllamaProvider(AIProvider):
 
         try:
 
+            base_url = self.url.split("/api/", 1)[0].rstrip("/")
             response = requests.get(
-                "http://127.0.0.1:11434/api/tags",
+                f"{base_url}/api/tags",
                 timeout=3,
             )
 

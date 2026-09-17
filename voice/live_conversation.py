@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import threading
 from pathlib import Path
 from typing import Optional
@@ -66,6 +65,7 @@ from core.live_execution import (
 )
 
 from hud.integration import HUDIntegration
+from config.environment import get_env
 
 # =============================================================
 # CONFIGURATION
@@ -73,7 +73,7 @@ from hud.integration import HUDIntegration
 
 DEFAULT_MODEL = "gemini-3.1-flash-live-preview"
 
-LIVE_MODEL = os.getenv(
+LIVE_MODEL = get_env(
     "JARVIS_LIVE_MODEL",
     DEFAULT_MODEL,
 )
@@ -104,10 +104,7 @@ def _api_key() -> str:
         2. config/api_keys.json
     """
 
-    key = os.getenv(
-        "GEMINI_API_KEY",
-        "",
-    ).strip()
+    key = get_env("GEMINI_API_KEY").strip()
 
     if key:
         return key

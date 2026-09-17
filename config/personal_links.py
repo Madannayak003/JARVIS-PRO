@@ -9,6 +9,8 @@ This file contains configuration only.
 No routing or browser logic belongs here.
 """
 
+from config.environment import get_env
+
 # =========================================================
 # Personal Links
 # =========================================================
@@ -19,42 +21,42 @@ PERSONAL_LINKS = {
     # Social / Profiles
     # -----------------------------------------------------
 
-    "github": "https://github.com/Madannayak003",
-    "github_profile": "https://github.com/Madannayak003",
+    "github": get_env("PERSONAL_GITHUB_URL"),
+    "github_profile": get_env("PERSONAL_GITHUB_PROFILE_URL"),
     
-    "github_repository": "https://github.com/Madannayak003?tab=repositories",
+    "github_repository": get_env("PERSONAL_GITHUB_REPOSITORIES_URL"),
 
-    "facebook": "",
-    "facebook_profile": "",
+    "facebook": get_env("PERSONAL_FACEBOOK_URL"),
+    "facebook_profile": get_env("PERSONAL_FACEBOOK_PROFILE_URL"),
 
-    "linkedin": "",
-    "linkedin_profile": "",
+    "linkedin": get_env("PERSONAL_LINKEDIN_URL"),
+    "linkedin_profile": get_env("PERSONAL_LINKEDIN_PROFILE_URL"),
 
     # -----------------------------------------------------
     # Personal Websites
     # -----------------------------------------------------
 
-    "website": "https://madanr.vercel.app/",
-    "portfolio": "https://madanr.vercel.app/",
+    "website": get_env("PERSONAL_WEBSITE_URL"),
+    "portfolio": get_env("PERSONAL_PORTFOLIO_URL"),
 
-    "iot": "",
-    "iot_website": "",
+    "iot": get_env("PERSONAL_IOT_URL"),
+    "iot_website": get_env("PERSONAL_IOT_WEBSITE_URL"),
     
-    "iotrix_lab": "https://iotrix-lab.vercel.app/",
+    "iotrix_lab": get_env("IOTRIX_LAB_URL"),
 
     # -----------------------------------------------------
     # JARVIS
     # -----------------------------------------------------
 
-    "jarvis_github": "https://github.com/Madannayak003/JARVIS-PRO",
-    "jarvis_repository": "https://github.com/Madannayak003/JARVIS-PRO",
+    "jarvis_github": get_env("JARVIS_GITHUB_URL"),
+    "jarvis_repository": get_env("JARVIS_REPOSITORY_URL"),
 
     # -----------------------------------------------------
     # Projects
     # -----------------------------------------------------
 
-    "smart_parking": "",
-    "atmers": "",
+    "smart_parking": get_env("SMART_PARKING_URL"),
+    "atmers": get_env("ATMERS_URL"),
 }
 
 

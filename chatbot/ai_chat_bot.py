@@ -15,7 +15,6 @@ It does NOT use:
 - Live Conversation
 """
 
-import os
 from dataclasses import dataclass
 from typing import Iterator, Optional
 
@@ -23,6 +22,7 @@ from google import genai
 from google.genai import types
 
 from chatbot.ai_chat_session import chat_sessions
+from config.environment import get_env
 
 
 DEFAULT_MODEL = "gemini-3.6-flash"
@@ -77,10 +77,7 @@ class AIChatBot:
         api_key: Optional[str] = None,
         model: str = DEFAULT_MODEL,
     ):
-        self.api_key = (
-            api_key
-            or os.getenv("GEMINI_API_KEY")
-        )
+        self.api_key = api_key or get_env("GEMINI_API_KEY")
 
         self.model = model
         self._client = None

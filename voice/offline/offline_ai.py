@@ -32,13 +32,17 @@ from brain.profile_manager import ProfileManager
 from brain.conversation_manager import ConversationManager
 from brain.context_builder import ContextBuilder
 from brain.prompt_builder import PromptBuilder
+from config.environment import get_env
 
 
 # =========================================================
 # Configuration
 # =========================================================
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+OLLAMA_URL = get_env(
+    "OLLAMA_API_URL",
+    "http://127.0.0.1:11434/api/generate",
+)
 
 OLLAMA_MODEL = "jarvis"
 

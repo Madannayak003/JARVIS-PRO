@@ -1,12 +1,13 @@
-import os
 import requests
+
+from config.environment import get_env
 
 
 YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 
 
 def search_videos(query, max_results=10):
-    api_key = os.getenv("YOUTUBE_API_KEY")
+    api_key = get_env("YOUTUBE_API_KEY")
 
     if not api_key:
         raise RuntimeError("YOUTUBE_API_KEY is not configured")
