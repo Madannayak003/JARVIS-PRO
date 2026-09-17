@@ -150,6 +150,11 @@ class HUDAdapter:
             message
         )
 
+    @staticmethod
+    def personal_links(entries):
+
+        hud.personal_links(entries)
+
     # =====================================================
     # Notifications
     # =====================================================

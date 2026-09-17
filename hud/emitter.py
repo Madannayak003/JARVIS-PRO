@@ -145,6 +145,13 @@ class HUDEmitter:
             )
             return
 
+        if event == HUDEvent.PERSONAL_LINKS:
+
+            HUDAdapter.personal_links(
+                data.get("entries", [])
+            )
+            return
+
         # =========================================
         # Notifications
         # =========================================

@@ -10,6 +10,7 @@ No routing or browser logic belongs here.
 """
 
 from config.environment import get_env
+from urllib.parse import urlparse
 
 # =========================================================
 # Personal Links
@@ -58,6 +59,69 @@ PERSONAL_LINKS = {
     "smart_parking": get_env("SMART_PARKING_URL"),
     "atmers": get_env("ATMERS_URL"),
 }
+
+
+# Friendly labels for the existing configuration keys. These labels are only
+# presentation metadata; URLs remain exclusively in PERSONAL_LINKS/.env.
+PERSONAL_LINK_NAMES = {
+    "github": "GitHub",
+    "github_profile": "GitHub Profile",
+    "github_repository": "GitHub Repositories",
+    "facebook": "Facebook",
+    "facebook_profile": "Facebook Profile",
+    "linkedin": "LinkedIn",
+    "linkedin_profile": "LinkedIn Profile",
+    "website": "Website",
+    "portfolio": "Portfolio",
+    "iot": "IoT",
+    "iot_website": "IoT Website",
+    "iotrix_lab": "IoTrix Lab",
+    "jarvis_github": "JARVIS GitHub",
+    "jarvis_repository": "JARVIS Repository",
+    "smart_parking": "Smart Parking",
+    "atmers": "ATMERS",
+}
+
+
+def is_safe_personal_url(value):
+    """Accept only absolute HTTP(S) URLs for the clickable HUD list."""
+
+    url = str(value or "").strip()
+
+    if not url or any(character.isspace() for character in url):
+        return False
+
+    parsed = urlparse(url)
+
+    return (
+        parsed.scheme.lower() in {"http", "https"}
+        and bool(parsed.netloc)
+    )
+
+
+def configured_links():
+    """Return validated, display-ready links from the existing configuration.
+
+    Blank, unsafe, and duplicate URL aliases are omitted. The first configured
+    key in PERSONAL_LINKS remains the canonical label for a duplicate URL.
+    """
+
+    entries = []
+    seen_urls = set()
+
+    for key, value in PERSONAL_LINKS.items():
+        url = str(value or "").strip()
+
+        if not is_safe_personal_url(url) or url in seen_urls:
+            continue
+
+        seen_urls.add(url)
+        entries.append({
+            "name": PERSONAL_LINK_NAMES.get(key, key.replace("_", " ").title()),
+            "url": url,
+        })
+
+    return entries
 
 
 # =========================================================

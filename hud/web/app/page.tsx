@@ -64,7 +64,34 @@ export type HUDActivity = {
   speaker: "user" | "jarvis" | "live" | "sys" | "system";
   text: string;
   timestamp: string;
+  personalLinks?: PersonalLinkEntry[];
 };
+
+export type PersonalLinkEntry = {
+  name: string;
+  url: string;
+};
+
+function personalLinkEntries(value: unknown): PersonalLinkEntry[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+
+    const { name, url } = entry as Record<string, unknown>;
+    if (typeof name !== "string" || typeof url !== "string") return [];
+
+    try {
+      const parsed = new URL(url);
+      if (!name.trim() || !["http:", "https:"].includes(parsed.protocol)) {
+        return [];
+      }
+      return [{ name: name.trim(), url: url.trim() }];
+    } catch {
+      return [];
+    }
+  });
+}
 
 type SettingsModal = "remote" | "customise" | "settings" | null;
 
@@ -562,10 +589,16 @@ export default function Home() {
         if (
           event.name !== "command" &&
           event.name !== "response" &&
-          event.name !== "system_activity"
+          event.name !== "system_activity" &&
+          event.name !== "personal_links"
         ) {
           return;
         }
+
+        const links =
+          event.name === "personal_links"
+            ? personalLinkEntries(event.data?.entries)
+            : [];
 
         const speaker =
           event.name === "command"
@@ -579,10 +612,12 @@ export default function Home() {
         const text = String(
           event.name === "system_activity"
             ? event.data?.message ?? ""
+            : event.name === "personal_links"
+              ? event.data?.message ?? event.data?.title ?? "MY WEBSITES"
             : event.data?.text ?? ""
         ).trim();
 
-        if (!text) return;
+        if (!text && links.length === 0) return;
 
         // Consume pending user command marker to prevent duplicate logs
         if (speaker === "user") {
@@ -593,7 +628,7 @@ export default function Home() {
           }
         }
 
-        if (speaker === "jarvis") {
+        if (event.name === "response" && speaker === "jarvis") {
           setHudState((prev) => ({
             ...prev,
             speaking: true,
@@ -613,6 +648,7 @@ export default function Home() {
             speaker,
             text,
             timestamp: event.timestamp,
+            personalLinks: links.length > 0 ? links : undefined,
           };
 
           return [...previous, activity].slice(-30);

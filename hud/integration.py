@@ -220,6 +220,19 @@ class HUDIntegration:
             }
         )
 
+    @classmethod
+    def personal_links(
+        cls,
+        entries,
+    ):
+
+        cls._emit(
+            HUDEvent.PERSONAL_LINKS,
+            {
+                "entries": entries or [],
+            },
+        )
+
     # ========================================================
     # Conversation Activity Log
     #

@@ -21,6 +21,7 @@ from .events import (
     HUD_AI_MODEL_CHANGED,
     HUD_SYSTEM_UPDATE,
     HUD_SYSTEM_ACTIVITY,
+    HUD_PERSONAL_LINKS,
     HUD_NOTIFICATION,
     HUD_ERROR,
     HUD_COMMAND,
@@ -282,6 +283,33 @@ class HUDManager:
             {
                 "message": message
             }
+        )
+
+    def personal_links(self, entries):
+        """Publish safe structured website entries for the Activity Log."""
+
+        safe_entries = []
+
+        for entry in entries or []:
+            if not isinstance(entry, dict):
+                continue
+
+            name = str(entry.get("name", "")).strip()
+            url = str(entry.get("url", "")).strip()
+
+            if name and url:
+                safe_entries.append({"name": name, "url": url})
+
+        self._publish(
+            HUD_PERSONAL_LINKS,
+            {
+                "title": "MY WEBSITES",
+                "entries": safe_entries,
+                "message": (
+                    "" if safe_entries
+                    else "No personal websites are configured."
+                ),
+            },
         )
 
     # =====================================================

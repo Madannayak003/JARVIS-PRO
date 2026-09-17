@@ -12,6 +12,7 @@ import type {
 
 import type {
   HUDActivity,
+  PersonalLinkEntry,
 } from "@/app/page";
 
 
@@ -348,6 +349,33 @@ function ActivityMessage({
     <>
       {displayText}
     </>
+  );
+}
+
+
+function PersonalLinksActivity({
+  entries,
+}: {
+  entries: PersonalLinkEntry[];
+}) {
+  return (
+    <div>
+      {entries.map((entry) => (
+        <div key={entry.url}>
+          <a
+            href={entry.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              event.preventDefault();
+              window.open(entry.url, "_blank", "noopener,noreferrer");
+            }}
+          >
+            {entry.name}: {entry.url}
+          </a>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -734,13 +762,19 @@ export default function HudCockpit({
 
                   <div className="activity-message-text">
 
-                    <ActivityMessage
-                      text={activity.text}
-                      animate={
-                        activity.id ===
-                        activities[activities.length - 1]?.id
-                      }
-                    />
+                    {activity.personalLinks?.length ? (
+                      <PersonalLinksActivity
+                        entries={activity.personalLinks}
+                      />
+                    ) : (
+                      <ActivityMessage
+                        text={activity.text}
+                        animate={
+                          activity.id ===
+                          activities[activities.length - 1]?.id
+                        }
+                      />
+                    )}
 
                   </div>
 

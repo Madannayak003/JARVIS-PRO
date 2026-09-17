@@ -9,7 +9,7 @@ Execution remains in services.
 """
 
 from core.registry import register
-from services.personal_link_service import open_personal_link
+from services.personal_link_service import open_personal_link, show_personal_links
 
 
 def personal_link_action(data=None):
@@ -26,4 +26,10 @@ def personal_link_action(data=None):
 register(
     "open_personal_link",
     personal_link_action
+)
+
+
+register(
+    "show_personal_links",
+    lambda data=None: show_personal_links(),
 )

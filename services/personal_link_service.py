@@ -9,8 +9,25 @@ No voice logic.
 No command routing.
 """
 
-from config.personal_links import get_link
+from config.personal_links import configured_links, get_link
+from hud.integration import HUDIntegration
 from skills.browser.browser_controller import browser
+
+
+def show_personal_links():
+    """Publish the configured personal websites to the existing HUD log."""
+
+    entries = configured_links()
+
+    print("[PERSONAL LINKS] Website list requested")
+    print(f"[PERSONAL LINKS] Loaded {len(entries)} configured links")
+
+    HUDIntegration.personal_links(entries)
+
+    if not entries:
+        return "No personal websites are configured."
+
+    return f"Found {len(entries)} configured personal websites."
 
 def open_personal_link(name):
     """

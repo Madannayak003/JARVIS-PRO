@@ -66,6 +66,9 @@ class HUDEvent:
 
     SYSTEM_ACTIVITY = "system_activity"
 
+    # Structured, configuration-backed personal website entries.
+    PERSONAL_LINKS = "personal_links"
+
     # =====================================================
     # Notifications
     # =====================================================

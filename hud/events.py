@@ -64,6 +64,8 @@ HUD_SYSTEM_UPDATE = "system_update"
 
 HUD_SYSTEM_ACTIVITY = "system_activity"
 
+HUD_PERSONAL_LINKS = "personal_links"
+
 HUD_NOTIFICATION = "notification"
 
 HUD_ERROR = "error"

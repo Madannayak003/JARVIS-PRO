@@ -98,6 +98,18 @@ COMMAND_PREFIXES = [
 ]
 
 
+WEBSITE_LIST_COMMANDS = {
+    "open website list",
+    "show website list",
+    "show my websites",
+    "open my websites",
+    "show my links",
+    "open my links",
+    "personal websites",
+    "personal links",
+}
+
+
 # =========================================================
 # Router
 # =========================================================
@@ -111,6 +123,9 @@ def web_route(command):
 
     if not command:
         return None
+
+    if command in WEBSITE_LIST_COMMANDS:
+        return [{"action": "show_personal_links"}]
     
     personal_request = bool(
         re.search(r"\b(?:my|mine)\b", command)
