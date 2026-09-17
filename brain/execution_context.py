@@ -258,6 +258,15 @@ class ExecutionContextResolver:
             "object": "search",
         },
 
+        "browser_open_result": {
+            "application": "browser",
+            "skill": "browser",
+            "topic": "search",
+            "task": "open browser result",
+            "intent": "browser_open_result",
+            "action": "open",
+        },
+
         "github_search": {
             "application": "github",
             "skill": "browser",
@@ -514,6 +523,7 @@ class ExecutionContextResolver:
 
         if action_name in {
             "google_search",
+            "browser_open_result",
             "youtube_search",
             "youtube_play_first",
             "youtube_play_result",
@@ -531,7 +541,10 @@ class ExecutionContextResolver:
                 # Google search results
                 # --------------------------------------------
 
-                if action_name == "google_search":
+                if action_name in {
+                    "google_search",
+                    "browser_open_result",
+                }:
 
                     browser_results = (
                         browser_context.last_search_results
@@ -543,9 +556,43 @@ class ExecutionContextResolver:
                             browser_results
                         )
 
-                        definition["object"] = (
-                            browser_results
-                        )
+                        if action_name == "google_search":
+
+                            definition["object"] = (
+                                browser_results
+                            )
+
+                        else:
+
+                            target_url = str(
+                                action_data.get(
+                                    "url",
+                                    "",
+                                )
+                                or ""
+                            ).strip()
+
+                            current_result = next(
+                                (
+                                    browser_result
+                                    for browser_result
+                                    in browser_results
+                                    if browser_result.url == target_url
+                                ),
+                                None,
+                            )
+
+                            if (
+                                current_result is None
+                                and browser_context.selected_result
+                                in browser_results
+                            ):
+
+                                current_result = (
+                                    browser_context.selected_result
+                                )
+
+                            definition["object"] = current_result
 
                 # --------------------------------------------
                 # YouTube queue

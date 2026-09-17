@@ -619,6 +619,11 @@ class ConversationUnderstandingEngine:
             ),
 
             (
+                r"\b(?:the\s+)?sixth one\b",
+                "the sixth one"
+            ),
+
+            (
                 r"\bnumber one\b",
                 "number one"
             ),
@@ -696,6 +701,7 @@ class ConversationUnderstandingEngine:
             "the third one": 3,
             "the fourth one": 4,
             "the fifth one": 5,
+            "the sixth one": 6,
 
             "number one": 1,
             "number two": 2,
