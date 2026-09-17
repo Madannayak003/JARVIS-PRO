@@ -24,7 +24,7 @@ from core.action_memory import set_memory
 
 from core.interrupt import interrupt
 
-from skills.assistant.greetings import startup_greeting
+from skills.assistant.greetings import speak_startup_greeting
 
 from core.whatsapp_memory import (
     get_contact,
@@ -150,12 +150,11 @@ def run():
     )
 
     # ========================================================
-    # EXISTING STARTUP GREETING
+    # STARTUP GREETING: this runs after wait_for_core() has observed the
+    # core-ready event, so it represents JARVIS being ready to use.
     # ========================================================
 
-    speak(
-        startup_greeting()
-    )
+    speak_startup_greeting(speak, profile=profile)
 
     # ========================================================
     # MORNING BRIEF

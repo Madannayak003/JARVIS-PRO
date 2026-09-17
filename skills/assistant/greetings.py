@@ -1,193 +1,320 @@
+"""
+JARVIS PRO greeting skill.
+
+The skill keeps startup speech separate from user-triggered greetings. Startup
+speech is generated locally from a small set of coherent, time-aware styles;
+it never calls an AI service and never runs while this module is imported.
+"""
+
+from __future__ import annotations
+
 import random
+from dataclasses import dataclass
 from datetime import datetime
+from threading import Lock
+from typing import Mapping
 
 from core.registry import register
-from voice.manager import speak
 
 
-# ----------------------------------------------------------
-# General Greetings
-# ----------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Backward-compatible response collections
+# ---------------------------------------------------------------------------
 
-GREETINGS = [
-    "Hello.",
-    "Hi there.",
-    "Hey.",
-    "Welcome back.",
-    "Nice to see you again.",
-    "At your service.",
-    "Ready whenever you are.",
-    "How can I help you?",
-    "What can I do for you today?",
-    "Awaiting your command."
-]
+GREETINGS = (
+    "Hello. What shall we work on?",
+    "Hi there. How can I help?",
+    "Hey. What are we working on today?",
+    "Good to hear from you. What can I do?",
+)
 
+HOW_ARE_YOU = (
+    "I'm doing well, thanks for asking. What can I help with?",
+    "I'm well and ready to help. What's on your mind?",
+    "Doing well. What would you like to work on?",
+)
 
-HOW_ARE_YOU = [
-    "I'm doing great. Thanks for asking.",
-    "Everything is running smoothly.",
-    "All systems are operational.",
-    "I'm functioning perfectly.",
-    "Always ready to assist."
-]
-
-
-WELCOME = [
-    "You're welcome.",
-    "Happy to help.",
-    "Anytime.",
+WELCOME = (
+    "Anytime. Glad I could help.",
+    "You're welcome. Happy to help.",
     "My pleasure.",
-    "Glad I could help."
-]
+)
+
+BYE = (
+    "Goodbye. Take care.",
+    "See you later. Have a good one.",
+    "Goodbye. I'll be here when you need me.",
+)
 
 
-BYE = [
-    "Goodbye.",
-    "See you later.",
-    "Take care.",
-    "Have a great day.",
-    "See you soon."
-]
+@dataclass(frozen=True)
+class _StartupVariant:
+    """One complete startup utterance, rather than a sentence fragment."""
+
+    text: str
+    uses_name: bool = False
+
+    def render(self, name: str | None = None) -> str:
+        name_suffix = f", {name}" if self.uses_name and name else ""
+        return self.text.format(name=name_suffix)
 
 
-# ----------------------------------------------------------
-# Startup Greeting
-# ----------------------------------------------------------
-
+# Styles are deliberately complete utterances. The engine chooses one style
+# per context, so it does not produce an awkward stack of random fragments.
 STARTUP = {
-
-    "morning": [
-
-        "Hope you slept well.",
-        "Nice to see you again.",
-        "Ready whenever you are.",
-        "Everything is ready.",
-        "How may I assist you today?",
-        "Hope today goes well for you.",
-        "What are we working on today?",
-        "I'm online and ready to help.",
-        "All systems are operational.",
-        "Looking forward to another productive day."
-
-    ],
-
-    "afternoon": [
-
-        "Welcome back.",
-        "Hope your day's going well.",
-        "Ready whenever you need me.",
-        "Everything is ready.",
-        "What shall we work on today?",
-        "I'm online and ready.",
-        "How can I help you?",
-        "Let's get started.",
-        "Nice to see you again.",
-        "Awaiting your command."
-
-    ],
-
-    "evening": [
-
-        "Welcome back.",
-        "Hope you had a good day.",
-        "Everything is ready whenever you are.",
-        "What shall we work on tonight?",
-        "I'm online and ready.",
-        "Nice to see you again.",
-        "How can I assist you this evening?",
-        "Ready whenever you are.",
-        "Let's get to work.",
-        "Awaiting your command."
-
-    ],
-
-    "night": [
-
-        "Working late tonight?",
-        "Still awake? I'm here if you need me.",
-        "Ready whenever you are.",
-        "Looks like another late session.",
-        "Let's get started.",
-        "Everything is ready.",
-        "I'm online whenever you need assistance.",
-        "Hope everything's going well.",
-        "How can I help tonight?",
-        "Ready for whatever comes next."
-
-    ]
-
+    "morning": (
+        _StartupVariant("Good morning{name}. Ready to get started?", True),
+        _StartupVariant(
+            "Good morning. Good to have you back. What are we working on?"
+        ),
+        _StartupVariant(
+            "Good morning{name}. I’m here when you’re ready to begin.", True
+        ),
+        _StartupVariant("Good morning. Let’s make a useful start to the day."),
+    ),
+    "afternoon": (
+        _StartupVariant("Good afternoon{name}. What shall we work on?", True),
+        _StartupVariant(
+            "Good afternoon. Welcome back. Ready when you are."
+        ),
+        _StartupVariant(
+            "Good afternoon{name}. I’m ready whenever you are.", True
+        ),
+        _StartupVariant("Good afternoon. What would you like to tackle?"),
+    ),
+    "evening": (
+        _StartupVariant("Good evening{name}. What are we working on tonight?", True),
+        _StartupVariant(
+            "Good evening. Good to have you back. Where shall we begin?"
+        ),
+        _StartupVariant(
+            "Good evening{name}. Everything’s ready when you are.", True
+        ),
+        _StartupVariant("Good evening. What can I help you make progress on?"),
+    ),
+    "night": (
+        _StartupVariant("Good evening{name}. Still time for one more thing?", True),
+        _StartupVariant("Good evening. I’m here if you need a hand tonight."),
+        _StartupVariant("It’s a late one, but we can keep this focused."),
+        _StartupVariant("Good evening. Ready when you are."),
+    ),
 }
 
 
-def startup_greeting():
+_USER_GREETING_STYLES = {
+    "general": GREETINGS,
+    "morning": (
+        "Good morning. I hope your day is off to a good start.",
+        "Good morning. What can I help you with?",
+    ),
+    "afternoon": (
+        "Good afternoon. How can I help?",
+        "Good afternoon. What shall we work on?",
+    ),
+    "evening": (
+        "Good evening. What can I help you with?",
+        "Good evening. How has your day been?",
+    ),
+}
 
-    hour = datetime.now().hour
+
+class GreetingEngine:
+    """Small in-memory selector that avoids immediate repetition."""
+
+    def __init__(self):
+        self._last_selected = {}
+
+    def reset(self):
+        """Clear in-memory variation state, primarily useful for tests."""
+
+        self._last_selected.clear()
+
+    def _choose(self, group: str, options):
+        options = tuple(options)
+        previous = self._last_selected.get(group)
+        candidates = tuple(option for option in options if option != previous)
+        selected = random.choice(candidates or options)
+        self._last_selected[group] = selected
+        return selected
+
+    def startup(self, context: str, name: str | None = None) -> str:
+        variant = self._choose(f"startup:{context}", STARTUP[context])
+        return variant.render(name)
+
+    def user_greeting(self, style: str = "general") -> str:
+        return self._choose(
+            f"user:{style}",
+            _USER_GREETING_STYLES.get(style, GREETINGS),
+        )
+
+    def response(self, group: str, options) -> str:
+        return self._choose(group, options)
+
+
+_engine = GreetingEngine()
+_startup_lock = Lock()
+_startup_spoken = False
+
+
+def _time_context(now: datetime | None = None) -> str:
+    """Return the existing four-part time context used by JARVIS."""
+
+    hour = (now or datetime.now()).hour
 
     if 5 <= hour < 12:
+        return "morning"
+    if 12 <= hour < 17:
+        return "afternoon"
+    if 17 <= hour < 22:
+        return "evening"
+    return "night"
 
-        prefix = "Good morning."
 
-        key = "morning"
+def _preferred_name(profile=None) -> str | None:
+    """Read only the existing profile name, failing closed when unavailable."""
 
-    elif 12 <= hour < 17:
+    if profile is None:
+        try:
+            # Lazy import avoids profile/file work while the skill is loaded.
+            from brain import profile as profile_manager
 
-        prefix = "Good afternoon."
+            profile = profile_manager
+        except Exception:
+            return None
 
-        key = "afternoon"
+    try:
+        if isinstance(profile, Mapping):
+            value = profile.get("name", "")
+        elif hasattr(profile, "get"):
+            value = profile.get("name", "")
+        else:
+            value = getattr(profile, "name", "")
 
-    elif 17 <= hour < 22:
+        if isinstance(value, str):
+            value = value.strip()
+            return value or None
+    except Exception:
+        pass
 
-        prefix = "Good evening."
+    return None
 
-        key = "evening"
 
-    else:
+def _fallback_startup(context: str, name: str | None = None) -> str:
+    opening = {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening",
+        "night": "Good evening",
+    }.get(context, "Hello")
 
-        prefix = "Good evening."
+    if name:
+        opening += f", {name}"
 
-        key = "night"
+    return f"{opening}. Ready when you are."
 
-    return f"{prefix} {random.choice(STARTUP[key])}"
 
-# ----------------------------------------------------------
-# Skills
-# ----------------------------------------------------------
+def startup_greeting(now: datetime | None = None, profile=None) -> str:
+    """Build one concise startup utterance from local time and profile data."""
+
+    context = "evening"
+
+    try:
+        context = _time_context(now)
+        name = _preferred_name(profile)
+        print(f"[GREETING] Startup context: {context}")
+        greeting = _engine.startup(context, name)
+    except Exception as error:
+        # Greeting generation is never allowed to block JARVIS startup.
+        print(f"[GREETING] Startup selection failed safely: {error}")
+        greeting = _fallback_startup(context, _preferred_name(profile))
+
+    print("[GREETING] Startup greeting selected")
+    return greeting or _fallback_startup(context)
+
+
+def _get_speaker():
+    """Load the established TTS entry point only when speech is requested."""
+
+    from voice.manager import speak
+
+    return speak
+
+
+def speak_startup_greeting(speaker=None, profile=None, now=None) -> bool:
+    """Speak startup greeting once for the current initialization lifecycle."""
+
+    global _startup_spoken
+
+    with _startup_lock:
+        if _startup_spoken:
+            return False
+
+        # Mark before TTS so concurrent/re-entrant startup calls cannot speak
+        # twice. A failed TTS call must not cause a startup retry storm.
+        _startup_spoken = True
+
+        try:
+            greeting = startup_greeting(now=now, profile=profile)
+        except Exception as error:
+            print(f"[GREETING] Startup fallback engaged: {error}")
+            greeting = "Hello. JARVIS is ready when you are."
+
+    try:
+        (speaker or _get_speaker())(greeting)
+    except Exception as error:
+        print(f"[GREETING] Startup speech failed safely: {error}")
+        return False
+
+    print("[GREETING] Startup greeting spoken")
+    return True
+
+
+def _command_text(data) -> str:
+    if not isinstance(data, Mapping):
+        return ""
+    value = data.get("command", "")
+    return str(value).strip().lower().rstrip("?!.,")
+
+
+def _speak(text: str) -> None:
+    try:
+        _get_speaker()(text)
+    except Exception as error:
+        print(f"[GREETING] Speech failed safely: {error}")
+
+
+# ---------------------------------------------------------------------------
+# Registered user-facing skill actions
+# ---------------------------------------------------------------------------
 
 def greet(data):
-
-    command = data.get("command", "").lower()
+    command = _command_text(data)
 
     if command.startswith("good morning"):
-        speak("Good morning.")
-        return True
+        message = _engine.user_greeting("morning")
+    elif command.startswith("good afternoon"):
+        message = _engine.user_greeting("afternoon")
+    elif command.startswith("good evening"):
+        message = _engine.user_greeting("evening")
+    else:
+        message = _engine.user_greeting("general")
 
-    if command.startswith("good afternoon"):
-        speak("Good afternoon.")
-        return True
-
-    if command.startswith("good evening"):
-        speak("Good evening.")
-        return True
-
-    speak(random.choice(GREETINGS))
+    _speak(message)
     return True
 
 
 def how_are_you(data):
-
-    speak(random.choice(HOW_ARE_YOU))
+    _speak(_engine.response("how_are_you", HOW_ARE_YOU))
     return True
 
 
 def welcome(data):
-
-    speak(random.choice(WELCOME))
+    _speak(_engine.response("welcome", WELCOME))
     return True
 
 
 def goodbye(data):
-
-    speak(random.choice(BYE))
+    _speak(_engine.response("goodbye", BYE))
     return True
 
 
