@@ -1,4 +1,5 @@
 import threading
+import os
 import requests
 import re
 
@@ -176,6 +177,12 @@ def check_internet():
 
     global ONLINE
 
+    # main.py sets this before loading shared skills in Offline Mode. Keep
+    # local skill speech on Piper and avoid an import-time network probe.
+    if os.getenv("JARVIS_OFFLINE_MODE") == "1":
+        ONLINE = False
+        return
+
     try:
 
         requests.get(
@@ -190,7 +197,8 @@ def check_internet():
         ONLINE = False
 
 
-check_internet()
+if os.getenv("JARVIS_OFFLINE_MODE") != "1":
+    check_internet()
 
 
 # =========================================================

@@ -77,11 +77,25 @@ type RemoteInfo = {
   clients: number;
 };
 
-const JARVIS_DASHBOARD_URL =
-  process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
-  (typeof window !== "undefined"
+const LOCAL_DASHBOARD_URL =
+  typeof window !== "undefined"
     ? `http://${window.location.hostname}:8765`
-    : "http://127.0.0.1:8765");
+    : "http://127.0.0.1:8765";
+
+const JARVIS_DASHBOARD_URL =
+  process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
+    ? LOCAL_DASHBOARD_URL
+    : process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL || LOCAL_DASHBOARD_URL;
+
+const HUD_BRIDGE_URL =
+  process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
+    ? (typeof window !== "undefined"
+        ? `http://${window.location.hostname}:8766`
+        : "http://127.0.0.1:8766")
+    : process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL ||
+      (typeof window !== "undefined"
+        ? `http://${window.location.hostname}:8766`
+        : "http://127.0.0.1:8766");
 
 
 export default function Home() {
@@ -502,7 +516,7 @@ export default function Home() {
   };
 
     const bridge = new HUDBridge(
-      process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL || "http://127.0.0.1:8766",
+      HUD_BRIDGE_URL,
       setHudState,
       (event: HUDBridgeEvent) => {
         if (event.name === "morning_brief") {
@@ -689,13 +703,7 @@ export default function Home() {
     setShortcutLoading(true);
 
     try {
-      const dashboardUrl =
-        process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
-        (typeof window !== "undefined"
-          ? `http://${window.location.hostname}:8765`
-          : "http://127.0.0.1:8765");
-
-      const response = await fetch(`${dashboardUrl}/api/local/shortcut`, {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/shortcut`, {
         method: "POST",
         cache: "no-store",
       });
@@ -749,7 +757,9 @@ export default function Home() {
     let success = false;
     let lastError = "Command could not be processed by backend.";
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const maxAttempts = process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1" ? 1 : 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const response = await fetch(
           dashboardEndpoint,
@@ -807,13 +817,7 @@ export default function Home() {
     setRemoteLoading(true);
 
     try {
-      const bridgeUrl =
-        process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
-        (typeof window !== "undefined"
-          ? `http://${window.location.hostname}:8765`
-          : "http://127.0.0.1:8765");
-
-      const response = await fetch(`${bridgeUrl}/api/info`, {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/info`, {
         cache: "no-store",
       });
 

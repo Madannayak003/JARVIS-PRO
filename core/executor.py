@@ -8,7 +8,8 @@ def execute_ai_plan(
     stop_event,
     original_request=None,
 ):
-    
+    results = []
+
     for raw_step in plan:
 
         # Keep the planner's original request available to a clarification
@@ -24,7 +25,7 @@ def execute_ai_plan(
 
         if stop_event and stop_event.is_set():
             print("[EXECUTOR] Cancelled")
-            return
+            return results
 
         action = step["action"]
 
@@ -44,4 +45,6 @@ def execute_ai_plan(
         if "query" in step:
             set_memory("search", step["query"])
 
-        execute(action, step)
+        results.append(execute(action, step))
+
+    return results

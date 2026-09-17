@@ -17,10 +17,10 @@ voice.speech_state
 core.listener
 """
 
+import time
+
 import numpy as np
 import speech_recognition as sr
-
-from faster_whisper import WhisperModel
 
 
 # =========================================================
@@ -62,22 +62,40 @@ COMPRESSION_RATIO_THRESHOLD = 2.4
 
 
 # =========================================================
-# Load Faster-Whisper
+# Load Faster-Whisper once
 # =========================================================
 
-print(
-    "[OFFLINE STT] Loading Faster-Whisper..."
-)
+WHISPER_MODEL = None
+_WHISPER_INITIALIZED = False
+_WHISPER_ERROR = ""
 
-WHISPER_MODEL = WhisperModel(
-    WHISPER_MODEL_NAME,
-    device=WHISPER_DEVICE,
-    compute_type=WHISPER_COMPUTE_TYPE,
-)
 
-print(
-    "[OFFLINE STT] Faster-Whisper ready."
-)
+def initialize():
+    """Load Faster-Whisper once and report a clear local error on failure."""
+
+    global WHISPER_MODEL, _WHISPER_INITIALIZED, _WHISPER_ERROR
+
+    if _WHISPER_INITIALIZED:
+        return WHISPER_MODEL is not None
+
+    _WHISPER_INITIALIZED = True
+    print("[OFFLINE STT] Loading Faster-Whisper...")
+
+    try:
+        from faster_whisper import WhisperModel
+
+        WHISPER_MODEL = WhisperModel(
+            WHISPER_MODEL_NAME,
+            device=WHISPER_DEVICE,
+            compute_type=WHISPER_COMPUTE_TYPE,
+        )
+        print("[OFFLINE STT] Faster-Whisper ready.")
+        return True
+
+    except Exception as error:
+        _WHISPER_ERROR = str(error)
+        print(f"[OFFLINE STT ERROR] Faster-Whisper unavailable: {_WHISPER_ERROR}")
+        return False
 
 
 # =========================================================
@@ -199,6 +217,9 @@ def transcribe_audio(audio):
 
     try:
 
+        if not initialize():
+            return None
+
         # -------------------------------------------------
         # Convert microphone audio
         # -------------------------------------------------
@@ -224,6 +245,8 @@ def transcribe_audio(audio):
         # -------------------------------------------------
         # Faster-Whisper
         # -------------------------------------------------
+
+        transcription_started = time.perf_counter()
 
         segments, info = (
             WHISPER_MODEL.transcribe(
@@ -285,6 +308,11 @@ def transcribe_audio(audio):
                     None
                 )
             )
+
+        print(
+            "[OFFLINE STT] Transcription latency: "
+            f"{time.perf_counter() - transcription_started:.2f}s"
+        )
 
         # -------------------------------------------------
         # Nothing recognized

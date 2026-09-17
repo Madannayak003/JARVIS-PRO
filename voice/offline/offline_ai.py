@@ -26,8 +26,10 @@ This module never uses:
 - voice.manager
 """
 
-import requests
+import time
 
+from ai.core.schemas import AIRequest
+from ai.providers.ollama import OllamaProvider
 from brain.profile_manager import ProfileManager
 from brain.conversation_manager import ConversationManager
 from brain.context_builder import ContextBuilder
@@ -78,7 +80,7 @@ Response rules:
 
 class OfflineAI:
 
-    def __init__(self):
+    def __init__(self, provider=None):
 
         print("[OFFLINE AI] Initializing...")
 
@@ -99,47 +101,64 @@ class OfflineAI:
 
         self.prompt_builder = PromptBuilder()
 
+        # Use the shared Ollama provider contract while forcing the provider
+        # to remain local. The model can still be selected explicitly through
+        # OLLAMA_MODEL, with the existing offline ``jarvis`` default retained.
+        self.model = get_env("OLLAMA_MODEL", OLLAMA_MODEL)
+        self.provider = provider or OllamaProvider(
+            model=self.model,
+            url=OLLAMA_URL,
+        )
+        self.ready = False
+        self.last_error = ""
+        self._initialize_provider()
+
         print("[OFFLINE AI] Stage 4 context ready.")
+
+    def _initialize_provider(self):
+        """Check the local Ollama service once; never probe the internet."""
+
+        try:
+            self.ready = bool(self.provider.is_available())
+        except Exception as error:
+            self.ready = False
+            self.last_error = str(error)
+
+        if self.ready:
+            print(f"[OFFLINE AI] Ollama ready ({self.model}).")
+        else:
+            self.last_error = (
+                self.last_error
+                or "Ollama is not reachable at the configured local URL."
+            )
+            print(f"[OFFLINE AI ERROR] {self.last_error}")
 
     # =====================================================
     # Ollama
     # =====================================================
 
     def _ollama(self, prompt):
-
-        payload = {
-            "model": OLLAMA_MODEL,
-            "prompt": prompt,
-            "stream": False,
-        }
-
-        try:
-
-            response = requests.post(
-                OLLAMA_URL,
-                json=payload,
-                timeout=OLLAMA_TIMEOUT,
+        started = time.perf_counter()
+        response = self.provider.generate(
+            AIRequest(
+                prompt=prompt,
+                capability="conversation",
+                model=self.model,
+                metadata={"offline": True},
             )
+        )
 
-            response.raise_for_status()
-
-            data = response.json()
-
-            text = data.get(
-                "response",
-                ""
-            ).strip()
-
-            return text
-
-        except Exception as e:
-
-            print(
-                "[OFFLINE AI ERROR]",
-                e
-            )
-
+        if not response.success:
+            self.ready = False
+            self.last_error = response.error or "Ollama generation failed."
+            print(f"[OFFLINE AI ERROR] {self.last_error}")
             return None
+
+        print(
+            f"[OFFLINE AI] Ollama response: "
+            f"{time.perf_counter() - started:.2f}s"
+        )
+        return response.text.strip()
 
     # =====================================================
     # Ask
@@ -149,6 +168,13 @@ class OfflineAI:
 
         if not user_input:
 
+            return None
+
+        if not self.ready:
+            print(
+                "[OFFLINE AI ERROR] "
+                f"Ollama unavailable: {self.last_error}"
+            )
             return None
 
         user_input = str(

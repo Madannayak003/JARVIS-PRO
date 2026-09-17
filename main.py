@@ -181,6 +181,40 @@ def start_voice_engine():
     print("[MAIN] Voice engine thread started.")
 
 
+def run_offline_voice_engine():
+    """Run offline providers against the shared, initialized JARVIS core."""
+
+    try:
+        print("[MAIN] Offline voice engine waiting for core...")
+        wait_for_core()
+
+        if _shutdown_event.is_set():
+            return
+
+        from voice.offline.offline_runner import run
+
+        print("[MAIN] Offline voice engine started.")
+        run()
+
+    except Exception as error:
+        print(f"[MAIN] Offline voice engine stopped: {error}")
+    finally:
+        if not _shutdown_event.is_set():
+            request_jarvis_shutdown()
+
+
+def start_offline_voice_engine():
+    global _voice_thread
+
+    _voice_thread = threading.Thread(
+        target=run_offline_voice_engine,
+        name="jarvis-offline-voice-engine",
+        daemon=True,
+    )
+    _voice_thread.start()
+    print("[MAIN] Offline voice engine thread started.")
+
+
 # =============================================================
 # SHUTDOWN
 # =============================================================
@@ -319,10 +353,77 @@ def main():
         print(f"[MAIN HUD] Voice mode sent to HUD: {mode}")
 
         if mode == "offline":
-            print("[MAIN] Starting isolated offline JARVIS...")
-            from voice.offline.offline_runner import run
-            return run()
+            print("[MAIN] Starting shared JARVIS runtime in offline mode...")
 
+            # Keep shared local skills on Piper and prevent voice.manager's
+            # import-time online probe from running during core loading.
+            os.environ["JARVIS_OFFLINE_MODE"] = "1"
+
+            # Offline changes only the providers. The core, skills, action
+            # registry, HUD bridge, and native PyWebView window remain the
+            # same runtime used by online mode.
+            core_thread = threading.Thread(
+                target=initialize_core_background,
+                name="jarvis-offline-core-init",
+                daemon=True,
+            )
+            core_thread.start()
+            print("[MAIN] Offline core initialization started.")
+
+            hud_runtime.start()
+            print("[MAIN HUD] Offline HUD runtime started.")
+
+            if not hud_web.start():
+                print("[MAIN HUD] WARNING: HUD bridge failed.")
+            else:
+                print("[MAIN HUD] Offline HUD bridge started.")
+
+            configure_hud_shutdown()
+
+            # Tell the local Next.js client to prefer the local Dashboard API
+            # even when a remote dashboard URL was configured for online use.
+            os.environ["NEXT_PUBLIC_JARVIS_OFFLINE"] = "1"
+
+            if not start_web_hud():
+                print("[MAIN HUD] Next.js HUD failed to start.")
+                return 1
+
+            # The Next.js HUD uses the local DashboardServer on port 8765 for
+            # typed commands and local settings/history APIs. Online mode
+            # already starts this server; offline mode must expose the same
+            # local endpoints so the HUD remains fully usable.
+            from voice.offline.offline_runner import handle_text_command
+
+            def offline_dashboard_command(text):
+                wait_for_core()
+                return handle_text_command(text)
+
+            offline_dashboard = DashboardServer(
+                command_handler=offline_dashboard_command,
+            )
+            offline_dashboard.new_pairing_pin()
+
+            if offline_dashboard.start():
+                print(
+                    f"[OFFLINE] Local Dashboard API: "
+                    f"{offline_dashboard.url()}"
+                )
+            else:
+                print("[OFFLINE] WARNING: Local Dashboard API unavailable.")
+
+            start_offline_voice_engine()
+
+            print("[MAIN HUD] Starting native JARVIS HUD...")
+            start_native_hud()
+            print("[MAIN] Native HUD closed.")
+            request_jarvis_shutdown()
+
+            if _voice_thread is not None and _voice_thread.is_alive():
+                _voice_thread.join(timeout=0.5)
+
+            return 0
+
+        os.environ.pop("JARVIS_OFFLINE_MODE", None)
         print("[MAIN] Starting existing online JARVIS...")
 
         core_thread = threading.Thread(
