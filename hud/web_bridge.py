@@ -940,6 +940,13 @@ class HUDWebBridge:
 
         payload = {
 
+            "event_id":
+                getattr(
+                    event,
+                    "event_id",
+                    "",
+                ),
+
             "name":
                 getattr(
                     event,

@@ -396,7 +396,10 @@ def main():
 
             def offline_dashboard_command(text):
                 wait_for_core()
-                return handle_text_command(text)
+                return handle_text_command(
+                    text,
+                    emit_command=False,
+                )
 
             offline_dashboard = DashboardServer(
                 command_handler=offline_dashboard_command,

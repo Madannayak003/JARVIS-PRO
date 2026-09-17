@@ -23,6 +23,7 @@ export type HUDState = {
 };
 
 export type HUDBridgeEvent = {
+  event_id: string;
   name: string;
   data: Record<string, unknown>;
   timestamp: string;

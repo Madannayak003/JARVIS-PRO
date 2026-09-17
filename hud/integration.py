@@ -253,13 +253,15 @@ class HUDIntegration:
     @classmethod
     def command(
         cls,
-        text
+        text,
+        source="jarvis",
     ):
 
         cls._emit(
             HUDEvent.COMMAND,
             {
-                "text": str(text)
+                "text": str(text),
+                "source": str(source),
             }
         )
 

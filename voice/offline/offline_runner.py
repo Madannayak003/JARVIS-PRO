@@ -9,7 +9,13 @@ from voice.offline.offline_action_bridge import OfflineActionBridge, OfflineRout
 from voice.offline.offline_ai import get_ai
 
 
-def process_command(text, ai=None, bridge=None, dispatch_result=None):
+def process_command(
+    text,
+    ai=None,
+    bridge=None,
+    dispatch_result=None,
+    emit_command=True,
+):
     """Process one already-transcribed command synchronously."""
 
     text = str(text or "").strip()
@@ -17,7 +23,8 @@ def process_command(text, ai=None, bridge=None, dispatch_result=None):
         return ""
 
     bridge = bridge or OfflineActionBridge()
-    HUDAdapter.command(text)
+    if emit_command:
+        HUDAdapter.command(text)
     started = time.perf_counter()
     result = dispatch_result or bridge.handle(text)
     print(f"[OFFLINE] Input: {text}")
@@ -63,7 +70,12 @@ def process_command(text, ai=None, bridge=None, dispatch_result=None):
     return response
 
 
-def handle_text_command(text, ai=None, bridge=None):
+def handle_text_command(
+    text,
+    ai=None,
+    bridge=None,
+    emit_command=True,
+):
     """Handle typed HUD input and voice input through the same path."""
 
     from voice.offline.offline_tts import speak
@@ -75,6 +87,7 @@ def handle_text_command(text, ai=None, bridge=None):
         ai=ai,
         bridge=bridge,
         dispatch_result=result,
+        emit_command=emit_command,
     )
 
     # Local skills already speak their own result through the shared voice

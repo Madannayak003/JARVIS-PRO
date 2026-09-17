@@ -316,7 +316,7 @@ class HUDManager:
     # Command
     # =====================================================
 
-    def command(self, text):
+    def command(self, text, source="jarvis"):
 
         self.state.last_command = str(text)
 
@@ -324,7 +324,8 @@ class HUDManager:
             HUD_COMMAND,
             {
                 "text": str(text)
-            }
+            },
+            source=source,
         )
 
     # =====================================================

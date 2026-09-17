@@ -11,6 +11,7 @@ They do not execute JARVIS actions.
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Optional
+from uuid import uuid4
 
 
 @dataclass
@@ -27,6 +28,12 @@ class HUDEvent:
         datetime.now().isoformat(
             timespec="seconds"
         )
+    )
+
+    # One logical HUD/activity event keeps the same identity across
+    # the desktop SSE bridge and the remote dashboard stream.
+    event_id: str = field(
+        default_factory=lambda: uuid4().hex
     )
 
     source: Optional[str] = None

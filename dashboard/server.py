@@ -40,6 +40,7 @@ import secrets
 import socket
 import threading
 import time
+from uuid import uuid4
 
 from pathlib import Path
 from typing import Callable, Optional
@@ -49,6 +50,14 @@ import json
 from core.runtime import handle_priority
 
 from hud.integration import HUDIntegration
+from hud.bus import hud_bus
+from hud.events import (
+    HUD_COMMAND,
+    HUD_ERROR,
+    HUD_NOTIFICATION,
+    HUD_RESPONSE,
+    HUD_SYSTEM_ACTIVITY,
+)
 
 from chatbot.ai_chat_api import (
     create_chat,
@@ -640,6 +649,12 @@ class DashboardServer:
 
         self._history = []
 
+        self._history_event_ids = set()
+
+        self._history_lock = threading.Lock()
+
+        self._hud_events_subscribed = False
+
         # -----------------------------------------------------
         # Phone audio
         #
@@ -718,6 +733,8 @@ class DashboardServer:
                 "[REMOTE] Voice output bridge failed:",
                 e
             )
+
+        self._subscribe_hud_events()
             
         # -----------------------------------------------------
         # Restore saved English voice
@@ -806,17 +823,6 @@ class DashboardServer:
                 "[HUD RESPONSE LOG] Failed:",
                 exc
             )
-
-        # -----------------------------------------------------
-        # Existing Mark-style Remote Dashboard
-        # -----------------------------------------------------
-
-        self._broadcast_threadsafe({
-            "type": "log",
-            "speaker": speaker,
-            "text": text,
-            "ts": time.time(),
-        })
 
     # =========================================================
     # PAIRING PIN
@@ -955,22 +961,155 @@ class DashboardServer:
     # BROADCAST
     # =========================================================
 
+    def _subscribe_hud_events(self):
+
+        if self._hud_events_subscribed:
+
+            return
+
+        hud_bus.subscribe(
+            self._on_hud_event
+        )
+
+        self._hud_events_subscribed = True
+
+    def _unsubscribe_hud_events(self):
+
+        if not self._hud_events_subscribed:
+
+            return
+
+        hud_bus.unsubscribe(
+            self._on_hud_event
+        )
+
+        self._hud_events_subscribed = False
+
+    @staticmethod
+    def _event_id(message):
+
+        return (
+            message.get("event_id")
+            or message.get("message_id")
+            or message.get("id")
+        )
+
+    def _record_message(self, message):
+        """Record one remote event, suppressing repeated identities."""
+
+        payload = dict(message)
+
+        event_id = self._event_id(payload)
+
+        if not event_id:
+
+            event_id = uuid4().hex
+
+            payload["event_id"] = event_id
+
+        with self._history_lock:
+
+            if event_id in self._history_event_ids:
+
+                print(
+                    "[REMOTE EVENT] Duplicate suppressed:",
+                    event_id,
+                )
+
+                return None
+
+            self._history_event_ids.add(event_id)
+
+            self._history.append(payload)
+
+            if len(self._history) > 300:
+
+                removed = self._history[:-300]
+
+                self._history = self._history[-300:]
+
+                for old in removed:
+
+                    old_id = self._event_id(old)
+
+                    if old_id:
+
+                        self._history_event_ids.discard(old_id)
+
+        return payload
+
+    def _on_hud_event(self, event):
+        """Mirror shared HUD activity events into the remote stream."""
+
+        name = getattr(event, "name", "")
+
+        data = getattr(event, "data", {}) or {}
+
+        if name == HUD_COMMAND:
+
+            payload = {
+                "type": "log",
+                "speaker": "user",
+                "text": str(data.get("text", "")),
+            }
+
+        elif name == HUD_RESPONSE:
+
+            payload = {
+                "type": "log",
+                "speaker": str(data.get("speaker", "jarvis")),
+                "text": str(data.get("text", "")),
+            }
+
+        elif name in {
+            HUD_SYSTEM_ACTIVITY,
+            HUD_NOTIFICATION,
+            HUD_ERROR,
+        }:
+
+            message = (
+                data.get("message")
+                or data.get("error")
+                or ""
+            )
+
+            payload = {
+                "type": "sys",
+                "text": str(message),
+            }
+
+        else:
+
+            return
+
+        payload.update({
+            "event_id": getattr(event, "event_id", "") or uuid4().hex,
+            "timestamp": getattr(event, "timestamp", ""),
+            "source": getattr(event, "source", None),
+        })
+
+        if not payload["text"]:
+
+            return
+
+        print(
+            "[REMOTE EVENT] "
+            f"{payload.get('speaker', 'system').upper()} event emitted:",
+            payload["event_id"],
+        )
+
+        self._broadcast_threadsafe(payload)
+
     async def broadcast(
         self,
         message: dict,
     ):
 
-        self._history.append(
-            message
-        )
+        message = self._record_message(message)
 
-        if len(
-            self._history
-        ) > 300:
+        if message is None:
 
-            self._history = (
-                self._history[-300:]
-            )
+            return
 
         dead = set()
 
@@ -1005,6 +1144,10 @@ class DashboardServer:
 
         if self._loop is None:
 
+            # Keep events emitted before a remote client connects so the
+            # normal websocket replay path can deliver them later.
+            self._record_message(message)
+
             return
 
         try:
@@ -1036,11 +1179,13 @@ class DashboardServer:
             text,
         )
 
-        self._broadcast_threadsafe({
-            "type": "log",
-            "speaker": "user",
-            "text": text,
-        })
+        # The HUD bus is the single authoritative activity stream. The
+        # same event is consumed by the desktop Activity Log and by the
+        # remote dashboard subscriber.
+        HUDIntegration.command(
+            text,
+            source="remote_control",
+        )
 
         # =====================================================
         # PRIORITY INTERRUPT
@@ -1055,11 +1200,9 @@ class DashboardServer:
 
             if handle_priority(text):
 
-                self._broadcast_threadsafe({
-                    "type": "log",
-                    "speaker": "jarvis",
-                    "text": "Stopped.",
-                })
+                HUDIntegration.response(
+                    "Stopped."
+                )
 
                 return
 
@@ -1070,12 +1213,9 @@ class DashboardServer:
                 exc,
             )
 
-            self._broadcast_threadsafe({
-                "type": "sys",
-                "text": (
-                    f"Interrupt error: {exc}"
-                ),
-            })
+            HUDIntegration.system_activity(
+                f"Interrupt error: {exc}"
+            )
 
             return
 
@@ -1090,13 +1230,9 @@ class DashboardServer:
                 "ERROR: dispatcher not connected."
             )
 
-            self._broadcast_threadsafe({
-                "type": "sys",
-                "text": (
-                    "JARVIS dispatcher "
-                    "is not connected."
-                ),
-            })
+            HUDIntegration.system_activity(
+                "JARVIS dispatcher is not connected."
+            )
 
             return
 
@@ -1140,25 +1276,12 @@ class DashboardServer:
 
         try:
 
-            result = (
-                self.command_handler(
-                    text
-                )
+            # Normal command handlers already feed their spoken response
+            # through the existing voice/output bridge. Do not create a
+            # second remote-only response event from the return value.
+            self.command_handler(
+                text
             )
-
-            if result is not None:
-
-                result_text = str(
-                    result
-                ).strip()
-
-                if result_text:
-
-                    self._broadcast_threadsafe({
-                        "type": "log",
-                        "speaker": "jarvis",
-                        "text": result_text,
-                    })
 
         except Exception as exc:
 
@@ -1167,12 +1290,9 @@ class DashboardServer:
                 exc,
             )
 
-            self._broadcast_threadsafe({
-                "type": "sys",
-                "text": (
-                    f"Command error: {exc}"
-                ),
-            })
+            HUDIntegration.system_activity(
+                f"Command error: {exc}"
+            )
 
     # =========================================================
     # BUILD FASTAPI
@@ -3363,6 +3483,9 @@ class DashboardServer:
                     "text": (
                         "Remote session active."
                     ),
+                    "event_id": uuid4().hex,
+                    "timestamp": time.time(),
+                    "source": "remote_control",
                 })
 
                 while True:
@@ -3593,6 +3716,8 @@ class DashboardServer:
     # =========================================================
 
     def stop(self):
+
+        self._unsubscribe_hud_events()
 
         self._tokens.clear()
 

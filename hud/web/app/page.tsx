@@ -516,6 +516,7 @@ export default function Home() {
      ========================================================= */
   useEffect(() => {
     let speakTimer: number | null = null;
+    const consumedHudEventIds = new Set<string>();
 
     const stopHudSpeaking = () => {
       // End the temporary morning-brief speaking lock.
@@ -619,13 +620,29 @@ export default function Home() {
 
         if (!text && links.length === 0) return;
 
+        const eventId = event.event_id;
+
+        if (
+          eventId
+          && consumedHudEventIds.has(eventId)
+        ) {
+          return;
+        }
+
         // Consume pending user command marker to prevent duplicate logs
         if (speaker === "user") {
           const pendingIndex = pendingHudCommandsRef.current.indexOf(text);
           if (pendingIndex !== -1) {
             pendingHudCommandsRef.current.splice(pendingIndex, 1);
+            if (eventId) {
+              consumedHudEventIds.add(eventId);
+            }
             return;
           }
+        }
+
+        if (eventId) {
+          consumedHudEventIds.add(eventId);
         }
 
         if (event.name === "response" && speaker === "jarvis") {
@@ -644,7 +661,7 @@ export default function Home() {
         // Strict global deduplication check
         setActivities((previous) => {
           const activity: HUDActivity = {
-            id: `${event.timestamp}-${Math.random()}`,
+            id: eventId || `${event.timestamp}-${Math.random()}`,
             speaker,
             text,
             timestamp: event.timestamp,

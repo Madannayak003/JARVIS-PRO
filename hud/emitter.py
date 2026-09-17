@@ -71,7 +71,8 @@ class HUDEmitter:
         if event == HUDEvent.COMMAND:
 
             HUDAdapter.command(
-                data.get("text", "")
+                data.get("text", ""),
+                data.get("source", "jarvis"),
             )
             return
 

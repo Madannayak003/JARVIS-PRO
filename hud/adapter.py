@@ -52,10 +52,11 @@ class HUDAdapter:
     # =====================================================
 
     @staticmethod
-    def command(text):
+    def command(text, source="jarvis"):
 
         hud.command(
-            text
+            text,
+            source,
         )
 
     @staticmethod
