@@ -42,6 +42,41 @@ SHUTDOWN_URL = (
 _native_window = None
 
 
+class _WindowApi:
+
+    def toggle_fullscreen(self):
+
+        window = _native_window
+
+        if window is None:
+
+            print(
+                "[DESKTOP HUD] "
+                "Native fullscreen unavailable: window is not ready."
+            )
+
+            return False
+
+        try:
+
+            window.toggle_fullscreen()
+
+            return True
+
+        except Exception as error:
+
+            print(
+                "[DESKTOP HUD] "
+                "Could not toggle native fullscreen:"
+            )
+
+            print(
+                f"[DESKTOP HUD] {error}"
+            )
+
+            return False
+
+
 # =============================================================
 # INITIAL LOADING SCREEN
 # =============================================================
@@ -381,6 +416,8 @@ def run():
         WINDOW_TITLE,
 
         html=LOADING_HTML,
+
+        js_api=_WindowApi(),
 
         width=WINDOW_WIDTH,
 

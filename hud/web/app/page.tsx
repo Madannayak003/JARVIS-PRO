@@ -659,6 +659,20 @@ export default function Home() {
      ========================================================= */
   const toggleFullscreen = async () => {
     try {
+      const nativeFullscreen = (
+        window as typeof window & {
+          pywebview?: {
+            api?: {
+              toggle_fullscreen?: () => Promise<boolean>;
+            };
+          };
+        }
+      ).pywebview?.api?.toggle_fullscreen;
+
+      if (nativeFullscreen && await nativeFullscreen()) {
+        return;
+      }
+
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
       } else {
