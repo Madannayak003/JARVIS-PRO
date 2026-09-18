@@ -12,9 +12,12 @@ Supports:
 - Stop-event interruption
 """
 
+import ssl
 from typing import Iterator, Optional
 
+import httpx
 from openai import OpenAI
+import truststore
 
 from ai.core.schemas import (
     AIRequest,
@@ -45,6 +48,27 @@ class OpenAIProvider(AIProvider):
 
         self._client = None
 
+    def _error_details(self, error) -> str:
+        """Return concise OpenAI diagnostics without exposing credentials."""
+
+        status = getattr(error, "status_code", None)
+        body = getattr(error, "body", None)
+        body = body if isinstance(body, dict) else {}
+
+        detail = body.get("message") or str(error)
+        error_code = body.get("code") or body.get("type")
+
+        if error_code:
+            detail = f"{error_code}: {detail}"
+
+        if status:
+            detail = f"HTTP {status} - {detail}"
+
+        if self.api_key:
+            detail = detail.replace(self.api_key, "[REDACTED]")
+
+        return detail
+
     # ======================================================
     # Provider Information
     # ======================================================
@@ -70,8 +94,13 @@ class OpenAIProvider(AIProvider):
                 "OPENAI_API_KEY is not configured."
             )
 
+        http_client = httpx.Client(
+            verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        )
+
         self._client = OpenAI(
-            api_key=self.api_key
+            api_key=self.api_key,
+            http_client=http_client,
         )
 
         return self._client
@@ -164,8 +193,10 @@ class OpenAIProvider(AIProvider):
 
         except Exception as e:
 
+            error_details = self._error_details(e)
+
             print(
-                f"[OPENAI ERROR] {e}"
+                f"[OPENAI ERROR] {error_details}"
             )
 
             return AIResponse(
@@ -178,12 +209,17 @@ class OpenAIProvider(AIProvider):
 
                 success=False,
 
-                error=str(e),
+                error=error_details,
 
                 metadata={
                     "error_type": (
                         type(e).__name__
-                    )
+                    ),
+                    "status_code": getattr(
+                        e,
+                        "status_code",
+                        None,
+                    ),
                 },
             )
 
@@ -294,8 +330,10 @@ class OpenAIProvider(AIProvider):
 
         except Exception as e:
 
+            error_details = self._error_details(e)
+
             print(
-                f"[OPENAI STREAM ERROR] {e}"
+                f"[OPENAI STREAM ERROR] {error_details}"
             )
 
             yield AIStreamChunk(
@@ -309,12 +347,18 @@ class OpenAIProvider(AIProvider):
                 done=True,
 
                 metadata={
-                    "error": str(e),
+                    "error": error_details,
 
                     "success": False,
 
                     "error_type": (
                         type(e).__name__
+                    ),
+
+                    "status_code": getattr(
+                        e,
+                        "status_code",
+                        None,
                     ),
                 },
             )
