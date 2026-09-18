@@ -474,6 +474,18 @@ def browser_route(command):
                 "action": "new_tab"
             }
         ]
+        
+    # Close Tab
+    if command in [
+        "close tab",
+        "close current tab",
+        "close this tab",
+    ]:
+        return [
+            {
+                "action": "close_tab"
+            }
+        ]
 
     # Back
     if command in [
