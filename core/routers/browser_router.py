@@ -487,20 +487,6 @@ def browser_route(command):
             }
         ]
 
-    # Back
-    if command in [
-        "back",
-        "go back",
-        "go backward",
-        "go to previous page",
-        "previous page",
-    ]:
-        return [
-            {
-                "action": "back"
-            }
-        ]
-
     # Forward
     if command in [
         "forward",
@@ -515,6 +501,44 @@ def browser_route(command):
             }
         ]
 
+    # Back
+    if command in [
+        "back",
+        "go back",
+        "go backward",
+        "go to previous page",
+        "previous page",
+    ]:
+        return [
+            {
+                "action": "back"
+            }
+        ]
+        
+    # Scroll Down
+    if command in [
+        "scroll down",
+        "scroll down the page",
+        "scroll down a little",
+    ]:
+        return [
+            {
+                "action": "scroll_down"
+            }
+        ]
+
+    # Scroll Up
+    if command in [
+        "scroll up",
+        "scroll up the page",
+        "scroll up a little",
+    ]:
+        return [
+            {
+                "action": "scroll_up"
+            }
+        ]
+        
     # Refresh
     if command in [
         "refresh",
@@ -527,6 +551,21 @@ def browser_route(command):
         return [
             {
                 "action": "refresh"
+            }
+        ]
+        
+    # Close Browser
+    if command in [
+        "close chrome",
+        "close google",
+        "close browser",
+        "close jarvis browser",
+        "exit chrome",
+        "exit browser",
+    ]:
+        return [
+            {
+                "action": "close"
             }
         ]
 
