@@ -502,7 +502,7 @@ export default function HudCockpit({
 
         <nav
           className="cockpit-header-nav cockpit-header-nav-left"
-          aria-label="ASTRA navigation"
+          aria-label={`${assistantName} navigation`}
         >
 
           <button
@@ -548,7 +548,7 @@ export default function HudCockpit({
         {/* ================================================= */}
 
         <div className="cockpit-title">
-          {assistantName || "ASTRA"}
+          {assistantName || "Assistant"}
         </div>
 
 
@@ -558,7 +558,7 @@ export default function HudCockpit({
 
         <nav
           className="cockpit-header-nav cockpit-header-nav-right"
-          aria-label="ASTRA tools"
+          aria-label={`${assistantName} tools`}
         >
 
           <button

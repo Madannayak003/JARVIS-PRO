@@ -15,6 +15,7 @@ from threading import Lock
 from typing import Mapping
 
 from core.registry import register
+from config.settings import get_assistant_display_name
 
 
 # ---------------------------------------------------------------------------
@@ -257,7 +258,9 @@ def speak_startup_greeting(speaker=None, profile=None, now=None) -> bool:
             greeting = startup_greeting(now=now, profile=profile)
         except Exception as error:
             print(f"[GREETING] Startup fallback engaged: {error}")
-            greeting = "Hello. ASTRA is ready when you are."
+            greeting = (
+                f"Hello. {get_assistant_display_name()} is ready when you are."
+            )
 
     try:
         (speaker or _get_speaker())(greeting)
@@ -308,6 +311,11 @@ def how_are_you(data):
     return True
 
 
+def assistant_name(data):
+    _speak(f"I am {get_assistant_display_name()}, your desktop AI assistant.")
+    return True
+
+
 def welcome(data):
     _speak(_engine.response("welcome", WELCOME))
     return True
@@ -320,5 +328,6 @@ def goodbye(data):
 
 register("greet", greet)
 register("how_are_you", how_are_you)
+register("assistant_name", assistant_name)
 register("welcome", welcome)
 register("goodbye", goodbye)

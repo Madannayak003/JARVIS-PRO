@@ -9,6 +9,7 @@ Do not modify the existing online voice architecture.
 """
 
 from core.assistant import run as run_online
+from config.settings import get_assistant_display_name
 
 
 def run():
@@ -16,6 +17,8 @@ def run():
     Start the existing online JARVIS.
     """
 
-    print("[ONLINE VOICE] Starting existing online ASTRA...")
+    print(
+        f"[ONLINE VOICE] Starting existing online {get_assistant_display_name()}..."
+    )
 
     return run_online()

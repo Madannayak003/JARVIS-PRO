@@ -28,6 +28,7 @@ from pathlib import Path
 
 # Load local configuration before importing application components.
 import config  # noqa: F401
+from config.settings import get_assistant_display_name
 
 # =============================================================
 # JARVIS CORE
@@ -159,7 +160,9 @@ def run_voice_engine():
         print("[MAIN] Core ready. Starting voice engine...")
         from voice.online_runner import run
 
-        print("[MAIN] Online ASTRA voice engine started.")
+        print(
+            f"[MAIN] Online {get_assistant_display_name()} voice engine started."
+        )
         run()
 
     except Exception as error:
@@ -228,7 +231,9 @@ def request_jarvis_shutdown():
         _shutdown_started = True
 
     print()
-    print("[MAIN] Complete ASTRA shutdown requested.")
+    print(
+        f"[MAIN] Complete {get_assistant_display_name()} shutdown requested."
+    )
     _shutdown_event.set()
 
     # 1. Stop microphone listener
@@ -263,7 +268,9 @@ def start_native_hud():
     if not wait_for_web_hud():
         return False
 
-    print("[MAIN HUD] Opening ASTRA desktop window...")
+    print(
+        f"[MAIN HUD] Opening {get_assistant_display_name()} desktop window..."
+    )
 
     try:
         from hud.desktop_window import run
@@ -353,7 +360,10 @@ def main():
         print(f"[MAIN HUD] Voice mode sent to HUD: {mode}")
 
         if mode == "offline":
-            print("[MAIN] Starting shared ASTRA runtime in offline mode...")
+            print(
+                f"[MAIN] Starting shared {get_assistant_display_name()} runtime "
+                "in offline mode..."
+            )
 
             # Keep shared local skills on Piper and prevent voice.manager's
             # import-time online probe from running during core loading.
@@ -416,7 +426,9 @@ def main():
 
             start_offline_voice_engine()
 
-            print("[MAIN HUD] Starting native ASTRA HUD...")
+            print(
+                f"[MAIN HUD] Starting native {get_assistant_display_name()} HUD..."
+            )
             start_native_hud()
             print("[MAIN] Native HUD closed.")
             request_jarvis_shutdown()
@@ -427,7 +439,9 @@ def main():
             return 0
 
         os.environ.pop("JARVIS_OFFLINE_MODE", None)
-        print("[MAIN] Starting existing online ASTRA...")
+        print(
+            f"[MAIN] Starting existing online {get_assistant_display_name()}..."
+        )
 
         core_thread = threading.Thread(
             target=initialize_core_background,
@@ -474,13 +488,18 @@ def main():
         remote_server.new_pairing_pin()
 
         if remote_server.start():
-            print(f"[REMOTE] ASTRA Dashboard: {remote_server.url()}")
+            print(
+                f"[REMOTE] {get_assistant_display_name()} Dashboard: "
+                f"{remote_server.url()}"
+            )
             print(f"[REMOTE] Pairing PIN: {remote_server._pin}")
             print("[REMOTE] Dashboard Live stop control: READY")
 
         start_voice_engine()
 
-        print("[MAIN HUD] Starting native ASTRA HUD...")
+        print(
+            f"[MAIN HUD] Starting native {get_assistant_display_name()} HUD..."
+        )
         start_native_hud()
 
         print("[MAIN] Native HUD closed.")
@@ -498,7 +517,7 @@ def main():
         return 0
 
     finally:
-        print("[MAIN] Cleaning up ASTRA...")
+        print(f"[MAIN] Cleaning up {get_assistant_display_name()}...")
 
         try:
             from core.listener import stop_listener
@@ -513,7 +532,7 @@ def main():
 
         stop_web_hud()
 
-        print("[MAIN] ASTRA shutdown complete.")
+        print(f"[MAIN] {get_assistant_display_name()} shutdown complete.")
         # Instantly releases terminal prompt without socket/thread hanging
         os._exit(0)
 

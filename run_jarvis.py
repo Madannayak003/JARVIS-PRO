@@ -9,6 +9,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from pathlib import Path
 
+from config.settings import get_assistant_display_name
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 LOG_PATH = PROJECT_ROOT / "data" / "logs" / "shortcut_startup.log"
@@ -19,7 +21,8 @@ def main() -> int:
 
     with LOG_PATH.open("a", encoding="utf-8", buffering=1) as log_file:
         log_file.write(
-            f"\n[{datetime.now().isoformat(timespec='seconds')}] ASTRA shortcut launched\n"
+            f"\n[{datetime.now().isoformat(timespec='seconds')}] "
+            f"{get_assistant_display_name()} shortcut launched\n"
         )
 
         with redirect_stdout(log_file), redirect_stderr(log_file):

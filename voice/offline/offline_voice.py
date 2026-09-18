@@ -36,6 +36,7 @@ from voice.offline.offline_stt import (
 from voice.offline.offline_ai import (
     get_ai,
 )
+from config.settings import get_assistant_display_name
 
 from voice.offline.offline_tts import (
     speak,
@@ -50,7 +51,7 @@ def print_banner():
 
     print()
     print("==========================================")
-    print("       ASTRA OFFLINE VOICE MODE")
+    print(f"       {get_assistant_display_name()} OFFLINE VOICE MODE")
     print("==========================================")
     print("[OFFLINE VOICE] STT  : Faster-Whisper")
     print("[OFFLINE VOICE] AI   : Ollama")
@@ -152,7 +153,7 @@ def run():
 
             print()
             print(
-                "[OFFLINE VOICE] ASTRA:",
+                f"[OFFLINE VOICE] {get_assistant_display_name()}:",
                 response
             )
 

@@ -1,4 +1,5 @@
 from core.interrupt import interrupt
+from config.settings import get_assistant_aliases
 
 INTERRUPTS = {
 
@@ -6,7 +7,6 @@ INTERRUPTS = {
     
     "stop chart",
 
-    "astra stop",
     "jarvis stop",
 
     "cancel",
@@ -21,7 +21,6 @@ INTERRUPTS = {
     
     "stop conversation",
     
-    "astra stop conversation",
     "jarvis stop conversation",
 
 }
@@ -30,7 +29,13 @@ def handle_priority(command):
 
     command = command.lower().strip()
 
-    if command in INTERRUPTS:
+    assistant_interrupts = {
+        f"{alias} {suffix}"
+        for alias in get_assistant_aliases()
+        for suffix in ("stop", "stop conversation")
+    }
+
+    if command in INTERRUPTS or command in assistant_interrupts:
 
         interrupt()
 

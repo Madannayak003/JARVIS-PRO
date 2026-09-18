@@ -175,9 +175,11 @@ ChatMessageItem.displayName = "ChatMessageItem";
 export default function AIChatBot({
   open,
   onClose,
+  assistantName,
 }: {
   open: boolean;
   onClose?: () => void;
+  assistantName: string;
 }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
@@ -722,7 +724,7 @@ export default function AIChatBot({
               <div className="ai-chat-welcome-icon">◉</div>
               <div className="ai-chat-welcome-title">Welcome to AI Assistant</div>
               <div className="ai-chat-welcome-text">Ask me anything.</div>
-              <div className="ai-chat-welcome-note">This chatbot is independent from ASTRA.</div>
+              <div className="ai-chat-welcome-note">This chatbot is independent from {assistantName || "the main assistant"}.</div>
               <div className="ai-chat-examples">
                 {["Explain quantum computing", "Write a Python function", "Explain this concept simply"].map((ex) => (
                   <button
@@ -819,7 +821,7 @@ export default function AIChatBot({
             </button>
           </div>
           <div className="ai-chat-composer-note">
-            Independent Gemini conversation · No ASTRA context
+            Independent Gemini conversation · No {assistantName || "main assistant"} context
           </div>
         </div>
       </main>

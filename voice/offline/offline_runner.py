@@ -7,6 +7,7 @@ import time
 from hud.adapter import HUDAdapter
 from voice.offline.offline_action_bridge import OfflineActionBridge, OfflineRoute
 from voice.offline.offline_ai import get_ai
+from config.settings import get_assistant_display_name
 
 
 def process_command(
@@ -114,7 +115,7 @@ def run():
 
     print()
     print("==========================================")
-    print("       ASTRA OFFLINE VOICE MODE")
+    print(f"       {get_assistant_display_name()} OFFLINE VOICE MODE")
     print("==========================================")
     print("[OFFLINE VOICE] STT  : Faster-Whisper")
     print("[OFFLINE VOICE] AI   : Ollama")
@@ -144,7 +145,7 @@ def run():
     print(f"[OFFLINE] STT {'ready' if stt_ready else 'unavailable'}")
     print(f"[OFFLINE] Piper {'ready' if piper_ready else 'unavailable'}")
     print("[OFFLINE] Action layer ready")
-    print("[OFFLINE] ASTRA ready")
+    print(f"[OFFLINE] {get_assistant_display_name()} ready")
 
     # Reuse the normal Greeting Engine. Passing offline Piper explicitly
     # keeps startup independent from Gemini/OpenAI and voice.manager.

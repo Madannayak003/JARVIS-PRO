@@ -318,6 +318,7 @@ from typing import Any
 
 from .bus import hud_bus
 from .manager import hud
+from config.settings import get_assistant_display_name
 
 
 # =============================================================
@@ -474,7 +475,7 @@ class _BridgeHandler(
                 {
                     "ok": True,
                     "message":
-                        "ASTRA shutdown requested.",
+                        f"{get_assistant_display_name()} shutdown requested.",
                 }
             )
 

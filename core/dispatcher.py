@@ -27,6 +27,8 @@ from ai.memory_stats import (
 from brain.brain_router import BrainRouter
 brain_router = BrainRouter()
 from core.fast_router import fast_route
+from core.assistant_name import normalize_assistant_invocation
+from config.settings import get_assistant_display_name
 from core.registry import execute
 from brain.screen_followup import is_screen_followup
 from brain.conversation_coordinator import conversation_coordinator
@@ -75,6 +77,26 @@ def dispatch(
 
     if not command:
         return
+
+    # Normalize assistant invocations before clarification, NCI, or planner
+    # handling. Microphone, HUD, and remote commands therefore share one path.
+    invocation = normalize_assistant_invocation(command)
+    if invocation:
+        # A fresh known assistant invocation is a new request, never an answer
+        # to an older clarification. Keep normal clarification replies such as
+        # "github" and "google" unchanged.
+        if conversation_coordinator.clarification.is_waiting():
+            print(
+                "[CLARIFICATION] Current assistant invocation "
+                "preempts pending clarification."
+            )
+            conversation_coordinator.cancel_clarification()
+
+        command = invocation.command or "hey"
+        if fast_plan is None:
+            fast_plan = fast_route(command)
+        if fast_plan:
+            skip_nci = True
 
     # A face registration flow owns its next reply until it completes or is
     # cancelled. This keeps a name such as "Madan" from becoming a new task.
@@ -1790,7 +1812,7 @@ def dispatch(
 
         print(
             "[DISPATCHER] Live execution active - "
-            "no ASTRA skill handled command; "
+            f"no {get_assistant_display_name()} skill handled command; "
             "suppressing normal AI fallback."
         )
 

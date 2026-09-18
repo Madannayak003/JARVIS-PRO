@@ -3,6 +3,7 @@ from threading import Event
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from config import settings
 from brain.conversation_coordinator import (
     ConversationCoordinator,
     conversation_coordinator,
@@ -245,6 +246,85 @@ class ClarificationFlowTests(unittest.TestCase):
         snapshot = conversation_coordinator.context.snapshot()
         self.assertIsNone(snapshot["pending_question"])
         self.assertIsNone(snapshot["pending_clarification"])
+
+    def test_current_assistant_invocation_preempts_pending_clarification(self):
+        import core.dispatcher as dispatcher
+
+        mark_core_ready()
+        conversation_coordinator.clear()
+
+        with patch.object(
+            settings,
+            "APP_NAME",
+            "MAX",
+        ):
+            conversation_coordinator.start_clarification(
+                field="action",
+                question="What would you like me to do with hey max?",
+                task="hey max",
+            )
+
+            with (
+                patch.object(dispatcher, "fast_route") as fast_route,
+                patch.object(dispatcher, "execute") as execute,
+            ):
+                fast_route.return_value = [
+                    {"action": "greet", "command": "hey"}
+                ]
+                dispatcher.dispatch("hey max")
+
+            fast_route.assert_called_once_with("hey")
+            execute.assert_called_once_with(
+                "greet",
+                {"action": "greet", "command": "hey"},
+            )
+            self.assertFalse(
+                conversation_coordinator.clarification.is_waiting()
+            )
+
+    def test_stop_cancels_only_pending_clarification(self):
+        from brain.conversation_context import conversation_context
+
+        conversation_coordinator.clear()
+        conversation_coordinator.start_clarification(
+            field="action",
+            question="What would you like me to do with hey max?",
+            task="hey max",
+        )
+        conversation_context.set_user_input("hey max")
+
+        conversation_coordinator.cancel_clarification()
+
+        self.assertFalse(conversation_coordinator.clarification.is_waiting())
+        snapshot = conversation_coordinator.context.snapshot()
+        self.assertIsNone(snapshot["pending_question"])
+        self.assertIsNone(snapshot["pending_clarification"])
+
+    def test_stop_then_changed_name_invocation_is_fresh(self):
+        from core.assistant_name import normalize_assistant_invocation
+        from core.routers.greeting_router import greeting_route
+
+        conversation_coordinator.clear()
+        with patch.object(settings, "APP_NAME", "MAX"):
+            conversation_coordinator.start_clarification(
+                field="action",
+                question="What would you like me to do with hey max?",
+                task="hey max",
+            )
+            self.assertTrue(
+                conversation_coordinator.cancel_clarification()
+            )
+
+        with patch.object(settings, "APP_NAME", "ASTRA"):
+            invocation = normalize_assistant_invocation("hey astra")
+            self.assertEqual(invocation.command, "")
+            self.assertEqual(
+                greeting_route("hey astra"),
+                [{"action": "greet", "command": "hey"}],
+            )
+            self.assertFalse(
+                conversation_coordinator.clarification.is_waiting()
+            )
 
     def test_normal_input_reaches_planner_instead_of_broad_memory(self):
         import core.dispatcher as dispatcher

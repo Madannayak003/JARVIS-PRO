@@ -29,6 +29,11 @@ import time
 
 from typing import Callable, Optional
 
+from config.settings import (
+    get_assistant_display_name,
+    get_assistant_name_lower,
+)
+
 
 # ==========================================================
 # Optional FastAPI / Uvicorn
@@ -301,6 +306,8 @@ class RemoteControlServer:
 
             return HTMLResponse(
                 _PAGE
+                .replace("__ASSISTANT_NAME__", get_assistant_display_name())
+                .replace("__ASSISTANT_NAME_LOWER__", get_assistant_name_lower())
             )
 
         # ==================================================
@@ -377,7 +384,7 @@ class RemoteControlServer:
                         "ok": False,
                         "error":
                             "No active pairing PIN. "
-                            "Restart ASTRA.",
+                            f"Restart {get_assistant_display_name()}.",
                     },
                     status_code=401,
                 )
@@ -467,7 +474,7 @@ class RemoteControlServer:
                 "ok": True,
                 "token": self._token,
                 "message":
-                    "Connected to ASTRA.",
+                    f"Connected to {get_assistant_display_name()}.",
             }
 
         # ==================================================
@@ -569,7 +576,7 @@ class RemoteControlServer:
                 return {
                     "ok": True,
                     "message":
-                        "Command sent to ASTRA.",
+                        f"Command sent to {get_assistant_display_name()}.",
                 }
 
             print(
@@ -582,7 +589,7 @@ class RemoteControlServer:
                 {
                     "ok": False,
                     "error":
-                        "ASTRA command handler "
+                        f"{get_assistant_display_name()} command handler "
                         "is not connected.",
                 },
                 status_code=503,
@@ -735,7 +742,7 @@ class RemoteControlServer:
                     ),
 
                 "server":
-                    "ASTRA Remote Control",
+                    f"{get_assistant_display_name()} Remote Control",
             }
 
         return app
@@ -891,7 +898,7 @@ _PAGE = r"""
 >
 
 <title>
-    ASTRA Remote
+    __ASSISTANT_NAME__ Remote
 </title>
 
 <style>
@@ -1060,18 +1067,18 @@ button:active {
 <body>
 
 <h1>
-    ASTRA Remote
+    __ASSISTANT_NAME__ Remote
 </h1>
 
 <p>
-    Connect your phone to your local ASTRA.
+    Connect your phone to your local __ASSISTANT_NAME__.
 </p>
 
 
 <div id="status">
 
     Enter the pairing PIN shown
-    in the ASTRA terminal.
+    in the __ASSISTANT_NAME__ terminal.
 
 </div>
 
@@ -1106,7 +1113,7 @@ button:active {
             id="cmd"
             autocomplete="off"
             placeholder=
-                "Tell ASTRA what to do"
+                "Tell __ASSISTANT_NAME__ what to do"
         >
 
         <button
@@ -1121,7 +1128,7 @@ button:active {
     <button
         onclick="wake()"
     >
-        Wake ASTRA
+        Wake __ASSISTANT_NAME__
     </button>
 
 
@@ -1148,11 +1155,11 @@ button:active {
     <p class="small">
 
         Normal commands are sent directly into
-        your existing ASTRA dispatcher.
+        your existing __ASSISTANT_NAME__ dispatcher.
 
         The Live Conversation stop button directly
         controls the Gemini Live session because
-        the normal ASTRA microphone is paused
+        the normal __ASSISTANT_NAME__ microphone is paused
         while Live Conversation is active.
 
     </p>
@@ -1183,7 +1190,7 @@ async function readResponse(response) {
         await response.text();
 
     console.log(
-        "[ASTRA REMOTE RESPONSE]",
+        "[__ASSISTANT_NAME__ REMOTE RESPONSE]",
         response.status,
         raw
     );
@@ -1241,7 +1248,7 @@ async function login() {
 
 
     setStatus(
-        "Connecting to ASTRA..."
+        "Connecting to __ASSISTANT_NAME__..."
     );
 
 
@@ -1308,12 +1315,12 @@ async function login() {
 
 
         setStatus(
-            "Connected to ASTRA."
+            "Connected to __ASSISTANT_NAME__."
         );
 
 
         console.log(
-            "[ASTRA REMOTE] "
+            "[__ASSISTANT_NAME__ REMOTE] "
             + "Authentication successful."
         );
 
@@ -1322,7 +1329,7 @@ async function login() {
     catch (error) {
 
         console.error(
-            "[ASTRA REMOTE LOGIN ERROR]",
+            "[__ASSISTANT_NAME__ REMOTE LOGIN ERROR]",
             error
         );
 
@@ -1359,7 +1366,7 @@ async function sendCommand() {
     if (!token) {
 
         setStatus(
-            "Please connect to ASTRA first."
+            "Please connect to __ASSISTANT_NAME__ first."
         );
 
         return;
@@ -1425,7 +1432,7 @@ async function sendCommand() {
 
 
         setStatus(
-        "Command sent to ASTRA."
+        "Command sent to __ASSISTANT_NAME__."
         );
 
     }
@@ -1433,7 +1440,7 @@ async function sendCommand() {
     catch (error) {
 
         console.error(
-            "[ASTRA REMOTE COMMAND ERROR]",
+            "[__ASSISTANT_NAME__ REMOTE COMMAND ERROR]",
             error
         );
 
@@ -1452,7 +1459,7 @@ async function sendCommand() {
 async function wake() {
 
     await sendCommandText(
-        "hey astra"
+        "hey __ASSISTANT_NAME_LOWER__"
     );
 }
 
@@ -1468,7 +1475,7 @@ async function sendCommandText(
     if (!token) {
 
         setStatus(
-            "Please connect to ASTRA first."
+            "Please connect to __ASSISTANT_NAME__ first."
         );
 
         return;
@@ -1539,7 +1546,7 @@ async function sendCommandText(
     catch (error) {
 
         console.error(
-            "[ASTRA REMOTE WAKE ERROR]",
+            "[__ASSISTANT_NAME__ REMOTE WAKE ERROR]",
             error
         );
 
@@ -1560,7 +1567,7 @@ async function stopLiveConversation() {
     if (!token) {
 
         setStatus(
-            "Please connect to ASTRA first."
+            "Please connect to __ASSISTANT_NAME__ first."
         );
 
         return;
@@ -1622,12 +1629,12 @@ async function stopLiveConversation() {
         setStatus(
             "Live Conversation stopped. "
             +
-            "Normal ASTRA voice resumed."
+            "Normal __ASSISTANT_NAME__ voice resumed."
         );
 
 
         console.log(
-            "[ASTRA REMOTE] "
+            "[__ASSISTANT_NAME__ REMOTE] "
             + "Live Conversation stopped."
         );
 
@@ -1636,7 +1643,7 @@ async function stopLiveConversation() {
     catch (error) {
 
         console.error(
-            "[ASTRA REMOTE LIVE STOP ERROR]",
+            "[__ASSISTANT_NAME__ REMOTE LIVE STOP ERROR]",
             error
         );
 

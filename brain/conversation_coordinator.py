@@ -598,6 +598,15 @@ class ConversationCoordinator:
 
         return result
 
+    def cancel_clarification(self) -> bool:
+        """Cancel only the active clarification and its pending markers."""
+
+        waiting = self.clarification.is_waiting()
+        if waiting:
+            self.clarification.clear()
+            self.context.clear_pending()
+        return waiting
+
     # ========================================================
     # Consume Clarification Reply
     # ========================================================

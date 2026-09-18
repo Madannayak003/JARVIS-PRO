@@ -25,6 +25,10 @@ from voice.state import (
 )
 
 from hud.integration import HUDIntegration
+from config.settings import (
+    get_assistant_display_name,
+    get_assistant_name,
+)
 
 
 ONLINE = False
@@ -48,12 +52,11 @@ def _clean_tts_text(text):
 
     text = str(text)
 
-    # Keep the official display name as ASTRA everywhere user-facing, but
-    # give TTS a normal word form so it is spoken as "Astra", not as the
-    # individual letters A-S-T-R-A.
+    # Give the configured name a natural spoken form without changing the
+    # original response shown in the activity log or dashboard.
     text = re.sub(
-        r"\bASTRA\b",
-        "Astra",
+        rf"\b{re.escape(get_assistant_name())}\b",
+        get_assistant_display_name(),
         text,
         flags=re.IGNORECASE,
     )

@@ -97,6 +97,7 @@ type SettingsModal = "remote" | "customise" | "settings" | null;
 
 type RemoteInfo = {
   ok: boolean;
+  assistant_name?: string;
   url: string;
   pairing_url: string;
   pairing_pin: string;
@@ -124,16 +125,16 @@ const HUD_BRIDGE_URL =
         ? `http://${window.location.hostname}:8766`
         : "http://127.0.0.1:8766");
 
-const DEFAULT_ASSISTANT_NAME = "ASTRA";
+const DEFAULT_ASSISTANT_NAME = "";
 
 function normalizeAssistantName(value: unknown): string {
   if (typeof value !== "string") {
-    return DEFAULT_ASSISTANT_NAME;
+      return "";
   }
 
   const name = value.trim();
-  if (!name || /^(jarvis|jarvis pro)$/i.test(name)) {
-    return DEFAULT_ASSISTANT_NAME;
+  if (!name) {
+    return "";
   }
 
   return name;
@@ -215,9 +216,6 @@ export default function Home() {
         const settings = JSON.parse(saved);
         if (typeof settings.autoStart === "boolean") setAutoStart(settings.autoStart);
         if (typeof settings.morningBrief === "boolean") setMorningBrief(settings.morningBrief);
-        if (typeof settings.assistantName === "string") {
-          setAssistantName(normalizeAssistantName(settings.assistantName));
-        }
         if (typeof settings.userName === "string") setUserName(settings.userName);
         if (typeof settings.assistantColour === "string") {
           setAssistantColour(settings.assistantColour);
@@ -785,7 +783,7 @@ export default function Home() {
         throw new Error(data?.error || "Unable to create desktop shortcut.");
       }
 
-      alert(data.message || "ASTRA desktop shortcut created successfully.");
+      alert(data.message || `${assistantName} desktop shortcut created successfully.`);
     } catch (error) {
       console.error("[DESKTOP SHORTCUT]", error);
       alert(error instanceof Error ? error.message : "Desktop shortcut creation failed.");
@@ -932,7 +930,6 @@ export default function Home() {
         JSON.stringify({
           autoStart,
           morningBrief,
-          assistantName: name,
           userName: user,
           assistantColour: colour,
         })
@@ -1161,7 +1158,7 @@ export default function Home() {
       </div>
 
       {/* =====================================================
-          ASTRA COCKPIT
+          CONFIGURABLE ASSISTANT COCKPIT
           ===================================================== */}
       <HudCockpit
         state={hudState}
@@ -1194,6 +1191,7 @@ export default function Home() {
       <AIChatBot
         open={aiChatOpen}
         onClose={() => setAiChatOpen(false)}
+        assistantName={assistantName}
       />
 
       {/* =====================================================
@@ -1307,7 +1305,7 @@ export default function Home() {
           aria-hidden="true"
         />
         <span>
-          ASTRA LINK ·{" "}
+          {assistantName} LINK ·{" "}
           {connection === "connected"
             ? hudState.status.toUpperCase()
             : connection.toUpperCase()}
@@ -1540,7 +1538,6 @@ export default function Home() {
                   JSON.stringify({
                     autoStart: next,
                     morningBrief,
-                    assistantName,
                     userName,
                     assistantColour,
                   })
@@ -1587,11 +1584,11 @@ export default function Home() {
             </div>
 
             <div className="remote-modal-content">
-              <div className="remote-title">ASTRA REMOTE</div>
+              <div className="remote-title">{assistantName} REMOTE</div>
               <p className="remote-description">Scan to connect your device</p>
 
               {remoteLoading ? (
-                <div className="remote-loading">CONNECTING TO ASTRA...</div>
+                <div className="remote-loading">CONNECTING TO {assistantName}...</div>
               ) : remoteInfo?.pairing_active && remoteInfo.pairing_url ? (
                 <>
                   <div className="remote-qr-wrapper">
@@ -1614,19 +1611,19 @@ export default function Home() {
                   </div>
 
                   <div className="remote-status-box">
-                    <span>ASTRA DASHBOARD</span>
+                    <span>{assistantName} DASHBOARD</span>
                     <strong>{remoteInfo.url}</strong>
                   </div>
                 </>
               ) : (
                 <div className="remote-offline">
                   <strong>PAIRING NOT AVAILABLE</strong>
-                  <span>Start the ASTRA dashboard and open Remote Control again.</span>
+                  <span>Start the {assistantName} dashboard and open Remote Control again.</span>
                 </div>
               )}
 
               <p className="remote-note">
-                Scan the QR code with your phone. Your device will open the ASTRA remote pairing page.
+                Scan the QR code with your phone. Your device will open the {assistantName} remote pairing page.
               </p>
 
               <div className="settings-modal-actions">
@@ -1694,7 +1691,7 @@ export default function Home() {
                     </div>
 
                     <div className="settings-control-description">
-                      Select your preferred English voice for ASTRA
+                      Select your preferred English voice for {assistantName}
                     </div>
                   </div>
                 </div>
@@ -1965,7 +1962,7 @@ export default function Home() {
                   type="text"
                   value={assistantName}
                   onChange={(event) => setAssistantName(event.target.value)}
-                  placeholder="ASTRA"
+                  placeholder={assistantName || "Assistant"}
                 />
               </label>
 

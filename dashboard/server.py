@@ -48,6 +48,11 @@ from typing import Callable, Optional
 import json
 
 from core.runtime import handle_priority
+from config.settings import (
+    get_assistant_display_name,
+    get_assistant_name_lower,
+    set_assistant_name,
+)
 
 from hud.integration import HUDIntegration
 from hud.bus import hud_bus
@@ -145,7 +150,7 @@ def create_desktop_shortcut() -> str:
         desktop_entry = (
             f"[Desktop Entry]\n"
             f"Type=Application\n"
-            f"Name=ASTRA\n"
+            f"Name={get_assistant_display_name()}\n"
             f"Exec={pythonw_executable} \"{target_script}\"\n"
             f"Path={project_dir}\n"
             f"Terminal=false\n"
@@ -405,8 +410,16 @@ def _read_static(
         / filename
     )
 
-    return path.read_text(
+    content = path.read_text(
         encoding="utf-8"
+    )
+
+    # Static dashboard pages use explicit identity placeholders so protocol
+    # and storage identifiers remain literal and unchanged.
+    return (
+        content
+        .replace("__ASSISTANT_NAME__", get_assistant_display_name())
+        .replace("__ASSISTANT_NAME_LOWER__", get_assistant_name_lower())
     )
 
 
@@ -1231,7 +1244,7 @@ class DashboardServer:
             )
 
             HUDIntegration.system_activity(
-                "ASTRA dispatcher is not connected."
+                f"{get_assistant_display_name()} dispatcher is not connected."
             )
 
             return
@@ -1401,7 +1414,7 @@ class DashboardServer:
         async def login_page():
 
             return HTMLResponse(
-                self._login_html
+                _read_static("login.html")
             )
 
         # =====================================================
@@ -1415,7 +1428,7 @@ class DashboardServer:
         async def index():
 
             html = (
-                self._app_html
+                _read_static("app.html")
                 .replace(
                     "__IP__",
                     self.ip,
@@ -1689,6 +1702,8 @@ class DashboardServer:
 
             return {
                 "ok": True,
+
+                "assistant_name": get_assistant_display_name(),
 
                 "url": self.url(),
 
@@ -2276,7 +2291,7 @@ class DashboardServer:
                 if not settings_file.exists():
                     return {
                         "ok": True,
-                        "assistantName": "",
+                        "assistantName": get_assistant_display_name(),
                         "userName": "",
                         "assistantColour": "",
                     }
@@ -2286,7 +2301,7 @@ class DashboardServer:
 
                 return {
                     "ok": True,
-                    "assistantName": settings.get("assistantName", ""),
+                    "assistantName": get_assistant_display_name(),
                     "userName": settings.get("userName", ""),
                     "assistantColour": settings.get("assistantColour", ""),
                 }
@@ -2329,7 +2344,9 @@ class DashboardServer:
                         settings = {}
 
                 if "assistantName" in body and body["assistantName"]:
-                    settings["assistantName"] = str(body["assistantName"]).strip()
+                    settings["assistantName"] = set_assistant_name(
+                        body["assistantName"]
+                    )
                 if "userName" in body:
                     settings["userName"] = str(body["userName"]).strip()
                 if "assistantColour" in body and body["assistantColour"]:
@@ -3027,7 +3044,7 @@ class DashboardServer:
             return {
                 "ok": True,
                 "message": (
-                    "Command sent to ASTRA."
+                    f"Command sent to {get_assistant_display_name()}."
                 ),
             }
 
@@ -3059,7 +3076,7 @@ class DashboardServer:
             threading.Thread(
                 target=self._run_command,
                 args=(
-                    "hey astra",
+                    f"hey {get_assistant_name_lower()}",
                 ),
                 daemon=True,
                 name=(

@@ -2,12 +2,13 @@ import sys
 
 from voice.manager import speak
 from core.context import set_value
+from config.settings import get_assistant_display_name
 
 
 def sleep():
 
     speak(
-        "Entering sleep mode. Say ASTRA to wake me."
+        f"Entering sleep mode. Say {get_assistant_display_name()} to wake me."
     )
 
     set_value(

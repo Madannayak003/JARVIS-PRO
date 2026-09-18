@@ -21,12 +21,13 @@ import threading
 import urllib.request
 
 import webview
+from config.settings import get_assistant_display_name
 
 
 HUD_URL = "http://127.0.0.1:3000"
 
 
-WINDOW_TITLE = "ASTRA"
+WINDOW_TITLE = get_assistant_display_name()
 
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
@@ -90,7 +91,7 @@ LOADING_HTML = """
 
 <meta charset="UTF-8">
 
-<title>ASTRA</title>
+<title>__ASSISTANT_DISPLAY_NAME__</title>
 
 <style>
 
@@ -183,7 +184,7 @@ body {
 <div class="loading">
 
     <div class="title">
-        ASTRA
+        __ASSISTANT_DISPLAY_NAME__
     </div>
 
     <div class="status">
@@ -318,7 +319,7 @@ def request_jarvis_shutdown():
 
     print(
         "[DESKTOP HUD] "
-        "Requesting ASTRA shutdown..."
+        f"Requesting {get_assistant_display_name()} shutdown..."
     )
 
     try:
@@ -335,7 +336,7 @@ def request_jarvis_shutdown():
 
         print(
             "[DESKTOP HUD] "
-            "ASTRA shutdown requested."
+            f"{get_assistant_display_name()} shutdown requested."
         )
 
     except Exception as error:
@@ -366,7 +367,7 @@ def close_native_window():
 
         print(
             "[DESKTOP HUD] "
-            "Closing native ASTRA window..."
+            f"Closing native {get_assistant_display_name()} window..."
         )
 
         window.destroy()
@@ -407,7 +408,7 @@ def run():
 
     print(
         "[DESKTOP HUD] "
-        "Creating native ASTRA window..."
+        f"Creating native {get_assistant_display_name()} window..."
     )
 
 
@@ -415,7 +416,10 @@ def run():
 
         WINDOW_TITLE,
 
-        html=LOADING_HTML,
+        html=LOADING_HTML.replace(
+            "__ASSISTANT_DISPLAY_NAME__",
+            get_assistant_display_name(),
+        ),
 
         js_api=_WindowApi(),
 
@@ -450,7 +454,7 @@ def run():
 
     print(
         "[DESKTOP HUD] "
-        "Native ASTRA window created."
+        f"Native {get_assistant_display_name()} window created."
     )
 
 

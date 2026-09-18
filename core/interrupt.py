@@ -23,6 +23,15 @@ def interrupt():
 
     task_manager.stop_all()
 
+    # Stop cancels the active clarification question as well as speech and
+    # tasks. Conversation history and unrelated memory remain untouched.
+    try:
+        from brain.conversation_coordinator import conversation_coordinator
+
+        conversation_coordinator.cancel_clarification()
+    except Exception as error:
+        print(f"[INTERRUPT] Clarification reset failed safely: {error}")
+
     time.sleep(0.1)
 
     print("[INTERRUPT COMPLETE]")

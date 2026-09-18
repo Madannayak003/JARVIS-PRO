@@ -1,5 +1,7 @@
 import re
 
+from core.assistant_name import get_assistant_aliases
+
 SYSTEM = {
 
     # ---------------------------------------------------------
@@ -22,23 +24,11 @@ SYSTEM = {
         "action": "terminate_jarvis"
     },
 
-    "close astra": {
-        "action": "terminate_jarvis"
-    },
-
     "exit jarvis": {
         "action": "terminate_jarvis"
     },
 
-    "exit astra": {
-        "action": "terminate_jarvis"
-    },
-
     "quit jarvis": {
-        "action": "terminate_jarvis"
-    },
-
-    "quit astra": {
         "action": "terminate_jarvis"
     },
 
@@ -153,6 +143,14 @@ SYSTEM = {
 def system_route(command):
 
     command = command.lower().strip()
+
+    assistant_shutdown_commands = {
+        f"{prefix} {alias}"
+        for prefix in ("close", "exit", "quit")
+        for alias in get_assistant_aliases()
+    }
+    if command in assistant_shutdown_commands:
+        return [{"action": "terminate_jarvis"}]
 
     # ---------- Lock ----------
 

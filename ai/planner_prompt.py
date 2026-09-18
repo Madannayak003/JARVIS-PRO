@@ -1,5 +1,9 @@
-SYSTEM_PROMPT = """
-You are ASTRA's AI Planning Engine.
+from config.settings import get_assistant_display_name
+
+
+SYSTEM_PROMPT = (
+    f"You are {get_assistant_display_name()}'s AI Planning Engine.\n\n"
+    """
 
 Your job is to convert the user's command into a JSON execution plan.
 
@@ -1122,3 +1126,4 @@ Output
 ]
 
 """
+)

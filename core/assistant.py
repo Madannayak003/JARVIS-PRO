@@ -3,8 +3,6 @@ from pathlib import Path
 import json
 
 from voice.manager import speak, stop_speaking
-from config.settings import WAKE_WORDS
-
 from core.confirmation import waiting
 from core.confirmation import get
 from core.confirmation import clear
@@ -53,7 +51,7 @@ from core.busy_manager import (
 from ai.intent import detect
 from core.fast_router import fast_route
 from core.assistant_name import (
-    CANONICAL_ASSISTANT_NAME,
+    get_assistant_name_lower,
     normalize_assistant_invocation,
 )
 
@@ -490,17 +488,31 @@ def run():
 
         if invocation:
 
-            if invocation.alias != CANONICAL_ASSISTANT_NAME:
+            # The microphone path strips the invocation before dispatching.
+            # Cancel any stale clarification here so the fresh invocation is
+            # not later mistaken for its answer.
+            try:
+                from brain.conversation_coordinator import conversation_coordinator
+
+                if conversation_coordinator.clarification.is_waiting():
+                    conversation_coordinator.cancel_clarification()
+            except Exception as error:
+                print(
+                    "[ASSISTANT NAME] Clarification reset failed safely: "
+                    f"{error}"
+                )
+
+            if invocation.alias != get_assistant_name_lower():
 
                 print(
                     "[ASSISTANT NAME] "
                     f"Normalized alias: {invocation.alias} "
-                    f"-> {CANONICAL_ASSISTANT_NAME}"
+                    f"-> {get_assistant_name_lower()}"
                 )
 
             routed_query = (
                 invocation.command
-                or "hey astra"
+                or "hey"
             )
 
             fast_plan = fast_route(
@@ -750,10 +762,7 @@ def run():
 
         if power_state == "sleep":
 
-            if any(
-                query.startswith(word)
-                for word in WAKE_WORDS
-            ):
+            if normalize_assistant_invocation(query):
 
                 wake()
 
@@ -800,57 +809,6 @@ def run():
             "user",
             query
         )
-
-        # =====================================================
-        # WAKE WORDS
-        # =====================================================
-
-        if any(
-            query.startswith(word)
-            for word in WAKE_WORDS
-        ):
-
-            remaining = query
-
-            for word in WAKE_WORDS:
-
-                if remaining.startswith(word):
-
-                    remaining = (
-                        remaining
-                        .replace(
-                            word,
-                            "",
-                            1,
-                        )
-                        .strip()
-                    )
-
-                    break
-
-            if remaining == "":
-
-                if power_state == "sleep":
-
-                    wake()
-
-                else:
-
-                    speak(
-                        "Yes Sir."
-                    )
-
-                continue
-
-            speak(
-                "Yes Sir."
-            )
-
-            dispatch(
-                remaining
-            )
-
-            continue
 
         # =====================================================
         # NORMAL DISPATCH

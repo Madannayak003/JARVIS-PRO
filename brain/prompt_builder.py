@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import List
 
+from config.settings import get_assistant_display_name
 from .context_types import AIContext
 
 
@@ -18,8 +19,8 @@ class PromptBuilder:
 
     def __init__(self):
 
-        self.system_prompt = """
-You are ASTRA.
+        self.system_prompt = f"""
+You are {get_assistant_display_name()}.
 
 You are an intelligent AI assistant designed to help the user with coding,
 automation, planning, research, electronics, IoT, robotics and productivity.
@@ -223,7 +224,7 @@ Analyzed At:
         """
         Add the result of Natural Conversation Intelligence.
 
-        This section tells the LLM what ASTRA understood
+        This section tells the LLM what {get_assistant_display_name()} understood
         about the user's request.
 
         It does NOT execute actions.

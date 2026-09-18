@@ -2,9 +2,106 @@
 # JARVIS PRO SETTINGS
 # ===========================
 
+import json
+from pathlib import Path
+
 from config.environment import get_env
 
-APP_NAME = "ASTRA"
+
+# APP_NAME is the authoritative user-facing assistant identity. The existing
+# Customize Assistant value is loaded into this same setting when the source
+# is still using the built-in default.
+APP_NAME = "JARVIS PRO"
+
+# This marker identifies the built-in fallback only; it is not another active
+# assistant-name setting.
+_BUILT_IN_APP_NAME = "JARVIS PRO"
+_ASSISTANT_SETTINGS_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "data"
+    / "settings"
+    / "jarvis_settings.json"
+)
+
+
+def _persisted_assistant_name() -> str | None:
+    try:
+        with _ASSISTANT_SETTINGS_FILE.open("r", encoding="utf-8") as file:
+            value = json.load(file).get("assistantName", "")
+    except (OSError, TypeError, ValueError, AttributeError):
+        return None
+
+    if not isinstance(value, str):
+        return None
+
+    value = " ".join(value.strip().split())
+    return value or None
+
+
+if APP_NAME.casefold() == _BUILT_IN_APP_NAME.casefold():
+    APP_NAME = _persisted_assistant_name() or APP_NAME
+
+
+# These are deliberately explicit pronunciation and compatibility aliases.
+# Do not expand them fuzzily from the configured name.
+PRONUNCIATION_ALIASES = ("astra", "ashtra")
+LEGACY_ASSISTANT_ALIASES = ("jarvis",)
+
+
+def get_assistant_name() -> str:
+    """Return the configured user-facing assistant name."""
+
+    return APP_NAME
+
+
+def get_assistant_name_lower() -> str:
+    """Return the configured name in its normalized internal form."""
+
+    return get_assistant_name().casefold()
+
+
+def get_assistant_display_name() -> str:
+    """Return a natural display form while preserving intentional casing."""
+
+    name = get_assistant_name().strip()
+    return name.title() if name.islower() else name
+
+
+def get_assistant_aliases() -> tuple[str, ...]:
+    """Return the configured name plus explicit pronunciation/legacy aliases."""
+
+    aliases = (
+        get_assistant_name_lower(),
+        *(alias.casefold() for alias in PRONUNCIATION_ALIASES),
+        *(alias.casefold() for alias in LEGACY_ASSISTANT_ALIASES),
+    )
+    return tuple(dict.fromkeys(alias for alias in aliases if alias))
+
+
+def get_wake_words() -> tuple[str, ...]:
+    """Build the deterministic wake-word set from the central identity."""
+
+    words = []
+    for alias in get_assistant_aliases():
+        words.extend((alias, f"hey {alias}", f"hello {alias}"))
+    return tuple(dict.fromkeys(words))
+
+
+WAKE_WORDS = list(get_wake_words())
+
+
+def set_assistant_name(name: str) -> str:
+    """Update APP_NAME for the running process after a saved customization."""
+
+    global APP_NAME
+
+    normalized = " ".join(str(name).strip().split())
+    if not normalized:
+        raise ValueError("Assistant name cannot be empty.")
+
+    APP_NAME = normalized
+    WAKE_WORDS[:] = get_wake_words()
+    return APP_NAME
 
 VERSION = "1.0"
 
@@ -15,19 +112,6 @@ VOICE = "male"
 LANGUAGE = "en"
 
 DEBUG = True
-
-WAKE_WORDS = [
-    "astra",
-    "hey astra",
-    "hello astra",
-    "ashtra",
-    "hey ashtra",
-    "hello ashtra",
-    # Legacy aliases retained for backward compatibility.
-    "jarvis",
-    "hey jarvis",
-    "hello jarvis"
-]
 
 # ===========================
 # AI

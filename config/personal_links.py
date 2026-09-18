@@ -10,6 +10,7 @@ No routing or browser logic belongs here.
 """
 
 from config.environment import get_env
+from config.settings import get_assistant_display_name
 from urllib.parse import urlparse
 
 # =========================================================
@@ -76,8 +77,8 @@ PERSONAL_LINK_NAMES = {
     "iot": "IoT",
     "iot_website": "IoT Website",
     "iotrix_lab": "IoTrix Lab",
-    "jarvis_github": "ASTRA GitHub",
-    "jarvis_repository": "ASTRA Repository",
+    "jarvis_github": f"{get_assistant_display_name()} GitHub",
+    "jarvis_repository": f"{get_assistant_display_name()} Repository",
     "smart_parking": "Smart Parking",
     "atmers": "ATMERS",
 }

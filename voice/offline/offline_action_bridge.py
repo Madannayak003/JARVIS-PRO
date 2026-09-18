@@ -15,6 +15,7 @@ from enum import Enum
 from core.executor import execute_ai_plan
 from core.fast_router import fast_route
 from core.skill_categories import action_requires_network
+from config.settings import get_assistant_aliases, get_assistant_display_name
 
 
 class OfflineRoute(str, Enum):
@@ -47,10 +48,8 @@ class OfflineActionBridge:
     }
 
     HUD_STATUS_COMMANDS = {
-        "open astra hud",
-        "open the astra hud",
-        "open jarvis hud",
-        "open the jarvis hud",
+        *(f"open {alias} hud" for alias in get_assistant_aliases()),
+        *(f"open the {alias} hud" for alias in get_assistant_aliases()),
         "open pywebview",
         "open the pywebview window",
     }
@@ -76,7 +75,9 @@ class OfflineActionBridge:
         if text in self.HUD_STATUS_COMMANDS:
             return OfflineDispatchResult(
                 route=OfflineRoute.LOCAL_ACTION,
-                message="The ASTRA HUD is already open.",
+                message=(
+                    f"The {get_assistant_display_name()} HUD is already open."
+                ),
             )
 
         plan = self.LOCAL_COMMAND_PLANS.get(text)

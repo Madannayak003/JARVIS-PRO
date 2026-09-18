@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no"
     >
 
-    <title>ASTRA — Remote</title>
+    <title>__ASSISTANT_NAME__ — Remote</title>
 
     <style>
 
@@ -534,7 +534,7 @@
             <div>
 
                 <div class="brand-name">
-                    ASTRA
+                    __ASSISTANT_NAME__
                 </div>
 
                 <div class="brand-sub">
@@ -575,7 +575,7 @@
             class="status-value"
             id="statusValue"
         >
-            Connecting to ASTRA...
+            Connecting to __ASSISTANT_NAME__...
         </span>
 
     </div>
@@ -596,10 +596,10 @@
         >
 
             <strong>
-                ASTRA Remote
+                __ASSISTANT_NAME__ Remote
             </strong>
 
-            Connected to your ASTRA system.
+            Connected to your __ASSISTANT_NAME__ system.
 
             <br>
 
@@ -625,7 +625,7 @@
                 autocomplete="off"
                 autocorrect="off"
                 spellcheck="false"
-                placeholder="Command ASTRA..."
+                placeholder="Command __ASSISTANT_NAME__..."
             >
 
             <button
@@ -647,7 +647,7 @@
 
             <button
                 class="quick"
-                data-command="hey astra"
+                data-command="hey __ASSISTANT_NAME_LOWER__"
             >
                 Wake
             </button>
@@ -1133,9 +1133,9 @@ function handleMessage(
 
         statusValue.textContent =
             message.state
-                ? "ASTRA: "
+                ? "__ASSISTANT_NAME__: "
                   + message.state
-                : "ASTRA online.";
+                : "__ASSISTANT_NAME__ online.";
 
         return;
 
@@ -1148,7 +1148,7 @@ function handleMessage(
 
         addMessage(
             "system",
-            "ASTRA wake requested."
+            "__ASSISTANT_NAME__ wake requested."
         );
 
         return;
@@ -1249,7 +1249,7 @@ function addMessage(
     } else {
 
         label.textContent =
-            "ASTRA";
+            "__ASSISTANT_NAME__";
 
     }
 
