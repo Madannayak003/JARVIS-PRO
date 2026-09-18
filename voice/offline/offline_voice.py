@@ -50,7 +50,7 @@ def print_banner():
 
     print()
     print("==========================================")
-    print("       JARVIS OFFLINE VOICE MODE")
+    print("       ASTRA OFFLINE VOICE MODE")
     print("==========================================")
     print("[OFFLINE VOICE] STT  : Faster-Whisper")
     print("[OFFLINE VOICE] AI   : Ollama")
@@ -152,7 +152,7 @@ def run():
 
             print()
             print(
-                "[OFFLINE VOICE] JARVIS:",
+                "[OFFLINE VOICE] ASTRA:",
                 response
             )
 

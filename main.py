@@ -159,7 +159,7 @@ def run_voice_engine():
         print("[MAIN] Core ready. Starting voice engine...")
         from voice.online_runner import run
 
-        print("[MAIN] Online JARVIS voice engine started.")
+        print("[MAIN] Online ASTRA voice engine started.")
         run()
 
     except Exception as error:
@@ -228,7 +228,7 @@ def request_jarvis_shutdown():
         _shutdown_started = True
 
     print()
-    print("[MAIN] Complete JARVIS shutdown requested.")
+    print("[MAIN] Complete ASTRA shutdown requested.")
     _shutdown_event.set()
 
     # 1. Stop microphone listener
@@ -263,7 +263,7 @@ def start_native_hud():
     if not wait_for_web_hud():
         return False
 
-    print("[MAIN HUD] Opening JARVIS desktop window...")
+    print("[MAIN HUD] Opening ASTRA desktop window...")
 
     try:
         from hud.desktop_window import run
@@ -353,7 +353,7 @@ def main():
         print(f"[MAIN HUD] Voice mode sent to HUD: {mode}")
 
         if mode == "offline":
-            print("[MAIN] Starting shared JARVIS runtime in offline mode...")
+            print("[MAIN] Starting shared ASTRA runtime in offline mode...")
 
             # Keep shared local skills on Piper and prevent voice.manager's
             # import-time online probe from running during core loading.
@@ -416,7 +416,7 @@ def main():
 
             start_offline_voice_engine()
 
-            print("[MAIN HUD] Starting native JARVIS HUD...")
+            print("[MAIN HUD] Starting native ASTRA HUD...")
             start_native_hud()
             print("[MAIN] Native HUD closed.")
             request_jarvis_shutdown()
@@ -427,7 +427,7 @@ def main():
             return 0
 
         os.environ.pop("JARVIS_OFFLINE_MODE", None)
-        print("[MAIN] Starting existing online JARVIS...")
+        print("[MAIN] Starting existing online ASTRA...")
 
         core_thread = threading.Thread(
             target=initialize_core_background,
@@ -474,13 +474,13 @@ def main():
         remote_server.new_pairing_pin()
 
         if remote_server.start():
-            print(f"[REMOTE] JARVIS Dashboard: {remote_server.url()}")
+            print(f"[REMOTE] ASTRA Dashboard: {remote_server.url()}")
             print(f"[REMOTE] Pairing PIN: {remote_server._pin}")
             print("[REMOTE] Dashboard Live stop control: READY")
 
         start_voice_engine()
 
-        print("[MAIN HUD] Starting native JARVIS HUD...")
+        print("[MAIN HUD] Starting native ASTRA HUD...")
         start_native_hud()
 
         print("[MAIN] Native HUD closed.")
@@ -498,7 +498,7 @@ def main():
         return 0
 
     finally:
-        print("[MAIN] Cleaning up JARVIS...")
+        print("[MAIN] Cleaning up ASTRA...")
 
         try:
             from core.listener import stop_listener
@@ -513,7 +513,7 @@ def main():
 
         stop_web_hud()
 
-        print("[MAIN] JARVIS shutdown complete.")
+        print("[MAIN] ASTRA shutdown complete.")
         # Instantly releases terminal prompt without socket/thread hanging
         os._exit(0)
 

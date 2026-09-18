@@ -93,6 +93,14 @@ class FaceSpeechTests(unittest.TestCase):
         self.assertTrue(state.should_speak(madan))
         self.assertTrue(state.should_speak(rahul))
 
+    def test_new_vision_session_can_announce_same_person_again(self):
+        state = VisionSpeechState(cooldown=60, clock=lambda: 100.0)
+        madan = [{"label": "person", "recognized": True, "name": "Madan"}]
+        self.assertTrue(state.should_speak(madan))
+        self.assertFalse(state.should_speak(madan))
+        state.reset()
+        self.assertTrue(state.should_speak(madan))
+
 
 class VisionIntegrationTests(unittest.TestCase):
     def test_registration_commands_are_deterministic(self):
@@ -110,6 +118,116 @@ class VisionIntegrationTests(unittest.TestCase):
             {"label": "bottle", "confidence": 0.9, "box": [0, 0, 100, 100]}
         ], 640, 480)
         self.assertIn("bottle", scene["description"])
+
+    def test_person_only_scene_is_described(self):
+        scene = SceneAnalyzer().analyze([
+            {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]}
+        ], 640, 480)
+        self.assertIn("person", scene["description"])
+
+    def test_person_and_bottle_are_both_retained_and_described(self):
+        scene = SceneAnalyzer().analyze([
+            {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]},
+            {"label": "bottle", "confidence": 0.9, "box": [120, 0, 180, 160]},
+        ], 640, 480)
+        self.assertEqual(
+            [item["label"] for item in scene["objects"]],
+            ["person", "bottle"],
+        )
+        self.assertIn("person", scene["description"])
+        self.assertIn("bottle", scene["description"])
+
+    def test_bottle_without_person_is_preserved(self):
+        scene = SceneAnalyzer().analyze([
+            {"label": "bottle", "confidence": 0.9, "box": [0, 0, 100, 160]}
+        ], 640, 480)
+        self.assertEqual(scene["counts"], {"bottle": 1})
+        self.assertIn("bottle", scene["description"])
+
+    def test_person_bottle_and_laptop_are_all_retained(self):
+        scene = SceneAnalyzer().analyze([
+            {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]},
+            {"label": "bottle", "confidence": 0.9, "box": [120, 0, 180, 160]},
+            {"label": "laptop", "confidence": 0.9, "box": [200, 0, 360, 130]},
+        ], 640, 480)
+        self.assertEqual(
+            set(scene["counts"]),
+            {"person", "bottle", "laptop"},
+        )
+        for label in ("person", "bottle", "laptop"):
+            self.assertIn(label, scene["description"])
+
+    def test_face_enrichment_keeps_registered_person_and_bottle(self):
+        recognizer = FaceRecognizer(FaceRegistry(Path(tempfile.mkdtemp())))
+        recognizer.analyze_frame = lambda frame, detections=None: [{
+            "type": "face",
+            "name": "Madan",
+            "recognized": True,
+            "confidence": 0.95,
+            "box": [10, 0, 90, 80],
+        }]
+        detections = [
+            {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]},
+            {"label": "bottle", "confidence": 0.9, "box": [120, 0, 180, 160]},
+        ]
+        enriched = recognizer.enrich_detections(object(), detections)
+        self.assertEqual(
+            [item["label"] for item in enriched],
+            ["person", "bottle"],
+        )
+        self.assertEqual(enriched[0]["name"], "Madan")
+        scene = SceneAnalyzer().analyze(enriched, 640, 480)
+        self.assertIn("Madan", scene["description"])
+        self.assertIn("bottle", scene["description"])
+
+    def test_unknown_person_and_bottle_are_both_preserved(self):
+        recognizer = FaceRecognizer(FaceRegistry(Path(tempfile.mkdtemp())))
+        recognizer.analyze_frame = lambda frame, detections=None: [{
+            "type": "face",
+            "name": None,
+            "recognized": False,
+            "confidence": 0.0,
+            "box": [10, 0, 90, 80],
+        }]
+        detections = [
+            {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]},
+            {"label": "bottle", "confidence": 0.9, "box": [120, 0, 180, 160]},
+        ]
+        enriched = recognizer.enrich_detections(object(), detections)
+        scene = SceneAnalyzer().analyze(enriched, 640, 480)
+        self.assertEqual(set(scene["counts"]), {"person", "bottle"})
+        self.assertIn("bottle", scene["description"])
+
+    def test_deleted_face_does_not_remove_bottle_detection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            registry = FaceRegistry(Path(directory))
+            registry.ensure_identity("Madan")
+            self.assertTrue(registry.delete_identity("Madan"))
+
+            recognizer = FaceRecognizer(registry)
+            recognizer.analyze_frame = lambda frame, detections=None: [{
+                "type": "face",
+                "name": None,
+                "recognized": False,
+                "confidence": 0.0,
+                "box": [10, 0, 90, 80],
+            }]
+            detections = [
+                {"label": "person", "confidence": 0.9, "box": [0, 0, 100, 200]},
+                {"label": "bottle", "confidence": 0.9, "box": [120, 0, 180, 160]},
+            ]
+            enriched = recognizer.enrich_detections(object(), detections)
+            self.assertEqual(
+                [item["label"] for item in enriched],
+                ["person", "bottle"],
+            )
+
+    def test_multiple_objects_without_face_are_preserved(self):
+        scene = SceneAnalyzer().analyze([
+            {"label": "bottle", "confidence": 0.9, "box": [0, 0, 100, 160]},
+            {"label": "cup", "confidence": 0.9, "box": [120, 0, 180, 120]},
+        ], 640, 480)
+        self.assertEqual(set(scene["counts"]), {"bottle", "cup"})
 
     def test_registration_cancellation_and_camera_failure_are_safe(self):
         class Camera:

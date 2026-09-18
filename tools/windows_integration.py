@@ -40,7 +40,7 @@ MAIN_PY = (
 )
 
 
-SHORTCUT_NAME = "JARVIS PRO.lnk"
+SHORTCUT_NAME = "ASTRA.lnk"
 
 
 # =============================================================
@@ -132,7 +132,7 @@ def create_desktop_shortcut() -> str:
     if not MAIN_PY.is_file():
 
         raise FileNotFoundError(
-            f"JARVIS main.py was not found: {MAIN_PY}"
+            f"ASTRA main.py was not found: {MAIN_PY}"
         )
 
     desktop = (
@@ -167,7 +167,7 @@ $Shortcut.Arguments = $env:JARVIS_MAIN
 
 $Shortcut.WorkingDirectory = $env:JARVIS_ROOT
 
-$Shortcut.Description = "JARVIS PRO"
+$Shortcut.Description = "ASTRA"
 
 $Shortcut.IconLocation = "$env:JARVIS_PYTHON,0"
 
@@ -337,17 +337,17 @@ def set_autostart(
             shortcut_path.unlink()
 
             print(
-                "[WINDOWS] JARVIS auto-start disabled."
+                "[WINDOWS] ASTRA auto-start disabled."
             )
 
         else:
 
             print(
-                "[WINDOWS] JARVIS auto-start was already disabled."
+                "[WINDOWS] ASTRA auto-start was already disabled."
             )
 
         return (
-            "JARVIS auto-start disabled."
+            "ASTRA auto-start disabled."
         )
 
     # ---------------------------------------------------------
@@ -357,7 +357,7 @@ def set_autostart(
     if not MAIN_PY.is_file():
 
         raise FileNotFoundError(
-            f"JARVIS main.py was not found: {MAIN_PY}"
+            f"ASTRA main.py was not found: {MAIN_PY}"
         )
 
     python_exe = (
@@ -377,7 +377,7 @@ $Shortcut.Arguments = $env:JARVIS_MAIN
 
 $Shortcut.WorkingDirectory = $env:JARVIS_ROOT
 
-$Shortcut.Description = "JARVIS PRO Auto Start"
+$Shortcut.Description = "ASTRA Auto Start"
 
 $Shortcut.IconLocation = "$env:JARVIS_PYTHON,0"
 
@@ -440,9 +440,9 @@ $Shortcut.Save()
         )
 
     print(
-        "[WINDOWS] JARVIS auto-start enabled."
+        "[WINDOWS] ASTRA auto-start enabled."
     )
 
     return (
-        "JARVIS auto-start enabled."
+        "ASTRA auto-start enabled."
     )

@@ -22,11 +22,23 @@ SYSTEM = {
         "action": "terminate_jarvis"
     },
 
+    "close astra": {
+        "action": "terminate_jarvis"
+    },
+
     "exit jarvis": {
         "action": "terminate_jarvis"
     },
 
+    "exit astra": {
+        "action": "terminate_jarvis"
+    },
+
     "quit jarvis": {
+        "action": "terminate_jarvis"
+    },
+
+    "quit astra": {
         "action": "terminate_jarvis"
     },
 

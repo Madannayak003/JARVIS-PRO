@@ -642,6 +642,16 @@ class ConversationCoordinator:
         if not self.clarification.is_waiting():
             return None
 
+        if user_input is None or not str(user_input).strip():
+
+            self.clarification.clear()
+            self.context.clear_pending()
+            self.context.set_user_input("")
+
+            return {
+                "status": "empty",
+            }
+
         if self._is_explicit_new_request(user_input):
             return {"status": "new_request"}
 

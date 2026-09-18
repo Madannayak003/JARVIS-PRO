@@ -474,7 +474,7 @@ class _BridgeHandler(
                 {
                     "ok": True,
                     "message":
-                        "JARVIS shutdown requested.",
+                        "ASTRA shutdown requested.",
                 }
             )
 

@@ -114,7 +114,7 @@ def run():
 
     print()
     print("==========================================")
-    print("       JARVIS OFFLINE VOICE MODE")
+    print("       ASTRA OFFLINE VOICE MODE")
     print("==========================================")
     print("[OFFLINE VOICE] STT  : Faster-Whisper")
     print("[OFFLINE VOICE] AI   : Ollama")
@@ -144,7 +144,7 @@ def run():
     print(f"[OFFLINE] STT {'ready' if stt_ready else 'unavailable'}")
     print(f"[OFFLINE] Piper {'ready' if piper_ready else 'unavailable'}")
     print("[OFFLINE] Action layer ready")
-    print("[OFFLINE] JARVIS ready")
+    print("[OFFLINE] ASTRA ready")
 
     # Reuse the normal Greeting Engine. Passing offline Piper explicitly
     # keeps startup independent from Gemini/OpenAI and voice.manager.

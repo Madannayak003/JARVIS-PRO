@@ -12,9 +12,17 @@ def greeting_route(command):
         "hi jarvis",
         "hey jarvis",
 
+        "hello astra",
+        "hi astra",
+        "hey astra",
+
         "jarvis hello",
         "jarvis hi",
         "jarvis hey",
+
+        "astra hello",
+        "astra hi",
+        "astra hey",
 
         "good morning",
         "good afternoon",
@@ -24,12 +32,21 @@ def greeting_route(command):
         "good afternoon jarvis",
         "good evening jarvis",
 
+        "good morning astra",
+        "good afternoon astra",
+        "good evening astra",
+
         "jarvis good morning",
         "jarvis good afternoon",
         "jarvis good evening",
 
+        "astra good morning",
+        "astra good afternoon",
+        "astra good evening",
+
         "good to see you",
-        "good to see you jarvis"
+        "good to see you jarvis",
+        "good to see you astra"
 
     ]:
 
@@ -42,7 +59,9 @@ def greeting_route(command):
 
         "how are you",
         "how are you jarvis",
-        "jarvis how are you"
+        "jarvis how are you",
+        "how are you astra",
+        "astra how are you"
 
     ]:
 
@@ -58,8 +77,14 @@ def greeting_route(command):
         "thanks jarvis",
         "thank you jarvis",
 
+        "thanks astra",
+        "thank you astra",
+
         "jarvis thanks",
-        "jarvis thank you"
+        "jarvis thank you",
+
+        "astra thanks",
+        "astra thank you"
 
     ]:
 
@@ -77,8 +102,15 @@ def greeting_route(command):
         "goodbye jarvis",
         "see you jarvis",
 
+        "bye astra",
+        "goodbye astra",
+        "see you astra",
+
         "jarvis bye",
-        "jarvis goodbye"
+        "jarvis goodbye",
+
+        "astra bye",
+        "astra goodbye"
 
     ]:
 

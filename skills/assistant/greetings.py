@@ -257,7 +257,7 @@ def speak_startup_greeting(speaker=None, profile=None, now=None) -> bool:
             greeting = startup_greeting(now=now, profile=profile)
         except Exception as error:
             print(f"[GREETING] Startup fallback engaged: {error}")
-            greeting = "Hello. JARVIS is ready when you are."
+            greeting = "Hello. ASTRA is ready when you are."
 
     try:
         (speaker or _get_speaker())(greeting)

@@ -90,5 +90,12 @@ class VisionSpeechState:
         self._last_spoken = now
         return True
 
+    def reset(self) -> None:
+        """Forget the previous scene when a Vision session ends."""
+
+        self._signature = None
+        self._last_nonempty_signature = None
+        self._last_spoken = 0.0
+
 
 vision_speech_state = VisionSpeechState()

@@ -72,7 +72,7 @@ def resolve_browser_executable(settings: BrowserSettings) -> Path:
             return Path(found).resolve()
 
     raise BrowserExecutableNotFoundError(
-        "JARVIS Browser could not find a supported Chrome/Chromium browser. "
+        "ASTRA Browser could not find a supported Chrome/Chromium browser. "
         "Install Google Chrome, Microsoft Edge, or Chromium, or configure "
         "JARVIS_BROWSER_EXECUTABLE."
     )

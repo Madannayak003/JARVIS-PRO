@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no"
     >
 
-    <title>JARVIS — Remote</title>
+    <title>ASTRA — Remote</title>
 
     <style>
 
@@ -534,7 +534,7 @@
             <div>
 
                 <div class="brand-name">
-                    JARVIS
+                    ASTRA
                 </div>
 
                 <div class="brand-sub">
@@ -575,7 +575,7 @@
             class="status-value"
             id="statusValue"
         >
-            Connecting to JARVIS...
+            Connecting to ASTRA...
         </span>
 
     </div>
@@ -596,10 +596,10 @@
         >
 
             <strong>
-                JARVIS Remote
+                ASTRA Remote
             </strong>
 
-            Connected to your JARVIS PRO system.
+            Connected to your ASTRA system.
 
             <br>
 
@@ -625,7 +625,7 @@
                 autocomplete="off"
                 autocorrect="off"
                 spellcheck="false"
-                placeholder="Command JARVIS..."
+                placeholder="Command ASTRA..."
             >
 
             <button
@@ -647,7 +647,7 @@
 
             <button
                 class="quick"
-                data-command="hey jarvis"
+                data-command="hey astra"
             >
                 Wake
             </button>
@@ -1133,9 +1133,9 @@ function handleMessage(
 
         statusValue.textContent =
             message.state
-                ? "JARVIS: "
+                ? "ASTRA: "
                   + message.state
-                : "JARVIS online.";
+                : "ASTRA online.";
 
         return;
 
@@ -1148,7 +1148,7 @@ function handleMessage(
 
         addMessage(
             "system",
-            "JARVIS wake requested."
+            "ASTRA wake requested."
         );
 
         return;
@@ -1249,7 +1249,7 @@ function addMessage(
     } else {
 
         label.textContent =
-            "JARVIS";
+            "ASTRA";
 
     }
 

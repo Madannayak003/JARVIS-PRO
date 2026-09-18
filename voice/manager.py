@@ -48,6 +48,16 @@ def _clean_tts_text(text):
 
     text = str(text)
 
+    # Keep the official display name as ASTRA everywhere user-facing, but
+    # give TTS a normal word form so it is spoken as "Astra", not as the
+    # individual letters A-S-T-R-A.
+    text = re.sub(
+        r"\bASTRA\b",
+        "Astra",
+        text,
+        flags=re.IGNORECASE,
+    )
+
     # Markdown links:
     # [Google](https://google.com) -> Google
     text = re.sub(

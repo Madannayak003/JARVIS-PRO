@@ -271,7 +271,7 @@ class BrowserController:
             endpoint = self.runtime.ensure_running()
 
             print(
-                "[Browser] Starting JARVIS Browser..."
+                "[Browser] Starting ASTRA Browser..."
             )
 
         except (
@@ -322,7 +322,7 @@ class BrowserController:
             )
 
             print(
-                "[Browser] Connected to JARVIS Chrome"
+                "[Browser] Connected to ASTRA Chrome"
             )
 
             # -------------------------------------------------
@@ -460,7 +460,7 @@ class BrowserController:
 
                 print(
                     "[Browser] "
-                    "Page opened in JARVIS Chrome"
+                    "Page opened in ASTRA Chrome"
                 )
 
                 return True
@@ -640,7 +640,7 @@ class BrowserController:
 
                 print(
                     "[Google] "
-                    "Search opened in JARVIS Chrome"
+                    "Search opened in ASTRA Chrome"
                 )
 
                 return True
@@ -729,7 +729,7 @@ class BrowserController:
 
                 print(
                     "[YouTube] "
-                    "Search opened in JARVIS Chrome"
+                    "Search opened in ASTRA Chrome"
                 )
 
                 return True
@@ -801,7 +801,7 @@ class BrowserController:
 
             print(
                 "[GitHub] "
-                "Search opened in JARVIS Chrome"
+                "Search opened in ASTRA Chrome"
             )
 
             return True
@@ -852,7 +852,7 @@ class BrowserController:
 
         print(
             "[YouTube] "
-            f"Opening in JARVIS Chrome: {url}"
+            f"Opening in ASTRA Chrome: {url}"
         )
 
         try:
@@ -905,7 +905,7 @@ class BrowserController:
 
             print(
                 "[YouTube] "
-                "Video opened in JARVIS Chrome"
+                "Video opened in ASTRA Chrome"
             )
 
             self._skip_ad_impl()
@@ -980,7 +980,7 @@ class BrowserController:
 
             print(
                 "[YouTube] "
-                "First video opened in JARVIS Chrome"
+                "First video opened in ASTRA Chrome"
             )
 
             return True

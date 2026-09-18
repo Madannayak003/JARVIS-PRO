@@ -75,7 +75,7 @@ def screen_vision_analyze(data=None):
                 "Do not describe decorative details."
             ),
             system_prompt=(
-                "You are JARVIS PRO's fast live screen-vision assistant. "
+                "You are ASTRA's fast live screen-vision assistant. "
                 "Accurately understand the supplied desktop image. "
                 "Respond naturally and concisely. "
                 "Prioritize useful information over visual detail. "

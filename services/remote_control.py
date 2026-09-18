@@ -377,7 +377,7 @@ class RemoteControlServer:
                         "ok": False,
                         "error":
                             "No active pairing PIN. "
-                            "Restart JARVIS.",
+                            "Restart ASTRA.",
                     },
                     status_code=401,
                 )
@@ -467,7 +467,7 @@ class RemoteControlServer:
                 "ok": True,
                 "token": self._token,
                 "message":
-                    "Connected to JARVIS.",
+                    "Connected to ASTRA.",
             }
 
         # ==================================================
@@ -569,7 +569,7 @@ class RemoteControlServer:
                 return {
                     "ok": True,
                     "message":
-                        "Command sent to JARVIS.",
+                        "Command sent to ASTRA.",
                 }
 
             print(
@@ -582,7 +582,7 @@ class RemoteControlServer:
                 {
                     "ok": False,
                     "error":
-                        "JARVIS command handler "
+                        "ASTRA command handler "
                         "is not connected.",
                 },
                 status_code=503,
@@ -735,7 +735,7 @@ class RemoteControlServer:
                     ),
 
                 "server":
-                    "JARVIS Remote Control",
+                    "ASTRA Remote Control",
             }
 
         return app
@@ -891,7 +891,7 @@ _PAGE = r"""
 >
 
 <title>
-    JARVIS Remote
+    ASTRA Remote
 </title>
 
 <style>
@@ -1060,18 +1060,18 @@ button:active {
 <body>
 
 <h1>
-    JARVIS Remote
+    ASTRA Remote
 </h1>
 
 <p>
-    Connect your phone to your local JARVIS.
+    Connect your phone to your local ASTRA.
 </p>
 
 
 <div id="status">
 
     Enter the pairing PIN shown
-    in the JARVIS terminal.
+    in the ASTRA terminal.
 
 </div>
 
@@ -1106,7 +1106,7 @@ button:active {
             id="cmd"
             autocomplete="off"
             placeholder=
-                "Tell JARVIS what to do"
+                "Tell ASTRA what to do"
         >
 
         <button
@@ -1121,7 +1121,7 @@ button:active {
     <button
         onclick="wake()"
     >
-        Wake JARVIS
+        Wake ASTRA
     </button>
 
 
@@ -1148,11 +1148,11 @@ button:active {
     <p class="small">
 
         Normal commands are sent directly into
-        your existing JARVIS dispatcher.
+        your existing ASTRA dispatcher.
 
         The Live Conversation stop button directly
         controls the Gemini Live session because
-        the normal JARVIS microphone is paused
+        the normal ASTRA microphone is paused
         while Live Conversation is active.
 
     </p>
@@ -1183,7 +1183,7 @@ async function readResponse(response) {
         await response.text();
 
     console.log(
-        "[JARVIS REMOTE RESPONSE]",
+        "[ASTRA REMOTE RESPONSE]",
         response.status,
         raw
     );
@@ -1241,7 +1241,7 @@ async function login() {
 
 
     setStatus(
-        "Connecting to JARVIS..."
+        "Connecting to ASTRA..."
     );
 
 
@@ -1308,12 +1308,12 @@ async function login() {
 
 
         setStatus(
-            "Connected to JARVIS."
+            "Connected to ASTRA."
         );
 
 
         console.log(
-            "[JARVIS REMOTE] "
+            "[ASTRA REMOTE] "
             + "Authentication successful."
         );
 
@@ -1322,7 +1322,7 @@ async function login() {
     catch (error) {
 
         console.error(
-            "[JARVIS REMOTE LOGIN ERROR]",
+            "[ASTRA REMOTE LOGIN ERROR]",
             error
         );
 
@@ -1359,7 +1359,7 @@ async function sendCommand() {
     if (!token) {
 
         setStatus(
-            "Please connect to JARVIS first."
+            "Please connect to ASTRA first."
         );
 
         return;
@@ -1425,7 +1425,7 @@ async function sendCommand() {
 
 
         setStatus(
-            "Command sent to JARVIS."
+        "Command sent to ASTRA."
         );
 
     }
@@ -1433,7 +1433,7 @@ async function sendCommand() {
     catch (error) {
 
         console.error(
-            "[JARVIS REMOTE COMMAND ERROR]",
+            "[ASTRA REMOTE COMMAND ERROR]",
             error
         );
 
@@ -1452,7 +1452,7 @@ async function sendCommand() {
 async function wake() {
 
     await sendCommandText(
-        "hey jarvis"
+        "hey astra"
     );
 }
 
@@ -1468,7 +1468,7 @@ async function sendCommandText(
     if (!token) {
 
         setStatus(
-            "Please connect to JARVIS first."
+            "Please connect to ASTRA first."
         );
 
         return;
@@ -1539,7 +1539,7 @@ async function sendCommandText(
     catch (error) {
 
         console.error(
-            "[JARVIS REMOTE WAKE ERROR]",
+            "[ASTRA REMOTE WAKE ERROR]",
             error
         );
 
@@ -1560,7 +1560,7 @@ async function stopLiveConversation() {
     if (!token) {
 
         setStatus(
-            "Please connect to JARVIS first."
+            "Please connect to ASTRA first."
         );
 
         return;
@@ -1622,12 +1622,12 @@ async function stopLiveConversation() {
         setStatus(
             "Live Conversation stopped. "
             +
-            "Normal JARVIS voice resumed."
+            "Normal ASTRA voice resumed."
         );
 
 
         console.log(
-            "[JARVIS REMOTE] "
+            "[ASTRA REMOTE] "
             + "Live Conversation stopped."
         );
 
@@ -1636,7 +1636,7 @@ async function stopLiveConversation() {
     catch (error) {
 
         console.error(
-            "[JARVIS REMOTE LIVE STOP ERROR]",
+            "[ASTRA REMOTE LIVE STOP ERROR]",
             error
         );
 

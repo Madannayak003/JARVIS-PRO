@@ -76,8 +76,8 @@ PERSONAL_LINK_NAMES = {
     "iot": "IoT",
     "iot_website": "IoT Website",
     "iotrix_lab": "IoTrix Lab",
-    "jarvis_github": "JARVIS GitHub",
-    "jarvis_repository": "JARVIS Repository",
+    "jarvis_github": "ASTRA GitHub",
+    "jarvis_repository": "ASTRA Repository",
     "smart_parking": "Smart Parking",
     "atmers": "ATMERS",
 }

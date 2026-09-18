@@ -139,7 +139,7 @@ def _lock() -> bool:
 def _terminate_jarvis() -> bool:
     """Terminate the JARVIS application without shutting down Windows."""
 
-    print("[SYSTEM] Terminating JARVIS.")
+    print("[SYSTEM] Terminating ASTRA.")
 
     speak("Goodbye Sir.")
 

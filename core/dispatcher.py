@@ -56,11 +56,22 @@ def dispatch(
     skip_fast=False,
     fast_plan=None,
     conversation_request=None,
+    skip_nci=False,
 ):
-    
+
+    if command is None or not str(command).strip():
+
+        if conversation_coordinator.clarification.is_waiting():
+
+            conversation_coordinator.consume_clarification_reply(
+                command
+            )
+
+        return
+
     wait_for_core()
 
-    command = command.strip()
+    command = str(command).strip()
 
     if not command:
         return
@@ -349,7 +360,11 @@ def dispatch(
 
     try:
 
-        if conversation_request is not None:
+        if skip_nci:
+
+            conversation_analysis = None
+
+        elif conversation_request is not None:
 
             from brain.followup_resolver import (
                 FollowUpResolution,
@@ -1775,7 +1790,7 @@ def dispatch(
 
         print(
             "[DISPATCHER] Live execution active - "
-            "no JARVIS skill handled command; "
+            "no ASTRA skill handled command; "
             "suppressing normal AI fallback."
         )
 

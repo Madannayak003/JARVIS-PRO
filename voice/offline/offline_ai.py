@@ -55,7 +55,7 @@ OLLAMA_TIMEOUT = 120
 # =========================================================
 
 OFFLINE_VOICE_INSTRUCTIONS = """
-You are JARVIS PRO operating in OFFLINE VOICE MODE.
+You are ASTRA operating in OFFLINE VOICE MODE.
 
 You are speaking directly to the user.
 

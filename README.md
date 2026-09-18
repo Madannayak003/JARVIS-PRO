@@ -1,16 +1,16 @@
 <p align="center">
   <img
-    src="https://readme-typing-svg.herokuapp.com?font=Poppins&weight=600&size=24&pause=1000&color=00C2FF&center=true&vCenter=true&width=850&lines=🤖+JARVIS+Desktop+Voice+Assistant;🎙️+Hey+Jarvis+%7C+Wake+Word+Activated;🖥️+Windows+Desktop+Automation;⚡+Python+%7C+Voice+Control+%7C+AI;🚀+Iron-Man+Style+Desktop+Assistant"
+    src="https://readme-typing-svg.herokuapp.com?font=Poppins&weight=600&size=24&pause=1000&color=00C2FF&center=true&vCenter=true&width=850&lines=🤖+ASTRA+Desktop+Voice+Assistant;🎙️+Hey+ASTRA+%7C+Wake+Word+Activated;🖥️+Windows+Desktop+Automation;⚡+Python+%7C+Voice+Control+%7C+AI;🚀+Iron-Man+Style+Desktop+Assistant"
     alt="Typing Header"
   />
 </p>
 
 <p align="center">
-  <img src="https://giffiles.alphacoders.com/212/212508.gif" alt="Jarvis HUD" width="100%">
+  <img src="https://giffiles.alphacoders.com/212/212508.gif" alt="ASTRA HUD" width="100%">
 </p>
 
 <p align="center">
-  <strong>ASSISTANT – Jarvis Desktop Voice Assistant</strong>
+  <strong>ASSISTANT – ASTRA Desktop Voice Assistant</strong>
 </p>
 
 <p align="center">
@@ -21,9 +21,9 @@
 
 ---
 
-## About JARVIS PRO
+## About ASTRA
 
-JARVIS PRO is a Windows-focused desktop voice assistant. It listens for a
+ASTRA is a Windows-focused desktop voice assistant. It listens for a
 command, determines the intent, routes the request to the appropriate skill,
 and returns feedback through speech and the desktop HUD. The project combines a
 Python automation and voice runtime with a Next.js/Three.js visual interface,
@@ -33,10 +33,11 @@ The assistant supports two voice modes:
 
 | Mode | When it is selected | What it does |
 | --- | --- | --- |
-| Online | An internet connection is available | Starts the full JARVIS runtime: skills, memory, automation, desktop HUD, remote dashboard, and the online voice engine. |
+| Online | An internet connection is available | Starts the full ASTRA runtime: skills, memory, automation, desktop HUD, remote dashboard, and the online voice engine. |
 | Offline | No internet connection is available | Runs an isolated local conversation loop using Faster-Whisper for speech-to-text, Ollama for AI, and Piper for text-to-speech. |
 
-The configured wake words are `jarvis`, `hey jarvis`, and `hello jarvis`.
+The primary wake words are `astra`, `hey astra`, and `hello astra`. The legacy
+`jarvis`, `hey jarvis`, and `hello jarvis` aliases remain supported.
 
 ## Main Features
 
@@ -92,7 +93,7 @@ Voice response + HUD event + dashboard update
 5. It starts the remote dashboard server and the online voice engine in the
    background.
 6. Commands are routed to registered skills. Closing the native HUD requests a
-   complete JARVIS shutdown and stops the HUD server process tree.
+   complete ASTRA shutdown and stops the HUD server process tree.
 
 ### Command Routing
 
@@ -108,7 +109,7 @@ browser session, Windows permission, network connection, or optional dependency.
 
 ### Face recognition and registration
 
-JARVIS uses the existing YOLO camera pipeline for person detection and performs
+ASTRA uses the existing YOLO camera pipeline for person detection and performs
 local face recognition with OpenCV LBPH. Face samples never leave the machine
 and are stored only under:
 
@@ -126,7 +127,7 @@ Register Rahul
 Add a new face
 ```
 
-For a new registration, JARVIS asks the person to look at the camera, captures
+For a new registration, ASTRA asks the person to look at the camera, captures
 several good-quality samples, and asks for a name when one was not included in
 the command. During registration, only one clearly visible person should be in
 the camera frame. Say `cancel registration`, `stop registration`, or `cancel`
@@ -154,25 +155,25 @@ on every camera frame.
 
 ### Browser setup
 
-JARVIS Browser uses a dedicated, persistent Chromium profile rather than your
+ASTRA Browser uses a dedicated, persistent Chromium profile rather than your
 normal Chrome profile. By default it is created at
 `%LOCALAPPDATA%\JARVIS\ChromeProfile`; it stays local to each Windows user and
 stores that user's browser login sessions. It is not repository data and must
 not be committed to Git.
 
-Install Google Chrome, Microsoft Edge, or Chromium. JARVIS automatically finds
+Install Google Chrome, Microsoft Edge, or Chromium. ASTRA automatically finds
 Chrome first, then Edge, then Chromium. To select a particular executable or
 profile directory, set `JARVIS_BROWSER_EXECUTABLE` or
 `JARVIS_BROWSER_PROFILE_DIR`. `JARVIS_BROWSER_CDP_PORT` optionally changes the
-preferred local-only debugging port (default: `9223`); JARVIS chooses another
+preferred local-only debugging port (default: `9223`); ASTRA chooses another
 local port if that one is occupied.
 
 ## Skills and Commands
 
 | Skill module | Registered actions / capability | Example voice commands |
 | --- | --- | --- |
-| `skills/assistant/greetings.py` | `greet`, `how_are_you`, `welcome`, `goodbye` | "Hello Jarvis", "How are you?", "Goodbye" |
-| `skills/ai/clarify.py` | `clarify` | Used when JARVIS needs a missing detail before acting. |
+| `skills/assistant/greetings.py` | `greet`, `how_are_you`, `welcome`, `goodbye` | "Hello ASTRA", "How are you?", "Goodbye" |
+| `skills/ai/clarify.py` | `clarify` | Used when ASTRA needs a missing detail before acting. |
 | `skills/automation/home_automation.py` | `home_automation` | "Turn on the [device]", "Turn off the [device]" |
 | `skills/browser/browser_ai.py` | `open`, `google_search`, `browser_open_result` | "Open Spotify", "Search Google for Python tutorials" |
 | `skills/browser/youtube.py` | `youtube_search`, playback actions | "Search YouTube for lofi music", "Pause YouTube" |
@@ -258,16 +259,16 @@ Set-Location ..\..
 
 `requirements.txt` is currently empty, so it does not yet pin the Python
 runtime dependencies. Install the Python packages required by the runtime and
-the optional skills you plan to use before starting JARVIS. The HUD dependencies
+the optional skills you plan to use before starting ASTRA. The HUD dependencies
 are declared in `hud/web/package.json` and are installed by `npm install`.
 
-### Start JARVIS
+### Start ASTRA
 
 ```powershell
 python main.py
 ```
 
-The application starts the Next.js HUD itself, opens the native JARVIS desktop
+The application starts the Next.js HUD itself, opens the native ASTRA desktop
 window, and prints the dashboard URL and pairing PIN to the terminal when the
 dashboard server is available. To work on the HUD alone:
 
@@ -290,11 +291,11 @@ The main application settings live in `config/settings.py`:
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
-| `APP_NAME` | `JARVIS` | Application display name. |
+| `APP_NAME` | `ASTRA` | Application display name. |
 | `VERSION` | `1.0` | Application version. |
 | `VOICE` | `male` | Preferred voice profile. |
 | `LANGUAGE` | `en` | Assistant language. |
-| `WAKE_WORDS` | `jarvis`, `hey jarvis`, `hello jarvis` | Words that activate the assistant. |
+| `WAKE_WORDS` | `astra`, `hey astra`, `hello astra` (+ legacy JARVIS aliases) | Words that activate the assistant. |
 | `AI_PROVIDER` | `ollama` | Selected AI provider. |
 | `OLLAMA_MODEL` | `qwen2.5:3b` | Default local Ollama model. |
 | `OLLAMA_URL` | `http://localhost:11434/api/generate` | Local Ollama generation endpoint. |
@@ -388,9 +389,9 @@ startup problems.
 | Symptom | Check |
 | --- | --- |
 | HUD does not open | Confirm Node.js/npm is installed, run `npm install` in `hud/web`, then inspect `logs/hud_web.log`. |
-| JARVIS reports a failed skill | Check the startup output from `skills/loader.py`; optional skill imports are allowed to fail independently. |
+| ASTRA reports a failed skill | Check the startup output from `skills/loader.py`; optional skill imports are allowed to fail independently. |
 | Offline mode does not respond | Start Ollama, ensure the configured model is installed, and verify the Ollama URL in `config/settings.py`. |
-| Microphone commands are not recognized | Check microphone permissions and the selected input device, then restart JARVIS so it can calibrate ambient noise. |
+| Microphone commands are not recognized | Check microphone permissions and the selected input device, then restart ASTRA so it can calibrate ambient noise. |
 | A service command does not work | Verify its account/session/configuration and any required browser, Windows permission, or network connection. |
 | Dashboard is unavailable | Check the console output for the generated pairing PIN and whether FastAPI-related dashboard dependencies are installed. |
 

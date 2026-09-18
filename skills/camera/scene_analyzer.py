@@ -236,7 +236,26 @@ class SceneAnalyzer:
     ):
         person_description = people_message(objects)
         if person_description:
-            return person_description
+            other_objects = [
+                obj
+                for obj in objects
+                if str(obj.get("label", "")).lower() != "person"
+            ]
+
+            if not other_objects:
+                return person_description
+
+            other_description = self._build_description(
+                other_objects,
+                counts,
+            )
+            other_description = other_description.removeprefix(
+                "I can see "
+            )
+            return (
+                f"{person_description[:-1]}, and "
+                f"{other_description}."
+            )
 
         if not objects:
             return (

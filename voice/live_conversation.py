@@ -160,7 +160,7 @@ def _system_prompt() -> str:
     except Exception:
 
         prompt = (
-            "You are JARVIS, a helpful personal AI assistant."
+            "You are ASTRA, a helpful personal AI assistant."
         )
 
     live_rules = """
@@ -168,7 +168,7 @@ def _system_prompt() -> str:
 LIVE CONVERSATION BEHAVIOR
 =============================================================
 
-You are JARVIS in a natural realtime spoken conversation.
+You are ASTRA in a natural realtime spoken conversation.
 
 GENERAL BEHAVIOR
 - Speak naturally, calmly, and conversationally.
@@ -219,15 +219,15 @@ IMPORTANT:
 This is a spoken conversation. Favor natural short answers
 over long assistant-style paragraphs.
 
-LIVE INFORMATION AND JARVIS SKILLS
+LIVE INFORMATION AND ASTRA SKILLS
 
-Some questions should use an existing JARVIS skill instead of
+Some questions should use an existing ASTRA skill instead of
 being answered from Gemini's internal knowledge.
 
 VISION AND CAMERA
-- For any request about what JARVIS can see, use jarvis_command.
-- Never answer that JARVIS cannot physically see anything.
-- Camera vision requests must be handled by the JARVIS vision skill.
+- For any request about what ASTRA can see, use jarvis_command.
+- Never answer that ASTRA cannot physically see anything.
+- Camera vision requests must be handled by the ASTRA vision skill.
 - Examples:
   - "What do you see?"
   - "What is in front of me?"
@@ -240,7 +240,7 @@ VISION AND CAMERA
   - "What is next to the person?"
 - Send the user's original wording to jarvis_command.
 - Do not paraphrase or answer vision requests from Gemini's own knowledge.
-- JARVIS's camera/YOLO vision system is authoritative for visible objects,
+- ASTRA's camera/YOLO vision system is authoritative for visible objects,
   positions, counts, and spatial relationships.
 
 VISION RESULT RULES
@@ -250,10 +250,10 @@ When jarvis_command returns a vision/camera result:
 - Treat the returned vision result as the complete authoritative
   description of what the camera detected.
 - Do not add objects, people, locations, attributes, or relationships
-  that are not explicitly present in the JARVIS result.
+  that are not explicitly present in the ASTRA result.
 - Do not rely on previous conversation or your own assumptions about
   what may be visible.
-- If JARVIS says only "one person and one bottle", report only
+- If ASTRA says only "one person and one bottle", report only
   the person and bottle.
 - Never invent common desk objects such as a mouse, keyboard,
   monitor, laptop, desk, or phone.
@@ -266,7 +266,7 @@ TIME AND DATE
 - For "Tell me the time.", use jarvis_command.
 - For "What time is it now?", use jarvis_command.
 - Do not answer the current time yourself.
-- JARVIS's time skill is authoritative for the user's local time.
+- ASTRA's time skill is authoritative for the user's local time.
 
 WEB SEARCH
 - For requests such as "Search for artificial intelligence",
@@ -274,9 +274,9 @@ WEB SEARCH
   use jarvis_command.
 - Do not answer a web-search request from your own knowledge.
 
-JARVIS COMPUTER COMMANDS
+ASTRA COMPUTER COMMANDS
 
-You are connected to the JARVIS computer-control system.
+You are connected to the ASTRA computer-control system.
 
 When the user asks you to perform an action on the computer,
 use the jarvis_command tool instead of pretending that you
@@ -317,7 +317,7 @@ REFERENCE PRESERVATION
   User: "Open first one"
   Correct jarvis_command: "Open first one"
   Incorrect: "Open first Python tutorial result"
-- JARVIS has its own reference-resolution system. Let JARVIS
+- ASTRA has its own reference-resolution system. Let ASTRA
   resolve which object the reference means.
 
 """
@@ -338,13 +338,13 @@ JARVIS_COMMAND_TOOL = {
         {
             "name": "jarvis_command",
             "description": (
-                "Execute a command using the existing JARVIS "
+                "Execute a command using the existing ASTRA "
                 "command system. Use this when the user asks "
-                "JARVIS to perform an action on the computer, "
-                "use an installed JARVIS skill, retrieve current "
-                "information through a JARVIS skill, or perform "
+                "ASTRA to perform an action on the computer, "
+                "use an installed ASTRA skill, retrieve current "
+                "information through an ASTRA skill, or perform "
                 "a web search. Do not use it for ordinary static "
-                "questions or casual conversation when no JARVIS "
+                "questions or casual conversation when no ASTRA "
                 "skill is required."
             ),
             "parameters": {
@@ -353,13 +353,13 @@ JARVIS_COMMAND_TOOL = {
                     "command": {
                         "type": "string",
                         "description": (
-                            "The exact command to pass to JARVIS. "
+                            "The exact command to pass to ASTRA. "
                             "Preserve the user's command wording whenever possible. "
                             "Do NOT paraphrase, expand, reinterpret, or replace "
                             "references such as 'first one', 'second one', "
                             "'that result', 'the previous one', or 'this one'. "
                             "For positional or contextual references, preserve the "
-                            "reference exactly as the user said it so JARVIS's own "
+                            "reference exactly as the user said it so ASTRA's own "
                             "reference resolver can resolve it. "
                             "Example: if the user says 'Open first one', send "
                             "'Open first one', NOT 'Open first Python tutorial result'."
@@ -755,7 +755,7 @@ class LiveConversation:
         self._pause_normal_microphone()
         
         print(
-            "[LIVE] Normal JARVIS microphone paused."
+            "[LIVE] Normal ASTRA microphone paused."
         )
 
         input_queue: asyncio.Queue[
@@ -1358,7 +1358,7 @@ class LiveConversation:
             self._resume_normal_microphone()
 
             print(
-                "[LIVE] Normal JARVIS microphone resumed."
+                "[LIVE] Normal ASTRA microphone resumed."
             )
 
     # =========================================================
@@ -1683,7 +1683,7 @@ class LiveConversation:
                                 result = {
                                     "success": False,
                                     "message": (
-                                        "No JARVIS command was provided."
+                                        "No ASTRA command was provided."
                                     ),
                                 }
 
@@ -1730,7 +1730,7 @@ class LiveConversation:
                                     if authoritative_response:
 
                                         print(
-                                            "[LIVE] JARVIS skill response:",
+                                            "[LIVE] ASTRA skill response:",
                                             authoritative_response,
                                         )
                                         
@@ -1739,7 +1739,7 @@ class LiveConversation:
                                         result = {
                                             "success": True,
                                             "message": (
-                                                f"JARVIS result: {authoritative_response}. "
+                                                f"ASTRA result: {authoritative_response}. "
                                                 "Use this result as the authoritative answer to the user's request. "
                                                 "Do not generate a different value."
                                             ),
@@ -1754,9 +1754,9 @@ class LiveConversation:
                                         result = {
                                             "success": dispatch_result,
                                             "message": (
-                                                f"JARVIS executed: {command}"
+                                                f"ASTRA executed: {command}"
                                                 if dispatch_result
-                                                else f"JARVIS failed to execute: {command}"
+                                                else f"ASTRA failed to execute: {command}"
                                             ),
                                         }
 
@@ -1765,7 +1765,7 @@ class LiveConversation:
                                         result = {
                                             "success": True,
                                             "message": (
-                                                f"JARVIS executed: {command}"
+                                                f"ASTRA executed: {command}"
                                             ),
                                         }
 
@@ -1797,7 +1797,7 @@ class LiveConversation:
                             result = {
                                 "success": False,
                                 "message": (
-                                    f"Unknown JARVIS tool: "
+                                    f"Unknown ASTRA tool: "
                                     f"{function_name}"
                                 ),
                             }
@@ -1989,7 +1989,7 @@ class LiveConversation:
                         if complete_output:
 
                             print(
-                                "[JARVIS]",
+                                "[ASTRA]",
                                 complete_output,
                             )
 

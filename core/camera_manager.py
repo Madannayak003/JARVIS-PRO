@@ -104,7 +104,7 @@ class CameraManager:
         if not self.start():
             return None
 
-        window = "JARVIS Camera"
+        window = "ASTRA Camera"
 
         frame = None
 
@@ -207,7 +207,7 @@ class CameraManager:
                 self.writer.write(frame)
 
             cv2.imshow(
-                "JARVIS Camera",
+                "ASTRA Camera",
                 frame
             )
 

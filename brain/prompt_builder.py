@@ -19,7 +19,7 @@ class PromptBuilder:
     def __init__(self):
 
         self.system_prompt = """
-You are JARVIS PRO.
+You are ASTRA.
 
 You are an intelligent AI assistant designed to help the user with coding,
 automation, planning, research, electronics, IoT, robotics and productivity.
@@ -223,7 +223,7 @@ Analyzed At:
         """
         Add the result of Natural Conversation Intelligence.
 
-        This section tells the LLM what JARVIS understood
+        This section tells the LLM what ASTRA understood
         about the user's request.
 
         It does NOT execute actions.

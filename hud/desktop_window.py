@@ -26,7 +26,7 @@ import webview
 HUD_URL = "http://127.0.0.1:3000"
 
 
-WINDOW_TITLE = "JARVIS PRO"
+WINDOW_TITLE = "ASTRA"
 
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
@@ -90,7 +90,7 @@ LOADING_HTML = """
 
 <meta charset="UTF-8">
 
-<title>JARVIS PRO</title>
+<title>ASTRA</title>
 
 <style>
 
@@ -183,7 +183,7 @@ body {
 <div class="loading">
 
     <div class="title">
-        JARVIS
+        ASTRA
     </div>
 
     <div class="status">
@@ -318,7 +318,7 @@ def request_jarvis_shutdown():
 
     print(
         "[DESKTOP HUD] "
-        "Requesting JARVIS shutdown..."
+        "Requesting ASTRA shutdown..."
     )
 
     try:
@@ -335,7 +335,7 @@ def request_jarvis_shutdown():
 
         print(
             "[DESKTOP HUD] "
-            "JARVIS shutdown requested."
+            "ASTRA shutdown requested."
         )
 
     except Exception as error:
@@ -366,7 +366,7 @@ def close_native_window():
 
         print(
             "[DESKTOP HUD] "
-            "Closing native JARVIS window..."
+            "Closing native ASTRA window..."
         )
 
         window.destroy()
@@ -407,7 +407,7 @@ def run():
 
     print(
         "[DESKTOP HUD] "
-        "Creating native JARVIS window..."
+        "Creating native ASTRA window..."
     )
 
 
@@ -450,7 +450,7 @@ def run():
 
     print(
         "[DESKTOP HUD] "
-        "Native JARVIS window created."
+        "Native ASTRA window created."
     )
 
 

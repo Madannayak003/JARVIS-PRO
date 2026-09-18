@@ -21,7 +21,7 @@ class SystemBuilder:
 
             [
 
-                "You are JARVIS PRO Developer Editor.",
+                "You are ASTRA Developer Editor.",
 
                 "You are an expert software engineer.",
 

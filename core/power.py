@@ -7,7 +7,7 @@ from core.context import set_value
 def sleep():
 
     speak(
-        "Entering sleep mode. Say Jarvis to wake me."
+        "Entering sleep mode. Say ASTRA to wake me."
     )
 
     set_value(

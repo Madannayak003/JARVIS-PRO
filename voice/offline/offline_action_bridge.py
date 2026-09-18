@@ -47,6 +47,8 @@ class OfflineActionBridge:
     }
 
     HUD_STATUS_COMMANDS = {
+        "open astra hud",
+        "open the astra hud",
         "open jarvis hud",
         "open the jarvis hud",
         "open pywebview",
@@ -74,7 +76,7 @@ class OfflineActionBridge:
         if text in self.HUD_STATUS_COMMANDS:
             return OfflineDispatchResult(
                 route=OfflineRoute.LOCAL_ACTION,
-                message="The JARVIS HUD is already open.",
+                message="The ASTRA HUD is already open.",
             )
 
         plan = self.LOCAL_COMMAND_PLANS.get(text)

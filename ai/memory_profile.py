@@ -84,7 +84,7 @@ def profile_summary():
 
     lines.append("==========================")
 
-    lines.append("JARVIS USER PROFILE")
+    lines.append("ASTRA USER PROFILE")
 
     lines.append("==========================")
 

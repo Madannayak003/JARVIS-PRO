@@ -4,7 +4,7 @@
 
 from config.environment import get_env
 
-APP_NAME = "JARVIS"
+APP_NAME = "ASTRA"
 
 VERSION = "1.0"
 
@@ -17,6 +17,13 @@ LANGUAGE = "en"
 DEBUG = True
 
 WAKE_WORDS = [
+    "astra",
+    "hey astra",
+    "hello astra",
+    "ashtra",
+    "hey ashtra",
+    "hello ashtra",
+    # Legacy aliases retained for backward compatibility.
     "jarvis",
     "hey jarvis",
     "hello jarvis"

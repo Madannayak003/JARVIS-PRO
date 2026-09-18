@@ -16,6 +16,6 @@ def run():
     Start the existing online JARVIS.
     """
 
-    print("[ONLINE VOICE] Starting existing online JARVIS...")
+    print("[ONLINE VOICE] Starting existing online ASTRA...")
 
     return run_online()

@@ -52,6 +52,10 @@ from core.busy_manager import (
 
 from ai.intent import detect
 from core.fast_router import fast_route
+from core.assistant_name import (
+    CANONICAL_ASSISTANT_NAME,
+    normalize_assistant_invocation,
+)
 
 
 # ============================================================
@@ -482,6 +486,48 @@ def run():
         # It does NOT execute anything.
         # =====================================================
 
+        invocation = normalize_assistant_invocation(query)
+
+        if invocation:
+
+            if invocation.alias != CANONICAL_ASSISTANT_NAME:
+
+                print(
+                    "[ASSISTANT NAME] "
+                    f"Normalized alias: {invocation.alias} "
+                    f"-> {CANONICAL_ASSISTANT_NAME}"
+                )
+
+            routed_query = (
+                invocation.command
+                or "hey astra"
+            )
+
+            fast_plan = fast_route(
+                routed_query
+            )
+
+            if fast_plan:
+
+                if is_busy():
+
+                    interrupt()
+
+                print(
+                    "[ASSISTANT NAME] Command:",
+                    invocation.command,
+                )
+
+                dispatch(
+                    routed_query,
+                    fast_plan=fast_plan,
+                    skip_nci=True,
+                )
+
+                continue
+
+            query = routed_query
+
         conversation_request = None
 
         try:
@@ -704,8 +750,9 @@ def run():
 
         if power_state == "sleep":
 
-            if query.startswith(
-                "jarvis"
+            if any(
+                query.startswith(word)
+                for word in WAKE_WORDS
             ):
 
                 wake()

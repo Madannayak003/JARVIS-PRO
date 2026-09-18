@@ -6,6 +6,7 @@ INTERRUPTS = {
     
     "stop chart",
 
+    "astra stop",
     "jarvis stop",
 
     "cancel",
@@ -20,6 +21,7 @@ INTERRUPTS = {
     
     "stop conversation",
     
+    "astra stop conversation",
     "jarvis stop conversation",
 
 }

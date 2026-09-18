@@ -94,6 +94,56 @@ class ClarificationFlowTests(unittest.TestCase):
             [{"action": "google_search", "query": "arduino uno"}],
         )
 
+    def test_empty_clarification_input_is_ignored_and_cleared(self):
+        for empty_input in (None, "", "   "):
+            with self.subTest(empty_input=empty_input):
+                coordinator = ConversationCoordinator()
+                coordinator.start_clarification(
+                    field="action",
+                    question="What would you like me to do with esp32?",
+                    task="esp32",
+                )
+
+                result = coordinator.consume_clarification_reply(empty_input)
+
+                self.assertEqual(result["status"], "empty")
+                self.assertFalse(coordinator.clarification.is_waiting())
+                snapshot = coordinator.context.snapshot()
+                self.assertIsNone(snapshot["pending_question"])
+                self.assertIsNone(snapshot["pending_clarification"])
+
+    def test_short_clarification_answers_remain_valid(self):
+        for answer in ("Google", "GitHub", "yes"):
+            with self.subTest(answer=answer):
+                coordinator = ConversationCoordinator()
+                coordinator.start_clarification(
+                    field="action",
+                    question="What would you like me to do with esp32?",
+                    task="esp32",
+                )
+
+                result = coordinator.consume_clarification_reply(answer)
+
+                self.assertEqual(result["status"], "resolved")
+                self.assertTrue(result["merged_request"].endswith(answer))
+
+    def test_dispatcher_drops_empty_clarification_input(self):
+        import core.dispatcher as dispatcher
+
+        mark_core_ready()
+        conversation_coordinator.clear()
+        conversation_coordinator.start_clarification(
+            field="action",
+            question="What would you like me to do with esp32?",
+            task="esp32",
+        )
+
+        with patch.object(dispatcher.task_manager, "start") as start:
+            dispatcher.dispatch(None)
+
+        start.assert_not_called()
+        self.assertFalse(conversation_coordinator.clarification.is_waiting())
+
     def test_invalid_structured_reply_becomes_a_new_request(self):
         coordinator = ConversationCoordinator()
         coordinator.start_clarification(

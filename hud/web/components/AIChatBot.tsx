@@ -722,7 +722,7 @@ export default function AIChatBot({
               <div className="ai-chat-welcome-icon">◉</div>
               <div className="ai-chat-welcome-title">Welcome to AI Assistant</div>
               <div className="ai-chat-welcome-text">Ask me anything.</div>
-              <div className="ai-chat-welcome-note">This chatbot is independent from JARVIS.</div>
+              <div className="ai-chat-welcome-note">This chatbot is independent from ASTRA.</div>
               <div className="ai-chat-examples">
                 {["Explain quantum computing", "Write a Python function", "Explain this concept simply"].map((ex) => (
                   <button
@@ -819,7 +819,7 @@ export default function AIChatBot({
             </button>
           </div>
           <div className="ai-chat-composer-note">
-            Independent Gemini conversation · No JARVIS context
+            Independent Gemini conversation · No ASTRA context
           </div>
         </div>
       </main>

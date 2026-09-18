@@ -124,7 +124,7 @@ def create_desktop_shortcut() -> str:
         pythonw_executable = sys.executable
 
     if os.name == "nt":
-        shortcut_path = os.path.join(desktop_path, "Jarvis Pro.lnk")
+        shortcut_path = os.path.join(desktop_path, "Astra.lnk")
         powershell_script = (
             f"$WshShell = New-Object -ComObject WScript.Shell; "
             f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
@@ -141,11 +141,11 @@ def create_desktop_shortcut() -> str:
         subprocess.run(["powershell", "-Command", powershell_script], check=True)
         return "Windows desktop shortcut created successfully."
     else:
-        shortcut_path = os.path.join(desktop_path, "Jarvis-Pro.desktop")
+        shortcut_path = os.path.join(desktop_path, "Astra.desktop")
         desktop_entry = (
             f"[Desktop Entry]\n"
             f"Type=Application\n"
-            f"Name=Jarvis Pro\n"
+            f"Name=ASTRA\n"
             f"Exec={pythonw_executable} \"{target_script}\"\n"
             f"Path={project_dir}\n"
             f"Terminal=false\n"
@@ -1231,7 +1231,7 @@ class DashboardServer:
             )
 
             HUDIntegration.system_activity(
-                "JARVIS dispatcher is not connected."
+                "ASTRA dispatcher is not connected."
             )
 
             return
@@ -3027,7 +3027,7 @@ class DashboardServer:
             return {
                 "ok": True,
                 "message": (
-                    "Command sent to JARVIS."
+                    "Command sent to ASTRA."
                 ),
             }
 
@@ -3059,7 +3059,7 @@ class DashboardServer:
             threading.Thread(
                 target=self._run_command,
                 args=(
-                    "hey jarvis",
+                    "hey astra",
                 ),
                 daemon=True,
                 name=(

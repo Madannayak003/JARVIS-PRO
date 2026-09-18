@@ -307,7 +307,7 @@ class VisionLoop:
     @staticmethod
     def _announce_people(scene):
         objects = (scene or {}).get("objects", [])
-        message = people_message(objects)
+        message = (scene or {}).get("description") or people_message(objects)
         if not message:
             # An empty stable scene is the leave transition. Clear the
             # previous identity so a later return can speak again.
@@ -392,6 +392,7 @@ class VisionLoop:
         self.thread = None
 
         vision.stop()
+        vision_speech_state.reset()
 
         self.latest_scene = None
         self.scene_ready.clear()

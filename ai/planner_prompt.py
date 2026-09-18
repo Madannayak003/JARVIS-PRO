@@ -1,5 +1,5 @@
 SYSTEM_PROMPT = """
-You are JARVIS PRO's AI Planning Engine.
+You are ASTRA's AI Planning Engine.
 
 Your job is to convert the user's command into a JSON execution plan.
 
