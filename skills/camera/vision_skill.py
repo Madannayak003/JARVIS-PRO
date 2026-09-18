@@ -27,6 +27,9 @@ from core.registry import register
 
 from skills.camera.vision_loop import vision_loop
 from skills.camera.vision_query import vision_query
+from skills.camera.face_registration import face_registration
+from skills.camera.face_registry import face_registry, sanitize_name
+from skills.camera.face_speech import people_message
 
 
 # =========================================================
@@ -126,7 +129,13 @@ def vision_describe(data=None):
             "[VISION] Describing scene..."
         )
 
-        return vision_query.describe()
+        description = vision_query.describe()
+        scene = vision_query.get_scene()
+        if people_message((scene or {}).get("objects", [])):
+            # The processing loop already emitted the state-aware person
+            # announcement through the existing voice/HUD path.
+            return None
+        return description
 
     except Exception as e:
 
@@ -459,6 +468,76 @@ def vision_target(data=None):
         if started:
             _stop_vision()
 
+
+# =========================================================
+# Local Face Registration
+# =========================================================
+
+def register_face(data=None):
+    name = data.get("name") if isinstance(data, dict) else None
+
+    try:
+        if not face_registration.start(name=name):
+            from voice.manager import speak
+            speak("Face registration is already in progress.")
+        return True
+    except ValueError as exc:
+        from voice.manager import speak
+        speak(str(exc))
+        return True
+    except Exception as exc:
+        print("[VISION REGISTRATION ERROR]", exc)
+        from voice.manager import speak
+        speak("Face registration wasn't completed.")
+        return True
+
+
+def cancel_face_registration(data=None):
+    if not face_registration.cancel():
+        from voice.manager import speak
+        speak("There is no active face registration.")
+    return True
+
+
+def delete_face(data=None):
+    data = data if isinstance(data, dict) else {}
+
+    try:
+        if data.get("all"):
+            deleted = face_registry.delete_all()
+            from voice.manager import speak
+            speak(
+                "All registered faces were deleted."
+                if deleted
+                else "There were no registered faces to delete."
+            )
+            return True
+
+        name = data.get("name")
+        if not name:
+            from voice.manager import speak
+            speak("Please specify a registered name, or say delete all faces.")
+            return True
+
+        safe_name = sanitize_name(name)
+        deleted = face_registry.delete_identity(safe_name)
+        from voice.manager import speak
+        speak(
+            f"Face registration for {safe_name} was deleted."
+            if deleted
+            else f"I couldn't find a registered face for {safe_name}."
+        )
+        return True
+    except ValueError as exc:
+        from voice.manager import speak
+        speak(str(exc))
+        return True
+    except Exception as exc:
+        print("[VISION FACE DELETE ERROR]", exc)
+        from voice.manager import speak
+        speak("I couldn't delete that face registration.")
+        return True
+
 # =========================================================
 # Registry
 # =========================================================
@@ -508,6 +587,24 @@ register(
 register(
     "vision_target",
     vision_target,
+    category="camera",
+)
+
+register(
+    "register_face",
+    register_face,
+    category="camera",
+)
+
+register(
+    "cancel_face_registration",
+    cancel_face_registration,
+    category="camera",
+)
+
+register(
+    "delete_face",
+    delete_face,
     category="camera",
 )
 

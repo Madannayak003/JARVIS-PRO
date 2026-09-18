@@ -18,6 +18,7 @@ Responsibilities:
 
 from skills.camera.vision_analyzer import vision_analyzer
 from skills.camera.spatial_analyzer import spatial_analyzer
+from skills.camera.face_speech import people_message
 
 
 class SceneAnalyzer:
@@ -233,6 +234,10 @@ class SceneAnalyzer:
         objects,
         counts,
     ):
+        person_description = people_message(objects)
+        if person_description:
+            return person_description
+
         if not objects:
             return (
                 "I don't see any recognizable objects."

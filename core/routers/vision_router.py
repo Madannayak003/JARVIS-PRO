@@ -143,6 +143,14 @@ CAMERA_COMMANDS = {
 
 YOLO_VISION_COMMANDS = {
 
+    "start vision": {
+        "action": "vision_start"
+    },
+
+    "stop vision": {
+        "action": "vision_stop"
+    },
+
     # -----------------------------------------------------
     # Scene Description
     # -----------------------------------------------------
@@ -223,6 +231,74 @@ YOLO_VISION_COMMANDS = {
     },
 
 }
+
+# =========================================================
+# LOCAL FACE REGISTRATION
+# =========================================================
+
+FACE_REGISTRATION_COMMANDS = {
+    "register face": {"action": "register_face"},
+    "register my face": {"action": "register_face"},
+    "add face": {"action": "register_face"},
+    "add a new face": {"action": "register_face"},
+    "cancel registration": {"action": "cancel_face_registration"},
+    "stop registration": {"action": "cancel_face_registration"},
+}
+
+FACE_DELETE_COMMANDS = {
+    "delete all faces": {"action": "delete_face", "all": True},
+    "delete all registered faces": {"action": "delete_face", "all": True},
+    "remove all faces": {"action": "delete_face", "all": True},
+    "remove all registered faces": {"action": "delete_face", "all": True},
+}
+
+
+def _match_face_delete(command):
+    normalized = command.lower().strip()
+    static = FACE_DELETE_COMMANDS.get(normalized)
+    if static:
+        return static
+
+    match = re.fullmatch(
+        r"(?:delete|remove)\s+(?:the\s+)?(?:registered\s+)?face"
+        r"(?:\s+(?:for|of|named|as))?\s+(.+)",
+        command,
+        re.IGNORECASE,
+    )
+    if match:
+        return {"action": "delete_face", "name": match.group(1).strip()}
+
+    match = re.fullmatch(
+        r"(?:delete|remove)\s+(.+?)(?:'s)?\s+face",
+        command,
+        re.IGNORECASE,
+    )
+    if match:
+        return {"action": "delete_face", "name": match.group(1).strip()}
+
+    return None
+
+
+def _match_face_registration(command):
+    normalized = command.lower().strip()
+    static = FACE_REGISTRATION_COMMANDS.get(normalized)
+    if static:
+        return static
+
+    match = re.fullmatch(
+        r"(?:register|add)\s+(?:my\s+|a\s+|the\s+|new\s+)?face"
+        r"(?:\s+(?:for|as|named)\s+)?\s*(.+)?",
+        command,
+        re.IGNORECASE,
+    )
+    if match and match.group(1):
+        return {"action": "register_face", "name": match.group(1).strip()}
+
+    match = re.fullmatch(r"register\s+(.+)", command, re.IGNORECASE)
+    if match and match.group(1).strip() not in {"face", "my face"}:
+        return {"action": "register_face", "name": match.group(1).strip()}
+
+    return None
 
 
 # =========================================================
@@ -569,7 +645,18 @@ def vision_route(command):
 
         return None
 
-    command = command.lower().strip()
+    raw_command = command.strip()
+    command = raw_command.lower()
+
+    # Registration is deterministic and must be checked before generic
+    # object/scene routing. The actual name is sanitized by the skill.
+    plan = _match_face_delete(raw_command)
+    if plan:
+        return [plan]
+
+    plan = _match_face_registration(raw_command)
+    if plan:
+        return [plan]
 
     # =====================================================
     # 1. CAMERA

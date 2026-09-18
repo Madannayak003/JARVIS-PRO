@@ -16,7 +16,10 @@ class VisionAnalyzer:
         return [
             detection
             for detection in detections
-            if detection.get("confidence", 0) >= self.confidence_threshold
+            if detection.get(
+                "detection_confidence",
+                detection.get("confidence", 0),
+            ) >= self.confidence_threshold
         ]
 
     def count_objects(self, detections):

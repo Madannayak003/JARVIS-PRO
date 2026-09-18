@@ -20,6 +20,8 @@ import time
 
 from skills.camera.vision import vision
 from skills.camera.scene_analyzer import scene_analyzer
+from skills.camera.face_recognizer import face_recognizer
+from skills.camera.face_speech import people_message, vision_speech_state
 
 
 class VisionLoop:
@@ -252,6 +254,14 @@ class VisionLoop:
 
                 detections = vision.track(frame)
 
+                # Reuse this frame and the existing YOLO detections. Face
+                # recognition only enriches person detections; it does not
+                # create a second camera or object-detection pipeline.
+                detections = face_recognizer.enrich_detections(
+                    frame,
+                    detections,
+                )
+
                 scene = scene_analyzer.analyze(
                     detections,
                     frame.shape[1],
@@ -269,6 +279,8 @@ class VisionLoop:
                     self.latest_scene = (
                         stable_scene
                     )
+
+                    self._announce_people(stable_scene)
 
                     # Signal first stable scene
                     if not self.scene_ready.is_set():
@@ -291,6 +303,27 @@ class VisionLoop:
         print(
             "[VISION LOOP] Worker exited."
         )
+
+    @staticmethod
+    def _announce_people(scene):
+        objects = (scene or {}).get("objects", [])
+        message = people_message(objects)
+        if not message:
+            # An empty stable scene is the leave transition. Clear the
+            # previous identity so a later return can speak again.
+            vision_speech_state.should_speak(objects)
+            return
+        if not vision_speech_state.should_speak(objects):
+            return
+
+        try:
+            from hud.integration import HUDIntegration
+            from voice.manager import speak
+
+            HUDIntegration.system_activity(f"VISION: {message}")
+            speak(message)
+        except Exception as exc:
+            print("[VISION SPEECH ERROR]", exc)
 
     # --------------------------------------------------
     # Get Latest Scene

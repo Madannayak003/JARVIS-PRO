@@ -39,11 +39,19 @@ ROUTERS = [
 ]
 
 def fast_route(command):
-    command = command.lower().strip().rstrip("?!.,")
+    original_command = command.strip().rstrip("?!.,")
+    command = original_command.lower()
     print("[FAST ROUTER]", command)
 
     for router in ROUTERS:
-        plan = router(command)
+        # Preserve the spoken casing for registration names while keeping the
+        # existing normalized input contract for every other router.
+        route_command = (
+            original_command
+            if router is vision_route
+            else command
+        )
+        plan = router(route_command)
 
         if plan:
             print("[FAST ROUTER MATCH]", plan)

@@ -106,6 +106,52 @@ Natural wording is supported, so the examples below are representative phrases
 rather than a strict command grammar. Some actions require a configured account,
 browser session, Windows permission, network connection, or optional dependency.
 
+### Face recognition and registration
+
+JARVIS uses the existing YOLO camera pipeline for person detection and performs
+local face recognition with OpenCV LBPH. Face samples never leave the machine
+and are stored only under:
+
+```text
+data/faces/<Name>/face_001.jpg
+```
+
+Register a person with any of these commands:
+
+```text
+Register my face
+Register face
+Register Madan
+Register Rahul
+Add a new face
+```
+
+For a new registration, JARVIS asks the person to look at the camera, captures
+several good-quality samples, and asks for a name when one was not included in
+the command. During registration, only one clearly visible person should be in
+the camera frame. Say `cancel registration`, `stop registration`, or `cancel`
+to exit safely without deleting existing registrations.
+
+Remove one registered identity with:
+
+```text
+Delete face Rahul
+Remove Rahul face
+```
+
+Remove all registered identities with:
+
+```text
+Delete all faces
+Delete all registered faces
+```
+
+Specific deletion affects only the named directory. Delete-all removes the
+registered identity directories but preserves the `data/faces/` directory
+itself. Deletion is permanent. Unknown people are never assigned a guessed
+name. Recognition speech is state-based, so the same person is not announced
+on every camera frame.
+
 ### Browser setup
 
 JARVIS Browser uses a dedicated, persistent Chromium profile rather than your
@@ -132,7 +178,7 @@ local port if that one is occupied.
 | `skills/browser/youtube.py` | `youtube_search`, playback actions | "Search YouTube for lofi music", "Pause YouTube" |
 | `skills/browser_control/browser_controls.py` | `refresh`, `back`, `forward`, `new_tab`, `close_tab`, `scroll_down`, `scroll_up` | "Refresh the page", "Go back", "Open a new tab", "Scroll down" |
 | `skills/camera/camera.py` | `camera_status`, `capture`, `camera_preview`, `camera_close`, `start_recording`, `stop_recording` | "Open camera", "Take a photo", "Start recording" |
-| `skills/camera/vision_skill.py` | camera-vision analysis actions | "What can you see?", "Analyze the camera scene" |
+| `skills/camera/vision_skill.py` | camera vision, face registration, face cancellation, and face deletion actions | "What can you see?", "Register my face", "Delete face Rahul" |
 | `skills/communication/whatsapp.py` | WhatsApp open/close, message, file, photo, screenshot, scheduled-message, call, and video-call actions | "Send WhatsApp message to Alex", "Send the latest screenshot on WhatsApp" |
 | `skills/communication/email.py` | `send_email`, email-contact actions | "Send an email to Alex", "Show email contacts" |
 | `skills/communication/contact.py` | `remember_contact`, `forget_contact`, `show_contacts` | "Remember Alex's number", "Show my contacts" |
@@ -252,6 +298,13 @@ The main application settings live in `config/settings.py`:
 | `AI_PROVIDER` | `ollama` | Selected AI provider. |
 | `OLLAMA_MODEL` | `qwen2.5:3b` | Default local Ollama model. |
 | `OLLAMA_URL` | `http://localhost:11434/api/generate` | Local Ollama generation endpoint. |
+| `JARVIS_VISION_FACE_RECOGNITION_THRESHOLD` | `75` | LBPH recognition threshold; lower values are stricter. |
+| `JARVIS_VISION_FACE_MIN_SIZE` | `80` | Minimum recognized face-region size in pixels. |
+| `JARVIS_VISION_FACE_MIN_QUALITY` | `0.20` | Minimum registration quality score. |
+| `JARVIS_VISION_REGISTRATION_SAMPLE_COUNT` | `5` | Good samples captured for each registration. |
+| `JARVIS_VISION_REGISTRATION_MAX_ATTEMPTS` | `30` | Maximum camera attempts for one registration. |
+| `JARVIS_VISION_REGISTRATION_SAMPLE_INTERVAL` | `0.25` | Minimum seconds between registration samples. |
+| `JARVIS_VISION_SPEECH_COOLDOWN` | `5` | Seconds before a repeated vision announcement is allowed. |
 
 Other configuration modules in `config/` contain browser, Spotify, WhatsApp,
 YouTube, HUD, personal-link, and project-path settings.
@@ -321,7 +374,10 @@ JARVIS-PRO/
 
 `config/paths.py` creates the `data/` directory and its standard subfolders
 when they are needed: `cache`, `captures`, `documents`, `downloads`, `exports`,
-`faces`, `logs`, `memories`, `recordings`, `screenshots`, and `temp`.
+`faces`, `logs`, `memories`, `recordings`, `screenshots`, and `temp`. Face
+registration uses only `data/faces/`; it does not create an external face
+database directory. Real face images are local runtime data and should not be
+committed to Git.
 
 The Next.js HUD output is written to `logs/hud_web.log` by the main application.
 Use these locations when investigating skill failures, voice issues, or HUD

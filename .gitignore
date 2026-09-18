@@ -85,7 +85,10 @@ token.json
 
 # AI / application data
 ai/memory.db
-data/
+data/*
+!data/faces/
+data/faces/*
+!data/faces/.gitkeep
 voice/cache/
 
 # AI model files

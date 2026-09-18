@@ -65,6 +65,12 @@ def dispatch(
     if not command:
         return
 
+    # A face registration flow owns its next reply until it completes or is
+    # cancelled. This keeps a name such as "Madan" from becoming a new task.
+    from skills.camera.face_registration import face_registration
+    if face_registration.handle_pending_input(command):
+        return
+
     # =====================================================
     # PENDING CLARIFICATION
     # =====================================================

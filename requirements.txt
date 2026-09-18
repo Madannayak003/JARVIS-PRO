@@ -50,6 +50,7 @@ Send2Trash>=1.8
 winrt-Windows.Devices.Geolocation>=3.2.1
 
 # Camera, vision, and image handling
-opencv-python>=4.8
+# Includes the existing cv2 API plus the local LBPH face recognizer.
+opencv-contrib-python>=4.8
 Pillow>=10.0
 ultralytics>=8.0
