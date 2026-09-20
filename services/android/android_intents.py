@@ -8,6 +8,7 @@ from .models import IntentSpec
 ACTION_MAIN = "android.intent.action.MAIN"
 ACTION_VIEW = "android.intent.action.VIEW"
 ACTION_DIAL = "android.intent.action.DIAL"
+ACTION_CALL = "android.intent.action.CALL"
 ACTION_SENDTO = "android.intent.action.SENDTO"
 ACTION_IMAGE_CAPTURE = "android.media.action.IMAGE_CAPTURE"
 ACTION_SETTINGS = "android.settings.SETTINGS"

@@ -83,6 +83,17 @@ CATEGORIES = {
         "make_payment",
     },
 
+    "phone_calls": {
+        "phone_call_number",
+        "phone_call_contact",
+        "phone_call_confirmed",
+        "missed_calls",
+        "answer_call",
+        "reject_call",
+        "end_call",
+        "call_status",
+    },
+
     "communication": {
         "whatsapp_open",
         "whatsapp_close",

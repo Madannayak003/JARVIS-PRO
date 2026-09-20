@@ -1542,6 +1542,89 @@ body {
   color: var(--assistant-colour);
 }
 
+/* =========================================================
+   PHONE CALL DYNAMIC ISLAND
+   ========================================================= */
+
+.phone-call-island {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  z-index: 70;
+  min-width: 210px;
+  max-width: min(330px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 9px 18px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.84);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.15), 0 12px 28px rgba(0, 0, 0, 0.32);
+  color: #fff;
+  font-family: var(--hud-font-sans);
+  text-align: center;
+  pointer-events: none;
+  animation: phone-call-island-in 260ms ease-out both;
+}
+
+.phone-call-island-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--assistant-colour);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.phone-call-island-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #73ef8b;
+  box-shadow: 0 0 8px rgba(115, 239, 139, 0.8);
+}
+
+.phone-call-island-name {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.phone-call-island-number,
+.phone-call-island-duration {
+  margin-top: 2px;
+  color: var(--hud-text-secondary);
+  font-family: var(--hud-font-mono);
+  font-size: 10px;
+}
+
+.phone-call-island-duration {
+  color: #73ef8b;
+  font-weight: 700;
+}
+
+.phone-call-island-active {
+  border-color: rgba(115, 239, 139, 0.45);
+  box-shadow: 0 0 18px rgba(115, 239, 139, 0.18), 0 12px 28px rgba(0, 0, 0, 0.32);
+}
+
+.phone-call-island-disconnected {
+  animation: phone-call-island-out 2600ms ease-in both;
+}
+
+@keyframes phone-call-island-in {
+  from { opacity: 0; transform: translateX(-50%) scale(0.88); }
+  to { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+@keyframes phone-call-island-out {
+  0%, 78% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.88); }
+}
+
 .android-status-button {
   white-space: nowrap;
 }

@@ -63,6 +63,7 @@ SKILLS = [
     "camera.vision_skill",
     "android_control.android_control",
     "payments.payments",
+    "phone_call.phone_call",
 ]
 
 

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -9,6 +10,7 @@ import {
 import JarvisOrb from "@/components/JarvisOrb";
 import HudCockpit from "@/components/HudCockpit";
 import AIChatBot from "@/components/AIChatBot";
+import PhoneCallIsland, { type PhoneCallState } from "@/components/PhoneCallIsland";
 import { QRCodeSVG } from "qrcode.react";
 
 import {
@@ -93,6 +95,58 @@ function personalLinkEntries(value: unknown): PersonalLinkEntry[] {
   });
 }
 
+function phoneCallStateFromPayload(value: unknown): PhoneCallState | null {
+  if (!value || typeof value !== "object") return null;
+
+  const data = value as Record<string, unknown>;
+  const state = String(data.state || "").toLowerCase();
+  if (!["outgoing", "ringing", "active", "disconnected"].includes(state)) {
+    return null;
+  }
+
+  return {
+    state: state as PhoneCallState["state"],
+    direction: String(data.direction || "") as PhoneCallState["direction"],
+    caller_name: String(data.caller_name ?? data.name ?? ""),
+    phone_number: String(data.phone_number ?? data.number ?? ""),
+    started_at: (data.started_at as number | string | null | undefined) ?? null,
+  };
+}
+
+function phoneCallStatesEqual(
+  left: PhoneCallState | null,
+  right: PhoneCallState | null,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return (
+    left.state === right.state &&
+    left.direction === right.direction &&
+    left.caller_name === right.caller_name &&
+    left.phone_number === right.phone_number &&
+    left.started_at === right.started_at
+  );
+}
+
+function hudStatesEqual(left: HUDState, right: HUDState): boolean {
+  return (
+    left.status === right.status &&
+    left.voice_mode === right.voice_mode &&
+    left.ai_model === right.ai_model &&
+    left.current_task === right.current_task &&
+    left.task_status === right.task_status &&
+    left.listening === right.listening &&
+    left.speaking === right.speaking &&
+    left.thinking === right.thinking &&
+    left.executing === right.executing &&
+    left.notification === right.notification &&
+    left.error === right.error &&
+    left.last_event === right.last_event &&
+    left.last_update === right.last_update &&
+    JSON.stringify(left.system) === JSON.stringify(right.system)
+  );
+}
+
 type SettingsModal = "remote" | "android" | "customise" | "settings" | null;
 
 type RemoteInfo = {
@@ -172,6 +226,11 @@ export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
   const [connection, setConnection] = useState<HUDConnectionStatus>("connecting");
   const [activities, setActivities] = useState<HUDActivity[]>([]);
+  const [phoneCall, setPhoneCall] = useState<PhoneCallState | null>(null);
+  const phoneCallRef = useRef<PhoneCallState | null>(null);
+  const phoneCallExitTimerRef = useRef<number | null>(null);
+  const phoneCallExitTokenRef = useRef(0);
+  const phoneCallDismissedRef = useRef(false);
   const [waveformLevels, setWaveformLevels] =
     useState<number[]>(Array(16).fill(0));
 
@@ -228,6 +287,55 @@ export default function Home() {
 
   // 1. Inside your component, add an input ref:
   const commandInputRef = useRef<HTMLInputElement | null>(null);
+
+  const applyPhoneCallState = useCallback((value: unknown) => {
+    const nextCall = phoneCallStateFromPayload(value);
+    if (!nextCall) {
+      return;
+    }
+
+    // HUDManager retains the last structured call payload in its state.
+    // Ignore that stale DISCONNECTED snapshot after the island has exited;
+    // a new call state below starts a fresh session.
+    if (nextCall.state === "disconnected" && phoneCallDismissedRef.current) {
+      return;
+    }
+
+    if (phoneCallStatesEqual(phoneCallRef.current, nextCall)) {
+      return;
+    }
+
+    if (nextCall.state !== "disconnected") {
+      phoneCallDismissedRef.current = false;
+      phoneCallExitTokenRef.current += 1;
+    }
+
+    if (phoneCallExitTimerRef.current !== null) {
+      window.clearTimeout(phoneCallExitTimerRef.current);
+      phoneCallExitTimerRef.current = null;
+    }
+
+    phoneCallRef.current = nextCall;
+    setPhoneCall(nextCall);
+
+    if (nextCall.state === "disconnected") {
+      const exitToken = ++phoneCallExitTokenRef.current;
+      phoneCallExitTimerRef.current = window.setTimeout(() => {
+        if (exitToken !== phoneCallExitTokenRef.current) {
+          return;
+        }
+        phoneCallDismissedRef.current = true;
+        phoneCallRef.current = null;
+        setPhoneCall(null);
+        phoneCallExitTimerRef.current = null;
+      }, 2600);
+    }
+  }, []);
+
+  const handleHUDState = useCallback((state: HUDState) => {
+    applyPhoneCallState(state.system?.phone_call);
+    setHudState((previous) => (hudStatesEqual(previous, state) ? previous : state));
+  }, [applyPhoneCallState]);
 
   const refreshAndroidStatus = async () => {
     try {
@@ -699,8 +807,15 @@ export default function Home() {
 
     const bridge = new HUDBridge(
       HUD_BRIDGE_URL,
-      setHudState,
+      handleHUDState,
       (event: HUDBridgeEvent) => {
+        if (event.name === "system_update") {
+          // State delivery is authoritative; this fallback also supports
+          // older bridge payloads that omit the nested state snapshot.
+          applyPhoneCallState(event.data?.phone_call);
+          return;
+        }
+
         if (event.name === "morning_brief") {
           const headlines = Array.isArray(event.data?.headlines) ? event.data.headlines : [];
           if (headlines.length > 0) {
@@ -833,12 +948,18 @@ export default function Home() {
     return () => {
       bridge.disconnect();
 
+      if (phoneCallExitTimerRef.current !== null) {
+        window.clearTimeout(phoneCallExitTimerRef.current);
+        phoneCallExitTimerRef.current = null;
+      }
+      phoneCallExitTokenRef.current += 1;
+
       if (speakTimer !== null) {
         window.clearTimeout(speakTimer);
         speakTimer = null;
       }
     };
-  }, []);
+  }, [applyPhoneCallState, handleHUDState]);
 
   /* =========================================================
      3D AVATAR STATE DISPATCHER (CONTINUOUS SPEECH LOCK)
@@ -1324,6 +1445,8 @@ export default function Home() {
           setModal("settings");
         }}
       />
+
+      {phoneCall && <PhoneCallIsland call={phoneCall} />}
 
       <AIChatBot
         open={aiChatOpen}

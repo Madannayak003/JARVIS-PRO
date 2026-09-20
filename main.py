@@ -36,7 +36,7 @@ from config.settings import get_assistant_display_name
 
 from skills.loader import load_all
 from ai.memory import init_memory
-from core.services import start_all
+from core.services import start_all, stop_all
 from core.core_state import mark_core_ready
 from core.core_state import wait_for_core
 
@@ -522,6 +522,11 @@ def main():
         try:
             from core.listener import stop_listener
             stop_listener()
+        except Exception:
+            pass
+
+        try:
+            stop_all()
         except Exception:
             pass
 

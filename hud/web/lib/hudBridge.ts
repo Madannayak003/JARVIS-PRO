@@ -76,6 +76,10 @@ export class HUDBridge {
 
     source.onopen = () => {
 
+      if (this.source !== source) {
+        return;
+      }
+
       this.onConnection?.(
         "connected"
       );
@@ -85,6 +89,10 @@ export class HUDBridge {
     source.addEventListener(
       "state",
       (message) => {
+
+        if (this.source !== source) {
+          return;
+        }
 
         try {
 
@@ -108,6 +116,10 @@ export class HUDBridge {
     source.addEventListener(
       "hud",
       (message) => {
+
+        if (this.source !== source) {
+          return;
+        }
 
         try {
 
@@ -133,6 +145,10 @@ export class HUDBridge {
     );
 
     source.onerror = () => {
+
+      if (this.source !== source) {
+        return;
+      }
 
       this.onConnection?.(
         "offline"

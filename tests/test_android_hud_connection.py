@@ -110,6 +110,27 @@ class AndroidHudConnectionTests(unittest.TestCase):
         self.assertIn("manager.disconnect_wireless(endpoint)", server)
         self.assertNotIn('run_adb(["kill-server"])', server)
 
+    def test_hud_eventsource_subscription_is_stable_and_deduplicated(self):
+        page = Path("hud/web/app/page.tsx").read_text(encoding="utf-8")
+        bridge = Path("hud/web/lib/hudBridge.ts").read_text(encoding="utf-8")
+
+        self.assertIn("const handleHUDState = useCallback", page)
+        self.assertIn("[applyPhoneCallState, handleHUDState]", page)
+        self.assertNotIn("}, [hudState.system]);", page)
+        self.assertEqual(page.count("new HUDBridge("), 1)
+        self.assertIn("if (this.source !== source)", bridge)
+        self.assertIn("phoneCallStatesEqual", page)
+        self.assertIn("hudStatesEqual", page)
+
+    def test_disconnected_phone_call_cannot_be_resurrected_by_stale_hud_state(self):
+        page = Path("hud/web/app/page.tsx").read_text(encoding="utf-8")
+
+        self.assertIn("phoneCallDismissedRef", page)
+        self.assertIn("phoneCallExitTokenRef", page)
+        self.assertIn("stale DISCONNECTED snapshot", page)
+        self.assertIn("phoneCallDismissedRef.current = true", page)
+        self.assertIn("if (exitToken !== phoneCallExitTokenRef.current)", page)
+
 
 if __name__ == "__main__":
     unittest.main()

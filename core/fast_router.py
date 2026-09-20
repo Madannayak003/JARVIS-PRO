@@ -17,9 +17,11 @@ from core.routers.web_router import web_route
 from core.routers.weather_router import weather_route
 from core.routers.android_router import android_route
 from core.routers.payment_router import payment_route
+from core.routers.phone_call_router import phone_call_route
 
 ROUTERS = [
 
+    phone_call_route,
     payment_route,
     memory_route,
     news_route,
