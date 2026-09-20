@@ -71,6 +71,18 @@ CATEGORIES = {
         "stop_recording",
     },
 
+    "android_control": {
+        "android_check_adb",
+        "android_check_device",
+        "android_device_info",
+        "android_open_app",
+        "android_launch_app",
+    },
+
+    "payments": {
+        "make_payment",
+    },
+
     "communication": {
         "whatsapp_open",
         "whatsapp_close",

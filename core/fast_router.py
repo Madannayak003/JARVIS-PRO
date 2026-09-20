@@ -15,9 +15,12 @@ from core.routers.file_selection_router import file_selection_route
 from core.routers.memory_router import memory_route
 from core.routers.web_router import web_route
 from core.routers.weather_router import weather_route
+from core.routers.android_router import android_route
+from core.routers.payment_router import payment_route
 
 ROUTERS = [
 
+    payment_route,
     memory_route,
     news_route,
     weather_route,
@@ -30,6 +33,7 @@ ROUTERS = [
     network_route,
     media_route,
     vision_route,
+    android_route,
     file_route,
     email_route,
     contact_route,

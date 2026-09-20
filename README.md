@@ -107,6 +107,25 @@ Natural wording is supported, so the examples below are representative phrases
 rather than a strict command grammar. Some actions require a configured account,
 browser session, Windows permission, network connection, or optional dependency.
 
+### Android Control and Payment
+
+The Android bridge in `services/android/` is a small ADB transport layer shared
+by two separate skills. It uses `ANDROID_ADB_PATH` and `ANDROID_DEVICE_ID`,
+then falls back to `C:\platform-tools\adb.exe` when that file exists. It uses
+safe subprocess argument lists and resolves named apps from the connected
+device's installed packages.
+
+Android Control supports device checks and explicitly phone-scoped app
+launching, for example `check adb`, `check phone`, `open phone camera`,
+`open phone Chrome`, `open phone YouTube`, `open phone PhonePe`, and
+`launch phone <app>`. Generic commands such as `open camera` and `open Chrome`
+remain with the existing desktop skills. Payment is intentionally user-driven:
+`make payment` opens the Android payment-app resolver, while `make payment
+using PhonePe`, `Google Pay`, or `Paytm` opens that requested app. The official
+payment app handles QR scanning, recipient/amount review, PIN or other security
+authentication, and final authorization. ASTRA does not read or enter those
+values, simulate payment taps, or claim completion.
+
 ### Face recognition and registration
 
 ASTRA uses the existing YOLO camera pipeline for person detection and performs
@@ -180,6 +199,8 @@ local port if that one is occupied.
 | `skills/browser_control/browser_controls.py` | `refresh`, `back`, `forward`, `new_tab`, `close_tab`, `scroll_down`, `scroll_up` | "Refresh the page", "Go back", "Open a new tab", "Scroll down" |
 | `skills/camera/camera.py` | `camera_status`, `capture`, `camera_preview`, `camera_close`, `start_recording`, `stop_recording` | "Open camera", "Take a photo", "Start recording" |
 | `skills/camera/vision_skill.py` | camera vision, face registration, face cancellation, and face deletion actions | "What can you see?", "Register my face", "Delete face Rahul" |
+| `skills/android_control/android_control.py` | `android_check_adb`, `android_check_device`, `android_device_info`, phone-scoped app launching | "Check phone", "Open phone Chrome", "Launch phone YouTube" |
+| `skills/payments/payments.py` | `make_payment` | "Make payment", "Make payment using PhonePe" |
 | `skills/communication/whatsapp.py` | WhatsApp open/close, message, file, photo, screenshot, scheduled-message, call, and video-call actions | "Send WhatsApp message to Alex", "Send the latest screenshot on WhatsApp" |
 | `skills/communication/email.py` | `send_email`, email-contact actions | "Send an email to Alex", "Show email contacts" |
 | `skills/communication/contact.py` | `remember_contact`, `forget_contact`, `show_contacts` | "Remember Alex's number", "Show my contacts" |
@@ -330,13 +351,15 @@ JARVIS-PRO/
 │       ├── lib/            # Three.js scenes, avatars, bridge, hand tracking
 │       ├── public/models/  # GLB 3D assets
 │       └── package.json    # HUD scripts and Node dependencies
-├── services/               # External-service and Windows integration adapters
+├── services/               # External-service, Android, and Windows adapters
 ├── skills/                 # Feature modules registered as executable actions
 │   ├── assistant/          # Greetings and assistant responses
 │   ├── automation/         # Home automation
 │   ├── browser/            # Browser, Google, and YouTube actions
 │   ├── browser_control/    # In-browser navigation controls
 │   ├── camera/             # Camera capture, recording, and vision
+│   ├── android_control/    # Simple Android device/app control
+│   ├── payments/           # User-driven payment-app launch flow
 │   ├── communication/      # WhatsApp, email, contacts, GitHub, ChatGPT
 │   ├── files/              # File, folder, archive, recent-file, recycle actions
 │   ├── media/              # General media and Spotify controls

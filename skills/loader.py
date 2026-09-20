@@ -61,6 +61,8 @@ SKILLS = [
     "screen.screen_vision_skill",
     "camera.camera",
     "camera.vision_skill",
+    "android_control.android_control",
+    "payments.payments",
 ]
 
 
