@@ -39,7 +39,7 @@ MAIN_PY = (
     / "run_jarvis.py"
 )
 
-ICON_PATH = PROJECT_ROOT / "config" / "jarvis.ico"
+ICON_PATH = PROJECT_ROOT / "assets" / "icons" / "jarvis.ico"
 
 SHORTCUT_NAME = "JARVIS PRO.lnk"
 
