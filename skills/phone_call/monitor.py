@@ -16,6 +16,9 @@ IDLE = "IDLE"
 RINGING = "RINGING"
 ACTIVE = "ACTIVE"
 DISCONNECTED = "DISCONNECTED"
+OUTGOING_IDLE_GRACE_SECONDS = float(
+    os.getenv("PHONE_CALL_OUTGOING_IDLE_GRACE", "8.0")
+)
 
 
 @dataclass(frozen=True)
@@ -69,6 +72,7 @@ class PhoneCallMonitor:
         self._last_transition = IDLE
         self._last_ended_at = 0.0
         self._ring_started_at_ms = 0
+        self._outgoing_idle_since = 0.0
 
     @staticmethod
     def _speak(message: str) -> None:
@@ -157,6 +161,15 @@ class PhoneCallMonitor:
     def process_snapshot(self, observed: CallSnapshot) -> CallSnapshot:
         with self._lock:
             previous = self._snapshot
+            if previous.state == "OUTGOING" and observed.state == IDLE:
+                now = time.monotonic()
+                if not self._outgoing_idle_since:
+                    self._outgoing_idle_since = now
+                if now - self._outgoing_idle_since < OUTGOING_IDLE_GRACE_SECONDS:
+                    return previous
+            else:
+                self._outgoing_idle_since = 0.0
+
             if previous.state in {"OUTGOING", RINGING, ACTIVE} and observed.state == IDLE:
                 ended = CallSnapshot(
                     state=DISCONNECTED,

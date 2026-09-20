@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from core.routers.phone_call_router import phone_call_route
 from services.android import AdbClient
+import skills.phone_call.monitor as monitor_module
 from skills.phone_call.monitor import (
     ACTIVE,
     DISCONNECTED,
@@ -243,6 +244,49 @@ class PhoneCallTests(unittest.TestCase):
         ended = monitor.process_snapshot(CallSnapshot(IDLE))
         self.assertEqual(ended.state, DISCONNECTED)
         self.assertEqual(ended.caller_name, "Rahul")
+        self.assertIn("Call ended", notifications[-1])
+
+    def test_outgoing_transient_idle_keeps_calling_until_active(self):
+        notifications = []
+        monitor = PhoneCallMonitor(
+            manager=object(),
+            announce=lambda message: None,
+            notify=notifications.append,
+        )
+
+        monitor.begin_outgoing("+919876543210", "Rahul")
+        transient = monitor.process_snapshot(CallSnapshot(IDLE))
+        self.assertEqual(transient.state, "OUTGOING")
+        self.assertFalse(any("Call ended" in message for message in notifications))
+
+        active = monitor.process_snapshot(CallSnapshot(ACTIVE))
+        self.assertEqual(active.state, ACTIVE)
+        self.assertEqual(active.direction, "OUTGOING")
+        self.assertFalse(any("Call ended" in message for message in notifications))
+
+    def test_outgoing_idle_beyond_grace_becomes_disconnected(self):
+        notifications = []
+        monitor = PhoneCallMonitor(
+            manager=object(),
+            announce=lambda message: None,
+            notify=notifications.append,
+        )
+
+        monitor.begin_outgoing("+919876543210", "Rahul")
+        with patch.object(
+            monitor_module.time,
+            "monotonic",
+            side_effect=(
+                100.0,
+                100.0 + monitor_module.OUTGOING_IDLE_GRACE_SECONDS + 0.01,
+                100.0 + monitor_module.OUTGOING_IDLE_GRACE_SECONDS + 0.01,
+            ),
+        ):
+            self.assertEqual(monitor.process_snapshot(CallSnapshot(IDLE)).state, "OUTGOING")
+            ended = monitor.process_snapshot(CallSnapshot(IDLE))
+
+        self.assertEqual(ended.state, DISCONNECTED)
+        self.assertEqual(ended.direction, "OUTGOING")
         self.assertIn("Call ended", notifications[-1])
 
     def test_hud_state_event_contains_structured_call_payload(self):
