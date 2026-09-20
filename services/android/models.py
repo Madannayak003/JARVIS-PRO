@@ -35,6 +35,19 @@ class AndroidDevice:
         return self.state == "device"
 
     @property
+    def is_wireless(self) -> bool:
+        """ADB serials for TCP/IP devices are represented as host:port."""
+        return ":" in self.serial
+
+    @property
+    def connection_type(self) -> str:
+        return "Wireless" if self.is_wireless else "USB"
+
+    @property
+    def endpoint(self) -> str | None:
+        return self.serial if self.is_wireless else None
+
+    @property
     def display_name(self) -> str:
         return self.model or self.product or self.serial
 
@@ -49,6 +62,22 @@ class DeviceStatus:
     selected_device: AndroidDevice | None = None
     model: str = ""
     android_version: str = ""
+
+
+@dataclass(frozen=True)
+class AndroidConnectionStatus:
+    """Compact connection snapshot for local UI/API consumers."""
+
+    adb_available: bool
+    adb_path: str | None
+    connected: bool = False
+    selected_device: AndroidDevice | None = None
+    model: str = ""
+    android_version: str = ""
+    connection_type: str = ""
+    endpoint: str | None = None
+    wireless_endpoints: tuple[str, ...] = ()
+    error: str = ""
 
 
 @dataclass(frozen=True)

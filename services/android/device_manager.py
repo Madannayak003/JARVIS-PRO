@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Sequence
 
-from .adb_client import AdbClient, AdbError
+from .adb_client import AdbClient, AdbError, normalize_endpoint
 from .android_intents import (
     ACTION_MAIN,
     CATEGORY_LAUNCHER,
@@ -13,7 +13,7 @@ from .android_intents import (
     package_hints_for,
     standard_intent_for,
 )
-from .models import AppLaunchResult, DeviceStatus, IntentSpec
+from .models import AndroidConnectionStatus, AppLaunchResult, DeviceStatus, IntentSpec
 
 
 class AndroidDeviceManager:
@@ -40,6 +40,20 @@ class AndroidDeviceManager:
 
     def run_adb(self, args: Sequence[str], **kwargs):
         return self.adb.run_adb(args, **kwargs)
+
+    def connect_wireless(self, address: str, port: int | str = 5555):
+        """Connect one user-selected wireless endpoint through the shared bridge."""
+        endpoint = normalize_endpoint(address, port)
+        result = self.adb.connect(address, port)
+        if result.ok:
+            # Make the explicitly requested endpoint the active bridge target
+            # when it is visible, while retaining USB fallback after disconnect.
+            self.adb.select_device(endpoint)
+        return result
+
+    def disconnect_wireless(self, endpoint: str):
+        """Disconnect only the requested wireless endpoint."""
+        return self.adb.disconnect(endpoint)
 
     def launch_intent(self, intent: IntentSpec, *, device: str | None = None) -> bool:
         """Launch an intent without coordinates, taps, or text injection."""
@@ -178,4 +192,38 @@ class AndroidDeviceManager:
 
         return DeviceStatus(
             adb_available, adb_path, devices, selected, model, android_version
+        )
+
+    def connection_status(self) -> AndroidConnectionStatus:
+        """Return one UI-safe snapshot without exposing duplicate transport rows."""
+        status = self.device_status()
+        wireless_endpoints = tuple(
+            device.serial
+            for device in status.devices
+            if device.is_online and device.is_wireless
+        )
+        selected = status.selected_device
+        if selected is None:
+            selected = next(
+                (device for device in status.devices if device.is_online),
+                None,
+            )
+        if selected is None:
+            return AndroidConnectionStatus(
+                status.adb_available,
+                status.adb_path,
+                wireless_endpoints=wireless_endpoints,
+            )
+
+        model = status.model or selected.model or selected.product
+        return AndroidConnectionStatus(
+            status.adb_available,
+            status.adb_path,
+            connected=True,
+            selected_device=selected,
+            model=model,
+            android_version=status.android_version,
+            connection_type=selected.connection_type,
+            endpoint=selected.endpoint,
+            wireless_endpoints=wireless_endpoints,
         )

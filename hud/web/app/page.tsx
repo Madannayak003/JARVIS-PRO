@@ -93,7 +93,7 @@ function personalLinkEntries(value: unknown): PersonalLinkEntry[] {
   });
 }
 
-type SettingsModal = "remote" | "customise" | "settings" | null;
+type SettingsModal = "remote" | "android" | "customise" | "settings" | null;
 
 type RemoteInfo = {
   ok: boolean;
@@ -103,6 +103,33 @@ type RemoteInfo = {
   pairing_pin: string;
   pairing_active: boolean;
   clients: number;
+};
+
+type AndroidStatus = {
+  ok: boolean;
+  adb_available: boolean;
+  connected: boolean;
+  device: string;
+  serial: string;
+  model: string;
+  connection_type: "USB" | "Wireless" | "";
+  endpoint: string;
+  wireless_endpoints: string[];
+  android_version: string;
+  error?: string;
+};
+
+const EMPTY_ANDROID_STATUS: AndroidStatus = {
+  ok: true,
+  adb_available: false,
+  connected: false,
+  device: "",
+  serial: "",
+  model: "",
+  connection_type: "",
+  endpoint: "",
+  wireless_endpoints: [],
+  android_version: "",
 };
 
 const LOCAL_DASHBOARD_URL =
@@ -190,6 +217,11 @@ export default function Home() {
   const [remoteInfo, setRemoteInfo] = useState<RemoteInfo | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [shortcutLoading, setShortcutLoading] = useState(false);
+  const [androidStatus, setAndroidStatus] = useState<AndroidStatus>(EMPTY_ANDROID_STATUS);
+  const [androidIp, setAndroidIp] = useState("");
+  const [androidPort, setAndroidPort] = useState("5555");
+  const [androidLoading, setAndroidLoading] = useState(false);
+  const [androidMessage, setAndroidMessage] = useState("");
 
   const [commandInput, setCommandInput] = useState("");
   const [commandSending, setCommandSending] = useState(false);
@@ -197,12 +229,117 @@ export default function Home() {
   // 1. Inside your component, add an input ref:
   const commandInputRef = useRef<HTMLInputElement | null>(null);
 
+  const refreshAndroidStatus = async () => {
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/android`, {
+        cache: "no-store",
+      });
+      const result = (await response.json()) as AndroidStatus;
+      if (!response.ok || !result.ok) throw new Error(result.error || "Android status unavailable.");
+      const nextStatus = { ...EMPTY_ANDROID_STATUS, ...result };
+      setAndroidStatus(nextStatus);
+      if (nextStatus.endpoint && !androidIp.trim()) {
+        const separator = nextStatus.endpoint.lastIndexOf(":");
+        if (separator > 0) {
+          setAndroidIp(nextStatus.endpoint.slice(0, separator).replace(/^\[|\]$/g, ""));
+          setAndroidPort(nextStatus.endpoint.slice(separator + 1));
+        }
+      }
+    } catch (error) {
+      setAndroidStatus((previous) => ({
+        ...EMPTY_ANDROID_STATUS,
+        error: error instanceof Error ? error.message : "Android status unavailable.",
+      }));
+    }
+  };
+
+  const openAndroidPanel = () => {
+    setAndroidMessage("");
+    setModal("android");
+    void refreshAndroidStatus();
+  };
+
+  const connectAndroid = async () => {
+    const ip = androidIp.trim();
+    const port = androidPort.trim() || "5555";
+    if (!ip) {
+      setAndroidMessage("Enter the phone IP address.");
+      return;
+    }
+
+    setAndroidLoading(true);
+    setAndroidMessage("");
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/android/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ ip, port }),
+      });
+      const result = await response.json();
+      if (result.status) setAndroidStatus({ ...EMPTY_ANDROID_STATUS, ...result.status });
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Unable to connect to Android device.");
+      }
+      window.localStorage.setItem("jarvis-android-endpoint", JSON.stringify({ ip, port }));
+      setAndroidMessage("Android device connected.");
+    } catch (error) {
+      setAndroidMessage(error instanceof Error ? error.message : "Android connection failed.");
+      await refreshAndroidStatus();
+    } finally {
+      setAndroidLoading(false);
+    }
+  };
+
+  const disconnectAndroid = async () => {
+    setAndroidLoading(true);
+    setAndroidMessage("");
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/android/disconnect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ endpoint: androidStatus.endpoint }),
+      });
+      const result = await response.json();
+      if (result.status) setAndroidStatus({ ...EMPTY_ANDROID_STATUS, ...result.status });
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Unable to disconnect Android device.");
+      }
+      setAndroidMessage("Android device disconnected.");
+    } catch (error) {
+      setAndroidMessage(error instanceof Error ? error.message : "Android disconnection failed.");
+      await refreshAndroidStatus();
+    } finally {
+      setAndroidLoading(false);
+    }
+  };
+
   // 2. Automatically restore cursor focus whenever sending completes:
   useEffect(() => {
     if (!commandSending) {
       commandInputRef.current?.focus();
     }
   }, [commandSending]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("jarvis-android-endpoint");
+      if (saved) {
+        const endpoint = JSON.parse(saved);
+        if (typeof endpoint.ip === "string") setAndroidIp(endpoint.ip);
+        if (typeof endpoint.port === "string" || typeof endpoint.port === "number") {
+          setAndroidPort(String(endpoint.port));
+        }
+      }
+    } catch {}
+
+    void refreshAndroidStatus();
+    const statusInterval = window.setInterval(() => {
+      void refreshAndroidStatus();
+    }, 5000);
+    return () => window.clearInterval(statusInterval);
+  }, []);
 
   /* =========================================================
      LOAD SETTINGS
@@ -1460,6 +1597,20 @@ export default function Home() {
 
         {/* ALL 8 BUTTONS IN ONE TRANSPARENT INLINE ROW */}
         <nav className="hud-bottom-toolbar" aria-label="HUD Cockpit Controls">
+          <button
+            type="button"
+            className={`hud-bar-btn android-status-button ${
+              androidStatus.connected ? "is-android-connected" : ""
+            }`}
+            onClick={openAndroidPanel}
+            aria-label="Android device connection"
+          >
+            <span className="android-status-indicator" aria-hidden="true">
+              {androidStatus.connected ? "●" : "○"}
+            </span>
+            <span>ANDROID</span>
+          </button>
+
           <button type="button" className="hud-bar-btn" onClick={openRemoteControl}>
             <span className="btn-icon"></span>
             <span>REMOTE</span>
@@ -1565,6 +1716,114 @@ export default function Home() {
           </button>
         </nav>
       </div>
+
+      {/* =====================================================
+          ANDROID CONNECTION MODAL
+          ===================================================== */}
+      {modal === "android" && (
+        <div
+          className="settings-modal-backdrop"
+          onClick={() => setModal(null)}
+        >
+          <section
+            className="settings-modal android-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="settings-modal-heading">
+              <span className="settings-heading-icon">◆</span>
+              <span>ANDROID DEVICE</span>
+              <button
+                type="button"
+                className="settings-modal-close"
+                aria-label="Close Android connection panel"
+                onClick={() => setModal(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="android-modal-content">
+              <div className="android-status-grid">
+                <span>Status</span>
+                <strong className={androidStatus.connected ? "android-connected-text" : ""}>
+                  {androidStatus.connected ? "Connected" : "Disconnected"}
+                </strong>
+                <span>Device</span>
+                <strong>{androidStatus.model || androidStatus.device || "—"}</strong>
+                <span>Connection</span>
+                <strong>{androidStatus.connection_type || "—"}</strong>
+                {androidStatus.endpoint && (
+                  <>
+                    <span>Endpoint</span>
+                    <strong>{androidStatus.endpoint}</strong>
+                  </>
+                )}
+              </div>
+
+              <div className="android-endpoint-fields">
+                <label>
+                  <span>IP ADDRESS</span>
+                  <input
+                    type="text"
+                    value={androidIp}
+                    onChange={(event) => setAndroidIp(event.target.value)}
+                    placeholder="192.168.1.100"
+                    spellCheck={false}
+                  />
+                </label>
+                <label>
+                  <span>PORT</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={androidPort}
+                    onChange={(event) => setAndroidPort(event.target.value)}
+                    placeholder="5555"
+                    spellCheck={false}
+                  />
+                </label>
+              </div>
+
+              {androidMessage && <div className="android-modal-message">{androidMessage}</div>}
+              {androidStatus.error && !androidMessage && (
+                <div className="android-modal-message">{androidStatus.error}</div>
+              )}
+
+              <div className="settings-modal-actions">
+                {(!androidStatus.connected ||
+                  androidStatus.connection_type !== "Wireless" ||
+                  `${androidIp.trim()}:${androidPort.trim() || "5555"}` !== androidStatus.endpoint) && (
+                  <button
+                    type="button"
+                    className="settings-modal-button settings-modal-button-primary"
+                    onClick={() => void connectAndroid()}
+                    disabled={androidLoading || !androidIp.trim()}
+                  >
+                    {androidLoading ? "CONNECTING..." : "CONNECT"}
+                  </button>
+                )}
+                {androidStatus.connected && androidStatus.connection_type === "Wireless" && (
+                  <button
+                    type="button"
+                    className="settings-modal-button settings-modal-button-primary"
+                    onClick={() => void disconnectAndroid()}
+                    disabled={androidLoading}
+                  >
+                    {androidLoading ? "DISCONNECTING..." : "DISCONNECT"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="settings-modal-button"
+                  onClick={() => setModal(null)}
+                >
+                  DISMISS
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* =====================================================
           REMOTE CONTROL MODAL

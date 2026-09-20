@@ -970,6 +970,27 @@ class DashboardServer:
             self.ip,
         }
 
+    def _android_status_payload(self):
+        """Serialize the shared Android bridge status for the local HUD."""
+        from services.android import get_android_manager
+
+        status = get_android_manager().connection_status()
+        device = status.selected_device
+        return {
+            "ok": True,
+            "adb_available": status.adb_available,
+            "adb_path": status.adb_path or "",
+            "connected": status.connected,
+            "device": device.display_name if device else "",
+            "serial": device.serial if device else "",
+            "model": status.model,
+            "connection_type": status.connection_type,
+            "endpoint": status.endpoint or "",
+            "wireless_endpoints": list(status.wireless_endpoints),
+            "android_version": status.android_version,
+            "error": status.error,
+        }
+
     # =========================================================
     # BROADCAST
     # =========================================================
@@ -1726,6 +1747,118 @@ class DashboardServer:
                 ),
             }
             
+        # =====================================================
+        # LOCAL — ANDROID CONNECTION
+        # =====================================================
+
+        @app.get("/api/local/android")
+        async def local_android_status(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+            try:
+                return self._android_status_payload()
+            except Exception as exc:
+                print("[LOCAL ANDROID STATUS ERROR]", exc)
+                return JSONResponse(
+                    {"ok": False, "error": "Android status unavailable."},
+                    status_code=500,
+                )
+
+        @app.post("/api/local/android/connect")
+        async def local_android_connect(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+            try:
+                body = await request.json()
+                address = str(
+                    body.get("ip", body.get("address", ""))
+                ).strip()
+                port = body.get("port", 5555)
+                if not address:
+                    return JSONResponse(
+                        {"ok": False, "error": "Android IP address is required."},
+                        status_code=400,
+                    )
+
+                from services.android import get_android_manager, normalize_endpoint
+
+                manager = get_android_manager()
+                manager.connect_wireless(address, port)
+                payload = self._android_status_payload()
+                endpoint = normalize_endpoint(address, port)
+                connected = endpoint in payload["wireless_endpoints"]
+                if not connected:
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "status": payload,
+                            "error": "Unable to connect to Android device.",
+                        },
+                        status_code=502,
+                    )
+                return {"ok": True, "status": payload}
+            except (TypeError, ValueError) as exc:
+                return JSONResponse(
+                    {"ok": False, "error": str(exc)},
+                    status_code=400,
+                )
+            except Exception as exc:
+                print("[LOCAL ANDROID CONNECT ERROR]", exc)
+                return JSONResponse(
+                    {"ok": False, "error": "Unable to connect to Android device."},
+                    status_code=502,
+                )
+
+        @app.post("/api/local/android/disconnect")
+        async def local_android_disconnect(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+            try:
+                body = await request.json()
+            except Exception:
+                body = {}
+
+            try:
+                from services.android import get_android_manager
+
+                manager = get_android_manager()
+                payload = self._android_status_payload()
+                endpoint = str(body.get("endpoint", "")).strip()
+                if not endpoint:
+                    endpoint = str(payload.get("endpoint", "")).strip()
+                if not endpoint or endpoint not in payload["wireless_endpoints"]:
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "status": payload,
+                            "error": "No connected wireless Android endpoint is selected.",
+                        },
+                        status_code=400,
+                    )
+
+                manager.disconnect_wireless(endpoint)
+                return {"ok": True, "status": self._android_status_payload()}
+            except (TypeError, ValueError) as exc:
+                return JSONResponse(
+                    {"ok": False, "error": str(exc)},
+                    status_code=400,
+                )
+            except Exception as exc:
+                print("[LOCAL ANDROID DISCONNECT ERROR]", exc)
+                return JSONResponse(
+                    {"ok": False, "error": "Unable to disconnect Android device."},
+                    status_code=502,
+                )
+
         # =====================================================
         # LOCAL — DESKTOP SHORTCUT
         # =====================================================

@@ -11,9 +11,17 @@ from .adb_client import (
     AdbDeviceError,
     AdbError,
     AdbNotFoundError,
+    normalize_endpoint,
 )
 from .device_manager import AndroidDeviceManager
-from .models import AdbCommandResult, AndroidDevice, AppLaunchResult, DeviceStatus, IntentSpec
+from .models import (
+    AdbCommandResult,
+    AndroidConnectionStatus,
+    AndroidDevice,
+    AppLaunchResult,
+    DeviceStatus,
+    IntentSpec,
+)
 
 _manager = None
 
@@ -28,7 +36,7 @@ def get_android_manager() -> AndroidDeviceManager:
 
 __all__ = [
     "AdbClient", "AdbCommandError", "AdbDeviceError", "AdbError",
-    "AdbNotFoundError", "AdbCommandResult",
-    "AndroidDevice", "AndroidDeviceManager", "AppLaunchResult", "DeviceStatus",
+    "AdbNotFoundError", "AdbCommandResult", "normalize_endpoint",
+    "AndroidConnectionStatus", "AndroidDevice", "AndroidDeviceManager", "AppLaunchResult", "DeviceStatus",
     "IntentSpec", "get_android_manager",
 ]

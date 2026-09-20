@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,7 +13,29 @@ from .models import AdbCommandResult, AndroidDevice
 
 
 DEFAULT_ADB_PATH = Path(r"C:\platform-tools\adb.exe")
-_NO_DEVICE_COMMANDS = {"version", "devices", "start-server", "kill-server"}
+_NO_DEVICE_COMMANDS = {
+    "version", "devices", "start-server", "kill-server", "connect", "disconnect",
+}
+
+
+def normalize_endpoint(address: str, port: int | str = 5555) -> str:
+    """Validate and normalize a user-provided ADB TCP endpoint."""
+    host = str(address).strip()
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1].strip()
+    if not host or any(character.isspace() for character in host):
+        raise ValueError("A valid Android IP address is required.")
+    if not re.fullmatch(r"[A-Za-z0-9_.:-]+", host):
+        raise ValueError("The Android IP address contains invalid characters.")
+    try:
+        normalized_port = int(port)
+    except (TypeError, ValueError) as error:
+        raise ValueError("The Android ADB port must be a number.") from error
+    if not 1 <= normalized_port <= 65535:
+        raise ValueError("The Android ADB port must be between 1 and 65535.")
+    if ":" in host and not host.count(":") == 1:
+        return f"[{host}]:{normalized_port}"
+    return f"{host}:{normalized_port}"
 
 
 class AdbError(RuntimeError):
@@ -168,6 +191,19 @@ class AdbClient:
                 )
             )
         return devices
+
+    def connect(self, address: str, port: int | str = 5555) -> AdbCommandResult:
+        """Connect one explicitly requested wireless ADB endpoint."""
+        endpoint = normalize_endpoint(address, port)
+        return self.run_adb(["connect", endpoint])
+
+    def disconnect(self, endpoint: str) -> AdbCommandResult:
+        """Disconnect only one explicitly requested wireless endpoint."""
+        value = str(endpoint).strip()
+        if not value or ":" not in value:
+            raise ValueError("A wireless Android endpoint is required.")
+        address, port = value.rsplit(":", 1)
+        return self.run_adb(["disconnect", normalize_endpoint(address, port)])
 
     def select_device(self, device_id: str | None = None) -> AndroidDevice | None:
         devices = self.get_devices()
