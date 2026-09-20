@@ -80,6 +80,7 @@ from chatbot.ai_chat_clipboard import (
 )
 
 from tools.windows_integration import (
+    create_desktop_shortcut,
     get_autostart_status,
     set_autostart,
 )
@@ -91,78 +92,6 @@ from core.listener import (
     listener_running,
     listener_paused,
 )
-
-# =============================================================
-# ROBUST DESKTOP SHORTCUT BUILDER (WINDOWS / LINUX)
-# =============================================================
-
-def create_desktop_shortcut() -> str:
-    """
-    Creates a clean desktop shortcut with the exact working directory 
-    set to your Jarvis project path, using pythonw.exe to stay windowless.
-    """
-    import sys
-    import os
-
-    desktop_path = None
-    if os.name == "nt":
-        try:
-            import winreg
-            sub_key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
-                desktop_path = winreg.QueryValueEx(key, "Desktop")[0]
-        except Exception:
-            desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    else:
-        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-
-    if not desktop_path or not os.path.exists(desktop_path):
-        os.makedirs(desktop_path, exist_ok=True)
-
-    # Get absolute path to main.py instead of sys.argv[0] so shortcut always boots the core
-    project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    target_script = os.path.join(project_dir, "run_jarvis.py")
-    icon_path = os.path.join(project_dir, "config", "jarvis.ico")
-    
-    pythonw_executable = sys.executable.replace("python.exe", "pythonw.exe")
-    if not os.path.exists(pythonw_executable):
-        pythonw_executable = sys.executable
-
-    if os.name == "nt":
-        shortcut_path = os.path.join(desktop_path, "Astra.lnk")
-        powershell_script = (
-            f"$WshShell = New-Object -ComObject WScript.Shell; "
-            f"$Shortcut = $WshShell.CreateShortcut('{shortcut_path}'); "
-            f"$Shortcut.TargetPath = '{pythonw_executable}'; "
-            f"$Shortcut.Arguments = '\"{target_script}\"'; "
-            f"$Shortcut.WorkingDirectory = '{project_dir}'; "  # Forces correct project path context
-            f"$Shortcut.WindowStyle = 7; "
-        )
-        if os.path.exists(icon_path):
-            powershell_script += f"$Shortcut.IconLocation = '{icon_path}'; "
-        powershell_script += "$Shortcut.Save()"
-
-        import subprocess
-        subprocess.run(["powershell", "-Command", powershell_script], check=True)
-        return "Windows desktop shortcut created successfully."
-    else:
-        shortcut_path = os.path.join(desktop_path, "Astra.desktop")
-        desktop_entry = (
-            f"[Desktop Entry]\n"
-            f"Type=Application\n"
-            f"Name={get_assistant_display_name()}\n"
-            f"Exec={pythonw_executable} \"{target_script}\"\n"
-            f"Path={project_dir}\n"
-            f"Terminal=false\n"
-        )
-        if os.path.exists(icon_path):
-            desktop_entry += f"Icon={icon_path}\n"
-        
-        with open(shortcut_path, "w", encoding="utf-8") as f:
-            f.write(desktop_entry)
-        os.chmod(shortcut_path, 0o755)
-        return "Linux desktop shortcut created successfully."
-
 
 # =============================================================
 # FASTAPI

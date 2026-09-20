@@ -1,12 +1,15 @@
 """Focused tests for the Android bridge command boundaries."""
 
 import unittest
+import subprocess
 from pathlib import Path
+from unittest.mock import patch
 
 from core.routers.android_router import android_route
 from core.routers.browser_router import browser_route
 from core.routers.payment_router import payment_route
 from core.routers.vision_router import vision_route
+import services.android.adb_client as adb_client_module
 from services.android import AdbClient, AndroidDeviceManager
 
 
@@ -64,6 +67,27 @@ class AndroidBridgeTests(unittest.TestCase):
         self.assertEqual(devices[0].serial, "RZ8T5139PRD")
         self.assertEqual(devices[0].model, "SM A135F")
         self.assertFalse(runner.calls[0][1]["shell"])
+
+    def test_adb_uses_no_console_creation_flag_on_windows(self):
+        runner = FakeRunner()
+        client = AdbClient(adb_path="fake-adb", runner=runner)
+
+        with patch.object(adb_client_module.os, "name", "nt"):
+            client.run_adb(["version"])
+
+        self.assertEqual(
+            runner.calls[0][1]["creationflags"],
+            getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+        )
+
+    def test_adb_does_not_pass_windows_creation_flag_on_non_windows(self):
+        runner = FakeRunner()
+        client = AdbClient(adb_path="fake-adb", runner=runner)
+
+        with patch.object(adb_client_module.os, "name", "posix"):
+            client.run_adb(["version"])
+
+        self.assertNotIn("creationflags", runner.calls[0][1])
 
     def test_package_resolution_only_returns_installed_apps(self):
         runner = FakeRunner()

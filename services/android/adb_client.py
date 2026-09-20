@@ -18,6 +18,13 @@ _NO_DEVICE_COMMANDS = {
 }
 
 
+def _adb_subprocess_options() -> dict[str, int]:
+    """Return subprocess options that keep ADB console-free on Windows."""
+    if os.name != "nt":
+        return {}
+    return {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)}
+
+
 def normalize_endpoint(address: str, port: int | str = 5555) -> str:
     """Validate and normalize a user-provided ADB TCP endpoint."""
     host = str(address).strip()
@@ -136,6 +143,7 @@ class AdbClient:
                 timeout=timeout or self.timeout,
                 check=False,
                 shell=False,
+                **_adb_subprocess_options(),
             )
         except FileNotFoundError as error:
             raise AdbNotFoundError(f"ADB executable is not available: {path}") from error
