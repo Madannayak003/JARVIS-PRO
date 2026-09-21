@@ -49,6 +49,30 @@ def fast_route(command):
     command = original_command.lower()
     print("[FAST ROUTER]", command)
 
+    android_targeted = (
+        command.startswith((
+            "open phone ",
+            "open mobile ",
+            "open my phone ",
+            "open my mobile ",
+        ))
+        or (
+            command.startswith("open ")
+            and command.endswith((
+                " on phone",
+                " on mobile",
+                " on my phone",
+                " on my mobile",
+            ))
+        )
+    )
+
+    if android_targeted:
+        android_plan = android_route(command)
+        if android_plan:
+            print("[FAST ROUTER MATCH]", android_plan)
+            return android_plan
+
     for router in ROUTERS:
         # Preserve the spoken casing for registration names while keeping the
         # existing normalized input contract for every other router.

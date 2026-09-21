@@ -9,6 +9,7 @@ from core.routers.android_router import android_route
 from core.routers.browser_router import browser_route
 from core.routers.payment_router import payment_route
 from core.routers.vision_router import vision_route
+from core.fast_router import fast_route
 import services.android.adb_client as adb_client_module
 from services.android import AdbClient, AndroidDeviceManager
 
@@ -131,6 +132,31 @@ class AndroidBridgeTests(unittest.TestCase):
             [{"action": "make_payment", "payment_app": "PhonePe"}],
         )
         self.assertEqual(payment_route("make payment"), [{"action": "make_payment"}])
+
+    def test_fast_route_gives_explicit_android_targets_precedence(self):
+        expected = {
+            "open phone camera": [{"action": "android_open_app", "app": "camera"}],
+            "open mobile camera": [{"action": "android_open_app", "app": "camera"}],
+            "open my phone camera": [{"action": "android_open_app", "app": "camera"}],
+            "open my mobile camera": [{"action": "android_open_app", "app": "camera"}],
+            "open camera on phone": [{"action": "android_open_app", "app": "camera"}],
+            "open camera on mobile": [{"action": "android_open_app", "app": "camera"}],
+            "open camera on my phone": [{"action": "android_open_app", "app": "camera"}],
+            "open camera on my mobile": [{"action": "android_open_app", "app": "camera"}],
+            "open phone whatsapp": [{"action": "android_open_app", "app": "WhatsApp"}],
+            "open whatsapp on phone": [{"action": "android_open_app", "app": "WhatsApp"}],
+            "open whatsapp on mobile": [{"action": "android_open_app", "app": "WhatsApp"}],
+            "open spotify on phone": [{"action": "android_open_app", "app": "Spotify"}],
+            "open instagram on mobile": [{"action": "android_open_app", "app": "Instagram"}],
+        }
+
+        for command, plan in expected.items():
+            with self.subTest(command=command):
+                self.assertEqual(fast_route(command), plan)
+
+        self.assertEqual(fast_route("open camera"), [{"action": "camera_preview"}])
+        self.assertIsNotNone(fast_route("open whatsapp"))
+        self.assertEqual(fast_route("open spotify"), [{"action": "spotify_open"}])
 
     def test_payment_launch_uses_discovered_packages(self):
         runner = FakeRunner()
