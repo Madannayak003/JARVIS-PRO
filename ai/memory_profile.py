@@ -14,6 +14,7 @@ Responsibilities
 """
 
 from ai.memory_store import list_all
+from config.settings import get_assistant_display_name
 
 
 # ---------------------------------------
@@ -84,7 +85,7 @@ def profile_summary():
 
     lines.append("==========================")
 
-    lines.append("ASTRA USER PROFILE")
+    lines.append(f"{get_assistant_display_name()} USER PROFILE")
 
     lines.append("==========================")
 

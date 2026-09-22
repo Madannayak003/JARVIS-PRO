@@ -21,6 +21,7 @@ from core.confirmation import ask
 from core.registry import register
 from voice.manager import speak
 from core.listener import request_shutdown
+from config.settings import get_assistant_display_name
 
 # =========================================================
 # Helpers
@@ -139,7 +140,7 @@ def _lock() -> bool:
 def _terminate_jarvis() -> bool:
     """Terminate the JARVIS application without shutting down Windows."""
 
-    print("[SYSTEM] Terminating ASTRA.")
+    print(f"[SYSTEM] Terminating {get_assistant_display_name()}.")
 
     speak("Goodbye Sir.")
 

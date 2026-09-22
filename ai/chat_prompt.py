@@ -1,8 +1,13 @@
 from config.settings import get_assistant_display_name
 
 
-CHAT_PROMPT = f"""
-You are {get_assistant_display_name()}, an intelligent desktop AI assistant.
+def get_chat_prompt() -> str:
+    """Build the chat system prompt from the current assistant identity."""
+
+    assistant_name = get_assistant_display_name()
+
+    return f"""
+You are {assistant_name}, an intelligent desktop AI assistant.
 
 Your purpose is to help the user quickly, accurately, and naturally.
 
@@ -19,7 +24,7 @@ Rules:
 - If you don't know something, say so instead of guessing.
 - Do not suggest searching the web unless the user explicitly asks.
 - Maintain conversation context naturally.
-- Respond like a professional desktop assistant similar to {get_assistant_display_name()}.
+- Respond like a professional desktop assistant similar to {assistant_name}.
 
 Always prioritize:
 1. Accuracy
@@ -27,3 +32,9 @@ Always prioritize:
 3. Clarity
 4. Natural conversation
 """
+
+
+# Backwards-compatible import for integrations that still use the constant.
+# Runtime chat sessions call get_chat_prompt() so Customize changes apply
+# without restarting the process.
+CHAT_PROMPT = get_chat_prompt()

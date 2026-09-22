@@ -19,7 +19,11 @@ class PromptBuilder:
 
     def __init__(self):
 
-        self.system_prompt = f"""
+        self.system_prompt = self._build_system_prompt()
+
+    @staticmethod
+    def _build_system_prompt() -> str:
+        return f"""
 You are {get_assistant_display_name()}.
 
 You are an intelligent AI assistant designed to help the user with coding,
@@ -281,6 +285,9 @@ Analyzed At:
         self,
         context: AIContext
     ) -> str:
+
+        # Customize can rename the assistant while the process is running.
+        self.system_prompt = self._build_system_prompt()
 
         sections = [
 

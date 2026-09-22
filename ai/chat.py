@@ -1,5 +1,5 @@
 from ai.core.service import ai_service
-from ai.chat_prompt import CHAT_PROMPT
+from ai.chat_prompt import get_chat_prompt
 
 from brain import pipeline
 
@@ -81,7 +81,7 @@ def ask_chat(
 
         stream_callback=ai_chat_stream,
 
-        system_prompt=CHAT_PROMPT,
+        system_prompt=get_chat_prompt(),
 
         stop_event=stop_event
 

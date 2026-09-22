@@ -24,6 +24,7 @@ from ai.core.service import ai_service
 from skills.screen.screen_vision import screen_vision
 
 from brain.screen_context import screen_context
+from config.settings import get_assistant_display_name
 
 
 # =========================================================
@@ -75,7 +76,7 @@ def screen_vision_analyze(data=None):
                 "Do not describe decorative details."
             ),
             system_prompt=(
-                "You are ASTRA's fast live screen-vision assistant. "
+                f"You are {get_assistant_display_name()}'s fast live screen-vision assistant. "
                 "Accurately understand the supplied desktop image. "
                 "Respond naturally and concisely. "
                 "Prioritize useful information over visual detail. "

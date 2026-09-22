@@ -8,6 +8,7 @@ import wave
 import sounddevice as sd
 
 from core.paths import RECORDINGS
+from config.settings import get_assistant_display_name
 
 FFMPEG_PATH = r"C:\Users\madan\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0-full_build\bin\ffmpeg.exe"
 
@@ -104,7 +105,7 @@ class CameraManager:
         if not self.start():
             return None
 
-        window = "ASTRA Camera"
+        window = f"{get_assistant_display_name()} Camera"
 
         frame = None
 
@@ -207,7 +208,7 @@ class CameraManager:
                 self.writer.write(frame)
 
             cv2.imshow(
-                "ASTRA Camera",
+                f"{get_assistant_display_name()} Camera",
                 frame
             )
 

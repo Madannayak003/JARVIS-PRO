@@ -35,6 +35,7 @@ from brain.conversation_manager import ConversationManager
 from brain.context_builder import ContextBuilder
 from brain.prompt_builder import PromptBuilder
 from config.environment import get_env
+from config.settings import get_assistant_display_name
 
 
 # =========================================================
@@ -54,8 +55,9 @@ OLLAMA_TIMEOUT = 120
 # Offline Voice Instructions
 # =========================================================
 
-OFFLINE_VOICE_INSTRUCTIONS = """
-You are ASTRA operating in OFFLINE VOICE MODE.
+def _offline_voice_instructions() -> str:
+    return f"""
+You are {get_assistant_display_name()} operating in OFFLINE VOICE MODE.
 
 You are speaking directly to the user.
 
@@ -208,7 +210,7 @@ class OfflineAI:
         prompt = (
             base_prompt
             + "\n\n"
-            + OFFLINE_VOICE_INSTRUCTIONS
+            + _offline_voice_instructions()
         )
 
         print(
