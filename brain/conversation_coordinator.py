@@ -59,6 +59,7 @@ from brain.followup_resolver import (
 from brain.clarification_manager import (
     ClarificationManager,
 )
+from core.diagnostics import debug_print
 
 # ============================================================
 # Coordinator Result
@@ -202,12 +203,12 @@ class ConversationCoordinator:
 
         raw_input = user_input or ""
         
-        print(
+        debug_print(
             "[CONVERSATION DEBUG] analyze context:",
             id(self.context)
         )
 
-        print(
+        debug_print(
             "[CONVERSATION DEBUG] analyze context snapshot:",
             self.context.snapshot()
         )
@@ -519,12 +520,12 @@ class ConversationCoordinator:
 
         )
         
-        print(
+        debug_print(
             "[CONVERSATION DEBUG] record_execution context:",
             id(self.context)
         )
 
-        print(
+        debug_print(
             "[CONVERSATION DEBUG] context after execution:",
             self.context.snapshot()
         )

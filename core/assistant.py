@@ -36,6 +36,7 @@ from core.context import (
     get_value,
     set_value,
 )
+from core.diagnostics import debug_print
 
 from core.power import (
     sleep,
@@ -574,42 +575,42 @@ def run():
                 conversation_request,
             )
             
-            print(
+            debug_print(
                 "[NCI DEBUG] relation:",
                 conversation_request.relation,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] intent:",
                 conversation_request.intent,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] application:",
                 conversation_request.application,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] skill:",
                 conversation_request.skill,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] object:",
                 conversation_request.object,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] references:",
                 conversation_request.references,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] resolved:",
                 conversation_request.resolved_references,
             )
 
-            print(
+            debug_print(
                 "[NCI DEBUG] unresolved:",
                 conversation_request.unresolved_references,
             )

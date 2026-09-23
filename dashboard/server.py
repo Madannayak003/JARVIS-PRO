@@ -48,6 +48,7 @@ from typing import Callable, Optional
 import json
 
 from core.runtime import handle_priority
+from core.diagnostics import debug_print
 from config.settings import (
     get_assistant_display_name,
     get_assistant_name_lower,
@@ -726,7 +727,7 @@ class DashboardServer:
         if not text:
             return
 
-        print(
+        debug_print(
             "[REMOTE VOICE] Sending:",
             text,
         )
@@ -974,7 +975,7 @@ class DashboardServer:
 
             if event_id in self._history_event_ids:
 
-                print(
+                debug_print(
                     "[REMOTE EVENT] Duplicate suppressed:",
                     event_id,
                 )
@@ -1055,7 +1056,7 @@ class DashboardServer:
 
             return
 
-        print(
+        debug_print(
             "[REMOTE EVENT] "
             f"{payload.get('speaker', 'system').upper()} event emitted:",
             payload["event_id"],

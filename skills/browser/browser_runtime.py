@@ -13,6 +13,7 @@ import requests
 
 from skills.browser.browser_config import BrowserSettings
 from skills.browser.browser_resolver import resolve_browser_executable
+from config.settings import get_assistant_display_name
 
 
 class BrowserRuntimeError(RuntimeError):
@@ -32,7 +33,9 @@ class BrowserRuntime:
     @property
     def endpoint(self) -> str:
         if self.port is None:
-            raise BrowserRuntimeError("ASTRA Browser has not selected a CDP port.")
+            raise BrowserRuntimeError(
+                f"{get_assistant_display_name()} Browser has not selected a CDP port."
+            )
         return f"http://{self.settings.cdp_host}:{self.port}"
 
     def resolve_profile_dir(self) -> Path:
@@ -190,7 +193,8 @@ class BrowserRuntime:
             self.process = None
             self.pid = None
             raise BrowserRuntimeError(
-                f"ASTRA Browser could not start {self.executable}: {error}"
+                f"{get_assistant_display_name()} Browser could not start "
+                f"{self.executable}: {error}"
             ) from error
 
         for _ in range(30):
@@ -205,7 +209,9 @@ class BrowserRuntime:
         detail = "browser debugging did not become available"
         if exit_code is not None:
             detail = f"browser exited with code {exit_code}"
-        raise BrowserRuntimeError(f"ASTRA Browser could not start: {detail}.")
+        raise BrowserRuntimeError(
+            f"{get_assistant_display_name()} Browser could not start: {detail}."
+        )
 
     def stop(self) -> None:
         """Stop only the browser subprocess this runtime started."""

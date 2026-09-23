@@ -6,8 +6,9 @@ from voice.manager import (
     speak,
     prepare_speech,
     play_prepared_speech,
-    notify_speech_output,
 )
+
+from core.diagnostics import debug_print
 
 from voice.state import (
     is_current,
@@ -189,7 +190,7 @@ class TTSPipeline:
 
         self.started = True
 
-        print(
+        debug_print(
             "[TTS PIPELINE] Starting"
         )
 
@@ -241,7 +242,7 @@ class TTSPipeline:
 
         self.playback_thread.start()
 
-        print(
+        debug_print(
             "[TTS PIPELINE] Started "
             f"with {TTS_WORKERS} TTS workers"
         )
@@ -266,20 +267,6 @@ class TTSPipeline:
 
             return False
         
-        # -------------------------------------------------
-        # Remote Dashboard
-        #
-        # AI streaming uses this pipeline directly instead
-        # of voice.manager.speak().
-        #
-        # Forward the sentence to the remote dashboard
-        # without triggering another TTS playback.
-        # -------------------------------------------------
-
-        notify_speech_output(
-            sentence
-        )
-
         # -------------------------------------------------
         # Assign an ordering index.
         #
@@ -381,7 +368,7 @@ class TTSPipeline:
             f"TTS-{worker_number + 1}"
         )
 
-        print(
+        debug_print(
             f"[TTS PIPELINE] "
             f"{worker_name} started"
         )
@@ -414,7 +401,7 @@ class TTSPipeline:
 
                     self.worker_done_count += 1
 
-                print(
+                debug_print(
                     f"[TTS PIPELINE] "
                     f"{worker_name} finished"
                 )
@@ -439,7 +426,7 @@ class TTSPipeline:
 
                     continue
 
-                print(
+                debug_print(
                     "[TTS PIPELINE] "
                     f"{worker_name} preparing "
                     f"sentence {sentence_index}"
@@ -511,8 +498,8 @@ class TTSPipeline:
             except Exception as e:
 
                 print(
-                    "[TTS PREFETCH ERROR] "
-                    f"{worker_name}: {e}"
+                    "[VOICE ERROR] Speech preparation failed:"
+                    f" {e}"
                 )
 
             finally:
@@ -557,7 +544,7 @@ class TTSPipeline:
 
     def _playback_worker(self):
 
-        print(
+        debug_print(
             "[TTS PIPELINE] "
             "Playback worker started"
         )
@@ -638,6 +625,8 @@ class TTSPipeline:
 
                         self.hud_speaking = True
 
+                        print("[VOICE] Speaking response.")
+
                     except Exception as e:
 
                         print(
@@ -661,7 +650,7 @@ class TTSPipeline:
 
                         return
 
-                    print(
+                    debug_print(
                         "[TTS PIPELINE] "
                         f"Playing sentence "
                         f"{current_index}"
@@ -770,7 +759,7 @@ class TTSPipeline:
 
         try:
 
-            print(
+            debug_print(
                 "[TTS PIPELINE] "
                 "Using fallback speech"
             )
@@ -782,8 +771,10 @@ class TTSPipeline:
                 wait=True,
 
                 session=self.session,
-                
+
                 notify_remote=False,
+
+                record_conversation=False,
 
             )
 
@@ -850,7 +841,7 @@ class TTSPipeline:
                 f"HUD idle update failed: {e}"
             )
 
-        print(
+        debug_print(
             "[TTS PIPELINE] Finished"
         )
         
@@ -877,7 +868,7 @@ class TTSPipeline:
 
                 path.unlink()
 
-                print(
+                debug_print(
                     "[TTS PIPELINE] "
                     f"Deleted: {path.name}"
                 )
@@ -889,9 +880,8 @@ class TTSPipeline:
         except Exception as e:
 
             print(
-                "[TTS PIPELINE] "
-                f"Could not delete "
-                f"{Path(audio_file).name}: {e}"
+                "[VOICE ERROR] Could not clean up generated speech:"
+                f" {e}"
             )
 
     # =====================================================

@@ -51,6 +51,8 @@ class AIPipeline:
 
         self.conversation.add_assistant_message(response)
 
+        self._record_completed_response(response)
+
         self._store_memory(user_input, response)
 
         return response
@@ -122,6 +124,10 @@ class AIPipeline:
                 final_response
             )
 
+            # The stream is complete here, so the shared conversational
+            # context can be updated without waiting for TTS playback.
+            self._record_completed_response(final_response)
+
             self._store_memory(
                 user_input,
                 final_response
@@ -130,6 +136,26 @@ class AIPipeline:
     # ==========================================================
     # Long-Term Memory
     # ==========================================================
+
+    @staticmethod
+    def _record_completed_response(response: str):
+        """Record one completed assistant turn in the shared context."""
+
+        if not response:
+            return
+
+        try:
+            from brain.conversation_coordinator import (
+                conversation_coordinator,
+            )
+
+            conversation_coordinator.record_response(response)
+        except Exception as error:
+            # Context bookkeeping must never break streaming or playback.
+            print(
+                "[Brain Conversation] Response update failed safely:",
+                error,
+            )
 
     def _store_memory(
         self,

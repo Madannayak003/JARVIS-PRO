@@ -18,6 +18,7 @@ from core.routers.weather_router import weather_route
 from core.routers.android_router import android_route
 from core.routers.payment_router import payment_route
 from core.routers.phone_call_router import phone_call_route
+from core.diagnostics import debug_print
 
 ROUTERS = [
 
@@ -47,7 +48,7 @@ ROUTERS = [
 def fast_route(command):
     original_command = command.strip().rstrip("?!.,")
     command = original_command.lower()
-    print("[FAST ROUTER]", command)
+    debug_print("[FAST ROUTER]", command)
 
     android_targeted = (
         command.startswith((
@@ -70,7 +71,7 @@ def fast_route(command):
     if android_targeted:
         android_plan = android_route(command)
         if android_plan:
-            print("[FAST ROUTER MATCH]", android_plan)
+            debug_print("[FAST ROUTER MATCH]", android_plan)
             return android_plan
 
     for router in ROUTERS:
@@ -84,7 +85,7 @@ def fast_route(command):
         plan = router(route_command)
 
         if plan:
-            print("[FAST ROUTER MATCH]", plan)
+            debug_print("[FAST ROUTER MATCH]", plan)
             return plan
 
     return None

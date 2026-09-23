@@ -5,6 +5,8 @@ from ai.chat import ask_chat
 from ai.memory_manager import learn
 
 from core.context import add_message
+from core.diagnostics import debug_print
+from hud.integration import HUDIntegration
 
 from voice.manager import (
     start_speech_session,
@@ -14,132 +16,20 @@ from voice.tts_pipeline import (
     TTSPipeline,
 )
 
+from voice.speech_text import (
+    clean_for_speech_stateful,
+)
+
 
 # =========================================================
 # Voice Text Cleaner
 # =========================================================
 
 def clean_for_speech(text):
-    """
-    Clean AI response for TTS only.
+    """Clean one complete text fragment for TTS only."""
 
-    The original AI response remains unchanged for:
-
-    - chat history
-    - memory
-    - UI
-    - screen context
-
-    Only the spoken version is cleaned.
-    """
-
-    if not text:
-
-        return ""
-
-    text = str(text)
-
-    # -----------------------------------------------------
-    # Remove code fences
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"```[\w+-]*",
-        "",
-        text
-    )
-
-    text = text.replace(
-        "```",
-        ""
-    )
-
-    # -----------------------------------------------------
-    # Remove Markdown bold
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"\*\*(.*?)\*\*",
-        r"\1",
-        text
-    )
-
-    # -----------------------------------------------------
-    # Remove Markdown underline
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"__(.*?)__",
-        r"\1",
-        text
-    )
-
-    # -----------------------------------------------------
-    # Remove Markdown italic
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"(?<!\*)\*(?!\s)(.*?)(?<!\s)\*(?!\*)",
-        r"\1",
-        text
-    )
-
-    text = re.sub(
-        r"(?<!_)_(?!\s)(.*?)(?<!_)_",
-        r"\1",
-        text
-    )
-
-    # -----------------------------------------------------
-    # Remove Markdown headings
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"^\s*#{1,6}\s*",
-        "",
-        text,
-        flags=re.MULTILINE
-    )
-
-    # -----------------------------------------------------
-    # Remove Markdown bullet markers
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"^\s*[-*+]\s+",
-        "",
-        text,
-        flags=re.MULTILINE
-    )
-
-    # -----------------------------------------------------
-    # Remove numbered list markers
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"^\s*\d+\.\s+",
-        "",
-        text,
-        flags=re.MULTILINE
-    )
-
-    # -----------------------------------------------------
-    # Clean excessive whitespace
-    # -----------------------------------------------------
-
-    text = re.sub(
-        r"\n+",
-        " ",
-        text
-    )
-
-    text = re.sub(
-        r"\s{2,}",
-        " ",
-        text
-    )
-
-    return text.strip()
+    cleaned, _ = clean_for_speech_stateful(text)
+    return cleaned
 
 
 # =========================================================
@@ -196,10 +86,12 @@ def run_chat(
         session.is_developer
     )
 
-    print(
+    debug_print(
         "Request sent:",
         time.perf_counter() - t0
     )
+
+    print("[AI] Streaming response...")
 
     # =====================================================
     # Response State
@@ -208,6 +100,10 @@ def run_chat(
     answer = ""
 
     sentence_buffer = ""
+
+    # Fenced code can span several streamed sentence chunks. Carry the state
+    # so code stays visible in the UI/history but is silent by default.
+    speech_in_code_block = False
 
     # =====================================================
     # TTS Pipeline
@@ -269,7 +165,7 @@ def run_chat(
 
                 if first:
 
-                    print(
+                    debug_print(
                         "First token:",
                         time.perf_counter()
                         - t0
@@ -300,7 +196,7 @@ def run_chat(
             # Terminal output
             # -------------------------------------------------
 
-            print(
+            debug_print(
                 token,
                 end="",
                 flush=True
@@ -385,9 +281,10 @@ def run_chat(
 
                 if sentence:
 
-                    cleaned = (
-                        clean_for_speech(
-                            sentence
+                    cleaned, speech_in_code_block = (
+                        clean_for_speech_stateful(
+                            sentence,
+                            speech_in_code_block,
                         )
                     )
 
@@ -424,6 +321,13 @@ def run_chat(
 
         return
 
+    if answer.strip():
+        # Publish the untouched completed response as soon as generation
+        # finishes. TTS can continue preparing/playing progressively without
+        # delaying the single coherent HUD/activity entry.
+        HUDIntegration.response(answer)
+        print("[AI] Response completed.")
+
     # =====================================================
     # Remaining Text
     # =====================================================
@@ -437,9 +341,10 @@ def run_chat(
         and not is_developer
     ):
 
-        cleaned = (
-            clean_for_speech(
-                remaining
+        cleaned, speech_in_code_block = (
+            clean_for_speech_stateful(
+                remaining,
+                speech_in_code_block,
             )
         )
 

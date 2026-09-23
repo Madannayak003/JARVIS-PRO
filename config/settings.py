@@ -111,7 +111,15 @@ VOICE = "male"
 
 LANGUAGE = "en"
 
-DEBUG = True
+# Verbose provider/TTS diagnostics are opt-in. Runtime errors and warnings
+# continue to use their existing normal-output paths.
+DEBUG = get_env("JARVIS_DEBUG", "0").strip().casefold() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+    "debug",
+}
 
 # ===========================
 # AI

@@ -24,6 +24,11 @@ from voice.state import (
     is_cancelled,
 )
 
+from voice.speech_text import (
+    clean_for_speech_stateful,
+)
+from core.diagnostics import debug_print
+
 from hud.integration import HUDIntegration
 from config.settings import (
     get_assistant_display_name,
@@ -61,50 +66,8 @@ def _clean_tts_text(text):
         flags=re.IGNORECASE,
     )
 
-    # Markdown links:
-    # [Google](https://google.com) -> Google
-    text = re.sub(
-        r"\[([^\]]+)\]\([^)]+\)",
-        r"\1",
-        text,
-    )
-
-    # Bold / italic markers
-    text = text.replace("**", "")
-    text = text.replace("__", "")
-
-    # Markdown headings
-    text = re.sub(
-        r"(?m)^\s*#{1,6}\s*",
-        "",
-        text,
-    )
-
-    # Markdown bullets
-    text = re.sub(
-        r"(?m)^\s*[-*+]\s+",
-        "",
-        text,
-    )
-
-    # Inline code/backticks
-    text = text.replace("`", "")
-
-    # Markdown blockquote
-    text = re.sub(
-        r"(?m)^\s*>\s?",
-        "",
-        text,
-    )
-
-    # Collapse excessive whitespace
-    text = re.sub(
-        r"\s+",
-        " ",
-        text,
-    )
-
-    return text.strip()
+    normalized, _ = clean_for_speech_stateful(text)
+    return normalized
 
 VOICE_THREAD = None
 
@@ -182,6 +145,24 @@ def notify_speech_output(text):
         str(text)
     )
 
+
+def _record_conversation_response(text):
+    """Keep the shared conversational context aligned with spoken output."""
+
+    if not text:
+        return
+
+    try:
+        from brain.conversation_coordinator import conversation_coordinator
+
+        conversation_coordinator.record_response(str(text))
+    except Exception as error:
+        # Conversation bookkeeping must never make speech fail.
+        print(
+            "[VOICE] Conversation response update failed safely:",
+            error,
+        )
+
 # =========================================================
 # Internet Detection
 # =========================================================
@@ -233,7 +214,7 @@ def start_speech_session():
 
     session = create_session()
 
-    print(
+    debug_print(
         f"[VOICE] New speech session started: "
         f"{session.session_id}"
     )
@@ -439,6 +420,7 @@ def speak(
     wait=False,
     session=None,
     notify_remote=True,
+    record_conversation=True,
 ):
 
     global VOICE_THREAD
@@ -459,7 +441,14 @@ def speak(
         _notify_speech_listeners(
             str(text)
         )
-    
+
+    # Clean only the representation sent to the speech engine. The original
+    # text remains authoritative for conversation context and Live capture.
+    speech_text = _clean_tts_text(text)
+
+    if not speech_text:
+        return
+
     # -----------------------------------------------------
     # LIVE CONVERSATION SPEECH GATE
     #
@@ -469,6 +458,9 @@ def speak(
     # -----------------------------------------------------
 
     if is_live_execution():
+
+        if record_conversation:
+            _record_conversation_response(str(text))
 
         capture_live_response(
             str(text)
@@ -482,15 +474,6 @@ def speak(
 
         return
     
-    # -----------------------------------------------------
-    # Clean Markdown for TTS only
-    # -----------------------------------------------------
-
-    speech_text = _clean_tts_text(text)
-
-    if not speech_text:
-        return
-
     # -----------------------------------------------------
     # Resolve speech session
     # -----------------------------------------------------
@@ -531,16 +514,21 @@ def speak(
 
     if not is_current(session):
 
-        print(
+        debug_print(
             "[VOICE] Speech rejected: "
             f"old session {session.session_id}"
         )
 
         return
 
-    print(
-        f"[VOICE] {speech_text}"
+    if record_conversation:
+        _record_conversation_response(str(text))
+
+    debug_print(
+        f"[VOICE DEBUG] {speech_text}"
     )
+
+    print("[VOICE] Speaking response.")
     
     # -----------------------------------------------------
     # HUD — JARVIS is speaking

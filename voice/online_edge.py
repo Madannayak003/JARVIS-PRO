@@ -7,6 +7,7 @@ from uuid import uuid4
 from time import time
 
 from voice.player import play
+from core.diagnostics import debug_print
 
 from voice.state import (
     is_cancelled,
@@ -83,7 +84,7 @@ def set_english_voice(voice_name):
 
     VOICE = voice_id
 
-    print(
+    debug_print(
         "[EDGE TTS] English voice:",
         voice_name
     )
@@ -132,14 +133,13 @@ def _cleanup_cache():
             except Exception as e:
 
                 print(
-                    "[EDGE TTS CACHE] "
-                    f"Could not remove "
-                    f"{file.name}: {e}"
+                    "[EDGE TTS ERROR] Could not remove stale speech cache:"
+                    f" {e}"
                 )
 
         if removed:
 
-            print(
+            debug_print(
                 "[EDGE TTS CACHE] "
                 f"Removed {removed} "
                 "stale audio file(s)"
@@ -170,7 +170,7 @@ def _delete_file(file):
 
             path.unlink()
 
-            print(
+            debug_print(
                 "[EDGE TTS CACHE] Deleted:",
                 path.name
             )
@@ -182,9 +182,8 @@ def _delete_file(file):
     except Exception as e:
 
         print(
-            "[EDGE TTS CACHE] "
-            f"Could not delete "
-            f"{Path(file).name}: {e}"
+            "[EDGE TTS ERROR] Could not delete generated speech:"
+            f" {e}"
         )
 
 
@@ -256,7 +255,7 @@ def generate_audio(
 
     try:
 
-        print(
+        debug_print(
             "[EDGE TTS] Preparing:",
             outfile.name
         )
@@ -279,7 +278,7 @@ def generate_audio(
             or not is_current(session)
         ):
 
-            print(
+            debug_print(
                 "[EDGE TTS] "
                 "Prepared audio discarded"
             )
@@ -338,7 +337,7 @@ def play_audio(
 
             return False
 
-        print(
+        debug_print(
             "[EDGE TTS] Playing:",
             Path(outfile).name
         )

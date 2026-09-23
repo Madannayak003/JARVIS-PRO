@@ -1765,9 +1765,9 @@ class LiveConversation:
                                         result = {
                                             "success": dispatch_result,
                                             "message": (
-                                                f"{get_assistant_display_name()} executed: {command}"
+                                                "I completed that request."
                                                 if dispatch_result
-                                                else f"{get_assistant_display_name()} failed to execute: {command}"
+                                                else "I couldn't complete that request."
                                             ),
                                         }
 
@@ -1776,7 +1776,7 @@ class LiveConversation:
                                         result = {
                                             "success": True,
                                             "message": (
-                                                f"{get_assistant_display_name()} executed: {command}"
+                                                "I completed that request."
                                             ),
                                         }
 

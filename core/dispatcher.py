@@ -45,9 +45,11 @@ from brain.followup_resolver import (
 from brain.conversation_context import (
     conversation_context,
 )
+from brain.natural.response_strategy import action_result_message
 
 from core.live_execution import is_live_execution
 from core.core_state import wait_for_core
+from core.diagnostics import debug_print
 
 # =========================================================
 # DISPATCHER
@@ -77,6 +79,17 @@ def dispatch(
 
     if not command:
         return
+
+    # The preferred ConversationRequest path is intentionally read-only. The
+    # dispatcher owns the turn boundary, so record the current input here for
+    # both microphone and dashboard/remote callers before NCI reads context.
+    try:
+        conversation_context.set_user_input(command)
+    except Exception as error:
+        print(
+            "[CONVERSATION] Current input context update failed safely: "
+            f"{error}"
+        )
 
     # Normalize assistant invocations before clarification, NCI, or planner
     # handling. Microphone, HUD, and remote commands therefore share one path.
@@ -382,6 +395,37 @@ def dispatch(
 
     try:
 
+        # Dashboard/remote/Live callers may enter through dispatch() without
+        # the assistant loop's pre-built ConversationRequest. Build the same
+        # read-only NCI request here so short conversational follow-ups use
+        # the same context-aware route across input surfaces.
+        if not skip_nci and conversation_request is None:
+            try:
+                from brain import (
+                    conversation as brain_conversation,
+                    profile as brain_profile,
+                    state as brain_state,
+                )
+                from brain.natural.natural_bridge import (
+                    natural_conversation_bridge,
+                )
+
+                conversation_request = (
+                    natural_conversation_bridge.process(
+                        user_input=command,
+                        conversation_context=conversation_context,
+                        conversation_manager=brain_conversation,
+                        profile_manager=brain_profile,
+                        state_manager=brain_state,
+                        ai_context=None,
+                    )
+                )
+            except Exception as error:
+                print(
+                    "[CONVERSATION] Direct NCI request failed safely: "
+                    f"{error}"
+                )
+
         if skip_nci:
 
             conversation_analysis = None
@@ -561,18 +605,18 @@ def dispatch(
             conversation_context.context,
         )
 
-        print(
+        debug_print(
             "[FOLLOW-UP DEBUG] resolved_references:",
             follow_up.resolved_references,
         )
 
-        print(
+        debug_print(
             "[FOLLOW-UP DEBUG] object:",
             follow_up.object,
         )
 
         if follow_up.object is not None:
-            print(
+            debug_print(
                 "[FOLLOW-UP DEBUG] object video_id:",
                 getattr(
                     follow_up.object,
@@ -905,20 +949,17 @@ def dispatch(
 
                         elif isinstance(
                             result,
-                            dict,
+                            (dict, str),
                         ):
 
-                            if "error" in result:
+                            message = action_result_message(
+                                action_name,
+                                action,
+                                result,
+                            )
 
-                                speak(
-                                    result["error"]
-                                )
-
-                            else:
-
-                                speak(
-                                    str(result)
-                                )
+                            if message:
+                                speak(message)
 
                         # ---------------------------------
                         # Normal result
@@ -926,9 +967,14 @@ def dispatch(
 
                         else:
 
-                            speak(
-                                str(result)
+                            message = action_result_message(
+                                action_name,
+                                action,
+                                result,
                             )
+
+                            if message:
+                                speak(message)
 
             return
 
@@ -1826,6 +1872,16 @@ def dispatch(
     mode = detect(
         command
     )
+
+    # A context-aware conversational request must reach the existing chat
+    # worker even when the generic intent engine does not recognize a short
+    # phrase such as "Give me an example" as a chat prefix.
+    if (
+        conversation_request is not None
+        and conversation_request.mode == "conversation"
+        and conversation_request.needs_ai
+    ):
+        mode = "chat"
 
     # -----------------------------------------------------
     # Continue conversation

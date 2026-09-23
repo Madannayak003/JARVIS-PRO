@@ -54,6 +54,7 @@ class FollowUpExecutionBridge:
             raw_input
             .lower()
             .strip()
+            .rstrip(".,!?")
         )
 
         application = (
@@ -73,6 +74,21 @@ class FollowUpExecutionBridge:
             or skill
             or ""
         ).lower().strip()
+
+        # Browser applications such as Chrome and Edge are represented as
+        # concrete applications in conversational context, while this bridge
+        # routes their follow-ups through the existing browser domain.
+        if (
+            skill == "browser"
+            and application in {
+                "chrome",
+                "edge",
+                "firefox",
+                "brave",
+                "opera",
+            }
+        ):
+            domain = "browser"
         
         
         # ====================================================

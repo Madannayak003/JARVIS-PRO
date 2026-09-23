@@ -26,6 +26,7 @@ from ai.core.schemas import (
     AIResponse,
     AIStreamChunk,
 )
+from core.diagnostics import debug_print
 
 from ai.providers.base import AIProvider
 from config.environment import get_env
@@ -415,27 +416,27 @@ class GeminiProvider(AIProvider):
             # GEMINI REQUEST DEBUG
             # ==================================================
 
-            print(
+            debug_print(
                 "[GEMINI DEBUG] prompt length:",
                 len(request.prompt or "")
             )
 
-            print(
+            debug_print(
                 "[GEMINI DEBUG] system prompt length:",
                 len(request.system_prompt or "")
             )
 
-            print(
+            debug_print(
                 "[GEMINI DEBUG] capability:",
                 request.capability
             )
 
-            print(
+            debug_print(
                 "[GEMINI DEBUG] model:",
                 request.model
             )
 
-            print(
+            debug_print(
                 "[GEMINI DEBUG] metadata keys:",
                 list((request.metadata or {}).keys())
             )
@@ -446,7 +447,7 @@ class GeminiProvider(AIProvider):
 
             stream_start = time.perf_counter()
 
-            print(
+            debug_print(
                 f"[GEMINI STREAM] Request started: {model}"
             )
 
@@ -454,7 +455,7 @@ class GeminiProvider(AIProvider):
 
             client = self._get_client()
 
-            print(
+            debug_print(
                 "[GEMINI STREAM] Client ready:",
                 f"{time.perf_counter() - client_start:.3f}s"
             )
@@ -472,7 +473,7 @@ class GeminiProvider(AIProvider):
                 )
             )
 
-            print(
+            debug_print(
                 "[GEMINI STREAM] API stream created:",
                 f"{time.perf_counter() - api_start:.3f}s"
             )
@@ -490,7 +491,7 @@ class GeminiProvider(AIProvider):
                     and request.stop_event.is_set()
                 ):
 
-                    print(
+                    debug_print(
                         "[GEMINI STREAM] Interrupted"
                     )
 
@@ -514,13 +515,13 @@ class GeminiProvider(AIProvider):
                             time.perf_counter()
                         )
 
-                        print(
+                        debug_print(
                             "[GEMINI STREAM] "
                             f"FIRST TEXT: "
                             f"{first_text_time - stream_start:.3f}s"
                         )
 
-                    print(
+                    debug_print(
                         "[GEMINI STREAM] CHUNK:",
                         repr(text),
                     )
@@ -581,7 +582,7 @@ class GeminiProvider(AIProvider):
             - stream_start
         )
 
-        print(
+        debug_print(
             "[GEMINI STREAM] COMPLETE:",
             f"{total_time:.3f}s"
         )

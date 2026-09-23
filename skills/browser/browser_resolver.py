@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 from skills.browser.browser_config import BrowserSettings
+from config.settings import get_assistant_display_name
 
 
 class BrowserExecutableNotFoundError(RuntimeError):
@@ -72,7 +73,8 @@ def resolve_browser_executable(settings: BrowserSettings) -> Path:
             return Path(found).resolve()
 
     raise BrowserExecutableNotFoundError(
-        "ASTRA Browser could not find a supported Chrome/Chromium browser. "
+        f"{get_assistant_display_name()} Browser could not find a supported "
+        "Chrome/Chromium browser. "
         "Install Google Chrome, Microsoft Edge, or Chromium, or configure "
         "JARVIS_BROWSER_EXECUTABLE."
     )

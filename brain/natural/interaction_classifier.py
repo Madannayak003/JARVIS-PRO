@@ -380,6 +380,36 @@ class InteractionClassifier:
                 ),
             )
 
+        # Contextual conversational requests must be recognized before the
+        # generic action-prefix check. Otherwise short prompts such as
+        # "continue" or "show me another" can fall into the planner and ask
+        # for information that the immediately previous answer already made
+        # clear.
+        if self._looks_like_contextual_conversation(
+            command,
+            context,
+        ):
+
+            return InteractionDecision(
+
+                mode=(
+                    InteractionMode.CONVERSATION
+                ),
+
+                raw_input=command,
+
+                intent="contextual_conversation",
+
+                confidence=0.92,
+
+                requires_action=False,
+
+                reason=(
+                    "Input appears conversational within "
+                    "the active context."
+                ),
+            )
+
         # ----------------------------------------------------
         # Explicit action
         # ----------------------------------------------------
@@ -681,6 +711,16 @@ class InteractionClassifier:
             )
         ).strip()
 
+        # A completed conversational answer is useful context even when the
+        # deterministic action context has no topic label. The dispatcher
+        # records the current user input before classification, so
+        # ``last_user_input`` alone is not evidence of a previous exchange.
+        # Require the completed assistant turn to avoid guessing for an
+        # isolated prompt such as "Give me an example."
+        has_recent_exchange = bool(
+            conversation.get("last_assistant_response")
+        )
+
         # ----------------------------------------------------
         # Questions using the current context
         # ----------------------------------------------------
@@ -707,11 +747,21 @@ class InteractionClassifier:
             for word in question_words
         )
 
+        conversational_follow_up = command.startswith((
+            "give me an example",
+            "give an example",
+            "tell me more",
+            "what about ",
+            "how about ",
+            "can you give me ",
+        ))
+
         if (
-            starts_with_question
+            (starts_with_question or conversational_follow_up)
             and (
                 active_topic
                 or active_task
+                or has_recent_exchange
             )
         ):
 
@@ -732,6 +782,33 @@ class InteractionClassifier:
                     "tell me more",
                 )
             )
+        ):
+
+            return True
+
+        # Short references that do not name the subject should still remain
+        # conversational when a completed answer is immediately available.
+        # Do not steal concrete application follow-ups from the existing
+        # action bridge when an application/skill is active.
+        conversational_follow_ups = (
+            "give me an example",
+            "give an example",
+            "give me another",
+            "show me another",
+            "show me an example",
+            "explain more",
+            "explain again",
+            "go deeper",
+            "tell me more",
+            "simplify it",
+            "continue",
+        )
+
+        if (
+            has_recent_exchange
+            and command.startswith(conversational_follow_ups)
+            and not conversation.get("application")
+            and not conversation.get("skill")
         ):
 
             return True
