@@ -51,7 +51,10 @@ class AIPipeline:
 
         self.conversation.add_assistant_message(response)
 
-        self._record_completed_response(response)
+        self._record_completed_response(
+            response,
+            user_input=user_input,
+        )
 
         self._store_memory(user_input, response)
 
@@ -126,7 +129,10 @@ class AIPipeline:
 
             # The stream is complete here, so the shared conversational
             # context can be updated without waiting for TTS playback.
-            self._record_completed_response(final_response)
+            self._record_completed_response(
+                final_response,
+                user_input=user_input,
+            )
 
             self._store_memory(
                 user_input,
@@ -138,7 +144,10 @@ class AIPipeline:
     # ==========================================================
 
     @staticmethod
-    def _record_completed_response(response: str):
+    def _record_completed_response(
+        response: str,
+        user_input: str = None,
+    ):
         """Record one completed assistant turn in the shared context."""
 
         if not response:
@@ -149,7 +158,15 @@ class AIPipeline:
                 conversation_coordinator,
             )
 
-            conversation_coordinator.record_response(response)
+            try:
+                conversation_coordinator.record_response(
+                    response,
+                    user_input=user_input,
+                )
+            except TypeError:
+                # Keep lightweight/test coordinators and older integrations
+                # compatible with the original one-argument hook.
+                conversation_coordinator.record_response(response)
         except Exception as error:
             # Context bookkeeping must never break streaming or playback.
             print(

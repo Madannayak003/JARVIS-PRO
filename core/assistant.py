@@ -570,7 +570,7 @@ def run():
                 )
             )
 
-            print(
+            debug_print(
                 "[NCI REQUEST]",
                 conversation_request,
             )
@@ -651,8 +651,7 @@ def run():
         if nci_follow_up:
 
             print(
-                "[NCI PREEMPT] "
-                "Contextual follow-up detected."
+                "[CONVERSATION] Follow-up detected."
             )
 
             print(
@@ -660,10 +659,11 @@ def run():
                 conversation_request.relation,
             )
 
-            print(
-                "[NCI PREEMPT REQUEST]",
-                conversation_request,
-            )
+            if conversation_request.topic:
+                print(
+                    "[CONVERSATION] Context:",
+                    conversation_request.topic,
+                )
 
             print(
                 "[NCI PREEMPT] "

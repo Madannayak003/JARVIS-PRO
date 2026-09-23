@@ -149,6 +149,15 @@ class ContextBuilder:
                 "reference":
                     natural_request.reference,
 
+                "references":
+                    list(natural_request.references),
+
+                "resolved_references":
+                    dict(natural_request.resolved_references),
+
+                "unresolved_references":
+                    list(natural_request.unresolved_references),
+
                 "application":
                     natural_request.application,
 

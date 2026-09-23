@@ -253,6 +253,11 @@ Analyzed At:
             f"Task: {natural.get('task', '')}",
             f"Subject: {natural.get('object', '')}",
             f"Reference: {natural.get('reference', '')}",
+            f"References: {natural.get('references', [])}",
+            (
+                "Resolved References: "
+                f"{natural.get('resolved_references', {})}"
+            ),
             f"Application: {natural.get('application', '')}",
             f"Skill: {natural.get('skill', '')}",
             f"Needs AI: {natural.get('needs_ai', False)}",

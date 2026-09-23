@@ -32,6 +32,7 @@ Existing JARVIS execution remains authoritative.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any, Optional
 
 from brain.conversation_understanding import (
@@ -537,11 +538,46 @@ class ConversationCoordinator:
     def record_response(
         self,
         response: str,
+        user_input: Optional[str] = None,
     ):
 
         self.context.set_assistant_response(
             response
         )
+
+        # Chat turns do not pass through execution-context recording. Keep the
+        # existing topic field useful for the next follow-up by deriving it
+        # from the completed request when it is expressed as a subject
+        # question. This is generic and deliberately does not know any topic
+        # names.
+        topic = self._topic_from_request(user_input)
+        if topic:
+            self.context.set_topic(topic)
+
+    @staticmethod
+    def _topic_from_request(user_input: Optional[str]) -> Optional[str]:
+        """Extract a conversational subject without replacing the history."""
+
+        text = " ".join(str(user_input or "").split()).strip()
+        if not text:
+            return None
+
+        first_sentence = re.split(r"[.!?]", text, maxsplit=1)[0].strip()
+        patterns = (
+            r"^(?:what|who)\s+(?:is|are)\s+(.+)$",
+            r"^tell\s+me\s+about\s+(.+)$",
+            r"^(?:explain|describe)\s+(.+)$",
+            r"^how\s+does\s+(.+?)\s+work$",
+            r"^what\s+about\s+(.+)$",
+        )
+
+        for pattern in patterns:
+            match = re.match(pattern, first_sentence, re.IGNORECASE)
+            if match:
+                subject = match.group(1).strip(" ,:;")
+                return subject or None
+
+        return None
 
     # ========================================================
     # Start Clarification

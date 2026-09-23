@@ -25,6 +25,11 @@ _MODULE_NAMES = [
     "brain.natural.interaction_decision",
     "brain.natural.natural_context",
     "brain.natural.interaction_classifier",
+    "brain.natural.meaning_understanding",
+    "brain.natural.response_strategy",
+    "brain.natural.conversation_request",
+    "brain.natural.natural_pipeline",
+    "brain.natural.natural_bridge",
     "jarvis_test_ai_pipeline",
 ]
 _ORIGINAL_MODULES = {
@@ -75,6 +80,26 @@ for _name, _relative_path in (
         "brain.natural.interaction_classifier",
         "brain/natural/interaction_classifier.py",
     ),
+    (
+        "brain.natural.meaning_understanding",
+        "brain/natural/meaning_understanding.py",
+    ),
+    (
+        "brain.natural.response_strategy",
+        "brain/natural/response_strategy.py",
+    ),
+    (
+        "brain.natural.conversation_request",
+        "brain/natural/conversation_request.py",
+    ),
+    (
+        "brain.natural.natural_pipeline",
+        "brain/natural/natural_pipeline.py",
+    ),
+    (
+        "brain.natural.natural_bridge",
+        "brain/natural/natural_bridge.py",
+    ),
     ("jarvis_test_ai_pipeline", "brain/ai_pipeline.py"),
 ):
     _load_module(_name, ROOT / _relative_path)
@@ -86,6 +111,7 @@ from brain.followup_execution_bridge import FollowUpExecutionBridge
 from brain.followup_resolver import FollowUpResolver
 from brain.natural.interaction_classifier import InteractionClassifier
 from brain.natural.natural_context import NaturalContext
+from brain.natural.natural_bridge import NaturalConversationBridge
 from jarvis_test_ai_pipeline import AIPipeline
 from voice.state import (
     cancel_current,
@@ -230,6 +256,8 @@ class ConversationGapFixTests(unittest.TestCase):
 
         for follow_up in (
             "Give me an example.",
+            "Give me one simple example.",
+            "Show me one.",
             "How does that work?",
             "Show me another one.",
             "What if I want arguments?",
@@ -244,6 +272,56 @@ class ConversationGapFixTests(unittest.TestCase):
 
                 self.assertEqual(decision.mode.value, "conversation")
                 self.assertFalse(decision.requires_action)
+
+    def test_multi_subject_bare_example_remains_conservative(self):
+        context = NaturalContext(
+            user_input="Give me an example.",
+            conversation={
+                "last_user_input": (
+                    "Explain Python decorators and JavaScript closures."
+                ),
+                "last_assistant_response": "Both are useful abstractions.",
+            },
+        )
+
+        decision = InteractionClassifier().classify(context)
+
+        self.assertNotEqual(decision.intent, "contextual_conversation")
+
+    def test_contextual_example_becomes_follow_up_request_for_chat(self):
+        class _Message:
+            def __init__(self, role, content):
+                self.role = role
+                self.content = content
+
+        class _Conversation:
+            def get_recent_messages(self, limit=10):
+                return [
+                    _Message("user", "What is Python?"),
+                    _Message(
+                        "assistant",
+                        "Python is a programming language.",
+                    ),
+                ]
+
+        context = ConversationContextManager()
+        context.update(
+            topic="Python",
+            last_assistant_response=(
+                "Python is a programming language."
+            ),
+        )
+
+        request = NaturalConversationBridge().process(
+            user_input="Give me one simple example.",
+            conversation_context=context,
+            conversation_manager=_Conversation(),
+        )
+
+        self.assertEqual(request.relation, "follow_up")
+        self.assertEqual(request.mode, "conversation")
+        self.assertTrue(request.needs_ai)
+        self.assertEqual(request.topic, "Python")
 
     def test_context_free_example_request_is_not_guessed(self):
         context = NaturalContext(

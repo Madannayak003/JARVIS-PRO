@@ -169,6 +169,30 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
+        # A contextual conversational request is a real follow-up even when
+        # it does not contain an explicit pronoun. Preserve that relationship
+        # for the existing FollowUpResolver so the dispatcher can choose the
+        # chat path before the planner sees the short, context-free wording.
+        if decision.intent == "contextual_conversation":
+
+            return self._result(
+                context=context,
+                decision=decision,
+                intent="contextual_conversation",
+                relation="follow_up",
+                topic=active_topic,
+                task=active_task,
+                object=active_object,
+                reference=self._find_reference(command),
+                application=application,
+                skill=skill,
+                confidence=0.92,
+                reason=(
+                    "Input continues the completed conversational "
+                    "exchange."
+                ),
+            )
+
         # ====================================================
         # Empty input
         # ====================================================

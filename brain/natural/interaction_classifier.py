@@ -711,6 +711,9 @@ class InteractionClassifier:
             )
         ).strip()
 
+        active_application = conversation.get("application")
+        active_skill = conversation.get("skill")
+
         # A completed conversational answer is useful context even when the
         # deterministic action context has no topic label. The dispatcher
         # records the current user input before classification, so
@@ -720,6 +723,25 @@ class InteractionClassifier:
         has_recent_exchange = bool(
             conversation.get("last_assistant_response")
         )
+
+        # Direct dispatcher callers may not have populated the semantic
+        # response field yet, while the conversation manager already contains
+        # the completed turn. Only accept a prior user/assistant pair from
+        # recent history so an isolated prompt is still not guessed.
+        if not has_recent_exchange:
+            recent_messages = context.recent_messages or ()
+            roles = {
+                str(
+                    message.get("role", "")
+                    if isinstance(message, dict)
+                    else getattr(message, "role", "")
+                ).lower()
+                for message in recent_messages
+            }
+            has_recent_exchange = {
+                "user",
+                "assistant",
+            }.issubset(roles)
 
         # ----------------------------------------------------
         # Questions using the current context
@@ -747,14 +769,30 @@ class InteractionClassifier:
             for word in question_words
         )
 
-        conversational_follow_up = command.startswith((
-            "give me an example",
-            "give an example",
-            "tell me more",
-            "what about ",
-            "how about ",
-            "can you give me ",
-        ))
+        conversational_follow_up = (
+            command.startswith((
+                "give me an example",
+                "give an example",
+                "give me another",
+                "show me an example",
+                "show me another",
+                "tell me more",
+                "what about ",
+                "how about ",
+                "can you give me ",
+                "can you show me ",
+                "can you show ",
+                "can you give ",
+            ))
+            or bool(re.match(
+                r"^(?:give|show) me (?:one|another|a|an)\b",
+                command,
+            ))
+        )
+
+        ambiguous_exchange = (
+            InteractionClassifier._has_multiple_recent_subjects(context)
+        )
 
         if (
             (starts_with_question or conversational_follow_up)
@@ -762,6 +800,20 @@ class InteractionClassifier:
                 active_topic
                 or active_task
                 or has_recent_exchange
+            )
+            and not (
+                ambiguous_exchange
+                and (
+                    conversational_follow_up
+                    or bool(re.search(
+                        r"\b(?:it|that|this|one)\b",
+                        command,
+                    ))
+                )
+            )
+            and not (
+                conversational_follow_up
+                and (active_application or active_skill)
             )
         ):
 
@@ -809,11 +861,44 @@ class InteractionClassifier:
             and command.startswith(conversational_follow_ups)
             and not conversation.get("application")
             and not conversation.get("skill")
+            and not ambiguous_exchange
         ):
 
             return True
 
         return False
+
+    @staticmethod
+    def _has_multiple_recent_subjects(
+        context: NaturalContext,
+    ) -> bool:
+        """Keep bare follow-ups conservative after multi-subject turns."""
+
+        conversation = context.conversation or {}
+        previous_input = str(
+            conversation.get("last_user_input") or ""
+        ).strip().lower()
+
+        if previous_input == str(context.user_input or "").strip().lower():
+            previous_input = ""
+
+        if not previous_input:
+            for message in reversed(context.recent_messages or ()):
+                if isinstance(message, dict):
+                    role = str(message.get("role", "")).lower()
+                    content = str(message.get("content", "")).strip()
+                else:
+                    role = str(getattr(message, "role", "")).lower()
+                    content = str(getattr(message, "content", "")).strip()
+
+                if role == "user" and content:
+                    previous_input = content.lower()
+                    break
+
+        return bool(
+            previous_input
+            and re.search(r"\b(?:and|or)\b", previous_input)
+        )
 
 
 # ============================================================
