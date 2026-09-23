@@ -323,6 +323,29 @@ class ConversationGapFixTests(unittest.TestCase):
         self.assertTrue(request.needs_ai)
         self.assertEqual(request.topic, "Python")
 
+    def test_explicit_vision_target_is_not_reclassified_as_chat_follow_up(self):
+        context = NaturalContext(
+            user_input="Show me another person.",
+            conversation={
+                "topic": "Python",
+                "last_assistant_response": "Here is a Python example.",
+            },
+        )
+
+        decision = InteractionClassifier().classify(context)
+
+        self.assertNotEqual(decision.intent, "contextual_conversation")
+
+    def test_context_free_another_one_does_not_invent_a_topic(self):
+        context = NaturalContext(
+            user_input="Show me another one.",
+            conversation={},
+        )
+
+        decision = InteractionClassifier().classify(context)
+
+        self.assertNotEqual(decision.intent, "contextual_conversation")
+
     def test_context_free_example_request_is_not_guessed(self):
         context = NaturalContext(
             user_input="Give me an example.",

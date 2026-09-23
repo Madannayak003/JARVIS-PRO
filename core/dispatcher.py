@@ -777,7 +777,24 @@ def dispatch(
     # for the same command.
     # =====================================================
 
-    if not skip_fast:
+    # A generic fast-router match must not steal an already-classified
+    # conversational continuation. Action follow-ups that the existing bridge
+    # can execute have already returned above; only unresolved AI follow-ups
+    # are protected here.
+    contextual_chat_follow_up = (
+        conversation_request is not None
+        and conversation_request.relation in {
+            "follow_up",
+            "continuation",
+            "correction",
+            "reference",
+            "contextual_reference",
+        }
+        and conversation_request.mode == "conversation"
+        and conversation_request.needs_ai
+    )
+
+    if not skip_fast and not contextual_chat_follow_up:
 
         # -------------------------------------------------
         # Reuse existing plan if assistant already
@@ -977,6 +994,24 @@ def dispatch(
                                 speak(message)
 
             return
+
+    if contextual_chat_follow_up:
+        print(
+            "[CONVERSATION] Contextual follow-up detected."
+        )
+        if conversation_request.topic:
+            print(
+                "[CONVERSATION] Previous topic:",
+                conversation_request.topic,
+            )
+
+        task_manager.start(
+            "chat",
+            chat_worker,
+            command,
+        )
+
+        return
 
     # =====================================================
     # CONTEXT-AWARE GENERIC SEARCH

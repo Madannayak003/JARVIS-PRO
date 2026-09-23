@@ -549,11 +549,20 @@ def _match_object_location(command):
 # YOLO OBJECT TARGET
 # =========================================================
 
+_GENERIC_REFERENTIAL_TARGETS = {
+    "one",
+    "another one",
+    "the other one",
+    "this",
+    "that",
+    "it",
+}
+
 def _match_object_target(command):
 
     match = re.fullmatch(
         r"(?:find|locate|show me|which)"
-        r"\s+(?:the|my|a|an)?\s*(.+?)"
+        r"\s+(?:(?:the|my|a|an)\b)?\s*(.+?)"
         r"(?:\s+on my\s+(left|right|center|middle)"
         r"|\s+in the\s+(left|right|center|middle))?"
         r"(?:\?)?",
@@ -568,6 +577,11 @@ def _match_object_target(command):
     position = match.group(2) or match.group(3)
 
     if not object_name:
+        return None
+
+    if object_name.rstrip(".,!?").strip().lower() in (
+        _GENERIC_REFERENTIAL_TARGETS
+    ):
         return None
 
     object_name = _normalize_object(object_name)

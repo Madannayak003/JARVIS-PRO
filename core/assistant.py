@@ -534,7 +534,6 @@ def run():
                 dispatch(
                     routed_query,
                     fast_plan=fast_plan,
-                    skip_nci=True,
                 )
 
                 continue

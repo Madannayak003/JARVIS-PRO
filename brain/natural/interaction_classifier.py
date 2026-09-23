@@ -769,13 +769,12 @@ class InteractionClassifier:
             for word in question_words
         )
 
+        follow_up_command = command.rstrip(".,!?").strip()
         conversational_follow_up = (
-            command.startswith((
+            follow_up_command.startswith((
                 "give me an example",
                 "give an example",
-                "give me another",
                 "show me an example",
-                "show me another",
                 "tell me more",
                 "what about ",
                 "how about ",
@@ -784,10 +783,14 @@ class InteractionClassifier:
                 "can you show ",
                 "can you give ",
             ))
-            or bool(re.match(
-                r"^(?:give|show) me (?:one|another|a|an)\b",
-                command,
+            or bool(re.fullmatch(
+                r"(?:give|show)(?: me)? (?:another(?: one| example)?|one(?: more| example)?|one simple example)",
+                follow_up_command,
             ))
+            or follow_up_command in {
+                "another example",
+                "one more",
+            }
         )
 
         ambiguous_exchange = (
@@ -843,11 +846,6 @@ class InteractionClassifier:
         # Do not steal concrete application follow-ups from the existing
         # action bridge when an application/skill is active.
         conversational_follow_ups = (
-            "give me an example",
-            "give an example",
-            "give me another",
-            "show me another",
-            "show me an example",
             "explain more",
             "explain again",
             "go deeper",
@@ -858,7 +856,10 @@ class InteractionClassifier:
 
         if (
             has_recent_exchange
-            and command.startswith(conversational_follow_ups)
+            and (
+                conversational_follow_up
+                or command.startswith(conversational_follow_ups)
+            )
             and not conversation.get("application")
             and not conversation.get("skill")
             and not ambiguous_exchange
