@@ -13,11 +13,20 @@ Examples:
 """
 
 
+from config.settings import (
+    get_ai_provider_setting,
+    set_ai_provider_setting,
+)
+
+
 class AIPreference:
+
+    PROVIDER_MODES = ("auto", "ollama", "gemini", "grok", "openai")
 
     def __init__(self):
 
-        self.provider = None
+        persisted = get_ai_provider_setting().lower()
+        self.provider = None if persisted == "auto" else persisted
         self.model = None
 
     # ======================================================
@@ -29,11 +38,14 @@ class AIPreference:
         provider: str,
     ):
 
-        self.provider = (
-            provider.strip().lower()
-        )
+        normalized = provider.strip().lower()
+        if normalized not in self.PROVIDER_MODES:
+            raise ValueError(f"Unsupported AI provider: {provider}")
+
+        self.provider = None if normalized == "auto" else normalized
 
         self.model = None
+        set_ai_provider_setting(normalized)
 
     # ======================================================
     # Set Model
@@ -58,6 +70,11 @@ class AIPreference:
 
         self.provider = None
         self.model = None
+        set_ai_provider_setting("auto")
+
+    @property
+    def mode(self) -> str:
+        return self.provider or "auto"
 
     # ======================================================
     # State

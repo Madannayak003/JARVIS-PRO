@@ -30,6 +30,8 @@ from ai.providers.gemini import GeminiProvider
 
 from ai.providers.openai import OpenAIProvider
 
+from ai.providers.grok import GrokProvider
+
 from ai.core.preference import AIPreference
 
 from ai.core.commands import AICommandHandler
@@ -101,6 +103,16 @@ class AIService:
 
             self.router.register_provider(
                 OpenAIProvider()
+            )
+
+        # --------------------------------------------------
+        # Grok
+        # --------------------------------------------------
+
+        if self.router.get_provider("grok") is None:
+
+            self.router.register_provider(
+                GrokProvider()
             )
 
     # ======================================================
@@ -175,9 +187,15 @@ class AIService:
         # Generate
         # --------------------------------------------------
 
-        return self.router.generate(
-            request
-        )
+        response = self.router.generate(request)
+        if response.success and response.provider:
+            try:
+                from hud.integration import HUDIntegration
+
+                HUDIntegration.ai_model(response.provider, response.model)
+            except Exception:
+                pass
+        return response
         
     # ======================================================
     # Stream
@@ -243,9 +261,29 @@ class AIService:
             ),
         )
 
-        return self.router.stream(
-            request
-        )
+        provider_stream = self.router.stream(request)
+
+        def report_active_provider():
+            reported = False
+            for chunk in provider_stream:
+                provider_succeeded = (
+                    bool(chunk.text)
+                    or (
+                        chunk.done
+                        and chunk.metadata.get("success") is True
+                    )
+                )
+                if not reported and chunk.provider and provider_succeeded:
+                    try:
+                        from hud.integration import HUDIntegration
+
+                        HUDIntegration.ai_model(chunk.provider, chunk.model)
+                    except Exception:
+                        pass
+                    reported = True
+                yield chunk
+
+        return report_active_provider()
         
     # ======================================================
     # AI Selection Command
@@ -270,6 +308,12 @@ class AIService:
             command,
             self.preference,
         )    
+
+    def set_provider(self, provider: str) -> str:
+        """Set and persist the selected provider mode."""
+
+        self.preference.set_provider(provider)
+        return self.preference.mode
 
 
 # ==========================================================

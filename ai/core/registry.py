@@ -372,6 +372,42 @@ class ModelRegistry:
                 ),
             )
         )
+
+        # --------------------------------------------------
+        # Grok - xAI general AI model
+        # --------------------------------------------------
+
+        self.register(
+
+            ModelDefinition(
+
+                name="grok-4.7",
+
+                provider="grok",
+
+                capabilities=[
+                    "conversation",
+                    "planning",
+                    "coding",
+                    "developer",
+                    "editing",
+                    "repair",
+                    "reasoning",
+                    "memory",
+                    "fast",
+                ],
+
+                streaming=True,
+
+                local=False,
+
+                enabled=True,
+
+                priority=15,
+
+                description="Grok model provided by xAI.",
+            )
+        )
         
         # --------------------------------------------------
         # OpenAI GPT - Reasoning / General AI
@@ -402,7 +438,7 @@ class ModelRegistry:
 
                 local=False,
 
-                enabled=False,
+                enabled=True,
 
                 priority=30,
 

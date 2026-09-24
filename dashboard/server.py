@@ -49,6 +49,7 @@ import json
 
 from core.runtime import handle_priority
 from core.diagnostics import debug_print
+from ai.core.service import ai_service
 from config.settings import (
     get_assistant_display_name,
     get_assistant_name_lower,
@@ -2424,6 +2425,47 @@ class DashboardServer:
                 )
 
                 return {"ok": True, "settings": settings}
+            except Exception as exc:
+                return JSONResponse(
+                    {"ok": False, "error": str(exc)},
+                    status_code=500,
+                )
+
+        # =====================================================
+        # LOCAL — AI PROVIDER
+        # =====================================================
+
+        @app.get("/api/local/ai-provider")
+        async def local_ai_provider_status(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+
+            return {
+                "ok": True,
+                "provider": ai_service.preference.mode.upper(),
+            }
+
+        @app.post("/api/local/ai-provider")
+        async def local_ai_provider(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+
+            try:
+                body = await request.json()
+                provider = str(body.get("provider", "AUTO")).strip().upper()
+                selected = ai_service.set_provider(provider)
+                return {"ok": True, "provider": selected.upper()}
+            except ValueError as exc:
+                return JSONResponse(
+                    {"ok": False, "error": str(exc)},
+                    status_code=400,
+                )
             except Exception as exc:
                 return JSONResponse(
                     {"ok": False, "error": str(exc)},

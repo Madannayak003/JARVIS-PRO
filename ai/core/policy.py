@@ -29,6 +29,7 @@ class AIModelPolicy:
 
         "coding": [
             "gemini",
+            "grok",
             "openai",
             "ollama",
         ],
@@ -39,6 +40,7 @@ class AIModelPolicy:
 
         "developer": [
             "gemini",
+            "grok",
             "openai",
             "ollama",
         ],
@@ -49,6 +51,7 @@ class AIModelPolicy:
 
         "editing": [
             "gemini",
+            "grok",
             "openai",
             "ollama",
         ],
@@ -59,6 +62,7 @@ class AIModelPolicy:
 
         "repair": [
             "gemini",
+            "grok",
             "openai",
             "ollama",
         ],
@@ -68,8 +72,9 @@ class AIModelPolicy:
         # --------------------------------------------------
 
         "reasoning": [
-            "openai",
             "gemini",
+            "grok",
+            "openai",
             "ollama",
         ],
 
@@ -79,6 +84,7 @@ class AIModelPolicy:
 
         "conversation": [
             "gemini",
+            "grok",
             "openai",
             "ollama",
         ],
@@ -88,8 +94,9 @@ class AIModelPolicy:
         # --------------------------------------------------
 
         "planning": [
-            "openai",
             "gemini",
+            "grok",
+            "openai",
             "ollama",
         ],
 
@@ -99,6 +106,8 @@ class AIModelPolicy:
 
         "memory": [
             "gemini",
+            "grok",
+            "openai",
             "ollama",
         ],
 
@@ -108,6 +117,8 @@ class AIModelPolicy:
 
         "fast": [
             "gemini",
+            "grok",
+            "openai",
             "ollama",
         ],
 
@@ -149,6 +160,7 @@ class AIModelPolicy:
             capability,
             [
                 "gemini",
+                "grok",
                 "openai",
                 "ollama",
             ],

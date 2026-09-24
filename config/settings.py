@@ -23,6 +23,40 @@ _ASSISTANT_SETTINGS_FILE = (
     / "jarvis_settings.json"
 )
 
+AI_PROVIDER_OPTIONS = ("AUTO", "OLLAMA", "GEMINI", "GROK", "OPENAI")
+
+
+def _read_persisted_settings() -> dict:
+    try:
+        with _ASSISTANT_SETTINGS_FILE.open("r", encoding="utf-8") as file:
+            value = json.load(file)
+    except (OSError, TypeError, ValueError, AttributeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def get_ai_provider_setting() -> str:
+    """Return the persisted provider mode, defaulting safely to AUTO."""
+
+    value = str(_read_persisted_settings().get("aiProvider", "AUTO")).upper()
+    return value if value in AI_PROVIDER_OPTIONS else "AUTO"
+
+
+def set_ai_provider_setting(provider: str) -> str:
+    """Persist one of the supported provider modes."""
+
+    normalized = str(provider).strip().upper()
+    if normalized not in AI_PROVIDER_OPTIONS:
+        raise ValueError(f"Unsupported AI provider: {provider}")
+
+    settings = _read_persisted_settings()
+    settings["aiProvider"] = normalized
+    _ASSISTANT_SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with _ASSISTANT_SETTINGS_FILE.open("w", encoding="utf-8") as file:
+        json.dump(settings, file, indent=2)
+        file.write("\n")
+    return normalized
+
 
 def _persisted_assistant_name() -> str | None:
     try:
@@ -125,7 +159,7 @@ DEBUG = get_env("JARVIS_DEBUG", "0").strip().casefold() in {
 # AI
 # ===========================
 
-AI_PROVIDER = "ollama"
+AI_PROVIDER = "auto"
 
 OLLAMA_MODEL = "qwen2.5:3b"
 

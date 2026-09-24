@@ -34,6 +34,10 @@ class AICommandHandler:
 
         "qwen": "ollama",
 
+        "grok": "grok",
+
+        "xai": "grok",
+
     }
 
     # ======================================================
@@ -86,7 +90,7 @@ class AICommandHandler:
         # --------------------------------------------------
 
         match = re.fullmatch(
-            r"use\s+(gemini|google|gpt|openai|ollama|qwen)",
+            r"use\s+(gemini|google|gpt|openai|ollama|qwen|grok|xai)",
             command,
         )
 

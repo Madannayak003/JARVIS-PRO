@@ -6,6 +6,7 @@ Common interface implemented by:
 - OllamaProvider
 - GeminiProvider
 - OpenAIProvider
+- GrokProvider
 """
 
 from abc import ABC, abstractmethod
@@ -37,6 +38,7 @@ class AIProvider(ABC):
             ollama
             gemini
             openai
+            grok
         """
         pass
 

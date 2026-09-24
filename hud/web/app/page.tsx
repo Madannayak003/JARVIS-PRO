@@ -268,6 +268,7 @@ export default function Home() {
   const [userName, setUserName] = useState("");
   const [assistantColour, setAssistantColour] = useState("");
   const [assistantVoice, setAssistantVoice] = useState("Ryan");
+  const [aiProvider, setAiProvider] = useState("AUTO");
 
   const [showActivityLog, setShowActivityLog] = useState(true);
   const [showSystemMonitor, setShowSystemMonitor] = useState(true);
@@ -469,6 +470,9 @@ export default function Home() {
         if (typeof settings.assistantVoice === "string") {
           setAssistantVoice(settings.assistantVoice);
         }
+        if (["AUTO", "OLLAMA", "GEMINI", "GROK", "OPENAI"].includes(settings.aiProvider)) {
+          setAiProvider(settings.aiProvider);
+        }
         if (typeof settings.showActivityLog === "boolean") {
           setShowActivityLog(settings.showActivityLog);
         }
@@ -529,6 +533,24 @@ export default function Home() {
           isMounted
         ) {
           setAssistantVoice(data.voice);
+        }
+      }
+    });
+
+    loadWithRetry(async () => {
+      const res = await fetch(
+        `${JARVIS_DASHBOARD_URL}/api/local/ai-provider`,
+        { cache: "no-store" }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (
+          data.ok &&
+          ["AUTO", "OLLAMA", "GEMINI", "GROK", "OPENAI"].includes(data.provider) &&
+          isMounted
+        ) {
+          setAiProvider(data.provider);
         }
       }
     });
@@ -2103,6 +2125,41 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* AI PROVIDER */}
+              <div className="settings-control-section">
+                <div className="settings-control-header">
+                  <span className="settings-control-icon">✦</span>
+
+                  <div>
+                    <div className="settings-control-title">
+                      JARVIS &gt; AI PROVIDER
+                    </div>
+
+                    <div className="settings-control-description">
+                      Select the provider mode for AI generation
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-select-wrap">
+                  <span className="settings-select-icon">◈</span>
+
+                  <select
+                    value={aiProvider}
+                    onChange={(event) => setAiProvider(event.target.value)}
+                    className="settings-voice-select"
+                  >
+                    <option value="AUTO">AUTO</option>
+                    <option value="OLLAMA">OLLAMA</option>
+                    <option value="GEMINI">GEMINI</option>
+                    <option value="GROK">GROK</option>
+                    <option value="OPENAI">OPENAI</option>
+                  </select>
+
+                  <span className="settings-select-arrow">⌄</span>
+                </div>
+              </div>
+
               {/* HUD VISIBILITY */}
               <div className="settings-visibility-section">
 
@@ -2237,6 +2294,26 @@ export default function Home() {
                   className="settings-modal-button settings-modal-button-primary"
                   onClick={async () => {
                     try {
+                      const providerResponse = await fetch(
+                        `${JARVIS_DASHBOARD_URL}/api/local/ai-provider`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          cache: "no-store",
+                          body: JSON.stringify({ provider: aiProvider }),
+                        }
+                      );
+
+                      const providerResult = await providerResponse.json();
+                      if (!providerResponse.ok || !providerResult.ok) {
+                        throw new Error(
+                          providerResult?.error ||
+                            "Failed to save AI provider."
+                        );
+                      }
+
                       const response = await fetch(
                         `${JARVIS_DASHBOARD_URL}/api/local/voice`,
                         {
@@ -2279,6 +2356,7 @@ export default function Home() {
                           JSON.stringify({
                             ...settings,
                             assistantVoice,
+                            aiProvider,
                             showActivityLog,
                             showSystemMonitor,
                             showQuickTools,
