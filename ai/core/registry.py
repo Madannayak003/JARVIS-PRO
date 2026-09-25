@@ -169,6 +169,8 @@ class ModelRegistry:
                     "coding",
                     "reasoning",
                     "editing",
+                    "repair",
+                    "reasoning",
                     "memory",
                     "offline",
                     "fast",
@@ -254,6 +256,86 @@ class ModelRegistry:
         )
         
         # --------------------------------------------------
+        # Gemini 3.8 Flash - Primary Configured Model
+        # --------------------------------------------------
+
+        self.register(
+
+            ModelDefinition(
+
+                name="gemini-3.8-flash",
+
+                provider="gemini",
+
+                capabilities=[
+                    "conversation",
+                    "planning",
+                    "coding",
+                    "developer",
+                    "editing",
+                    "repair",
+                    "reasoning",
+                    "memory",
+                    "vision",
+                    "screen_vision",
+                    "fast",
+                ],
+
+                streaming=True,
+
+                vision=True,
+
+                local=False,
+
+                enabled=True,
+
+                priority=5,
+
+                description="Primary configured Gemini model.",
+            )
+        )
+
+        # --------------------------------------------------
+        # Gemini 3.7 Flash - Gemini Fallback
+        # --------------------------------------------------
+
+        self.register(
+
+            ModelDefinition(
+
+                name="gemini-3.7-flash",
+
+                provider="gemini",
+
+                capabilities=[
+                    "conversation",
+                    "planning",
+                    "coding",
+                    "developer",
+                    "editing",
+                    "repair",
+                    "reasoning",
+                    "memory",
+                    "vision",
+                    "screen_vision",
+                    "fast",
+                ],
+
+                streaming=True,
+
+                vision=True,
+
+                local=False,
+
+                enabled=True,
+
+                priority=8,
+
+                description="Gemini fallback model.",
+            )
+        )
+
+        # --------------------------------------------------
         # Gemini 3.6 Flash - Primary Coding Model
         # --------------------------------------------------
 
@@ -269,7 +351,9 @@ class ModelRegistry:
                     "conversation",
                     "planning",
                     "coding",
+                    "developer",
                     "editing",
+                    "repair",
                     "reasoning",
                     "memory",
                     "vision",
@@ -310,7 +394,9 @@ class ModelRegistry:
                     "conversation",
                     "planning",
                     "coding",
+                    "developer",
                     "editing",
+                    "repair",
                     "reasoning",
                     "memory",
                     "fast",
@@ -350,9 +436,12 @@ class ModelRegistry:
                     "conversation",
                     "planning",
                     "editing",
+                    "repair",
+                    "reasoning",
                     "memory",
                     "fast",
                     "coding",
+                    "developer",
                     "screen_vision",
                 ],
 

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from ai.core.preference import AIPreference
+from ai.core.model_manager import ModelManager
 from ai.core.router import AIRouter
 from ai.core.schemas import AIRequest, AIResponse
 from ai.providers.base import AIProvider
@@ -13,6 +14,7 @@ class FakeProvider(AIProvider):
         self.outcomes = list(outcomes)
         self.available = available
         self.calls = 0
+        self.models = []
 
     @property
     def name(self):
@@ -23,6 +25,7 @@ class FakeProvider(AIProvider):
 
     def generate(self, request):
         self.calls += 1
+        self.models.append(request.model)
         success, text = self.outcomes.pop(0)
         return AIResponse(
             text=text if success else "",
@@ -49,6 +52,68 @@ def make_router(outcomes, selected=None):
 
 
 class AIProviderSelectionTests(unittest.TestCase):
+    def test_gemini_capability_preferences_are_authoritative(self):
+        manager = ModelManager()
+
+        self.assertEqual(
+            [model.name for model in manager.candidates("conversation")
+             if model.provider == "gemini"][:5],
+            [
+                "gemini-3.8-flash",
+                "gemini-3.7-flash",
+                "gemini-3.6-flash",
+                "gemini-3.5-flash",
+                "gemini-3.5-flash-lite",
+            ],
+        )
+        self.assertEqual(
+            [model.name for model in manager.candidates("fast")
+             if model.provider == "gemini"][:2],
+            ["gemini-3.7-flash", "gemini-3.8-flash"],
+        )
+
+        for capability in (
+            "coding", "developer", "repair", "reasoning",
+            "planning", "screen_vision",
+        ):
+            self.assertEqual(
+                next(
+                    model.name
+                    for model in manager.candidates(capability)
+                    if model.provider == "gemini"
+                ),
+                "gemini-3.8-flash",
+            )
+
+    def test_gemini_falls_through_models_in_preference_order(self):
+        router = AIRouter()
+        gemini = FakeProvider(
+            "gemini",
+            [(False, "3.8 unavailable"), (False, "3.7 unavailable"),
+             (True, "3.6 ok")],
+        )
+        router.register_provider(gemini)
+
+        response = router.generate(
+            AIRequest(
+                prompt="test",
+                capability="conversation",
+                provider="gemini",
+            )
+        )
+
+        self.assertTrue(response.success)
+        self.assertEqual(response.model, "gemini-3.6-flash")
+        self.assertEqual(
+            gemini.models,
+            [
+                "gemini-3.8-flash",
+                "gemini-3.7-flash",
+                "gemini-3.6-flash",
+            ],
+        )
+        self.assertEqual(len(gemini.models), len(set(gemini.models)))
+
     def test_auto_order_is_gemini_grok_openai_ollama(self):
         router, providers, request = make_router(
             {

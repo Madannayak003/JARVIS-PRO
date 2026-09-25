@@ -410,13 +410,19 @@ class AIRouter:
             ]
 
         else:
-            # AUTO is intentionally provider-first. Keep one configured
-            # model per provider so the fallback order is exactly:
+            # AUTO remains provider-first, but Gemini needs to retain its
+            # capability-specific model chain so an unavailable preferred
+            # model can fall through to the next configured Gemini model.
+            # Keep one configured model for every other provider so their
+            # existing fallback order remains exactly:
             # Gemini -> Grok -> OpenAI -> Ollama.
             seen_providers = set()
             ordered_candidates = []
             for model in candidates:
                 provider_name = model.provider.lower()
+                if provider_name == "gemini":
+                    ordered_candidates.append(model)
+                    continue
                 if provider_name in seen_providers:
                     continue
                 seen_providers.add(provider_name)
