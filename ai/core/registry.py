@@ -490,7 +490,7 @@ class ModelRegistry:
 
                 local=False,
 
-                enabled=True,
+                enabled=False,
 
                 priority=15,
 
@@ -527,7 +527,7 @@ class ModelRegistry:
 
                 local=False,
 
-                enabled=True,
+                enabled=False,
 
                 priority=30,
 
