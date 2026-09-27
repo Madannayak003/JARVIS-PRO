@@ -560,7 +560,6 @@ def browser_route(command):
         "close google",
         "close browser",
         "close jarvis browser",
-        "close astra browser",
         "exit chrome",
         "exit browser",
     ]:

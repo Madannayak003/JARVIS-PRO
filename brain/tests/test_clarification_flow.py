@@ -315,11 +315,11 @@ class ClarificationFlowTests(unittest.TestCase):
                 conversation_coordinator.cancel_clarification()
             )
 
-        with patch.object(settings, "APP_NAME", "ASTRA"):
-            invocation = normalize_assistant_invocation("hey astra")
+        with patch.object(settings, "APP_NAME", "__ASSISTANT_NAME__"):
+            invocation = normalize_assistant_invocation("hey __ASSISTANT_NAME__")
             self.assertEqual(invocation.command, "")
             self.assertEqual(
-                greeting_route("hey astra"),
+                greeting_route("hey __ASSISTANT_NAME__"),
                 [{"action": "greet", "command": "hey"}],
             )
             self.assertFalse(

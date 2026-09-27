@@ -1,16 +1,16 @@
 <p align="center">
   <img
-    src="https://readme-typing-svg.herokuapp.com?font=Poppins&weight=600&size=24&pause=1000&color=00C2FF&center=true&vCenter=true&width=850&lines=🤖+ASTRA+Desktop+Voice+Assistant;🎙️+Hey+ASTRA+%7C+Wake+Word+Activated;🖥️+Windows+Desktop+Automation;⚡+Python+%7C+Voice+Control+%7C+AI;🚀+Iron-Man+Style+Desktop+Assistant"
+    src="https://readme-typing-svg.herokuapp.com?font=Poppins&weight=600&size=24&pause=1000&color=00C2FF&center=true&vCenter=true&width=850&lines=🤖+JARVIS PRO+Desktop+Voice+Assistant;🎙️+Hey+JARVIS PRO+%7C+Wake+Word+Activated;🖥️+Windows+Desktop+Automation;⚡+Python+%7C+Voice+Control+%7C+AI;🚀+Iron-Man+Style+Desktop+Assistant"
     alt="Typing Header"
   />
 </p>
 
 <p align="center">
-  <img src="https://giffiles.alphacoders.com/212/212508.gif" alt="ASTRA HUD" width="100%">
+  <img src="https://giffiles.alphacoders.com/212/212508.gif" alt="JARVIS PRO HUD" width="100%">
 </p>
 
 <p align="center">
-  <strong>ASSISTANT – ASTRA Desktop Voice Assistant</strong>
+  <strong>ASSISTANT – JARVIS PRO Desktop Voice Assistant</strong>
 </p>
 
 <p align="center">
@@ -21,15 +21,15 @@
 
 ---
 
-# ASTRA Desktop Voice Assistant
+# JARVIS PRO Desktop Voice Assistant
 
 ## ✨ Overview
 
-ASTRA is a Windows-focused desktop voice assistant built around a Python
+JARVIS PRO is a Windows-focused desktop voice assistant built around a Python
 automation runtime, deterministic command routing, AI providers, and a
 real-time desktop HUD.
 
-ASTRA combines:
+JARVIS PRO combines:
 
 - Voice interaction and wake-word invocation
 - Online and optional offline voice modes
@@ -42,17 +42,12 @@ ASTRA combines:
 - Camera, object-detection, face-registration, and screen-vision features
 - A native Next.js/React HUD and an optional remote dashboard
 
-The user-facing identity is ASTRA. Internal modules, storage names, and
-protocols still contain JARVIS/JARVIS PRO identifiers for compatibility. The
-runtime display name is configurable, and the explicit aliases <code>astra</code>,
-<code>ashtra</code>, and legacy <code>jarvis</code> are supported.
-
 ## 🚀 Features
 
 ### Voice and AI
 
 - Deterministic wake-word handling for the configured assistant name and
-  explicit ASTRA/JARVIS aliases.
+  explicit JARVIS PRO/JARVIS aliases.
 - Online voice mode using SpeechRecognition and Edge TTS.
 - Offline voice mode using Faster-Whisper, local Ollama, and Piper TTS.
 - Ollama, Gemini, and OpenAI provider implementations.
@@ -119,7 +114,7 @@ runtime display name is configurable, and the explicit aliases <code>astra</code
 Feature availability depends on Windows permissions, installed applications,
 hardware, model files, network access, and configured credentials.
 
-## 🧠 How ASTRA Works
+## 🧠 How JARVIS PRO Works
 
 ~~~text
 User
@@ -206,8 +201,6 @@ separate action system.
 The name system builds deterministic wake-word phrases from the configured
 assistant name and explicit aliases, including forms such as:
 
-- <code>astra</code>, <code>hey astra</code>, <code>hello astra</code>
-- <code>ashtra</code>, <code>hey ashtra</code>, <code>hello ashtra</code>
 - <code>jarvis</code>, <code>hey jarvis</code>, <code>hello jarvis</code>
 
 The dispatcher strips a recognized invocation before routing the remaining
@@ -239,7 +232,7 @@ Some actions use optional Windows-only libraries or require user permissions.
 
 ## 🌐 Browser System
 
-ASTRA owns a dedicated Chromium browser runtime instead of attaching to an
+JARVIS PRO owns a dedicated Chromium browser runtime instead of attaching to an
 arbitrary browser debugging endpoint.
 
 The browser system:
@@ -247,7 +240,7 @@ The browser system:
 - Detects Chrome, Edge, or Chromium.
 - Creates or reuses a persistent per-user browser profile.
 - Uses a local CDP endpoint and Playwright.
-- Records ownership/session information so only a verified ASTRA-launched
+- Records ownership/session information so only a verified JARVIS PRO-launched
   browser session is reused.
 - Supports tabs, navigation, scrolling, Google search, YouTube, and sequential
   result references.
@@ -272,7 +265,7 @@ Browser configuration variables:
 
 ## 📱 Android Control
 
-ASTRA uses one shared Android/ADB bridge:
+JARVIS PRO uses one shared Android/ADB bridge:
 
 ~~~text
 Android Control / Phone Calls / Payment
@@ -339,7 +332,7 @@ The official payment application remains responsible for:
 - PIN, OTP, CVV, biometric, or other security checks
 - Final authorization and payment confirmation
 
-ASTRA does not scan payment QR codes with its own camera, enter payment
+JARVIS PRO does not scan payment QR codes with its own camera, enter payment
 credentials, simulate authorization taps, or claim that a transfer succeeded.
 
 Payment-app launching uses the Android/ADB bridge. It does not require the
@@ -365,7 +358,7 @@ operation; device permissions and Android behavior still apply.
 
 Answer, reject, and end actions are registered, but the current implementation
 explicitly reports that safe ADB control is unavailable on the audited Android
-device and asks the user to operate the phone manually. ASTRA should not be
+device and asks the user to operate the phone manually. JARVIS PRO should not be
 treated as providing automatic telecom control.
 
 ## 👁️ Vision
@@ -448,7 +441,7 @@ Remote Control and Android ADB are different systems:
 
 | System | Purpose |
 | --- | --- |
-| Remote dashboard | Sends commands/events between a browser or phone UI and the ASTRA runtime. |
+| Remote dashboard | Sends commands/events between a browser or phone UI and the JARVIS PRO runtime. |
 | Android/ADB bridge | Communicates directly with a connected Android device. |
 
 The dashboard is optional. Android ADB and payment-app launching do not depend
@@ -568,7 +561,7 @@ For a selected device, set <code>ANDROID_DEVICE_ID</code> or use the Android
 connection controls in the HUD. Wireless ADB accepts an address and port through
 the connection UI.
 
-## ▶️ Run ASTRA
+## ▶️ Run JARVIS PRO
 
 From the repository root:
 
@@ -700,7 +693,7 @@ modules.
 ## 🔐 Safety and Design Boundaries
 
 - Payment authorization stays inside the official Android payment application.
-- ASTRA does not handle UPI PINs, OTPs, CVVs, biometrics, or final payment
+- JARVIS PRO does not handle UPI PINs, OTPs, CVVs, biometrics, or final payment
   authorization.
 - Android commands use the shared <code>services/android/</code> bridge and
   target the phone only when the command is explicitly phone-scoped.
@@ -717,7 +710,7 @@ modules.
 
 Test locations include:
 
-- <code>tests/</code>: configuration, ASTRA routing, offline mode, browser
+- <code>tests/</code>: configuration, JARVIS PRO routing, offline mode, browser
   references, Android/payment routing, vision, phone calls, remote events,
   providers, and personal links.
 - <code>brain/tests/</code>: clarification and intent behavior.
@@ -754,7 +747,7 @@ No automated test run is claimed for this documentation change.
 | Browser skill fails | Install Chrome, Edge, or Chromium and check the browser executable/profile/CDP environment values. |
 | Optional integration fails | Configure only the relevant API/OAuth variables and verify the desktop application or external service is available. |
 
-## 🤝 Contributing and Extending ASTRA
+## 🤝 Contributing and Extending JARVIS PRO
 
 Use the existing architecture boundaries:
 

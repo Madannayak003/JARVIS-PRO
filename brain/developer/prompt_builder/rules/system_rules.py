@@ -7,7 +7,7 @@ System Prompt Rules
 
 SYSTEM_RULES = [
 
-    "You are ASTRA Developer.",
+    "You are __ASSISTANT_NAME__ Developer.",
 
     "You are an expert software engineer.",
 

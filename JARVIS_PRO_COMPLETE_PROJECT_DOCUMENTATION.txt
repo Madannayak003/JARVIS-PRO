@@ -64,20 +64,20 @@ Current development state:
 ===================
 
 The requested product terminology says:
-    CURRENT USER-FACING NAME: ASTRA
+    CURRENT USER-FACING NAME: JARVIS PRO
     INTERNAL / LEGACY IDENTIFIERS: JARVIS / JARVIS PRO
 
-The current repository does not consistently confirm ASTRA as the active runtime
+The current repository does not consistently confirm JARVIS PRO as the active runtime
 name. The authoritative settings module starts with APP_NAME = "JARVIS PRO",
 then loads data/settings/jarvis_settings.json when present. That persisted file
 currently contains a customized assistantName of "JARVIS". Therefore the
 runtime display name resolves to the persisted setting on this checkout, not
-to ASTRA.
+to JARVIS PRO.
 
-ASTRA evidence:
-    - offline AI instructions use the name ASTRA;
-    - browser runtime messages include ASTRA in some descriptions;
-    - tests and newer UI terminology refer to ASTRA in places.
+JARVIS PRO evidence:
+    - offline AI instructions use the name JARVIS PRO;
+    - browser runtime messages include JARVIS PRO in some descriptions;
+    - tests and newer UI terminology refer to JARVIS PRO in places.
 
 JARVIS evidence:
     - package/module/file names, action protocol names, dashboard constants,
@@ -87,7 +87,7 @@ JARVIS evidence:
     - the persisted runtime setting currently resolves to JARVIS.
 
 Safe conclusion:
-    ASTRA is a requested/new identity and appears in parts of the code, but this
+    JARVIS PRO is a requested/new identity and appears in parts of the code, but this
     checkout's effective persisted display name is JARVIS. JARVIS and JARVIS PRO
     remain active technical identifiers. The name system is configurable and
     intentionally preserves explicit compatibility aliases.
@@ -724,7 +724,6 @@ skills/utilities/time_skill.py | classes=- | functions=current_time
 skills/web/personal_links.py | classes=- | functions=personal_link_action
 tests/test_android_hud_connection.py | classes=FakeCompleted,WirelessRunner,UsbRunner,AndroidHudConnectionTests | functions=-
 tests/test_android_payment_routing.py | classes=FakeCompleted,FakeRunner,AndroidBridgeTests | functions=-
-tests/test_astra_routing.py | classes=AstraRoutingTests | functions=-
 tests/test_browser_followup_references.py | classes=BrowserFollowUpReferenceTests | functions=-
 tests/test_configuration.py | classes=ConfigurationTests | functions=-
 tests/test_face_vision.py | classes=FaceRegistryTests,FaceSpeechTests,VisionIntegrationTests | functions=-
@@ -1093,10 +1092,10 @@ Invocation handling:
     normalize_assistant_invocation accepts only configured explicit aliases,
     with optional leading "hey" or "hello". It strips the alias before routing.
     Current configured name and the explicit legacy alias "jarvis" are supported;
-    pronunciation aliases include "astra" and "ashtra" in settings.
+    pronunciation aliases include "JARVIS PRO" and "ashtra" in settings.
 
 Examples confirmed by routers/actions:
-    "hey astra ..." / "hey jarvis ..." -> alias normalization if alias list
+    "hey jarvis ..." -> alias normalization if alias list
     matches current settings.
     "take a photo", "open camera", "start vision", "what do you see"
     "open youtube", "search google ...", "play ... on youtube"
@@ -1122,7 +1121,7 @@ Sources:
 Behavior:
     - APP_NAME begins as JARVIS PRO.
     - data/settings/jarvis_settings.json may override it through assistantName.
-    - PRONUNCIATION_ALIASES = ("astra", "ashtra").
+    - PRONUNCIATION_ALIASES = ().
     - LEGACY_ASSISTANT_ALIASES = ("jarvis",).
     - aliases are explicit; matching is not fuzzy.
     - runtime set_assistant_name updates APP_NAME in-process and persists settings.
@@ -1708,7 +1707,7 @@ External applications commonly required:
 
 Observed test inventory:
     tests/ (11 top-level files):
-        Android/HUD connection, Android payment routing, ASTRA routing,
+        Android/HUD connection, Android payment routing, JARVIS PRO routing,
         browser follow-up references, configuration, face vision, offline mode,
         OpenAI provider, personal website list, phone call, remote event sync.
     brain/tests/:
@@ -1728,7 +1727,7 @@ Observed test inventory:
         greeting skill checks.
 
 Important validation themes:
-    TEST: test_astra_routing.py
+    TEST: test_JARVIS PRO_routing.py
     PURPOSE: name/invocation routing behavior.
     TEST: test_offline_mode.py
     PURPOSE: shared offline action/runtime behavior.
@@ -1856,7 +1855,7 @@ unless import/registration evidence exists. See the Python manifest and loader.
 36. NOT IMPLEMENTED / UNKNOWN AREAS
 ===================================
 
-    - ASTRA is not confirmed as the effective persisted display name on this
+    - JARVIS PRO is not confirmed as the effective persisted display name on this
       checkout; current persisted name is JARVIS.
     - No automatic payment authorization or credential entry is implemented.
     - No Firebase/Apps Script integration was confirmed.
@@ -2221,7 +2220,7 @@ Ignore policy:
         This audit did not execute tests or start services.
 
     STATUS: IDENTITY DISCREPANCY
-        Requested ASTRA identity is present in parts of code, but persisted
+        Requested JARVIS PRO identity is present in parts of code, but persisted
         effective runtime name on this checkout is JARVIS.
 
 46. FINAL COMPLETE INVENTORY

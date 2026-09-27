@@ -78,7 +78,7 @@ if APP_NAME.casefold() == _BUILT_IN_APP_NAME.casefold():
 
 # These are deliberately explicit pronunciation and compatibility aliases.
 # Do not expand them fuzzily from the configured name.
-PRONUNCIATION_ALIASES = ("astra", "ashtra")
+PRONUNCIATION_ALIASES = ()
 LEGACY_ASSISTANT_ALIASES = ("jarvis",)
 
 

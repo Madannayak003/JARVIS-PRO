@@ -37,7 +37,7 @@ class RepairPromptBuilder:
         prompt = RepairPrompt()
 
         prompt.system_prompt = (
-            "You are ASTRA Repair Engine.\n"
+            "You are __ASSISTANT_NAME__ Repair Engine.\n"
             "Generate ONLY the missing files.\n"
             "Do NOT regenerate existing files."
         )

@@ -271,7 +271,7 @@ class BrowserController:
             endpoint = self.runtime.ensure_running()
 
             print(
-                "[Browser] Starting ASTRA Browser..."
+                "[Browser] Starting __ASSISTANT_NAME__ Browser..."
             )
 
         except (
@@ -322,7 +322,7 @@ class BrowserController:
             )
 
             print(
-                "[Browser] Connected to ASTRA Chrome"
+                "[Browser] Connected to __ASSISTANT_NAME__ Chrome"
             )
 
             # -------------------------------------------------
@@ -460,7 +460,7 @@ class BrowserController:
 
                 print(
                     "[Browser] "
-                    "Page opened in ASTRA Chrome"
+                    "Page opened in __ASSISTANT_NAME__ Chrome"
                 )
 
                 return True
@@ -640,7 +640,7 @@ class BrowserController:
 
                 print(
                     "[Google] "
-                    "Search opened in ASTRA Chrome"
+                    "Search opened in __ASSISTANT_NAME__ Chrome"
                 )
 
                 return True
@@ -729,7 +729,7 @@ class BrowserController:
 
                 print(
                     "[YouTube] "
-                    "Search opened in ASTRA Chrome"
+                    "Search opened in __ASSISTANT_NAME__ Chrome"
                 )
 
                 return True
@@ -801,7 +801,7 @@ class BrowserController:
 
             print(
                 "[GitHub] "
-                "Search opened in ASTRA Chrome"
+                "Search opened in __ASSISTANT_NAME__ Chrome"
             )
 
             return True
@@ -852,7 +852,7 @@ class BrowserController:
 
         print(
             "[YouTube] "
-            f"Opening in ASTRA Chrome: {url}"
+            f"Opening in __ASSISTANT_NAME__ Chrome: {url}"
         )
 
         try:
@@ -905,7 +905,7 @@ class BrowserController:
 
             print(
                 "[YouTube] "
-                "Video opened in ASTRA Chrome"
+                "Video opened in __ASSISTANT_NAME__ Chrome"
             )
 
             self._skip_ad_impl()
@@ -980,7 +980,7 @@ class BrowserController:
 
             print(
                 "[YouTube] "
-                "First video opened in ASTRA Chrome"
+                "First video opened in __ASSISTANT_NAME__ Chrome"
             )
 
             return True
