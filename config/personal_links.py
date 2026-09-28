@@ -43,8 +43,6 @@ PERSONAL_LINKS = {
 
     "iot": get_env("PERSONAL_IOT_URL"),
     "iot_website": get_env("PERSONAL_IOT_WEBSITE_URL"),
-    
-    "iotrix_lab": get_env("IOTRIX_LAB_URL"),
 
     # -----------------------------------------------------
     # JARVIS

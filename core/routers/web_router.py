@@ -56,14 +56,7 @@ PERSONAL_WEB_TARGETS = {
     "iot": "iot",
     "iot website": "iot_website",
     "iot site": "iot_website",
-
-    "iotrix": "iotrix_lab",
-    "iotrix lab": "iotrix_lab",
-    "iotrix website": "iotrix_lab",
-    "iotrix site": "iotrix_lab",
-    "iot tricks" : "iotrix_lab",
-    "iot tricks lab" : "iotrix_lab",
-
+    
     # -----------------------------------------------------
     # JARVIS
     # -----------------------------------------------------

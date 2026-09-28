@@ -18,7 +18,7 @@ def load_environment(env_file: Optional[Path] = None) -> bool:
 
     return load_dotenv(
         dotenv_path=env_file or ENV_FILE,
-        override=False,
+        override=True,
     )
 
 
