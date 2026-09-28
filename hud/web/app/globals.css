@@ -8,16 +8,56 @@
   --assistant-colour: #ffab17;
 
   /* Accent Alpha Derivations */
-  --assistant-colour-04: color-mix(in srgb, var(--assistant-colour) 4%, transparent);
-  --assistant-colour-08: color-mix(in srgb, var(--assistant-colour) 8%, transparent);
-  --assistant-colour-10: color-mix(in srgb, var(--assistant-colour) 10%, transparent);
-  --assistant-colour-15: color-mix(in srgb, var(--assistant-colour) 15%, transparent);
-  --assistant-colour-20: color-mix(in srgb, var(--assistant-colour) 20%, transparent);
-  --assistant-colour-30: color-mix(in srgb, var(--assistant-colour) 30%, transparent);
-  --assistant-colour-45: color-mix(in srgb, var(--assistant-colour) 45%, transparent);
-  --assistant-colour-65: color-mix(in srgb, var(--assistant-colour) 65%, transparent);
-  --assistant-colour-70: color-mix(in srgb, var(--assistant-colour) 70%, transparent);
-  --assistant-colour-80: color-mix(in srgb, var(--assistant-colour) 80%, transparent);
+  --assistant-colour-04: color-mix(
+    in srgb,
+    var(--assistant-colour) 4%,
+    transparent
+  );
+  --assistant-colour-08: color-mix(
+    in srgb,
+    var(--assistant-colour) 8%,
+    transparent
+  );
+  --assistant-colour-10: color-mix(
+    in srgb,
+    var(--assistant-colour) 10%,
+    transparent
+  );
+  --assistant-colour-15: color-mix(
+    in srgb,
+    var(--assistant-colour) 15%,
+    transparent
+  );
+  --assistant-colour-20: color-mix(
+    in srgb,
+    var(--assistant-colour) 20%,
+    transparent
+  );
+  --assistant-colour-30: color-mix(
+    in srgb,
+    var(--assistant-colour) 30%,
+    transparent
+  );
+  --assistant-colour-45: color-mix(
+    in srgb,
+    var(--assistant-colour) 45%,
+    transparent
+  );
+  --assistant-colour-65: color-mix(
+    in srgb,
+    var(--assistant-colour) 65%,
+    transparent
+  );
+  --assistant-colour-70: color-mix(
+    in srgb,
+    var(--assistant-colour) 70%,
+    transparent
+  );
+  --assistant-colour-80: color-mix(
+    in srgb,
+    var(--assistant-colour) 80%,
+    transparent
+  );
 
   /* Deep Canvas & Glass Surfaces */
   --bg-core: #040609;
@@ -36,7 +76,8 @@
   --border-accent: var(--assistant-colour-45);
 
   /* Typography Hierarchy */
-  --hud-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --hud-font-sans:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --hud-font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
 
   /* Modern Neutral Text Spectrum */
@@ -57,8 +98,11 @@
 
   /* Atmospheric Shadows & Depth */
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
-  --shadow-glass: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --shadow-card: 0 16px 36px -4px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
+  --shadow-glass:
+    0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-card:
+    0 16px 36px -4px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
   --shadow-accent-glow: 0 0 22px var(--assistant-colour-30);
 
   /* Geometric Radii */
@@ -147,14 +191,13 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 9;
-  background:
-    radial-gradient(
-      ellipse at 50% 50%,
-      transparent 0%,
-      transparent 45%,
-      rgba(3, 5, 8, 0.5) 75%,
-      rgba(2, 3, 5, 0.94) 100%
-    );
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 0%,
+    transparent 45%,
+    rgba(3, 5, 8, 0.5) 75%,
+    rgba(2, 3, 5, 0.94) 100%
+  );
 }
 
 /* =========================================================
@@ -211,7 +254,9 @@ body {
   border-color: var(--assistant-colour-70);
   color: #ffffff;
   background: var(--assistant-colour-10);
-  box-shadow: 0 0 16px var(--assistant-colour-30), var(--glass-specular);
+  box-shadow:
+    0 0 16px var(--assistant-colour-30),
+    var(--glass-specular);
   transform: translateY(-1px);
 }
 
@@ -223,7 +268,9 @@ body {
   background: var(--assistant-colour-20);
   border-color: var(--assistant-colour);
   color: #ffffff;
-  box-shadow: 0 0 16px var(--assistant-colour-45), var(--glass-specular);
+  box-shadow:
+    0 0 16px var(--assistant-colour-45),
+    var(--glass-specular);
 }
 
 .hud-controls-toggle {
@@ -257,7 +304,9 @@ body {
   background: var(--bg-surface-elevated);
   isolation: isolate;
   z-index: 60;
-  box-shadow: var(--shadow-card), 0 0 24px var(--assistant-colour-15);
+  box-shadow:
+    var(--shadow-card),
+    0 0 24px var(--assistant-colour-15);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   pointer-events: auto;
@@ -290,14 +339,22 @@ body {
   pointer-events: none;
   box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
   background:
-    linear-gradient(to right, var(--assistant-colour-45) 8px, transparent 8px) 0 0,
-    linear-gradient(to bottom, var(--assistant-colour-45) 8px, transparent 8px) 0 0,
-    linear-gradient(to left, var(--assistant-colour-45) 8px, transparent 8px) 100% 0,
-    linear-gradient(to bottom, var(--assistant-colour-45) 8px, transparent 8px) 100% 0,
-    linear-gradient(to right, var(--assistant-colour-45) 8px, transparent 8px) 0 100%,
-    linear-gradient(to top, var(--assistant-colour-45) 8px, transparent 8px) 0 100%,
-    linear-gradient(to left, var(--assistant-colour-45) 8px, transparent 8px) 100% 100%,
-    linear-gradient(to top, var(--assistant-colour-45) 8px, transparent 8px) 100% 100%;
+    linear-gradient(to right, var(--assistant-colour-45) 8px, transparent 8px) 0
+      0,
+    linear-gradient(to bottom, var(--assistant-colour-45) 8px, transparent 8px)
+      0 0,
+    linear-gradient(to left, var(--assistant-colour-45) 8px, transparent 8px)
+      100% 0,
+    linear-gradient(to bottom, var(--assistant-colour-45) 8px, transparent 8px)
+      100% 0,
+    linear-gradient(to right, var(--assistant-colour-45) 8px, transparent 8px) 0
+      100%,
+    linear-gradient(to top, var(--assistant-colour-45) 8px, transparent 8px) 0
+      100%,
+    linear-gradient(to left, var(--assistant-colour-45) 8px, transparent 8px)
+      100% 100%,
+    linear-gradient(to top, var(--assistant-colour-45) 8px, transparent 8px)
+      100% 100%;
   background-repeat: no-repeat;
   background-size: 8px 8px;
 }
@@ -314,7 +371,11 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #ffffff;
-  background: linear-gradient(180deg, transparent 0%, rgba(4, 6, 10, 0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(4, 6, 10, 0.92) 100%
+  );
   z-index: 3;
   display: flex;
   align-items: center;
@@ -394,7 +455,9 @@ body {
 .ultron-color-btn:hover {
   transform: translateY(-2px) scale(1.06);
   border-color: var(--assistant-colour) !important;
-  box-shadow: 0 0 14px var(--assistant-colour-30), var(--glass-specular);
+  box-shadow:
+    0 0 14px var(--assistant-colour-30),
+    var(--glass-specular);
 }
 
 .ultron-color-dot {
@@ -453,10 +516,16 @@ body {
   justify-content: space-between;
   padding: 0 32px;
   border-bottom: 1px solid var(--border-subtle);
-  background: linear-gradient(180deg, rgba(6, 9, 14, 0.88) 0%, rgba(6, 9, 14, 0.45) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(6, 9, 14, 0.88) 0%,
+    rgba(6, 9, 14, 0.45) 100%
+  );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), var(--glass-specular);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    var(--glass-specular);
   z-index: 50;
 }
 
@@ -498,8 +567,15 @@ body {
   color: #ffffff;
   opacity: 0.95;
   white-space: nowrap;
-  background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.65) 100%);
+  background: linear-gradient(
+    180deg,
+    #ffffff 40%,
+    rgba(255, 255, 255, 0.65) 100%
+  );
+
+  background-clip: text;
   -webkit-background-clip: text;
+
   -webkit-text-fill-color: transparent;
 }
 
@@ -629,7 +705,9 @@ body {
 .cockpit-header-nav button::before {
   color: var(--assistant-colour);
   opacity: 0.85;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .cockpit-header-nav button:hover::before {
@@ -761,7 +839,9 @@ body {
 .cockpit-left .cockpit-system-row:hover {
   border-color: var(--assistant-colour-30);
   background: var(--bg-card-hover);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), var(--glass-specular-subtle);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    var(--glass-specular-subtle);
 }
 
 .cockpit-system-row {
@@ -1134,7 +1214,9 @@ body {
   border-color: var(--border-glass);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), var(--glass-specular-subtle);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    var(--glass-specular-subtle);
 }
 
 .quick-tools-grid button:active {
@@ -1224,7 +1306,9 @@ body {
   box-shadow: var(--shadow-card), var(--glass-specular) !important;
   border: 1px solid var(--border-subtle) !important;
   isolation: isolate;
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 /* Moving beam locked STRICTLY to the border ring via mask */
@@ -1394,12 +1478,16 @@ body {
 .hud-command-row .hud-live-circle.is-active {
   background: rgba(0, 212, 255, 0.25) !important;
   border: 1px solid #00d4ff !important;
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.55), inset 0 0 8px rgba(0, 212, 255, 0.3) !important;
+  box-shadow:
+    0 0 16px rgba(0, 212, 255, 0.55),
+    inset 0 0 8px rgba(0, 212, 255, 0.3) !important;
 }
 
 .hud-command-row .hud-live-circle.is-active .btn-icon {
   background: #00d4ff !important;
-  box-shadow: 0 0 12px #00d4ff, 0 0 20px #00d4ff !important;
+  box-shadow:
+    0 0 12px #00d4ff,
+    0 0 20px #00d4ff !important;
 }
 
 .hud-command-row .hud-live-circle > span:not(.btn-icon) {
@@ -1507,7 +1595,9 @@ body {
 
 .siri-path {
   transform-origin: center center;
-  transition: transform 0.2s ease, opacity 0.4s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.4s ease;
   transform: scaleY(0.12);
   opacity: 0.25;
 }
@@ -1537,28 +1627,52 @@ body {
 }
 
 @keyframes siriPulseGreen {
-  0%, 100% { transform: scaleY(0.9) translateX(0px); }
-  50% { transform: scaleY(1.35) translateX(10px); }
+  0%,
+  100% {
+    transform: scaleY(0.9) translateX(0px);
+  }
+  50% {
+    transform: scaleY(1.35) translateX(10px);
+  }
 }
 
 @keyframes siriPulseCyan {
-  0% { transform: scaleY(0.85) translateX(0px); }
-  100% { transform: scaleY(1.4) translateX(-8px); }
+  0% {
+    transform: scaleY(0.85) translateX(0px);
+  }
+  100% {
+    transform: scaleY(1.4) translateX(-8px);
+  }
 }
 
 @keyframes siriPulseBlue {
-  0% { transform: scaleY(0.7) translateX(-5px); }
-  100% { transform: scaleY(1.5) translateX(12px); }
+  0% {
+    transform: scaleY(0.7) translateX(-5px);
+  }
+  100% {
+    transform: scaleY(1.5) translateX(12px);
+  }
 }
 
 @keyframes siriPulsePurple {
-  0%, 100% { transform: scaleY(0.9) translateX(0px); }
-  50% { transform: scaleY(1.25) translateX(-6px); }
+  0%,
+  100% {
+    transform: scaleY(0.9) translateX(0px);
+  }
+  50% {
+    transform: scaleY(1.25) translateX(-6px);
+  }
 }
 
 @keyframes siriPulseCore {
-  0% { transform: scaleY(0.8) scaleX(0.95); opacity: 0.7; }
-  100% { transform: scaleY(1.45) scaleX(1.1); opacity: 1; }
+  0% {
+    transform: scaleY(0.8) scaleX(0.95);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleY(1.45) scaleX(1.1);
+    opacity: 1;
+  }
 }
 
 .hud-bottom-toolbar {
@@ -1613,7 +1727,9 @@ body {
   background: var(--assistant-colour-15) !important;
   border-color: var(--assistant-colour-65);
   color: #ffffff;
-  box-shadow: 0 0 14px var(--assistant-colour-30), var(--glass-specular-subtle);
+  box-shadow:
+    0 0 14px var(--assistant-colour-30),
+    var(--glass-specular-subtle);
 }
 
 .hud-bar-btn.is-active .btn-icon {
@@ -1638,7 +1754,9 @@ body {
   background: rgba(8, 12, 18, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.18), 0 16px 32px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 20px rgba(0, 229, 255, 0.18),
+    0 16px 32px rgba(0, 0, 0, 0.45);
   color: #ffffff;
   font-family: var(--hud-font-sans);
   text-align: center;
@@ -1686,7 +1804,9 @@ body {
 
 .phone-call-island-active {
   border-color: rgba(115, 239, 139, 0.45);
-  box-shadow: 0 0 20px rgba(115, 239, 139, 0.22), 0 16px 32px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 20px rgba(115, 239, 139, 0.22),
+    0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
 .phone-call-island-disconnected {
@@ -1694,13 +1814,26 @@ body {
 }
 
 @keyframes phone-call-island-in {
-  from { opacity: 0; transform: translateX(-50%) scale(0.88); }
-  to { opacity: 1; transform: translateX(-50%) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
 }
 
 @keyframes phone-call-island-out {
-  0%, 78% { opacity: 1; transform: translateX(-50%) scale(1); }
-  100% { opacity: 0; transform: translateX(-50%) scale(0.88); }
+  0%,
+  78% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
 }
 
 .android-status-button {
@@ -1753,7 +1886,10 @@ body {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card), 0 0 45px rgba(0, 0, 0, 0.75), var(--glass-specular);
+  box-shadow:
+    var(--shadow-card),
+    0 0 45px rgba(0, 0, 0, 0.75),
+    var(--glass-specular);
   color: #ffffff;
 }
 
@@ -2205,7 +2341,16 @@ body {
   height: 115px;
   border-radius: 50%;
   cursor: crosshair;
-  background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  background: conic-gradient(
+    from 0deg,
+    #ff0000,
+    #ffff00,
+    #00ff00,
+    #00ffff,
+    #0000ff,
+    #ff00ff,
+    #ff0000
+  );
   border: 2px solid var(--border-glass);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
   touch-action: none;
@@ -2216,7 +2361,12 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.65) 20%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.65) 20%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
