@@ -268,6 +268,12 @@ def start_native_hud():
     if not wait_for_web_hud():
         return False
 
+    try:
+        from dashboard.heartbeat import start_heartbeat
+        start_heartbeat()
+    except Exception as error:
+        print(f"[HEARTBEAT] Startup skipped: {error}")
+
     print(
         f"[MAIN HUD] Opening {get_assistant_display_name()} desktop window..."
     )
@@ -536,6 +542,12 @@ def main():
             pass
 
         stop_web_hud()
+
+        try:
+            from dashboard.heartbeat import stop_heartbeat
+            stop_heartbeat()
+        except Exception as error:
+            print(f"[HEARTBEAT] Shutdown skipped: {error}")
 
         print(f"[MAIN] {get_assistant_display_name()} shutdown complete.")
         # Instantly releases terminal prompt without socket/thread hanging
