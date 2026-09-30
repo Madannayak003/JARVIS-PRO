@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from core.registry import register
+from core.notifications import notify_windows_toast
 from hud.integration import HUDIntegration
 from voice.manager import speak
 
@@ -161,7 +162,7 @@ def _run_due() -> None:
         command = str(item.get("command", "")).strip()
         schedule_id = int(item.get("id", -1))
         try:
-            HUDIntegration.notify("SCHEDULE", f"Scheduled task: {command}", source="scheduler", metadata={"schedule_id": schedule_id})
+            notify_windows_toast("J.A.R.V.I.S Scheduled Task", command)
             executor = _executor
             if executor is None:
                 from core.dispatcher import dispatch

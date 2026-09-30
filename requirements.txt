@@ -42,6 +42,7 @@ psutil>=5.9
 pyautogui>=0.9.54
 pyperclip>=1.8
 pywin32>=306
+win10toast>=0.9; sys_platform == "win32"
 pywinauto>=0.6.8
 comtypes>=1.4
 pycaw>=20240210

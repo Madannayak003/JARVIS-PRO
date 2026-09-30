@@ -2680,7 +2680,7 @@ body {
 
 .morning-brief-overlay {
   position: absolute;
-  top: 84px;
+  top: 110px;
   left: 360px;
   right: 400px;
   z-index: 20;

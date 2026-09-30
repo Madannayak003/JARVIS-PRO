@@ -13,7 +13,7 @@ from datetime import datetime
 
 from core.registry import register
 from voice.manager import speak
-from hud.integration import HUDIntegration
+from core.notifications import notify_windows_toast
 
 
 # =========================================================
@@ -336,12 +336,9 @@ def _reminder_worker():
                         f"Reminder: {text}"
                     )
 
-                    HUDIntegration.notify(
-                        "REMINDER",
+                    notify_windows_toast(
+                        "J.A.R.V.I.S Reminder",
                         text,
-                        level="REMINDER",
-                        source="reminder",
-                        metadata={"reminder_id": reminder.get("id")},
                     )
 
                     reminder["completed"] = True
