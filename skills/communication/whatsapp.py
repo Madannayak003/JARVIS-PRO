@@ -369,6 +369,11 @@ def list_scheduled_whatsapp(data=None):
 
     return True
 
+
+def get_scheduled_whatsapp_items():
+    """Read-only data access for the existing Schedule Center."""
+    return _load_scheduled_whatsapp()
+
 def cancel_scheduled_whatsapp(data=None):
 
     data = data or {}

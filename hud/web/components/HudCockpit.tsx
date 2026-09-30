@@ -40,6 +40,8 @@ type Props = {
 
   onSettings: () => void;
 
+  onSchedules: () => void;
+
   showActivityLog: boolean;
   showSystemMonitor: boolean;
   showQuickTools: boolean;
@@ -390,6 +392,7 @@ export default function HudCockpit({
   onCommand,
   onFullscreen,
   onSettings,
+  onSchedules,
   showActivityLog,
   showSystemMonitor,
   showQuickTools,
@@ -937,11 +940,11 @@ export default function HudCockpit({
             <span>WEBSITES</span>
           </button>
 
-          {/* CALCULATOR */}
+          {/* SCHEDULES */}
           <button
             type="button"
-            onClick={() => onCommand("open calculator")}
-            aria-label="Open Calculator"
+            onClick={onSchedules}
+            aria-label="Open Schedules"
           >
             <span className="quick-tool-icon">
               <svg
@@ -949,22 +952,16 @@ export default function HudCockpit({
                 width="22"
                 height="22"
                 fill="none"
-                stroke="#4285F4"
+                stroke="#00e5ff"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <rect x="4" y="2" width="16" height="20" rx="3" />
-                <rect x="7" y="5" width="10" height="4" rx="1" fill="#4285F4" fillOpacity="0.2" />
-                <circle cx="8" cy="13" r="1" fill="#4285F4" />
-                <circle cx="12" cy="13" r="1" fill="#4285F4" />
-                <circle cx="16" cy="13" r="1" fill="#4285F4" />
-                <circle cx="8" cy="17" r="1" fill="#4285F4" />
-                <circle cx="12" cy="17" r="1" fill="#4285F4" />
-                <circle cx="16" cy="17" r="1" fill="#4285F4" />
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
               </svg>
             </span>
-            <span>CALCULATOR</span>
+            <span>SCHEDULES</span>
           </button>
 
           {/* LOCK */}

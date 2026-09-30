@@ -149,6 +149,13 @@ function hudStatesEqual(left: HUDState, right: HUDState): boolean {
 
 type SettingsModal = "remote" | "android" | "customise" | "settings" | null;
 
+type ScheduleCenterTab = "reminders" | "whatsapp" | "schedules";
+type ScheduleCenterData = {
+  reminders: Array<Record<string, unknown>>;
+  whatsapp: Array<Record<string, unknown>>;
+  schedules: Array<Record<string, unknown>>;
+};
+
 type RemoteInfo = {
   ok: boolean;
   assistant_name?: string;
@@ -221,11 +228,55 @@ function normalizeAssistantName(value: unknown): string {
   return name;
 }
 
+function displayTime(value: unknown): string {
+  if (!value) return "Time not set";
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+}
+
+function ScheduleCenterSection({ tab, data }: { tab: ScheduleCenterTab; data: ScheduleCenterData }) {
+  const items = data[tab];
+  const next = items
+    .filter((item) => item.enabled !== false && item.completed !== true && item.cancelled !== true)
+    .sort((left, right) => new Date(String(left.next_run_at ?? left.remind_at ?? left.send_at ?? "")).getTime() - new Date(String(right.next_run_at ?? right.remind_at ?? right.send_at ?? "")).getTime())[0];
+  const title = tab === "reminders" ? "NEXT REMINDER" : tab === "whatsapp" ? "NEXT WHATSAPP" : "NEXT SCHEDULE";
+  const summary = tab === "reminders" ? String(next?.text ?? "") : tab === "whatsapp" ? `Message to ${String(next?.contact ?? "contact")}` : String(next?.command ?? "");
+  const time = next?.next_run_at ?? next?.remind_at ?? next?.send_at;
+  return (
+    <div className={`schedule-center-content schedule-center-content--${tab}`}>
+      {next && <div className="schedule-center-next"><span>{title}</span><strong>{summary}</strong><small>{displayTime(time)}</small></div>}
+      {!next && <div className="schedule-center-empty">{tab === "reminders" ? "No reminders scheduled." : tab === "whatsapp" ? "No WhatsApp schedules." : "No scheduled tasks."}</div>}
+      <div className="schedule-center-list">
+        {items.filter((item) => item !== next).map((item, index) => {
+          const label = tab === "reminders" ? String(item.text ?? "Reminder") : tab === "whatsapp" ? `${String(item.contact ?? "Contact")}: ${String(item.message ?? "")}` : String(item.command ?? "Scheduled task");
+          const status = item.enabled === false || item.completed === true || item.cancelled === true ? "DISABLED" : "ACTIVE";
+          if (tab === "schedules") {
+            return (
+              <div className="schedule-center-task-row" key={String(item.id ?? index)}>
+                <div className="schedule-center-task-main">
+                  <strong>{label}</strong>
+                  <span className={`schedule-center-task-status schedule-center-task-status--${status.toLowerCase()}`}>{status}</span>
+                </div>
+                <time>{displayTime(item.next_run_at ?? item.run_at)}</time>
+              </div>
+            );
+          }
+          return <div className="schedule-center-item" key={String(item.id ?? index)}><span>{label}</span><small>{status} · {displayTime(item.next_run_at ?? item.remind_at ?? item.send_at)}</small></div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 export default function Home() {
   const [hudState, setHudState] = useState<HUDState>(EMPTY_STATE);
   const [connection, setConnection] = useState<HUDConnectionStatus>("connecting");
   const [activities, setActivities] = useState<HUDActivity[]>([]);
+  const [scheduleCenterOpen, setScheduleCenterOpen] = useState(false);
+  const [scheduleCenterTab, setScheduleCenterTab] = useState<ScheduleCenterTab>("reminders");
+  const [scheduleCenterData, setScheduleCenterData] = useState<ScheduleCenterData>({ reminders: [], whatsapp: [], schedules: [] });
+  const [hudNotification, setHudNotification] = useState<{ title: string; message: string; level: string } | null>(null);
   const [phoneCall, setPhoneCall] = useState<PhoneCallState | null>(null);
   const phoneCallRef = useRef<PhoneCallState | null>(null);
   const phoneCallExitTimerRef = useRef<number | null>(null);
@@ -850,6 +901,16 @@ export default function Home() {
           return;
         }
 
+        if (event.name === "notification" || event.name === "error") {
+          const title = String(event.data?.title ?? (event.name === "error" ? "ERROR" : "JARVIS"));
+          const message = String(event.data?.message ?? event.data?.error ?? "").trim();
+          if (message) {
+            setHudNotification({ title, message, level: String(event.data?.level ?? (event.name === "error" ? "ERROR" : "INFO")) });
+            window.setTimeout(() => setHudNotification(null), 7000);
+          }
+          return;
+        }
+
         if (event.name === "speaking") {
           if (morningBriefActiveRef.current) {
           setMorningBriefStartedSpeaking(true);
@@ -982,6 +1043,18 @@ export default function Home() {
       }
     };
   }, [applyPhoneCallState, handleHUDState]);
+
+  const openScheduleCenter = async (tab: ScheduleCenterTab = scheduleCenterTab) => {
+    setScheduleCenterTab(tab);
+    setScheduleCenterOpen(true);
+    try {
+      const response = await fetch(`${HUD_BRIDGE_URL}/schedule-center`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Schedule Center unavailable");
+      setScheduleCenterData(await response.json() as ScheduleCenterData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   /* =========================================================
      3D AVATAR STATE DISPATCHER (CONTINUOUS SPEECH LOCK)
@@ -1448,6 +1521,7 @@ export default function Home() {
         showActivityLog={showActivityLog}
         showSystemMonitor={showSystemMonitor}
         showQuickTools={showQuickTools}
+        onSchedules={() => void openScheduleCenter()}
         morningBriefHeadlines={morningBriefHeadlines}
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
@@ -1581,7 +1655,31 @@ export default function Home() {
       {/* =====================================================
           CONNECTION
           ===================================================== */}
-      <div className="hud-bridge-status">
+        {hudNotification && (
+          <div className={`hud-notification hud-notification--${hudNotification.level.toLowerCase()}`} role="status">
+            <div className="hud-notification-title">{hudNotification.title}</div>
+            <div className="hud-notification-message">{hudNotification.message}</div>
+          </div>
+        )}
+
+        {scheduleCenterOpen && (
+          <div className="schedule-center-backdrop" role="dialog" aria-modal="true" aria-label="Schedule Center">
+            <section className="schedule-center-panel">
+              <button type="button" className="schedule-center-close" onClick={() => setScheduleCenterOpen(false)} aria-label="Close Schedule Center">×</button>
+              <div className="schedule-center-heading">SCHEDULE CENTER</div>
+              <div className="schedule-center-tabs" role="tablist">
+                {(["reminders", "whatsapp", "schedules"] as ScheduleCenterTab[]).map((tab) => (
+                  <button key={tab} type="button" role="tab" aria-selected={scheduleCenterTab === tab} className={scheduleCenterTab === tab ? "is-active" : ""} onClick={() => void openScheduleCenter(tab)}>
+                    {tab === "reminders" ? "🔔 Reminders" : tab === "whatsapp" ? "💬 WhatsApp" : "📅 Scheduled Tasks"}
+                  </button>
+                ))}
+              </div>
+              <ScheduleCenterSection tab={scheduleCenterTab} data={scheduleCenterData} />
+            </section>
+          </div>
+        )}
+
+        <div className="hud-bridge-status">
         <span
           className={`hud-bridge-dot ${connection}`}
           aria-hidden="true"
@@ -1740,126 +1838,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ALL 8 BUTTONS IN ONE TRANSPARENT INLINE ROW */}
-        <nav className="hud-bottom-toolbar" aria-label="HUD Cockpit Controls">
-          <button
-            type="button"
-            className={`hud-bar-btn android-status-button ${
-              androidStatus.connected ? "is-android-connected" : ""
-            }`}
-            onClick={openAndroidPanel}
-            aria-label="Android device connection"
-          >
-            <span className="android-status-indicator" aria-hidden="true">
-              {androidStatus.connected ? "●" : "○"}
-            </span>
-            <span>ANDROID</span>
-          </button>
-
-          <button type="button" className="hud-bar-btn" onClick={openRemoteControl}>
-            <span className="btn-icon"></span>
-            <span>REMOTE</span>
-          </button>
-
-          <button
-            type="button"
-            className="hud-bar-btn"
-            onClick={() => setAiChatOpen(true)}
-          >
-            <span>AI CHAT</span>
-          </button>
-
-          <button type="button" className="hud-bar-btn" onClick={toggleFullscreen}>
-            <span className="btn-icon">⛶</span>
-            <span>FULLSCREEN</span>
-          </button>
-
-          <button
-            type="button"
-            className={`hud-bar-btn ${microphoneEnabled ? "is-active" : ""}`}
-            onClick={async () => {
-              const next = !microphoneEnabled;
-              setMicrophoneEnabled(next);
-              try {
-                const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ enabled: next }),
-                });
-                const result = await res.json();
-                if (!res.ok || !result.ok) throw new Error(result.error);
-                setMicrophoneEnabled(Boolean(result.enabled));
-              } catch (err) {
-                console.error(err);
-                setMicrophoneEnabled(!next);
-              }
-            }}
-          >
-            <span className="btn-icon"></span>
-            <span>MIC {microphoneEnabled ? "ON" : "OFF"}</span>
-          </button>
-          <button
-            type="button"
-            className={`hud-bar-btn ${morningBrief ? "is-active" : ""}`}
-            onClick={async () => {
-              const next = !morningBrief;
-              setMorningBrief(next);
-              try {
-                const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/morning-brief`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ enabled: next }),
-                });
-                const result = await res.json();
-                if (!res.ok || !result.ok) throw new Error(result.error);
-              } catch (err) {
-                console.error(err);
-                setMorningBrief(!next);
-              }
-            }}
-          >
-            <span className="btn-icon">☀</span>
-            <span>BRIEF {morningBrief ? "ON" : "OFF"}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`hud-bar-btn ${autoStart ? "is-active" : ""}`}
-            onClick={() => {
-              const next = !autoStart;
-              setAutoStart(next);
-              try {
-                window.localStorage.setItem(
-                  "jarvis-pro-settings",
-                  JSON.stringify({
-                    autoStart: next,
-                    morningBrief,
-                    userName,
-                    assistantColour,
-                  })
-                );
-              } catch {}
-            }}
-          >
-            <span className="btn-icon"></span>
-            <span>AUTO-START {autoStart ? "ON" : "OFF"}</span>
-          </button>
-
-          <button
-            type="button"
-            className="hud-bar-btn"
-            onClick={createDesktopShortcut}
-            disabled={shortcutLoading}
-          >
-            <span className="btn-icon"></span>
-            <span>{shortcutLoading ? "SHORTCUT..." : "SHORTCUT"}</span>
-          </button>
-
-          <button type="button" className="hud-bar-btn" onClick={openCustomise}>
-            <span className="btn-icon"></span>
-            <span>CUSTOMISE</span>
-          </button>
-        </nav>
       </div>
 
       {/* =====================================================
@@ -2157,6 +2135,115 @@ export default function Home() {
                   </select>
 
                   <span className="settings-select-arrow">⌄</span>
+                </div>
+              </div>
+
+              {/* BOTTOM ACTIONS */}
+              <div className="settings-bottom-actions-section">
+                <div className="settings-control-header">
+                  <span className="settings-control-icon">▤</span>
+                  <div>
+                    <div className="settings-control-title">BOTTOM ACTIONS</div>
+                    <div className="settings-control-description">
+                      HUD actions and controls
+                    </div>
+                  </div>
+                </div>
+                <div className="settings-bottom-actions-grid">
+                  <button
+                    type="button"
+                    className={`hud-bar-btn ${microphoneEnabled ? "is-active" : ""}`}
+                    onClick={async () => {
+                      const next = !microphoneEnabled;
+                      setMicrophoneEnabled(next);
+                      try {
+                        const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ enabled: next }),
+                        });
+                        const result = await res.json();
+                        if (!res.ok || !result.ok) throw new Error(result.error);
+                        setMicrophoneEnabled(Boolean(result.enabled));
+                      } catch (err) {
+                        console.error(err);
+                        setMicrophoneEnabled(!next);
+                      }
+                    }}
+                  >
+                    <span className="btn-icon"></span>
+                    <span>MIC {microphoneEnabled ? "ON" : "OFF"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`hud-bar-btn android-status-button ${androidStatus.connected ? "is-android-connected" : ""}`}
+                    onClick={openAndroidPanel}
+                    aria-label="Android device connection"
+                  >
+                    <span className="android-status-indicator" aria-hidden="true">
+                      {androidStatus.connected ? "●" : "○"}
+                    </span>
+                    <span>ANDROID</span>
+                  </button>
+                  <button type="button" className="hud-bar-btn" onClick={openRemoteControl}>
+                    <span className="btn-icon"></span>
+                    <span>REMOTE</span>
+                  </button>
+                  <button type="button" className="hud-bar-btn" onClick={() => setAiChatOpen(true)}>
+                    <span>AI CHAT</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`hud-bar-btn ${morningBrief ? "is-active" : ""}`}
+                    onClick={async () => {
+                      const next = !morningBrief;
+                      setMorningBrief(next);
+                      try {
+                        const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/morning-brief`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ enabled: next }),
+                        });
+                        const result = await res.json();
+                        if (!res.ok || !result.ok) throw new Error(result.error);
+                      } catch (err) {
+                        console.error(err);
+                        setMorningBrief(!next);
+                      }
+                    }}
+                  >
+                    <span className="btn-icon">☀</span>
+                    <span>BRIEF {morningBrief ? "ON" : "OFF"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`hud-bar-btn ${autoStart ? "is-active" : ""}`}
+                    onClick={() => {
+                      const next = !autoStart;
+                      setAutoStart(next);
+                      try {
+                        window.localStorage.setItem(
+                          "jarvis-pro-settings",
+                          JSON.stringify({ autoStart: next, morningBrief, userName, assistantColour })
+                        );
+                      } catch {}
+                    }}
+                  >
+                    <span className="btn-icon"></span>
+                    <span>AUTO-START {autoStart ? "ON" : "OFF"}</span>
+                  </button>
+                  <button type="button" className="hud-bar-btn" onClick={createDesktopShortcut} disabled={shortcutLoading}>
+                    <span className="btn-icon"></span>
+                    <span>{shortcutLoading ? "SHORTCUT..." : "SHORTCUT"}</span>
+                  </button>
+                  <button type="button" className="hud-bar-btn" onClick={openCustomise}>
+                    <span className="btn-icon"></span>
+                    <span>CUSTOMISE</span>
+                  </button>
+                  <button type="button" className="hud-bar-btn" onClick={toggleFullscreen}>
+                    <span className="btn-icon">⛶</span>
+                    <span>FULLSCREEN</span>
+                  </button>
                 </div>
               </div>
 

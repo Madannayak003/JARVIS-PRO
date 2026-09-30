@@ -454,6 +454,10 @@ class _BridgeHandler(
 
             return
 
+        if self.path == "/schedule-center":
+            self._json(self.bridge.schedule_center_payload())
+            return
+
         self._json(
             {
                 "error": "Not found"
@@ -1076,6 +1080,33 @@ class HUDWebBridge:
 
             "last_update":
                 state.last_update,
+        }
+
+    def schedule_center_payload(self) -> dict[str, Any]:
+        def read_json(path: str):
+            try:
+                from pathlib import Path
+                import json
+                file_path = Path(path)
+                if not file_path.exists():
+                    return []
+                value = json.loads(file_path.read_text(encoding="utf-8"))
+                return value if isinstance(value, list) else []
+            except Exception as error:
+                print(f"[HUD WEB] Schedule data unavailable: {error}")
+                return []
+
+        reminders = read_json("data/reminders.json")
+        schedules = read_json("data/schedules.json")
+        try:
+            from skills.communication.whatsapp import get_scheduled_whatsapp_items
+            whatsapp = get_scheduled_whatsapp_items()
+        except Exception:
+            whatsapp = []
+        return {
+            "reminders": reminders,
+            "whatsapp": whatsapp,
+            "schedules": schedules,
         }
 
 

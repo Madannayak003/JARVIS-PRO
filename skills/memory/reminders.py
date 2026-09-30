@@ -13,6 +13,7 @@ from datetime import datetime
 
 from core.registry import register
 from voice.manager import speak
+from hud.integration import HUDIntegration
 
 
 # =========================================================
@@ -289,7 +290,7 @@ def _reminder_worker():
         "[REMINDERS] Background scheduler started"
     )
 
-    while True:
+    while not _scheduler_stop.is_set():
 
         try:
 
@@ -335,6 +336,14 @@ def _reminder_worker():
                         f"Reminder: {text}"
                     )
 
+                    HUDIntegration.notify(
+                        "REMINDER",
+                        text,
+                        level="REMINDER",
+                        source="reminder",
+                        metadata={"reminder_id": reminder.get("id")},
+                    )
+
                     reminder["completed"] = True
 
                     reminder["triggered_at"] = (
@@ -353,7 +362,7 @@ def _reminder_worker():
                 f"[REMINDERS ERROR] Worker: {e}"
             )
 
-        time.sleep(1)
+        _scheduler_stop.wait(1)
 
 
 # =========================================================
@@ -362,17 +371,20 @@ def _reminder_worker():
 
 _scheduler_started = False
 _scheduler_lock = threading.Lock()
+_scheduler_stop = threading.Event()
+_scheduler_thread = None
 
 
 def _start_scheduler():
 
-    global _scheduler_started
+    global _scheduler_started, _scheduler_thread
 
     with _scheduler_lock:
 
         if _scheduler_started:
             return
 
+        _scheduler_stop.clear()
         thread = threading.Thread(
             target=_reminder_worker,
             daemon=True,
@@ -380,8 +392,26 @@ def _start_scheduler():
         )
 
         thread.start()
+        _scheduler_thread = thread
 
         _scheduler_started = True
+
+
+def start_scheduler():
+    _start_scheduler()
+
+
+def stop_scheduler():
+    global _scheduler_started, _scheduler_thread
+    with _scheduler_lock:
+        if not _scheduler_started:
+            return
+        _scheduler_stop.set()
+        thread = _scheduler_thread
+        _scheduler_thread = None
+        _scheduler_started = False
+    if thread and thread.is_alive():
+        thread.join(timeout=2.0)
 
 
 # =========================================================
@@ -402,6 +432,3 @@ register(
     "cancel_reminder",
     cancel_reminder,
 )
-
-
-_start_scheduler()

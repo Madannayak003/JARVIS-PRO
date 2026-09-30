@@ -21,6 +21,7 @@ SKILLS = [
     "memory.memory",
     "memory.notes",
     "memory.reminders",
+    "automation.scheduling",
     "ai.clarify",
     "media.media",
     "system.volume",

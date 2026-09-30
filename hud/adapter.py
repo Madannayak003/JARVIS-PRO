@@ -161,10 +161,14 @@ class HUDAdapter:
     # =====================================================
 
     @staticmethod
-    def notify(message):
+    def notify(title_or_message, message=None, level="INFO", source="jarvis", metadata=None):
 
         hud.notify(
-            message
+            title_or_message,
+            message,
+            level,
+            source,
+            metadata,
         )
 
     @staticmethod

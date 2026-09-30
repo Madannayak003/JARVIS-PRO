@@ -10,11 +10,26 @@ SERVICES = {
 }
 
 _phone_call_monitor = None
+_scheduler_started = False
 
 
 def start_all():
 
     print("[SERVICES] Ready")
+
+    global _scheduler_started
+    try:
+        from skills.memory.reminders import start_scheduler as start_reminder_scheduler
+        start_reminder_scheduler()
+        print("[SERVICES] Reminder scheduler started.")
+    except Exception as error:
+        print(f"[SERVICES] Reminder scheduler unavailable: {error}")
+    try:
+        from skills.automation.scheduling import start_scheduler
+        _scheduler_started = start_scheduler()
+        print("[SERVICES] Scheduler started.")
+    except Exception as error:
+        print(f"[SERVICES] Scheduler unavailable: {error}")
 
     global _phone_call_monitor
     try:
@@ -27,7 +42,18 @@ def start_all():
 
 
 def stop_all():
-    global _phone_call_monitor
+    global _phone_call_monitor, _scheduler_started
+    try:
+        from skills.memory.reminders import stop_scheduler as stop_reminder_scheduler
+        stop_reminder_scheduler()
+    except Exception as error:
+        print(f"[SERVICES] Reminder scheduler shutdown skipped: {error}")
+    try:
+        from skills.automation.scheduling import stop_scheduler
+        stop_scheduler()
+        _scheduler_started = False
+    except Exception as error:
+        print(f"[SERVICES] Scheduler shutdown skipped: {error}")
     if _phone_call_monitor is None:
         return
     try:

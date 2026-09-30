@@ -18,12 +18,14 @@ from core.routers.weather_router import weather_route
 from core.routers.android_router import android_route
 from core.routers.payment_router import payment_route
 from core.routers.phone_call_router import phone_call_route
+from core.routers.schedule_router import schedule_route
 from core.diagnostics import debug_print
 
 ROUTERS = [
 
     phone_call_route,
     payment_route,
+    schedule_route,
     memory_route,
     news_route,
     weather_route,
@@ -79,7 +81,7 @@ def fast_route(command):
         # existing normalized input contract for every other router.
         route_command = (
             original_command
-            if router is vision_route
+            if router in (vision_route, schedule_route)
             else command
         )
         plan = router(route_command)

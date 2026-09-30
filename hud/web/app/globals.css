@@ -782,7 +782,7 @@ body {
 }
 
 .cockpit-left {
-  top: 84px;
+  top: 110px;
   left: 24px;
   width: 320px;
 }
@@ -828,7 +828,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 14px 10px;
+  padding: 6px 2px;
   background: var(--bg-surface-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -847,7 +847,7 @@ body {
 .cockpit-system-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 6px;
 }
 
 .cockpit-left .cockpit-system-info-card {
@@ -1025,7 +1025,7 @@ body {
 
 .cockpit-right {
   position: absolute;
-  top: 84px;
+  top: 110px;
   right: 24px;
   width: 360px;
   padding: 16px;
@@ -1047,7 +1047,7 @@ body {
 
 .activity-log {
   width: 100%;
-  height: 340px;
+  height: 400px;
   padding: 4px 6px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1157,7 +1157,7 @@ body {
 
 .cockpit-quick-tools {
   position: absolute;
-  bottom: 84px;
+  bottom: 20px;
   right: 24px;
   width: 360px;
   padding: 14px 16px 16px;
@@ -1261,9 +1261,10 @@ body {
 
 .hud-command-input {
   position: fixed;
-  right: 24px;
+  right: auto;
+  left: 470px;
   bottom: 20px;
-  width: 360px;
+  width: 600px;
   max-width: calc(100vw - 48px);
   z-index: 120;
   background: transparent;
@@ -1500,14 +1501,14 @@ body {
 
 .cockpit-bottom-container {
   position: fixed;
-  bottom: 20px;
+  bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   pointer-events: auto;
 }
 
@@ -2040,6 +2041,30 @@ body {
   color: var(--hud-muted);
   font-size: 13px;
   pointer-events: none;
+}
+
+.settings-bottom-actions-section {
+  padding: 4px 0 4px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.settings-bottom-actions-section .settings-control-header {
+  margin-bottom: 10px;
+}
+
+.settings-bottom-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.settings-bottom-actions-grid .hud-bar-btn {
+  min-width: 22px;
+  min-height: 34px;
+  padding: 14px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Visibility Rows */
@@ -2776,26 +2801,7 @@ body {
   }
 }
 
-/* =========================================================
-   MOBILE ADAPTATION
-   ========================================================= */
 
-@media (max-width: 520px) {
-  .hud-bottom-toolbar {
-    max-width: calc(100vw - 20px);
-    flex-wrap: wrap;
-  }
-
-  .settings-toggle-description {
-    display: none;
-  }
-  .settings-toggle-row {
-    grid-template-columns: 24px 1fr 28px 34px;
-  }
-  .settings-toggle-state {
-    border-left: 0;
-  }
-}
 
 /* =========================================================
    COMPACT HUD (900x600 & LOWER SCREENS)
@@ -2857,7 +2863,7 @@ body {
   }
 
   .cockpit-panel.cockpit-left {
-    top: 54px !important;
+    top: 80px !important;
     left: 10px !important;
     width: 210px !important;
     padding: 8px !important;
@@ -2957,7 +2963,7 @@ body {
   }
 
   .cockpit-right {
-    top: 54px !important;
+    top: 80px !important;
     right: 10px !important;
     width: 230px !important;
     padding: 8px !important;
@@ -2970,7 +2976,7 @@ body {
   }
 
   .activity-log {
-    height: 200px !important;
+    height: 280px !important;
     gap: 6px !important;
   }
 
@@ -2987,7 +2993,7 @@ body {
   }
 
   .cockpit-quick-tools {
-    bottom: 74px !important;
+    bottom: 10px !important;
     right: 10px !important;
     width: 230px !important;
     padding: 8px !important;
@@ -3012,13 +3018,13 @@ body {
   }
 
   .hud-command-input {
-    right: 10px !important;
+    left: 260px;
     bottom: 12px !important;
-    width: 220px !important;
+    width: 365px !important;
   }
 
   .hud-command-row {
-    height: 34px !important;
+    height: 40px !important;
     padding: 2px 4px 2px 10px !important;
   }
 
@@ -3029,21 +3035,21 @@ body {
   .hud-command-row button[aria-label="Send command"],
   .hud-command-row .hud-live-circle {
     flex: 0 0 20px !important;
-    width: 20px !important;
-    height: 20px !important;
-    min-width: 20px !important;
-    max-width: 20px !important;
-    font-size: 9px !important;
+    width: 5px !important;
+    height: 5px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    font-size: 10px !important;
   }
 
   .cockpit-bottom-container {
-    bottom: 12px !important;
+    bottom: 65px !important;
     gap: 8px !important;
-    max-width: 440px !important;
+    max-width: 340px !important;
   }
 
   .cockpit-bottom-indicators {
-    gap: 10px !important;
+    gap: 5px !important;
   }
 
   .voice-indicator {
@@ -3105,4 +3111,207 @@ body {
   .hud-controls-toggle {
     min-width: 80px !important;
   }
+}
+
+.hud-notification {
+  position: fixed;
+  top: 72px;
+  right: 24px;
+  z-index: 80;
+  min-width: 260px;
+  max-width: 380px;
+  padding: 14px 18px;
+  border: 1px solid rgba(0, 229, 255, .65);
+  border-radius: 8px;
+  background: rgba(3, 16, 31, .92);
+  box-shadow: 0 0 24px rgba(0, 229, 255, .2);
+}
+.hud-notification-title { color: #00e5ff; font-size: 11px; letter-spacing: .16em; font-weight: 700; }
+.hud-notification-message { margin-top: 6px; color: #e8fbff; font-size: 14px; }
+.hud-notification--error { border-color: #ff5370; }
+.hud-notification--error .hud-notification-title { color: #ff5370; }
+
+
+.schedule-center-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.schedule-center-panel {
+  position: relative;
+  width: min(380px, 92vw);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(11, 19, 32, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+.schedule-center-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.schedule-center-close:hover {
+  color: #cbd5e1;
+}
+
+.schedule-center-heading {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #38bdf8;
+  margin: 0 0 12px;
+}
+
+.schedule-center-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.schedule-center-tabs button {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.schedule-center-tabs button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+.schedule-center-tabs button.is-active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-weight: 500;
+}
+
+.schedule-center-next {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 2px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.schedule-center-next span {
+  color: #38bdf8;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.schedule-center-next strong {
+  color: #f1f5f9;
+  font-size: 12px;
+}
+
+.schedule-center-next small,
+.schedule-center-item small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.schedule-center-empty {
+  padding: 20px 8px;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+}
+
+.schedule-center-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.schedule-center-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.schedule-center-task-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.15s ease;
+}
+
+.schedule-center-task-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.schedule-center-task-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-center-task-main strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-center-task-row time {
+  color: #64748b;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.schedule-center-task-status {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.schedule-center-task-status--disabled {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #64748b;
 }

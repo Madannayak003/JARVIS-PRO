@@ -287,13 +287,29 @@ class HUDIntegration:
     @classmethod
     def notify(
         cls,
-        message
+        title_or_message,
+        message=None,
+        level="INFO",
+        source="jarvis",
+        metadata=None,
     ):
+        """Emit a structured notification while preserving notify(message)."""
+
+        if message is None:
+            title = "JARVIS"
+            message = str(title_or_message)
+        else:
+            title = str(title_or_message)
+            message = str(message)
 
         cls._emit(
             HUDEvent.NOTIFICATION,
             {
-                "message": message
+                "title": title,
+                "message": message,
+                "level": str(level).upper(),
+                "source": str(source),
+                "metadata": metadata or {},
             }
         )
 

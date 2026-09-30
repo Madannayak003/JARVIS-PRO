@@ -160,7 +160,11 @@ class HUDEmitter:
         if event == HUDEvent.NOTIFICATION:
 
             HUDAdapter.notify(
-                data.get("message", "")
+                data.get("title", "JARVIS"),
+                data.get("message", ""),
+                data.get("level", "INFO"),
+                data.get("source", "jarvis"),
+                data.get("metadata", {}),
             )
             return
 

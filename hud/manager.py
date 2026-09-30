@@ -348,14 +348,24 @@ class HUDManager:
     # Notification
     # =====================================================
 
-    def notify(self, message):
+    def notify(self, title_or_message, message=None, level="INFO", source="jarvis", metadata=None):
+
+        if message is None:
+            title = "JARVIS"
+            message = str(title_or_message)
+        else:
+            title = str(title_or_message)
 
         self.state.notification = str(message)
 
         self._publish(
             HUD_NOTIFICATION,
             {
+                "title": title,
                 "message": str(message)
+                ,"level": str(level).upper(),
+                "source": str(source),
+                "metadata": metadata or {},
             }
         )
 
