@@ -36,6 +36,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import os
 import secrets
 import socket
 import threading
@@ -821,6 +822,16 @@ class DashboardServer:
             f"{self.port}"
         )
 
+    def pairing_host(self) -> str:
+        """Return an optional explicitly configured private-network host.
+
+        The listener remains bound by the existing server startup path. This
+        value only controls the address embedded in a QR pairing URL, allowing
+        a Tailscale/private-VPN address to be advertised without guessing or
+        scanning network interfaces.
+        """
+        return os.getenv("JARVIS_REMOTE_HOST", "").strip() or self.ip
+
     # =========================================================
     # PAIRING URL
     # =========================================================
@@ -828,7 +839,7 @@ class DashboardServer:
     def pairing_url(self) -> str:
 
         return (
-            f"{self.url()}"
+            f"http://{self.pairing_host()}:{self.port}"
             f"/login"
             f"?pin={self._pin or ''}"
         )
@@ -917,6 +928,8 @@ class DashboardServer:
             "model": status.model,
             "connection_type": status.connection_type,
             "endpoint": status.endpoint or "",
+            "host": status.host,
+            "port": status.port,
             "wireless_endpoints": list(status.wireless_endpoints),
             "android_version": status.android_version,
             "error": status.error,

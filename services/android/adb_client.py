@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import Sequence
 
@@ -16,6 +17,8 @@ DEFAULT_ADB_PATH = Path(r"C:\platform-tools\adb.exe")
 _NO_DEVICE_COMMANDS = {
     "version", "devices", "start-server", "kill-server", "connect", "disconnect",
 }
+_CONNECTION_MODES = {"AUTO", "USB", "LOCAL", "REMOTE"}
+_REMOTE_RETRY_SECONDS = 30.0
 
 
 def _adb_subprocess_options() -> dict[str, int]:
@@ -81,6 +84,23 @@ class AdbClient:
         self.timeout = timeout
         self._runner = runner
         self._selected_device_id: str | None = None
+        self.connection_mode = (
+            os.getenv("ANDROID_CONNECTION_MODE", "AUTO").strip().upper()
+        )
+        if self.connection_mode not in _CONNECTION_MODES:
+            self.connection_mode = "AUTO"
+        self.remote_host = os.getenv("ANDROID_REMOTE_HOST", "").strip()
+        self.remote_port = os.getenv("ANDROID_REMOTE_PORT", "5555").strip() or "5555"
+        self._remote_endpoint = None
+        if self.remote_host:
+            # Validate configuration once, without attempting any network access.
+            try:
+                self._remote_endpoint = normalize_endpoint(self.remote_host, self.remote_port)
+            except ValueError:
+                # Bad optional configuration must not make JARVIS unavailable.
+                self.remote_host = ""
+                self.remote_port = "5555"
+        self._last_remote_attempt = 0.0
 
     @property
     def adb_path(self) -> str | None:
@@ -98,6 +118,11 @@ class AdbClient:
     @property
     def selected_device_id(self) -> str | None:
         return self._selected_device_id or self.device_id or None
+
+    @property
+    def remote_endpoint(self) -> str | None:
+        """Return the optional, explicitly configured private-network endpoint."""
+        return self._remote_endpoint
 
     def _require_adb(self) -> str:
         path = self.adb_path
@@ -207,6 +232,25 @@ class AdbClient:
         endpoint = normalize_endpoint(address, port)
         return self.run_adb(["connect", endpoint])
 
+    def connect_remote(self) -> AdbCommandResult | None:
+        """Try the configured private-network endpoint once per retry window.
+
+        This is deliberately opt-in through ANDROID_REMOTE_HOST and never scans
+        or discovers arbitrary network addresses.
+        """
+        if self.connection_mode in {"USB", "LOCAL"} or not self._remote_endpoint:
+            return None
+        now = time.monotonic()
+        if now - self._last_remote_attempt < _REMOTE_RETRY_SECONDS:
+            return None
+        self._last_remote_attempt = now
+        host, port = self._remote_endpoint.rsplit(":", 1)
+        host = host.strip("[]")
+        try:
+            return self.connect(host, port)
+        except AdbError:
+            return None
+
     def disconnect(self, endpoint: str) -> AdbCommandResult:
         """Disconnect only one explicitly requested wireless endpoint."""
         value = str(endpoint).strip()
@@ -224,9 +268,54 @@ class AdbClient:
                 None,
             )
         else:
-            selected = next((item for item in devices if item.is_online), None)
+            online = [item for item in devices if item.is_online]
+            if self.connection_mode == "USB":
+                selected = next((item for item in online if not item.is_wireless), None)
+            elif self.connection_mode == "LOCAL":
+                selected = next((item for item in online if item.is_wireless), None)
+            elif self.connection_mode == "REMOTE":
+                selected = next(
+                    (item for item in online if item.serial == self._remote_endpoint),
+                    None,
+                )
+            else:
+                selected = next((item for item in online if not item.is_wireless), None)
+                if selected is None:
+                    selected = next(iter(online), None)
+
+        if (
+            selected is None
+            and not requested
+            and self.connection_mode in {"AUTO", "REMOTE"}
+            and self._remote_endpoint
+        ):
+            self.connect_remote()
+            devices = self.get_devices()
+            selected = next(
+                (item for item in devices if item.is_online and item.serial == self._remote_endpoint),
+                None,
+            )
         self._selected_device_id = selected.serial if selected else None
         return selected
+
+    def connection_type(self, device: AndroidDevice) -> str:
+        """Normalize the selected transport without changing device identity."""
+        if not device.is_wireless:
+            return "USB"
+        if self._remote_endpoint and device.serial == self._remote_endpoint:
+            return "REMOTE"
+        return "Wireless"
+
+    @staticmethod
+    def endpoint_parts(endpoint: str | None) -> tuple[str, int | None]:
+        """Split an ADB endpoint for safe status/API presentation."""
+        if not endpoint or ":" not in endpoint:
+            return "", None
+        host, port = endpoint.rsplit(":", 1)
+        try:
+            return host.strip("[]"), int(port)
+        except ValueError:
+            return host.strip("[]"), None
 
     def shell(
         self,

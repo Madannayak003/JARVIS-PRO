@@ -23,14 +23,14 @@ class WirelessRunner:
             return FakeCompleted(
                 stdout=(
                     "List of devices attached\n"
-                    "10.82.216.149:5555\tdevice product:a13nnxx model:SM_A135F "
+                    "192.0.2.10:5555\tdevice product:a13nnxx model:SM_A135F "
                     "device:a13 transport_id:13\n"
                 )
             )
-        if command[1:] == ["connect", "10.82.216.149:5555"]:
-            return FakeCompleted(stdout="connected to 10.82.216.149:5555\n")
-        if command[1:] == ["disconnect", "10.82.216.149:5555"]:
-            return FakeCompleted(stdout="disconnected 10.82.216.149:5555\n")
+        if command[1:] == ["connect", "192.0.2.10:5555"]:
+            return FakeCompleted(stdout="connected to 192.0.2.10:5555\n")
+        if command[1:] == ["disconnect", "192.0.2.10:5555"]:
+            return FakeCompleted(stdout="disconnected 192.0.2.10:5555\n")
         return FakeCompleted()
 
 
@@ -53,13 +53,13 @@ class AndroidHudConnectionTests(unittest.TestCase):
         runner = WirelessRunner()
         client = AdbClient(adb_path="fake-adb", runner=runner)
 
-        connected = client.connect("10.82.216.149", 5555)
-        disconnected = client.disconnect("10.82.216.149:5555")
+        connected = client.connect("192.0.2.10", 5555)
+        disconnected = client.disconnect("192.0.2.10:5555")
 
         self.assertTrue(connected.ok)
         self.assertTrue(disconnected.ok)
-        self.assertEqual(connected.command[1:], ("connect", "10.82.216.149:5555"))
-        self.assertEqual(disconnected.command[1:], ("disconnect", "10.82.216.149:5555"))
+        self.assertEqual(connected.command[1:], ("connect", "192.0.2.10:5555"))
+        self.assertEqual(disconnected.command[1:], ("disconnect", "192.0.2.10:5555"))
         self.assertNotIn("-s", connected.command)
         self.assertNotIn("-s", disconnected.command)
 
@@ -72,9 +72,9 @@ class AndroidHudConnectionTests(unittest.TestCase):
 
         self.assertTrue(status.connected)
         self.assertEqual(status.connection_type, "Wireless")
-        self.assertEqual(status.endpoint, "10.82.216.149:5555")
+        self.assertEqual(status.endpoint, "192.0.2.10:5555")
         self.assertEqual(status.model, "SM A135F")
-        self.assertEqual(status.wireless_endpoints, ("10.82.216.149:5555",))
+        self.assertEqual(status.wireless_endpoints, ("192.0.2.10:5555",))
 
     def test_usb_status_reports_usb_without_an_endpoint(self):
         manager = AndroidDeviceManager(

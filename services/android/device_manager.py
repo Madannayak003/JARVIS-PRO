@@ -32,7 +32,9 @@ class AndroidDeviceManager:
     def get_selected_device(self):
         selected_id = self.adb.selected_device_id
         if selected_id:
-            return self.adb.select_device(selected_id)
+            selected = self.adb.select_device(selected_id)
+            if selected is not None:
+                return selected
         return self.adb.select_device()
 
     def select_device(self, device_id: str | None = None):
@@ -216,6 +218,7 @@ class AndroidDeviceManager:
             )
 
         model = status.model or selected.model or selected.product
+        host, port = self.adb.endpoint_parts(selected.endpoint)
         return AndroidConnectionStatus(
             status.adb_available,
             status.adb_path,
@@ -223,7 +226,9 @@ class AndroidDeviceManager:
             selected_device=selected,
             model=model,
             android_version=status.android_version,
-            connection_type=selected.connection_type,
+            connection_type=self.adb.connection_type(selected),
             endpoint=selected.endpoint,
             wireless_endpoints=wireless_endpoints,
+            host=host,
+            port=port,
         )

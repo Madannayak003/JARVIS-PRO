@@ -77,6 +77,8 @@ class AndroidConnectionStatus:
     connection_type: str = ""
     endpoint: str | None = None
     wireless_endpoints: tuple[str, ...] = ()
+    host: str = ""
+    port: int | None = None
     error: str = ""
 
 
