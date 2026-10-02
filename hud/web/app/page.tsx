@@ -156,6 +156,18 @@ type ScheduleCenterData = {
   schedules: Array<Record<string, unknown>>;
 };
 
+type WorkspaceProject = {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  last_modified: string;
+  entry_file: string;
+  preview_available: boolean;
+  preview_running: boolean;
+  preview_url: string;
+};
+
 type RemoteInfo = {
   ok: boolean;
   assistant_name?: string;
@@ -276,6 +288,14 @@ export default function Home() {
   const [scheduleCenterOpen, setScheduleCenterOpen] = useState(false);
   const [scheduleCenterTab, setScheduleCenterTab] = useState<ScheduleCenterTab>("reminders");
   const [scheduleCenterData, setScheduleCenterData] = useState<ScheduleCenterData>({ reminders: [], whatsapp: [], schedules: [] });
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [workspaceProjects, setWorkspaceProjects] = useState<WorkspaceProject[]>([]);
+  const [workspaceRoot, setWorkspaceRoot] = useState("");
+  const [workspaceQuery, setWorkspaceQuery] = useState("");
+  const [workspaceFilter, setWorkspaceFilter] = useState("ALL");
+  const [workspaceMessage, setWorkspaceMessage] = useState("");
+  const [workspacePreviewProjectId, setWorkspacePreviewProjectId] = useState<string | null>(null);
+  const [workspacePreviewRefresh, setWorkspacePreviewRefresh] = useState(0);
   const [hudNotification, setHudNotification] = useState<{ title: string; message: string; level: string } | null>(null);
   const [phoneCall, setPhoneCall] = useState<PhoneCallState | null>(null);
   const phoneCallRef = useRef<PhoneCallState | null>(null);
@@ -417,6 +437,43 @@ export default function Home() {
     setAndroidMessage("");
     setModal("android");
     void refreshAndroidStatus();
+  };
+
+  const refreshWorkspace = async () => {
+    setWorkspaceMessage("");
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/workspace/projects`, { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Workspace unavailable.");
+      setWorkspaceRoot(String(result.workspace || ""));
+      setWorkspaceProjects(Array.isArray(result.projects) ? result.projects : []);
+    } catch (error) {
+      setWorkspaceMessage(error instanceof Error ? error.message : "Workspace unavailable.");
+    }
+  };
+
+  const openWorkspace = () => {
+    setWorkspaceOpen(true);
+    void refreshWorkspace();
+  };
+
+  const workspaceAction = async (action: string, project: WorkspaceProject) => {
+    setWorkspaceMessage("");
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/workspace/${action}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: project.id }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Workspace action failed.");
+      if (action === "start-preview" || action === "stop-preview") {
+        setWorkspaceProjects((items) => items.map((item) => item.id === project.id ? { ...item, ...result.project } : item));
+      }
+      if (action === "start-preview") setWorkspacePreviewProjectId(project.id);
+      if (action === "open-folder") setWorkspaceMessage(`Opened ${project.name}.`);
+    } catch (error) {
+      setWorkspaceMessage(error instanceof Error ? error.message : "Workspace action failed.");
+    }
   };
 
   const connectAndroid = async () => {
@@ -1492,6 +1549,16 @@ export default function Home() {
     );
   }
 
+  const filteredWorkspaceProjects = workspaceProjects.filter((project) =>
+    (workspaceFilter === "ALL" || (workspaceFilter === "OTHER"
+      ? !["HTML", "JAVASCRIPT", "PYTHON", "ARDUINO", "ESP32"].includes(project.type.toUpperCase())
+      : project.type.toUpperCase() === workspaceFilter)) &&
+    project.name.toLowerCase().includes(workspaceQuery.toLowerCase())
+  );
+  const workspacePreviewProject = workspaceProjects.find((project) => project.id === workspacePreviewProjectId) || null;
+  const workspaceHtmlCount = workspaceProjects.filter((project) => project.type.toUpperCase() === "HTML").length;
+  const workspaceRunningCount = workspaceProjects.filter((project) => project.preview_running).length;
+
   return (
     <main
       className="jarvis-hud"
@@ -1522,6 +1589,7 @@ export default function Home() {
         showSystemMonitor={showSystemMonitor}
         showQuickTools={showQuickTools}
         onSchedules={() => void openScheduleCenter()}
+        onWorkspace={openWorkspace}
         morningBriefHeadlines={morningBriefHeadlines}
         onMorningBriefClose={() => {
           setMorningBriefActive(false);
@@ -1544,6 +1612,45 @@ export default function Home() {
 
       {phoneCall && <PhoneCallIsland call={phoneCall} />}
 
+      {workspaceOpen && (
+        <div className="workspace-center-backdrop" onClick={() => setWorkspaceOpen(false)}>
+          <section className="workspace-center" onClick={(event) => event.stopPropagation()} aria-label="Workspace Project Center">
+            <div className="workspace-center-header">
+              <div><span className="workspace-kicker">PROJECT COMMAND CENTER</span><h2>{workspacePreviewProject ? "PROJECT PREVIEW" : "WORKSPACE"}</h2><small>{workspacePreviewProject ? workspacePreviewProject.name : (workspaceRoot || "Scanning configured workspace")}</small></div>
+              <div className="workspace-center-actions">{!workspacePreviewProject && <button type="button" onClick={() => void refreshWorkspace()}>REFRESH</button>}<button type="button" onClick={() => { setWorkspacePreviewProjectId(null); setWorkspaceOpen(false); }} aria-label="Close Workspace">×</button></div>
+            </div>
+            {!workspacePreviewProject && <>
+            <div className="workspace-summary-strip"><span><strong>{workspaceProjects.length}</strong><small>TOTAL PROJECTS</small></span><span><strong>{workspaceHtmlCount}</strong><small>HTML PROJECTS</small></span><span><strong>{workspaceProjects.length - workspaceHtmlCount}</strong><small>OTHER PROJECTS</small></span><span><strong>{workspaceRunningCount}</strong><small>ACTIVE PREVIEWS</small></span></div>
+            <div className="workspace-toolbar"><input value={workspaceQuery} onChange={(event) => setWorkspaceQuery(event.target.value)} placeholder="Search projects" aria-label="Search projects" /><div>{["ALL", "HTML", "JAVASCRIPT", "PYTHON", "ARDUINO", "ESP32", "OTHER"].map((filter) => <button key={filter} type="button" className={workspaceFilter === filter ? "is-active" : ""} onClick={() => setWorkspaceFilter(filter)}>{filter}</button>)}</div></div>
+            {workspaceMessage && <div className="workspace-message">{workspaceMessage}</div>}
+            <div className="workspace-project-grid">
+              {filteredWorkspaceProjects.map((project) => (
+                <article className="workspace-project-card" key={project.id}>
+                  <div className="workspace-project-top"><span className={`workspace-project-type workspace-type-${project.type.toLowerCase()}`}>{project.type}</span>{project.preview_running ? <span className="workspace-running">● RUNNING</span> : project.preview_available && <span className="workspace-available">● PREVIEW AVAILABLE</span>}</div>
+                  <h3>{project.name}</h3>
+                  <div className="workspace-project-meta"><span>LOCATION</span><code title={project.location}>{project.location}</code></div>
+                  <div className="workspace-project-meta"><span>MODIFIED</span><code>{project.last_modified ? new Date(project.last_modified).toLocaleString() : "--"}</code></div>
+                  {project.entry_file && <div className="workspace-project-entry">ENTRY · {project.entry_file}</div>}
+                  {project.preview_running && <div className="workspace-preview-url">{project.preview_url}</div>}
+                  <div className="workspace-project-buttons">{project.preview_available && <button type="button" onClick={() => void workspaceAction(project.preview_running ? "stop-preview" : "start-preview", project)}>{project.preview_running ? "STOP PREVIEW" : "PREVIEW"}</button>}<button type="button" onClick={() => void navigator.clipboard?.writeText(project.location).then(() => setWorkspaceMessage("Project path copied."))}>COPY PATH</button><button type="button" onClick={() => void workspaceAction("open-folder", project)}>OPEN FOLDER</button></div>
+                </article>
+              ))}
+              {!filteredWorkspaceProjects.length && <div className="workspace-empty"><strong>NO PROJECTS DETECTED</strong><span>{workspaceMessage || "Workspace contains no matching recognized projects."}</span></div>}
+            </div>
+            </>}
+            {workspacePreviewProject && <div className="workspace-preview-mode">
+              <div className="workspace-preview-toolbar"><button type="button" onClick={() => setWorkspacePreviewProjectId(null)}>← BACK TO PROJECTS</button><button type="button" onClick={() => setWorkspacePreviewRefresh((value) => value + 1)}>↻ REFRESH PREVIEW</button><button type="button" onClick={() => void workspaceAction("open-external", workspacePreviewProject)}>OPEN EXTERNALLY</button><button type="button" onClick={() => void workspaceAction("stop-preview", workspacePreviewProject)}>STOP PREVIEW</button></div>
+              <div className="workspace-preview-status"><span>● LOCAL PREVIEW</span><code>{workspacePreviewProject.preview_url}</code></div>
+              {workspacePreviewProject.preview_url ? (
+                <iframe key={`${workspacePreviewProject.id}-${workspacePreviewRefresh}`} className="workspace-preview-frame" src={workspacePreviewProject.preview_url} title={`${workspacePreviewProject.name} HTML preview`} sandbox="allow-forms allow-modals allow-popups allow-presentation allow-scripts allow-same-origin" />
+              ) : (
+                <div className="workspace-preview-initializing">INITIALIZING LOCAL PREVIEW…</div>
+              )}
+            </div>}
+          </section>
+        </div>
+      )}
+
       <AIChatBot
         open={aiChatOpen}
         onClose={() => setAiChatOpen(false)}
@@ -1553,7 +1660,7 @@ export default function Home() {
       {/* =====================================================
           COMMAND INPUT
           ===================================================== */}
-      <div className="hud-command-input">
+      {!workspaceOpen && <div className="hud-command-input">
         <div className="hud-command-label">◆ COMMAND INPUT</div>
         <div 
           className="hud-command-row"
@@ -1612,7 +1719,7 @@ export default function Home() {
             <span className="btn-icon" />
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* =====================================================
           MORNING BRIEF OVERLAY
@@ -1695,7 +1802,7 @@ export default function Home() {
       {/* =====================================================
           BOTTOM HUD: INDICATORS + WAVEFORM + 8 INLINE BUTTONS
           ===================================================== */}
-      <div className="cockpit-bottom-container">
+      {!workspaceOpen && <div className="cockpit-bottom-container">
 
         {/* =====================================================
             SIRI FLUID WAVE REACTOR
@@ -1838,7 +1945,7 @@ export default function Home() {
           </div>
         </div>
 
-      </div>
+      </div>}
 
       {/* =====================================================
           ANDROID CONNECTION MODAL

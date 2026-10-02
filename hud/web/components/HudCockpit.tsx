@@ -42,10 +42,53 @@ type Props = {
 
   onSchedules: () => void;
 
+  onWorkspace: () => void;
+
   showActivityLog: boolean;
   showSystemMonitor: boolean;
   showQuickTools: boolean;
 };
+
+type HeaderIconName =
+  | "power"
+  | "activity"
+  | "weather"
+  | "news"
+  | "music"
+  | "screen"
+  | "capture"
+  | "files"
+  | "notes"
+  | "settings";
+
+function HeaderIcon({ name }: { name: HeaderIconName }) {
+  const common = {
+    width: 19,
+    height: 19,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  const paths: Record<HeaderIconName, React.ReactNode> = {
+    power: <><path d="M12 3v8" /><path d="M7.05 5.93a8 8 0 1 0 9.9 0" /></>,
+    activity: <><path d="M3 12h4l2-6 4 12 2-6h6" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></>,
+    weather: <><circle cx="16.5" cy="7.5" r="3" /><path d="M16.5 2.5v1M16.5 11.5v1M21.5 7.5h-1M12.5 7.5h-1" /><path d="M6 18h10a3 3 0 0 0 .4-5.97A5 5 0 0 0 7 10.5a3.75 3.75 0 0 0-1 7.5Z" /></>,
+    news: <><path d="M4 5.5h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2v-11a1 1 0 0 1 1-1Z" /><path d="M7 9h9M7 12h9M7 15h5" /><path d="M17 5.5v3" /></>,
+    music: <><path d="M9 18V5l10-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" /></>,
+    screen: <><rect x="3" y="4" width="18" height="13" rx="1.5" /><path d="M8 21h8M12 17v4" /></>,
+    capture: <><path d="M4 8h3l1.5-2h7L17 8h3v10H4Z" /><circle cx="12" cy="13" r="3.5" /></>,
+    files: <><path d="M5 3h9l4 4v14H5Z" /><path d="M14 3v5h4M8 13h7M8 17h5" /></>,
+    notes: <><path d="M6 3h12v18H6z" /><path d="M9 7h6M9 11h6M9 15h4" /><path d="M9 3v2M15 3v2" /></>,
+    settings: <><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" /><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 0 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" /></>,
+  };
+
+  return <svg {...common}>{paths[name]}</svg>;
+}
 
 
 function formatValue(
@@ -393,6 +436,7 @@ export default function HudCockpit({
   onFullscreen,
   onSettings,
   onSchedules,
+  onWorkspace,
   showActivityLog,
   showSystemMonitor,
   showQuickTools,
@@ -512,35 +556,40 @@ export default function HudCockpit({
             type="button"
             onClick={() => onCommand("shutdown")}
           >
-            SHUTDOWN
+            <HeaderIcon name="power" />
+            <span>SHUTDOWN</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("running apps")}
           >
-            RUNNING
+            <HeaderIcon name="activity" />
+            <span>RUNNING</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("weather")}
           >
-            WEATHER
+            <HeaderIcon name="weather" />
+            <span>WEATHER</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("news")}
           >
-            NEWS
+            <HeaderIcon name="news" />
+            <span>NEWS</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("play music")}
           >
-            MUSIC
+            <HeaderIcon name="music" />
+            <span>MUSIC</span>
           </button>
 
         </nav>
@@ -568,35 +617,40 @@ export default function HudCockpit({
             type="button"
             onClick={() => onCommand("what is on my screen")}
           >
-            SCREEN
+            <HeaderIcon name="screen" />
+            <span>SCREEN</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("take photo")}
           >
-            CAPTURE
+            <HeaderIcon name="capture" />
+            <span>CAPTURE</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("recent files")}
           >
-            FILES
+            <HeaderIcon name="files" />
+            <span>FILES</span>
           </button>
 
           <button
             type="button"
             onClick={() => onCommand("take a note")}
           >
-            NOTES
+            <HeaderIcon name="notes" />
+            <span>NOTES</span>
           </button>
 
           <button
             type="button"
             onClick={onSettings}
           >
-            SETTINGS
+            <HeaderIcon name="settings" />
+            <span>SETTINGS</span>
           </button>
 
         </nav>
@@ -894,27 +948,6 @@ export default function HudCockpit({
             <span>MAPS</span>
           </button>
 
-          {/* TRANSLATE */}
-          <button
-            type="button"
-            onClick={() => onCommand("open google translate")}
-            aria-label="Open Google Translate"
-          >
-            <span className="quick-tool-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22">
-                <path
-                  fill="#1A73E8"
-                  d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.11 5.02L4 19l5-5 3.11 3.11.76-2.04z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"
-                />
-              </svg>
-            </span>
-            <span>TRANSLATE</span>
-          </button>
-
           {/* WEBSITES */}
           <button
             type="button"
@@ -962,6 +995,17 @@ export default function HudCockpit({
               </svg>
             </span>
             <span>SCHEDULES</span>
+          </button>
+
+          {/* WORKSPACE */}
+          <button type="button" onClick={onWorkspace} aria-label="Open Workspace">
+            <span className="quick-tool-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffbd5a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7.5h7l2 2h9v9.5H3z" />
+                <path d="M3 7.5V5h7l2 2" />
+              </svg>
+            </span>
+            <span>WORKSPACE</span>
           </button>
 
           {/* LOCK */}

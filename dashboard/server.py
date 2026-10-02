@@ -88,6 +88,8 @@ from tools.windows_integration import (
     set_autostart,
 )
 
+from hud.workspace_center import workspace_center
+
 from core.listener import (
     start_listener,
     pause_listener,
@@ -1711,6 +1713,37 @@ class DashboardServer:
                     status_code=500,
                 )
 
+        # =====================================================
+        # LOCAL — HUD WORKSPACE / PROJECT CENTER
+        # =====================================================
+
+        @app.get("/api/local/workspace/projects")
+        async def local_workspace_projects(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                return workspace_center.list_projects()
+            except Exception:
+                return JSONResponse({"ok": False, "error": "Workspace is unavailable."}, status_code=500)
+
+        @app.post("/api/local/workspace/{action}")
+        async def local_workspace_action(action: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                body = await request.json()
+            except Exception:
+                body = {}
+            project_id = str(body.get("project_id", ""))
+            if action == "start-preview":
+                return workspace_center.start_preview(project_id, open_external=False)
+            if action == "open-external":
+                return workspace_center.open_externally(project_id)
+            if action == "stop-preview":
+                return workspace_center.stop_preview(project_id)
+            if action == "open-folder":
+                return workspace_center.open_folder(project_id)
+            return JSONResponse({"ok": False, "error": "Unknown workspace action."}, status_code=404)
         @app.post("/api/local/android/connect")
         async def local_android_connect(request: Request):
             if not self._authorize_local(request):
