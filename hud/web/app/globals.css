@@ -3798,3 +3798,79 @@ body {
   .settings-preferences-modal .settings-toggle-description { display: none; }
   .settings-preferences-modal .settings-modal-actions { margin-inline: -16px; padding-inline: 16px; }
 }
+
+/* Remote pairing status and PIN regeneration. */
+.settings-modal:has(.remote-modal-content) .remote-pin-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, .14);
+  color: var(--hud-muted);
+  font-family: var(--hud-font-mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-pin-active {
+  color: #73ef8b;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-pin-expired {
+  color: #fbbf24;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-new-pin-button {
+  width: 100%;
+  height: 36px;
+  margin: 4px 0 12px;
+  border: 1px solid rgba(251, 191, 36, .42);
+  border-radius: var(--radius-sm);
+  background: rgba(251, 191, 36, .08);
+  color: #fbbf24;
+  font-family: var(--hud-font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.settings-modal:has(.remote-modal-content) .remote-new-pin-button:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, .16);
+  box-shadow: 0 0 14px rgba(251, 191, 36, .16);
+}
+
+.settings-modal:has(.remote-modal-content) .remote-new-pin-button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-device-status {
+  margin-top: 12px;
+  color: var(--hud-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-device-status span {
+  color: var(--hud-muted);
+  margin-right: 6px;
+}
+
+.settings-modal:has(.remote-modal-content) .remote-device-status.is-connected,
+.settings-modal:has(.remote-modal-content) .remote-device-status.is-connected span {
+  color: #73ef8b;
+  text-shadow: 0 0 8px rgba(115, 239, 139, .35);
+}
+
+.settings-modal:has(.remote-modal-content) .remote-message {
+  margin-top: 10px;
+  color: #fbbf24;
+  font-size: 10px;
+  line-height: 1.4;
+}

@@ -175,6 +175,7 @@ type RemoteInfo = {
   pairing_url: string;
   pairing_pin: string;
   pairing_active: boolean;
+  pairing_remaining_seconds?: number;
   clients: number;
 };
 
@@ -244,6 +245,12 @@ function displayTime(value: unknown): string {
   if (!value) return "Time not set";
   const date = new Date(String(value));
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatPairingRemaining(value: unknown): string {
+  const seconds = Math.max(0, Math.floor(Number(value) || 0));
+  const minutes = Math.floor(seconds / 60);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function ScheduleCenterSection({ tab, data }: { tab: ScheduleCenterTab; data: ScheduleCenterData }) {
@@ -347,6 +354,8 @@ export default function Home() {
 
   const [remoteInfo, setRemoteInfo] = useState<RemoteInfo | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remotePinLoading, setRemotePinLoading] = useState(false);
+  const [remoteMessage, setRemoteMessage] = useState("");
   const [shortcutLoading, setShortcutLoading] = useState(false);
   const [androidStatus, setAndroidStatus] = useState<AndroidStatus>(EMPTY_ANDROID_STATUS);
   const [androidIp, setAndroidIp] = useState("");
@@ -1313,6 +1322,7 @@ export default function Home() {
   const openRemoteControl = async () => {
     setModal("remote");
     setRemoteLoading(true);
+    setRemoteMessage("");
 
     try {
       const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/info`, {
@@ -1329,6 +1339,54 @@ export default function Home() {
       setRemoteInfo(null);
     } finally {
       setRemoteLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (modal !== "remote") return;
+
+    const countdown = window.setInterval(() => {
+      setRemoteInfo((previous) => {
+        if (!previous || !previous.pairing_active) return previous;
+        const remaining = Math.max(0, Math.floor(Number(previous.pairing_remaining_seconds) || 0) - 1);
+        if (remaining > 0) {
+          return { ...previous, pairing_remaining_seconds: remaining };
+        }
+        return {
+          ...previous,
+          pairing_active: false,
+          pairing_pin: "",
+          pairing_url: "",
+          pairing_remaining_seconds: 0,
+        };
+      });
+    }, 1000);
+
+    return () => window.clearInterval(countdown);
+  }, [modal]);
+
+  const generateRemotePin = async () => {
+    setRemotePinLoading(true);
+    setRemoteMessage("");
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/remote/new-pin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Unable to generate a new pairing PIN.");
+      setRemoteInfo((previous) => ({
+        ...(previous || { ok: true, assistant_name: assistantName, url: "", clients: 0 }),
+        pairing_pin: String(result.pairing_pin || ""),
+        pairing_url: String(result.pairing_url || ""),
+        pairing_active: Boolean(result.pairing_active),
+        pairing_remaining_seconds: Number(result.pairing_remaining_seconds || 0),
+      }));
+    } catch (error) {
+      setRemoteMessage(error instanceof Error ? error.message : "Unable to generate a new pairing PIN.");
+    } finally {
+      setRemotePinLoading(false);
     }
   };
 
@@ -2110,37 +2168,55 @@ export default function Home() {
 
               {remoteLoading ? (
                 <div className="remote-loading">CONNECTING TO {assistantName}...</div>
-              ) : remoteInfo?.pairing_active && remoteInfo.pairing_url ? (
-                <>
-                  <div className="remote-qr-wrapper">
-                    <div className="remote-qr">
-                      <QRCodeSVG
-                        value={remoteInfo.pairing_url}
-                        size={220}
-                        bgColor="#050505"
-                        fgColor="#ffcc66"
-                        level="M"
-                        includeMargin
-                      />
-                    </div>
-                    <div className="remote-qr-label">SCAN TO CONNECT</div>
-                  </div>
-
-                  <div className="remote-pin-box">
-                    <span className="remote-pin-label">PAIRING PIN</span>
-                    <strong className="remote-pin">{remoteInfo.pairing_pin}</strong>
-                  </div>
-
-                  <div className="remote-status-box">
-                    <span>{assistantName} DASHBOARD</span>
-                    <strong>{remoteInfo.url}</strong>
-                  </div>
-                </>
               ) : (
-                <div className="remote-offline">
-                  <strong>PAIRING NOT AVAILABLE</strong>
-                  <span>Start the {assistantName} dashboard and open Remote Control again.</span>
-                </div>
+                <>
+                  {remoteInfo?.pairing_active && remoteInfo.pairing_url ? (
+                    <div className="remote-qr-wrapper">
+                      <div className="remote-qr">
+                        <QRCodeSVG
+                          value={remoteInfo.pairing_url}
+                          size={220}
+                          bgColor="#050505"
+                          fgColor="#ffcc66"
+                          level="M"
+                          includeMargin
+                        />
+                      </div>
+                      <div className="remote-qr-label">SCAN TO CONNECT</div>
+                    </div>
+                  ) : (
+                    <div className="remote-offline">
+                      <strong>PIN EXPIRED</strong>
+                      <span>Generate a new PIN to pair a device.</span>
+                    </div>
+                  )}
+
+                  {remoteInfo && <>
+                    <div className="remote-pin-box">
+                      <span className="remote-pin-label">PAIRING PIN</span>
+                      <strong className="remote-pin">{remoteInfo.pairing_active ? remoteInfo.pairing_pin : "EXPIRED"}</strong>
+                      <div className="remote-pin-meta">
+                        <span className={remoteInfo.pairing_active ? "remote-pin-active" : "remote-pin-expired"}>● {remoteInfo.pairing_active ? "ACTIVE" : "EXPIRED"}</span>
+                        <span>EXPIRES IN {remoteInfo.pairing_active ? formatPairingRemaining(remoteInfo.pairing_remaining_seconds) : "00:00"}</span>
+                      </div>
+                    </div>
+
+                    <button type="button" className="remote-new-pin-button" onClick={() => void generateRemotePin()} disabled={remotePinLoading}>
+                      {remotePinLoading ? "GENERATING..." : "NEW PIN"}
+                    </button>
+
+                    <div className="remote-status-box">
+                      <span>{assistantName} DASHBOARD</span>
+                      <strong>{remoteInfo.url}</strong>
+                    </div>
+
+                    <div className={`remote-device-status ${remoteInfo.clients > 0 ? "is-connected" : ""}`}>
+                      <span>●</span>
+                      {remoteInfo.clients > 0 ? "DEVICE CONNECTED · REMOTE DEVICE AUTHENTICATED" : "WAITING FOR DEVICE"}
+                    </div>
+                  </>}
+                  {remoteMessage && <div className="remote-message">{remoteMessage}</div>}
+                </>
               )}
 
               <p className="remote-note">

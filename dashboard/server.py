@@ -1688,10 +1688,41 @@ class DashboardServer:
 
                 "pairing_active": pairing_active,
 
+                "pairing_remaining_seconds": max(
+                    0,
+                    int(self._pin_expiry - time.time())
+                ) if pairing_active else 0,
+
                 "clients": len(
                     self._clients
                 ),
             }
+
+        @app.post("/api/local/remote/new-pin")
+        async def local_remote_new_pin(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse(
+                    {"ok": False, "error": "Local access required."},
+                    status_code=403,
+                )
+            try:
+                self.new_pairing_pin()
+                active = bool(self._pin) and time.time() < self._pin_expiry
+                return {
+                    "ok": True,
+                    "pairing_pin": self._pin if active else "",
+                    "pairing_url": self.pairing_url() if active else "",
+                    "pairing_active": active,
+                    "pairing_remaining_seconds": max(
+                        0,
+                        int(self._pin_expiry - time.time())
+                    ) if active else 0,
+                }
+            except Exception:
+                return JSONResponse(
+                    {"ok": False, "error": "Unable to generate a new pairing PIN."},
+                    status_code=500,
+                )
             
         # =====================================================
         # LOCAL — ANDROID CONNECTION
