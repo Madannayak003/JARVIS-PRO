@@ -2150,7 +2150,7 @@ export default function Home() {
           onClick={() => setModal(null)}
         >
           <section
-            className="settings-modal"
+            className="settings-modal settings-preferences-modal"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="settings-modal-heading">
