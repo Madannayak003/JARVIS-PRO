@@ -1454,19 +1454,15 @@ body {
   transition: all var(--transition-fast) !important;
 }
 
-/* Center dot inside the live circle */
 .hud-command-row .hud-live-circle .btn-icon {
-  display: block !important;
-  width: 10px !important;
-  height: 10px !important;
-  min-width: 10px !important;
-  max-width: 10px !important;
-  border-radius: 50% !important;
-  background: #2f80ed !important;
-  box-shadow: 0 0 10px rgba(47, 128, 237, 0.8) !important;
-  margin: auto !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: #2f80ed !important;
+  fill: currentColor;
+  stroke: currentColor;
   pointer-events: none !important;
   transition: all var(--transition-fast) !important;
+  filter: drop-shadow(0 0 5px rgba(47, 128, 237, 0.65)) !important;
 }
 
 .hud-command-row .hud-live-circle:hover {
@@ -1476,13 +1472,16 @@ body {
   box-shadow: 0 0 14px rgba(47, 128, 237, 0.5) !important;
 }
 
-.hud-command-row .hud-live-circle.is-active {
-  background: rgba(0, 212, 255, 0.25) !important;
-  border: 1px solid #00d4ff !important;
-  box-shadow:
-    0 0 16px rgba(0, 212, 255, 0.55),
-    inset 0 0 8px rgba(0, 212, 255, 0.3) !important;
+/* Change this section in your CSS */
+.hud-command-row .hud-live-circle.is-active .btn-icon {
+  color: #00d4ff !important;
+  fill: #00d4ff !important;
+  filter: 
+    drop-shadow(0 0 6px #00d4ff)
+    drop-shadow(0 0 12px #00d4ff) !important;
+  /* Removed: background: #00d4ff !important; */
 }
+
 
 .hud-command-row .hud-live-circle.is-active .btn-icon {
   background: #00d4ff !important;
@@ -3594,6 +3593,12 @@ body {
   display: block;
   pointer-events: none;
 }
+
+/* Keep the command bar in the requested LIVE → INPUT → MIC → SEND order. */
+.hud-command-row .hud-live-circle { order: -1; }
+.hud-command-row input { order: 0; }
+.hud-command-row .hud-mic-button { order: 1; }
+.hud-command-row button[aria-label="Send command"] { order: 2; }
 
 @media (max-width: 650px) {
   .hud-command-row .hud-mic-button {

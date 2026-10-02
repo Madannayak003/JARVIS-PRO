@@ -1828,7 +1828,18 @@ export default function Home() {
               }
             }}
           >
-            <span className="btn-icon" />
+            <svg
+              className="btn-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              {/* Main 4-point AI Star */}
+              <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" />
+              {/* Accent Mini Sparkle */}
+              <path d="M19 3C19 4.7 17.7 6 16 6C17.7 6 19 7.3 19 9C19 7.3 20.3 6 22 6C20.3 6 19 4.7 19 3Z" />
+            </svg>
           </button>
         </div>
       </div>}
