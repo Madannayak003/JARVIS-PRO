@@ -457,6 +457,24 @@ export default function Home() {
     void refreshWorkspace();
   };
 
+  const toggleMicrophone = async () => {
+    const next = !microphoneEnabled;
+    setMicrophoneEnabled(next);
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error);
+      setMicrophoneEnabled(Boolean(result.enabled));
+    } catch (error) {
+      console.error(error);
+      setMicrophoneEnabled(!next);
+    }
+  };
+
   const workspaceAction = async (action: string, project: WorkspaceProject) => {
     setWorkspaceMessage("");
     try {
@@ -1694,6 +1712,20 @@ export default function Home() {
             ▶
           </button>
 
+          {/* MIC BUTTON */}
+          <button
+            type="button"
+            className={`hud-mic-button ${microphoneEnabled ? "is-active" : ""}`}
+            onClick={() => void toggleMicrophone()}
+            aria-label={microphoneEnabled ? "Disable microphone" : "Enable microphone"}
+            title={microphoneEnabled ? "Disable microphone" : "Enable microphone"}
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="8" y="3" width="8" height="12" rx="4" />
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+            </svg>
+          </button>
+
           {/* LIVE BUTTON (Updated to hud-live-circle) */}
           <button
             type="button"
@@ -2260,23 +2292,7 @@ export default function Home() {
                   <button
                     type="button"
                     className={`hud-bar-btn ${microphoneEnabled ? "is-active" : ""}`}
-                    onClick={async () => {
-                      const next = !microphoneEnabled;
-                      setMicrophoneEnabled(next);
-                      try {
-                        const res = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/microphone`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ enabled: next }),
-                        });
-                        const result = await res.json();
-                        if (!res.ok || !result.ok) throw new Error(result.error);
-                        setMicrophoneEnabled(Boolean(result.enabled));
-                      } catch (err) {
-                        console.error(err);
-                        setMicrophoneEnabled(!next);
-                      }
-                    }}
+                    onClick={() => void toggleMicrophone()}
                   >
                     <span className="btn-icon"></span>
                     <span>MIC {microphoneEnabled ? "ON" : "OFF"}</span>
