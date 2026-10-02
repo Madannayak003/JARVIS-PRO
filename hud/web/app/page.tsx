@@ -1767,7 +1767,29 @@ export default function Home() {
             disabled={commandSending || !commandInput.trim()}
             aria-label="Send command"
           >
-            ▶
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M21.5 3.5L10.7 14.3"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M21.5 3.5L14.6 21L10.7 14.3L3.5 10.4L21.5 3.5Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
 
           {/* MIC BUTTON */}
