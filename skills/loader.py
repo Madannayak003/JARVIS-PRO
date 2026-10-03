@@ -42,6 +42,7 @@ SKILLS = [
     "system.process",
     "system.taskmanager",
     "files.files",
+    "files.file_intelligence",
     "files.file_info",
     "files.recent",
     "files.recycle",

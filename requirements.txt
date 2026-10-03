@@ -48,6 +48,9 @@ comtypes>=1.4
 pycaw>=20240210
 screen-brightness-control>=0.22
 Send2Trash>=1.8
+pypdf>=5.0
+python-docx>=1.1
+openpyxl>=3.1
 winrt-Windows.Devices.Geolocation>=3.2.1
 
 # Camera, vision, and image handling

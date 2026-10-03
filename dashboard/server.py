@@ -89,6 +89,20 @@ from tools.windows_integration import (
 )
 
 from hud.workspace_center import workspace_center
+from skills.files.file_intelligence import (
+    edit_file as intelligence_edit_file,
+    file_intelligence_action,
+    get_file as intelligence_get_file,
+    list_files as intelligence_list_files,
+    read_file as intelligence_read_file,
+    remove_file as intelligence_remove_file,
+    save_uploaded_file as intelligence_save_uploaded_file,
+    search_files as intelligence_search_files,
+    speak_file as intelligence_speak_file,
+    file_speech_status as intelligence_file_speech_status,
+    stop_file_speech as intelligence_stop_file_speech,
+    summarize_file as intelligence_summarize_file,
+)
 
 from core.listener import (
     start_listener,
@@ -1775,6 +1789,130 @@ class DashboardServer:
             if action == "open-folder":
                 return workspace_center.open_folder(project_id)
             return JSONResponse({"ok": False, "error": "Unknown workspace action."}, status_code=404)
+
+        # * =====================================================
+        # * LOCAL — FILE INTELLIGENCE
+        # * =====================================================
+
+        @app.get("/api/local/file-intelligence/files")
+        async def local_file_intelligence_files(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            return {"ok": True, "files": intelligence_list_files()}
+
+        if MULTIPART_AVAILABLE and UploadFile is not None:
+            @app.post("/api/local/file-intelligence/upload")
+            async def local_file_intelligence_upload(request: Request, file: UploadFile = File(...)):
+                if not self._authorize_local(request):
+                    return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+                try:
+                    chunks = []
+                    total = 0
+                    while True:
+                        chunk = await file.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        total += len(chunk)
+                        if total > 500 * 1024 * 1024:
+                            return JSONResponse({"ok": False, "error": "File exceeds 500 MB."}, status_code=413)
+                        chunks.append(chunk)
+                    record = intelligence_save_uploaded_file(file.filename or "upload", b"".join(chunks), mime_type=file.content_type or "")
+                    return {"ok": True, "file": record}
+                except Exception as exc:
+                    return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+                finally:
+                    await file.close()
+
+        @app.get("/api/local/file-intelligence/{file_id}")
+        async def local_file_intelligence_read(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                return {"ok": True, **intelligence_read_file(file_id)}
+            except FileNotFoundError as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=404)
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+        @app.get("/api/local/file-intelligence/{file_id}/download")
+        async def local_file_intelligence_download(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                record = intelligence_get_file(file_id)
+                return FileResponse(record["storage_path"], filename=record["filename"], media_type=record.get("mime_type"))
+            except FileNotFoundError as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=404)
+
+        @app.post("/api/local/file-intelligence/search")
+        async def local_file_intelligence_search(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            body = await request.json()
+            return {"ok": True, "results": intelligence_search_files(body.get("query", ""), body.get("file_ids"))}
+
+        @app.post("/api/local/file-intelligence/{file_id}/summarize")
+        async def local_file_intelligence_summarize(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                body = await request.json()
+                text = await asyncio.to_thread(intelligence_summarize_file, file_id, body.get("question", ""))
+                return {"ok": True, "text": text}
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+        @app.post("/api/local/file-intelligence/{file_id}/speak")
+        async def local_file_intelligence_speak(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                try:
+                    body = await request.json()
+                except Exception:
+                    body = {}
+                result = await asyncio.to_thread(intelligence_speak_file, file_id, str(body.get("text", "")))
+                return {"ok": True, **result}
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+        @app.get("/api/local/file-intelligence/speech/status")
+        async def local_file_intelligence_speech_status(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            return {"ok": True, **intelligence_file_speech_status()}
+
+        @app.post("/api/local/file-intelligence/speech/stop")
+        async def local_file_intelligence_speech_stop(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            return {"ok": True, **intelligence_stop_file_speech()}
+
+        @app.post("/api/local/file-intelligence/{file_id}/edit")
+        async def local_file_intelligence_edit(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                body = await request.json()
+                return {"ok": True, "file": intelligence_edit_file(file_id, body.get("find", ""), body.get("replace", ""), expected_text=body.get("expected_text"))}
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+        @app.post("/api/local/file-intelligence/{file_id}/open-folder")
+        async def local_file_intelligence_open_folder(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                return {"ok": True, "folder": file_intelligence_action({"action": "file_open_folder", "file_id": file_id})}
+            except Exception as exc:
+                return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+        @app.delete("/api/local/file-intelligence/{file_id}")
+        async def local_file_intelligence_remove(file_id: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            return {"ok": intelligence_remove_file(file_id)}
+
         @app.post("/api/local/android/connect")
         async def local_android_connect(request: Request):
             if not self._authorize_local(request):

@@ -168,6 +168,17 @@ type WorkspaceProject = {
   preview_url: string;
 };
 
+type IntelligenceFile = {
+  id: string;
+  filename: string;
+  mime_type?: string;
+  type?: { category?: string; supported?: boolean };
+  size: number;
+  processing_status: string;
+  extracted_text_available?: boolean;
+  error?: string;
+};
+
 type RemoteInfo = {
   ok: boolean;
   assistant_name?: string;
@@ -365,6 +376,13 @@ export default function Home() {
 
   const [commandInput, setCommandInput] = useState("");
   const [commandSending, setCommandSending] = useState(false);
+  const [intelligenceFiles, setIntelligenceFiles] = useState<IntelligenceFile[]>([]);
+  const [fileUploadMessage, setFileUploadMessage] = useState("");
+  const [filePanel, setFilePanel] = useState<{ id: string; filename: string; text: string; label: "FILE CONTENT" | "JARVIS SUMMARY" } | null>(null);
+  const [fileSpeakingId, setFileSpeakingId] = useState<string | null>(null);
+  const [summaryProcessingId, setSummaryProcessingId] = useState<string | null>(null);
+  const fileSpeechPollRef = useRef<number | null>(null);
+  const filePickerRef = useRef<HTMLInputElement | null>(null);
 
   // * 1. Inside your component, add an input ref:
   const commandInputRef = useRef<HTMLInputElement | null>(null);
@@ -1316,6 +1334,120 @@ export default function Home() {
     setCommandSending(false);
   };
 
+  const uploadIntelligenceFiles = async (files: FileList | File[]) => {
+    const selected = Array.from(files);
+    if (!selected.length) return;
+    setFileUploadMessage("");
+    for (const file of selected) {
+      const form = new FormData();
+      form.append("file", file);
+      try {
+        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/upload`, { method: "POST", body: form, cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "File upload failed.");
+        setIntelligenceFiles((previous) => [result.file as IntelligenceFile, ...previous.filter((item) => item.id !== result.file.id)]);
+        if (result.file.processing_status === "FAILED") {
+          setFileUploadMessage(`${result.file.filename}: ${result.file.error || "File processing failed."}`);
+        }
+      } catch (error) {
+        setFileUploadMessage(error instanceof Error ? error.message : "File upload failed.");
+      }
+    }
+  };
+
+  const removeIntelligenceFile = async (fileId: string) => {
+    if (fileSpeakingId === fileId) await stopFileSpeech();
+    try {
+      await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/${encodeURIComponent(fileId)}`, { method: "DELETE", cache: "no-store" });
+    } finally {
+      setIntelligenceFiles((previous) => previous.filter((item) => item.id !== fileId));
+      setFilePanel((previous) => previous?.id === fileId ? null : previous);
+    }
+  };
+
+  const readIntelligenceFile = async (fileId: string, summarize = false) => {
+    if (summarize && summaryProcessingId) return;
+    if (summarize) setSummaryProcessingId(fileId);
+    try {
+      const endpoint = summarize
+        ? `${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/${encodeURIComponent(fileId)}/summarize`
+        : `${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/${encodeURIComponent(fileId)}`;
+      const response = await fetch(endpoint, { method: summarize ? "POST" : "GET", headers: summarize ? { "Content-Type": "application/json" } : undefined, body: summarize ? JSON.stringify({}) : undefined, cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "File action failed.");
+      const file = intelligenceFiles.find((item) => item.id === fileId);
+      setFilePanel({ id: fileId, filename: file?.filename || "File", label: summarize ? "JARVIS SUMMARY" : "FILE CONTENT", text: summarize ? String(result.text || "") : String(result.text || "No extractable text.") });
+      if (!summarize) void speakIntelligenceFile(fileId);
+    } catch (error) {
+      setFileUploadMessage(error instanceof Error ? error.message : "File action failed.");
+    } finally {
+      if (summarize) setSummaryProcessingId(null);
+    }
+  };
+
+  const stopFileSpeech = async () => {
+    if (fileSpeechPollRef.current !== null) {
+      window.clearInterval(fileSpeechPollRef.current);
+      fileSpeechPollRef.current = null;
+    }
+    try {
+      await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/speech/stop`, { method: "POST", cache: "no-store" });
+    } catch (error) {
+      setFileUploadMessage(error instanceof Error ? error.message : "Unable to speak file content.");
+    } finally {
+      setFileSpeakingId(null);
+    }
+  };
+
+  const speakIntelligenceFile = async (fileId: string, text = "") => {
+    if (fileSpeakingId) return;
+    setFileSpeakingId(fileId);
+    try {
+      const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/${encodeURIComponent(fileId)}/speak`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }), cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Unable to speak file content.");
+      if (result.busy) {
+        setFileUploadMessage("JARVIS is already speaking.");
+        setFileSpeakingId(null);
+        return;
+      }
+      fileSpeechPollRef.current = window.setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/speech/status`, { cache: "no-store" });
+          const status = await statusResponse.json();
+          if (!status.speaking) {
+            await stopFileSpeech();
+          }
+        } catch {
+          await stopFileSpeech();
+        }
+      }, 500);
+    } catch (error) {
+      setFileUploadMessage(error instanceof Error ? error.message : "Unable to speak file content.");
+      setFileSpeakingId(null);
+    }
+  };
+
+  const toggleFileSpeech = async () => {
+    if (!filePanel) return;
+    if (fileSpeakingId) {
+      await stopFileSpeech();
+      return;
+    }
+    await speakIntelligenceFile(filePanel.id, filePanel.label === "JARVIS SUMMARY" ? filePanel.text : "");
+  };
+
+  const closeFilePreview = async () => {
+    if (fileSpeakingId) await stopFileSpeech();
+    setFilePanel(null);
+  };
+
+  const openIntelligenceFolder = async (fileId: string) => {
+    const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/${encodeURIComponent(fileId)}/open-folder`, { method: "POST", cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok || !result.ok) setFileUploadMessage(result.error || "Could not open file folder.");
+  };
+
   /* =========================================================
      REMOTE CONTROL
      ========================================================= */
@@ -1738,10 +1870,40 @@ export default function Home() {
           ===================================================== */}
       {!workspaceOpen && <div className="hud-command-input">
         <div className="hud-command-label">◆ COMMAND INPUT</div>
+        {intelligenceFiles.length > 0 && <div className="hud-file-context" aria-label="Uploaded files">
+          {intelligenceFiles.map((file) => <div className="hud-file-chip" key={file.id}>
+            <span title={file.filename}>{file.filename}</span>
+            <small>{file.processing_status}</small>
+            {file.processing_status === "READY" && <>
+              <button type="button" onClick={() => void readIntelligenceFile(file.id)} aria-label={`Read ${file.filename}`}>READ</button>
+              <button type="button" onClick={() => void readIntelligenceFile(file.id, true)} disabled={Boolean(summaryProcessingId)} aria-label={`Summarize ${file.filename}`}>{summaryProcessingId === file.id ? "⟳ SUMMARIZING..." : "SUMMARY"}</button>
+              <button type="button" onClick={() => void openIntelligenceFolder(file.id)} aria-label={`Open folder for ${file.filename}`}>FOLDER</button>
+            </>}
+            <button type="button" onClick={() => void removeIntelligenceFile(file.id)} aria-label={`Remove ${file.filename}`}>×</button>
+          </div>)}
+        </div>}
+        {fileUploadMessage && <div className="hud-file-upload-message">{fileUploadMessage}</div>}
+        {filePanel && <div className="hud-file-panel"><div><strong>{filePanel.filename}</strong><span><em>{filePanel.label}</em><button type="button" className="hud-file-speak-button" onClick={() => void toggleFileSpeech()} aria-label={fileSpeakingId ? "Stop file speech" : "Speak file content"} title={fileSpeakingId ? "Stop file speech" : "Speak file content"}>{fileSpeakingId ? "⏹" : "🔊"}</button><button type="button" onClick={() => void closeFilePreview()} aria-label="Close file preview">×</button></span></div><pre>{filePanel.text}</pre></div>}
         <div 
           className="hud-command-row"
           onClick={() => commandInputRef.current?.focus()}
         >
+          <input
+            ref={filePickerRef}
+            className="hud-file-picker"
+            type="file"
+            multiple
+            accept=".pdf,.txt,.md,.docx,.py,.js,.ts,.jsx,.tsx,.html,.css,.json,.xml,.yaml,.yml,.sql,.c,.cpp,.h,.java,.kt,.cs,.php,.go,.rs,.sh,.bat,.ps1,.csv,.xlsx,.png,.jpg,.jpeg,.webp"
+            onChange={(event) => {
+              if (event.target.files) void uploadIntelligenceFiles(event.target.files);
+              event.currentTarget.value = "";
+            }}
+          />
+
+          <button type="button" className="hud-file-button" onClick={(event) => { event.stopPropagation(); filePickerRef.current?.click(); }} aria-label="Attach files" title="Attach files">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+
           <input
             ref={commandInputRef}
             type="text"

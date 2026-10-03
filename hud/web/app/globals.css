@@ -3552,6 +3552,47 @@ body {
   .cockpit-system-status .status-value { padding-inline: 6px; font-size: 10px; }
 }
 
+/* File attachment context and command-bar control. */
+.hud-file-picker {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.hud-file-context { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; margin-bottom: 6px; }
+.hud-file-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 260px; padding: 5px 8px 5px 10px; border: 1px solid var(--border-glass); border-radius: 999px; background: rgba(15, 23, 42, .82); color: var(--hud-text-secondary); font-size: 10px; }
+.hud-file-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-file-chip small { color: var(--assistant-colour); font-size: 8px; letter-spacing: .08em; }
+.hud-file-chip button { padding: 0 2px; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.hud-file-upload-message { margin-bottom: 6px; color: #fca5a5; font-size: 10px; }
+.hud-file-panel { max-height: 220px; margin-bottom: 6px; padding: 9px 11px; overflow: auto; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(4, 10, 18, .9); color: var(--hud-text-secondary); }
+.hud-file-panel > div { display: flex; justify-content: space-between; align-items: center; color: var(--assistant-colour); font-size: 10px; letter-spacing: .08em; }
+.hud-file-panel button { border: 0; background: transparent; color: inherit; cursor: pointer; }
+.hud-file-speak-button { margin-right: 8px; font-size: 14px; }
+.hud-file-panel pre { margin: 8px 0 0; white-space: pre-wrap; font: 11px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+.hud-command-row .hud-file-button {
+  display: flex !important;
+  flex: 0 0 30px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, .04) !important;
+  color: var(--hud-text-secondary) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.hud-command-row .hud-file-button:hover { background: rgba(56, 189, 248, .16) !important; border-color: rgba(56, 189, 248, .55) !important; color: #67e8f9 !important; transform: scale(1.06) !important; }
+
 /* Dedicated command-bar microphone control. */
 .hud-command-row .hud-mic-button {
   display: flex !important;
@@ -3596,6 +3637,7 @@ body {
 
 /* Keep the command bar in the requested LIVE → INPUT → MIC → SEND order. */
 .hud-command-row .hud-live-circle { order: -1; }
+.hud-command-row .hud-file-button { order: -0.5; }
 .hud-command-row input { order: 0; }
 .hud-command-row .hud-mic-button { order: 1; }
 .hud-command-row button[aria-label="Send command"] { order: 2; }

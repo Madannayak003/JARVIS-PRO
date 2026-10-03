@@ -45,6 +45,29 @@ def file_route(command):
     if not command:
         return None
 
+    if command in {"read it", "read this", "summarize it", "summarise it", "summarize this", "summarise this", "explain it", "explain this", "what does this say"}:
+        return [{"action": "file_intelligence_request", "request": command}]
+
+    if (
+        re.match(r"(?:what|where|when|who|how|tell me)", command, re.IGNORECASE)
+        and any(marker in command for marker in ("this", "it", "document", "pdf", "phone number", "internship", "important points"))
+    ):
+        return [{"action": "file_question_request", "question": command}]
+
+    match = re.fullmatch(r"(?:find|search)\s+(?:all\s+)?mentions?\s+of\s+(.+)", command, re.IGNORECASE)
+    if match:
+        return [{"action": "file_search_request", "query": match.group(1).strip()}]
+
+    # File Intelligence keeps natural-language requests on the existing
+    # fast-router/dispatcher path while leaving the legacy file actions intact.
+    match = re.fullmatch(r"(?:read|summarize|analyse|analyze|explain)\s+(?:this|the)?\s*(?:file|document|pdf)?\s*(.*)", command, re.IGNORECASE)
+    if match:
+        return [{"action": "file_intelligence_request", "request": command}]
+
+    match = re.fullmatch(r"(?:find|search)\s+(?:for\s+)?(.+?)\s+(?:in|inside)\s+(?:this\s+)?file", command, re.IGNORECASE)
+    if match:
+        return [{"action": "file_search_request", "query": match.group(1).strip()}]
+
     # * =====================================================
     # * Existing Exact Commands
     # * =====================================================
