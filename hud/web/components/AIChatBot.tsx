@@ -58,8 +58,8 @@ type ChatSession = {
 
 const LOCAL_DASHBOARD_URL =
   typeof window !== "undefined"
-    ? `http:  // * ${window.location.hostname}:8765`
-    : "http:  // * 127.0.0.1:8765";
+    ? `http://${window.location.hostname}:8765`
+    : "http://127.0.0.1:8765";
 
 const DASHBOARD_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"

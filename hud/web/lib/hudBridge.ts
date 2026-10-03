@@ -37,7 +37,7 @@ export type HUDConnectionStatus =
   | "offline";
 
 const DEFAULT_URL =
-  "http:  // * 127.0.0.1:8766";
+  "http://127.0.0.1:8766";
 
 export class HUDBridge {
 

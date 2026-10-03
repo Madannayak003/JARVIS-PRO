@@ -208,8 +208,8 @@ const EMPTY_ANDROID_STATUS: AndroidStatus = {
 
 const LOCAL_DASHBOARD_URL =
   typeof window !== "undefined"
-    ? `http:  // * ${window.location.hostname}:8765`
-    : "http:  // * 127.0.0.1:8765";
+    ? `http://${window.location.hostname}:8765`
+    : "http://127.0.0.1:8765";
 
 const JARVIS_DASHBOARD_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
@@ -219,12 +219,12 @@ const JARVIS_DASHBOARD_URL =
 const HUD_BRIDGE_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
     ? (typeof window !== "undefined"
-        ? `http:  // * ${window.location.hostname}:8766`
-        : "http:  // * 127.0.0.1:8766")
+        ? `http://${window.location.hostname}:8766`
+        : "http://127.0.0.1:8766")
     : process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL ||
       (typeof window !== "undefined"
-        ? `http:  // * ${window.location.hostname}:8766`
-        : "http:  // * 127.0.0.1:8766");
+        ? `http://${window.location.hostname}:8766`
+        : "http://127.0.0.1:8766");
 
 const DEFAULT_ASSISTANT_NAME = "";
 
