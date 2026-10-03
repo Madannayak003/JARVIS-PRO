@@ -49,10 +49,10 @@ class NaturalConversationBridge:
         and run NCI-3 -> NCI-7.
         """
 
-        # ====================================================
-        # NCI-2
-        # Build unified natural context
-        # ====================================================
+        # * ====================================================
+        # * NCI-2
+        # * Build unified natural context
+        # * ====================================================
 
         natural_context = (
             natural_context_aggregator.build(
@@ -81,10 +81,10 @@ class NaturalConversationBridge:
             )
         )
 
-        # ====================================================
-        # NCI-3 -> NCI-7
-        # Run natural conversation pipeline
-        # ====================================================
+        # * ====================================================
+        # * NCI-3 -> NCI-7
+        # * Run natural conversation pipeline
+        # * ====================================================
 
         request = (
             natural_conversation_pipeline.process(
@@ -95,9 +95,9 @@ class NaturalConversationBridge:
         return request
 
 
-# ============================================================
-# Shared Bridge
-# ============================================================
+# * ============================================================
+# * Shared Bridge
+# * ============================================================
 
 natural_conversation_bridge = (
     NaturalConversationBridge()

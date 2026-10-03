@@ -17,7 +17,7 @@ class BackupBuilder:
 
     BACKUP_FOLDER = ".jarvis_backups"
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def backup(
         self,

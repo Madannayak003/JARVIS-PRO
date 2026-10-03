@@ -25,10 +25,10 @@ class PythonExtractor(BaseExtractor):
         Extract only the relevant function/class.
     """
 
-    # Maximum number of lines to send entirely
+    # * Maximum number of lines to send entirely
     FULL_FILE_LIMIT = 300
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def extract(
         self,
@@ -41,10 +41,10 @@ class PythonExtractor(BaseExtractor):
 
             return ""
 
-        # ------------------------------------------
-        # Small project?
-        # Send the whole file.
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Small project?
+        # * Send the whole file.
+        # * ------------------------------------------
 
         lines = content.splitlines()
 
@@ -52,10 +52,10 @@ class PythonExtractor(BaseExtractor):
 
             return content
 
-        # ------------------------------------------
-        # Large project
-        # AST extraction
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Large project
+        # * AST extraction
+        # * ------------------------------------------
 
         try:
 
@@ -117,8 +117,8 @@ class PythonExtractor(BaseExtractor):
 
                 )
 
-        # ------------------------------------------
-        # Fallback
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Fallback
+        # * ------------------------------------------
 
         return content

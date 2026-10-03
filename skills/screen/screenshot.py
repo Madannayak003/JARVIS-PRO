@@ -15,9 +15,9 @@ from voice.manager import speak
 from core.paths import SCREENSHOTS
 
 
-# =========================================================
-# Screenshot
-# =========================================================
+# * =========================================================
+# * Screenshot
+# * =========================================================
 
 def screenshot(data=None):
     """
@@ -29,7 +29,7 @@ def screenshot(data=None):
 
     try:
 
-        # Make sure the directory exists.
+        # * Make sure the directory exists.
         SCREENSHOTS.mkdir(
             parents=True,
             exist_ok=True,
@@ -68,9 +68,9 @@ def screenshot(data=None):
         return False
 
 
-# =========================================================
-# Registry
-# =========================================================
+# * =========================================================
+# * Registry
+# * =========================================================
 
 register(
     "screenshot",

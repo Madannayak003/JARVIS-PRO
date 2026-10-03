@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 
-# Load only the dependency-light conversational modules. Importing the normal
-# ``brain`` package initializes optional provider integrations, which this
-# deterministic test does not need and should not mask in the full report.
+# * Load only the dependency-light conversational modules. Importing the normal
+# * ``brain`` package initializes optional provider integrations, which this
+# * deterministic test does not need and should not mask in the full report.
 ROOT = Path(__file__).parents[1]
 _MODULE_NAMES = [
     "brain",

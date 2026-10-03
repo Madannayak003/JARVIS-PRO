@@ -30,19 +30,19 @@ def _clock(value: str, tomorrow: bool = False) -> datetime | None:
 
 
 def schedule_route(command: str):
-    # Remove normal sentence-ending punctuation.
+    # * Remove normal sentence-ending punctuation.
     command = re.sub(r"[.!?]+$", "", command.strip())
 
-    # ---------------------------------------------------------
-    # Relative schedules
+    # * ---------------------------------------------------------
+    # * Relative schedules
     #
-    # Supported:
-    #   schedule a task to open Chrome in 1 minute
-    #   schedule a task to open Chrome after 1 minute
-    #   schedule a task to open Chrome at 1 minute from now
-    #   schedule a task to open Chrome 1 minute from now
-    #   schedule a task to open Chrome at 1 minute
-    # ---------------------------------------------------------
+    # * Supported:
+    # * schedule a task to open Chrome in 1 minute
+    # * schedule a task to open Chrome after 1 minute
+    # * schedule a task to open Chrome at 1 minute from now
+    # * schedule a task to open Chrome 1 minute from now
+    # * schedule a task to open Chrome at 1 minute
+    # * ---------------------------------------------------------
     relative = re.match(
         r"^schedule\s+(?:a\s+)?task\s+(?:to\s+)?(.+?)\s+"
         r"(?:in|after|at\s+)?\s*"
@@ -76,14 +76,14 @@ def schedule_route(command: str):
             "recurrence": "none",
         }]
 
-    # ---------------------------------------------------------
-    # Specific-time schedules
+    # * ---------------------------------------------------------
+    # * Specific-time schedules
     #
-    # Supported:
-    #   schedule a task at 10 PM to open Chrome
-    #   schedule a task tomorrow at 10 PM to open Chrome
-    #   schedule a task every day at 10 PM to open Chrome
-    # ---------------------------------------------------------
+    # * Supported:
+    # * schedule a task at 10 PM to open Chrome
+    # * schedule a task tomorrow at 10 PM to open Chrome
+    # * schedule a task every day at 10 PM to open Chrome
+    # * ---------------------------------------------------------
     match = re.match(
         r"^schedule\s+(?:a\s+)?task\s+(?:(every\s+day)\s+)?"
         r"(?:(tomorrow)\s+)?at\s+"
@@ -109,9 +109,9 @@ def schedule_route(command: str):
                 "recurrence": "daily" if recurring else "none",
             }]
 
-    # ---------------------------------------------------------
-    # List schedules
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * List schedules
+    # * ---------------------------------------------------------
     if command.lower() in {
         "show my scheduled tasks",
         "list scheduled tasks",
@@ -122,9 +122,9 @@ def schedule_route(command: str):
             "action": "list_schedules"
         }]
 
-    # ---------------------------------------------------------
-    # Cancel/delete schedule
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Cancel/delete schedule
+    # * ---------------------------------------------------------
     match = re.match(
         r"^(?:cancel|delete)\s+"
         r"(?:scheduled\s+task\s+)?"

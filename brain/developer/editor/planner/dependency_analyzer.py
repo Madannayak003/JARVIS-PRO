@@ -16,7 +16,7 @@ class DependencyAnalyzer:
     related project files.
     """
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def analyze(
         self,
@@ -27,9 +27,9 @@ class DependencyAnalyzer:
 
             return request
 
-        # ------------------------------------------
-        # Save primary files
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Save primary files
+        # * ------------------------------------------
 
         request.primary_files = list(
 
@@ -43,9 +43,9 @@ class DependencyAnalyzer:
 
         )
 
-        # ------------------------------------------
-        # Add files that import the selected modules
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Add files that import the selected modules
+        # * ------------------------------------------
 
         for module, files in request.project_index.imports.items():
 
@@ -55,9 +55,9 @@ class DependencyAnalyzer:
 
                     selected.update(files)
 
-        # ------------------------------------------
-        # Automatically include related tests
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Automatically include related tests
+        # * ------------------------------------------
 
         for file in request.project_index.files:
 
@@ -77,9 +77,9 @@ class DependencyAnalyzer:
 
                     selected.add(file)
 
-        # ------------------------------------------
-        # Save dependent files
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Save dependent files
+        # * ------------------------------------------
 
         request.dependent_files = sorted(
 

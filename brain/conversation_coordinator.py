@@ -62,44 +62,44 @@ from brain.clarification_manager import (
 )
 from core.diagnostics import debug_print
 
-# ============================================================
-# Coordinator Result
-# ============================================================
+# * ============================================================
+# * Coordinator Result
+# * ============================================================
 
 @dataclass
 class ConversationAnalysis:
 
-    # --------------------------------------------------------
-    # Original input
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Original input
+    # * --------------------------------------------------------
 
     raw_input: str = ""
 
-    # --------------------------------------------------------
-    # Understanding
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Understanding
+    # * --------------------------------------------------------
 
     understanding: Optional[
         ConversationUnderstanding
     ] = None
 
-    # --------------------------------------------------------
-    # Follow-up resolution
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Follow-up resolution
+    # * --------------------------------------------------------
 
     follow_up: Optional[
         FollowUpResolution
     ] = None
 
-    # --------------------------------------------------------
-    # Reference resolutions
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Reference resolutions
+    # * --------------------------------------------------------
 
     references: dict[str, ReferenceResolution] = None
 
-    # --------------------------------------------------------
-    # Clarification state
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Clarification state
+    # * --------------------------------------------------------
 
     clarification_waiting: bool = False
 
@@ -107,16 +107,16 @@ class ConversationAnalysis:
 
     clarification_question: Optional[str] = None
 
-    # --------------------------------------------------------
-    # Context snapshot
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Context snapshot
+    # * --------------------------------------------------------
 
     context: dict[str, Any] = None
 
 
-# ============================================================
-# Conversation Coordinator
-# ============================================================
+# * ============================================================
+# * Conversation Coordinator
+# * ============================================================
 
 class ConversationCoordinator:
 
@@ -131,23 +131,23 @@ class ConversationCoordinator:
         clarification_manager=None,
     ):
 
-        # ----------------------------------------------------
-        # Existing conversation history
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Existing conversation history
+        # * ----------------------------------------------------
 
         self.conversation = (
             conversation_manager
         )
 
-        # ----------------------------------------------------
-        # Existing ConversationStateManager
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Existing ConversationStateManager
+        # * ----------------------------------------------------
 
         self.state = state_manager
 
-        # ----------------------------------------------------
-        # New natural conversation context
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * New natural conversation context
+        # * ----------------------------------------------------
 
         self.context = (
             context_manager
@@ -155,27 +155,27 @@ class ConversationCoordinator:
             else conversation_context
         )
 
-        # ----------------------------------------------------
-        # Understanding
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Understanding
+        # * ----------------------------------------------------
 
         self.understanding = (
             understanding_engine
             or ConversationUnderstandingEngine()
         )
 
-        # ----------------------------------------------------
-        # Reference resolver
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Reference resolver
+        # * ----------------------------------------------------
 
         self.reference_resolver = (
             reference_resolver
             or ReferenceResolver()
         )
 
-        # ----------------------------------------------------
-        # Follow-up resolver
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Follow-up resolver
+        # * ----------------------------------------------------
 
         self.follow_up = (
             follow_up_resolver
@@ -184,18 +184,18 @@ class ConversationCoordinator:
             )
         )
 
-        # ----------------------------------------------------
-        # Clarification manager
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Clarification manager
+        # * ----------------------------------------------------
 
         self.clarification = (
             clarification_manager
             or ClarificationManager()
         )
 
-    # ========================================================
-    # Analyze Input
-    # ========================================================
+    # * ========================================================
+    # * Analyze Input
+    # * ========================================================
 
     def analyze(
         self,
@@ -214,19 +214,19 @@ class ConversationCoordinator:
             self.context.snapshot()
         )
 
-        # ----------------------------------------------------
-        # Update last input
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Update last input
+        # * ----------------------------------------------------
 
         self.context.set_user_input(
             raw_input
         )
 
-        # ----------------------------------------------------
-        # Existing conversation history
+        # * ----------------------------------------------------
+        # * Existing conversation history
         #
-        # Read-only.
-        # ----------------------------------------------------
+        # * Read-only.
+        # * ----------------------------------------------------
 
         previous_messages = None
 
@@ -245,28 +245,28 @@ class ConversationCoordinator:
 
                 previous_messages = None
 
-        # ----------------------------------------------------
-        # Conversation understanding
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Conversation understanding
+        # * ----------------------------------------------------
 
-        # ----------------------------------------------------
-        # Determine conversational waiting state
+        # * ----------------------------------------------------
+        # * Determine conversational waiting state
         #
-        # Existing ConversationStateManager remains
-        # authoritative for existing JARVIS task ownership.
+        # * Existing ConversationStateManager remains
+        # * authoritative for existing JARVIS task ownership.
         #
-        # New ClarificationManager is also checked because
-        # Natural Conversation needs to recognize answers
-        # such as:
+        # * New ClarificationManager is also checked because
+        # * Natural Conversation needs to recognize answers
+        # * such as:
         #
-        #     "google"
-        #     "Rahul"
-        #     "yes"
-        #     "Chrome"
+        # * "google"
+        # * "Rahul"
+        # * "yes"
+        # * "Chrome"
         #
-        # as answers when JARVIS is explicitly waiting
-        # for clarification.
-        # ----------------------------------------------------
+        # * as answers when JARVIS is explicitly waiting
+        # * for clarification.
+        # * ----------------------------------------------------
 
         understanding_state = self.context
 
@@ -300,17 +300,17 @@ class ConversationCoordinator:
             )
         )
 
-        # ----------------------------------------------------
-        # Save relationship
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Save relationship
+        # * ----------------------------------------------------
 
         self.context.set_relation(
             understanding.relation.value
         )
 
-        # ----------------------------------------------------
-        # Resolve references
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Resolve references
+        # * ----------------------------------------------------
 
         reference_results = {}
 
@@ -341,9 +341,9 @@ class ConversationCoordinator:
                     f"Reference error: {e}"
                 )
 
-        # ----------------------------------------------------
-        # Follow-up resolution
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Follow-up resolution
+        # * ----------------------------------------------------
 
         follow_up = None
 
@@ -366,9 +366,9 @@ class ConversationCoordinator:
                 f"Follow-up error: {e}"
             )
 
-        # ----------------------------------------------------
-        # Clarification state
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Clarification state
+        # * ----------------------------------------------------
 
         clarification_waiting = False
 
@@ -399,9 +399,9 @@ class ConversationCoordinator:
                 f"Clarification error: {e}"
             )
 
-        # ----------------------------------------------------
-        # Build analysis result
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Build analysis result
+        # * ----------------------------------------------------
 
         return ConversationAnalysis(
 
@@ -429,9 +429,9 @@ class ConversationCoordinator:
 
         )
 
-    # ========================================================
-    # Observe Input
-    # ========================================================
+    # * ========================================================
+    # * Observe Input
+    # * ========================================================
 
     def observe(
         self,
@@ -454,12 +454,12 @@ class ConversationCoordinator:
 
         except Exception as e:
 
-            # ------------------------------------------------
-            # Critical safety rule:
+            # * ------------------------------------------------
+            # ! Critical safety rule:
             #
-            # Natural Conversation must NEVER break the
-            # existing JARVIS runtime.
-            # ------------------------------------------------
+            # ! Natural Conversation must NEVER break the
+            # * existing JARVIS runtime.
+            # * ------------------------------------------------
 
             print(
                 "[CONVERSATION] "
@@ -471,9 +471,9 @@ class ConversationCoordinator:
                 context=self.context.snapshot(),
             )
 
-    # ========================================================
-    # Update Context After Execution
-    # ========================================================
+    # * ========================================================
+    # * Update Context After Execution
+    # * ========================================================
 
     def record_execution(
         self,
@@ -531,9 +531,9 @@ class ConversationCoordinator:
             self.context.snapshot()
         )
 
-    # ========================================================
-    # Record Assistant Response
-    # ========================================================
+    # * ========================================================
+    # * Record Assistant Response
+    # * ========================================================
 
     def record_response(
         self,
@@ -545,11 +545,11 @@ class ConversationCoordinator:
             response
         )
 
-        # Chat turns do not pass through execution-context recording. Keep the
-        # existing topic field useful for the next follow-up by deriving it
-        # from the completed request when it is expressed as a subject
-        # question. This is generic and deliberately does not know any topic
-        # names.
+        # ! Chat turns do not pass through execution-context recording. Keep the
+        # * existing topic field useful for the next follow-up by deriving it
+        # * from the completed request when it is expressed as a subject
+        # * question. This is generic and deliberately does not know any topic
+        # * names.
         topic = self._topic_from_request(user_input)
         if topic:
             self.context.set_topic(topic)
@@ -579,9 +579,9 @@ class ConversationCoordinator:
 
         return None
 
-    # ========================================================
-    # Start Clarification
-    # ========================================================
+    # * ========================================================
+    # * Start Clarification
+    # * ========================================================
 
     def start_clarification(
         self,
@@ -614,9 +614,9 @@ class ConversationCoordinator:
             field
         )
 
-    # ========================================================
-    # Resolve Clarification
-    # ========================================================
+    # * ========================================================
+    # * Resolve Clarification
+    # * ========================================================
 
     def resolve_clarification(
         self,
@@ -644,9 +644,9 @@ class ConversationCoordinator:
             self.context.clear_pending()
         return waiting
 
-    # ========================================================
-    # Consume Clarification Reply
-    # ========================================================
+    # * ========================================================
+    # * Consume Clarification Reply
+    # * ========================================================
 
     @staticmethod
     def _is_explicit_new_request(text: str) -> bool:
@@ -714,10 +714,10 @@ class ConversationCoordinator:
             self.context.clear_pending()
             return {"status": "cancelled"}
 
-        # The dispatcher reached this method only because a clarification is
-        # active. Confirmation words and longer natural-language replies are
-        # still answers even though the general-purpose classifier may label
-        # them as confirmation or a new request outside this narrow context.
+        # * The dispatcher reached this method only because a clarification is
+        # * active. Confirmation words and longer natural-language replies are
+        # * still answers even though the general-purpose classifier may label
+        # * them as confirmation or a new request outside this narrow context.
         self.context.set_relation(
             ConversationRelation.CLARIFICATION_ANSWER.value
         )
@@ -741,9 +741,9 @@ class ConversationCoordinator:
             for value in metadata.get("accepted_answers", [])
         }
 
-        # A structured clarification can state the valid reply values. If the
-        # reply is not one of them, it is clearly a new command rather than an
-        # answer that should keep recreating the same clarification.
+        # * A structured clarification can state the valid reply values. If the
+        # * reply is not one of them, it is clearly a new command rather than an
+        # * answer that should keep recreating the same clarification.
         if accepted_answers:
             normalized_answer = self._normalized_answer(answer)
 
@@ -771,9 +771,9 @@ class ConversationCoordinator:
             "merged_request": merged_request,
         }
 
-    # ========================================================
-    # Clear
-    # ========================================================
+    # * ========================================================
+    # * Clear
+    # * ========================================================
 
     def clear(self):
 
@@ -781,9 +781,9 @@ class ConversationCoordinator:
 
         self.clarification.clear()
 
-    # ========================================================
-    # Debug Info
-    # ========================================================
+    # * ========================================================
+    # ! Debug Info
+    # * ========================================================
 
     def info(self) -> dict:
 
@@ -798,9 +798,9 @@ class ConversationCoordinator:
         }
 
 
-# ============================================================
-# Shared Coordinator
-# ============================================================
+# * ============================================================
+# * Shared Coordinator
+# * ============================================================
 
 from brain.brain import brain
 

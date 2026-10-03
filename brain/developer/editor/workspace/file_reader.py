@@ -13,9 +13,9 @@ class FileReader:
     Reads the contents of selected files.
     """
 
-    MAX_FILE_SIZE = 1024 * 1024  # 1 MB
+    MAX_FILE_SIZE = 1024 * 1024  # * 1 MB
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def read(
         self,

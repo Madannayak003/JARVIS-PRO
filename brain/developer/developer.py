@@ -42,7 +42,7 @@ def _launch_project_assets(folder_path: str) -> None:
     sys_platform = platform.system()
     abs_folder = os.path.abspath(folder_path)
 
-    # 1. Open project folder in explorer
+    # * 1. Open project folder in explorer
     try:
         if sys_platform == "Windows":
             os.startfile(abs_folder)
@@ -53,7 +53,7 @@ def _launch_project_assets(folder_path: str) -> None:
     except Exception:
         pass
 
-    # 2. Collect project files
+    # * 2. Collect project files
     html_files = []
     ino_files = []
 
@@ -66,7 +66,7 @@ def _launch_project_assets(folder_path: str) -> None:
             elif ext == ".ino":
                 ino_files.append(full_path)
 
-    # 3. Launch HTML in browser (prefer index.html)
+    # * 3. Launch HTML in browser (prefer index.html)
     if html_files:
         target_html = next(
             (f for f in html_files if os.path.basename(f).lower() == "index.html"),
@@ -77,14 +77,14 @@ def _launch_project_assets(folder_path: str) -> None:
         except Exception:
             pass
 
-    # 4. Launch Arduino / ESP sketch cleanly
+    # * 4. Launch Arduino / ESP sketch cleanly
     if ino_files:
         target_ino = ino_files[0]
         sketch_name = os.path.splitext(os.path.basename(target_ino))[0]
         parent_dir = os.path.dirname(target_ino)
         parent_name = os.path.basename(parent_dir)
 
-        # Ensure folder name matches .ino file so Arduino IDE doesn't show moving popup
+        # * Ensure folder name matches .ino file so Arduino IDE doesn't show moving popup
         if parent_name != sketch_name:
             proper_dir = os.path.join(parent_dir, sketch_name)
             os.makedirs(proper_dir, exist_ok=True)
@@ -93,10 +93,10 @@ def _launch_project_assets(folder_path: str) -> None:
             target_ino = new_ino_path
 
         if sys_platform == "Windows":
-            # DETACHED_PROCESS (0x00000008) + CREATE_NEW_PROCESS_GROUP (0x00000200)
+            # * DETACHED_PROCESS (0x00000008) + CREATE_NEW_PROCESS_GROUP (0x00000200)
             DETACHED_FLAGS = 0x00000008 | 0x00000200
 
-            # Use 'cmd /c start' to launch completely detached from terminal IO
+            # * Use 'cmd /c start' to launch completely detached from terminal IO
             subprocess.Popen(
                 f'cmd.exe /c start "" "{target_ino}"',
                 shell=True,

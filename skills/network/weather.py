@@ -15,9 +15,9 @@ from core.registry import register
 from voice.manager import speak
 from services.location import location_service
 
-# =========================================================
-# Configuration
-# =========================================================
+# * =========================================================
+# * Configuration
+# * =========================================================
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
@@ -30,9 +30,9 @@ NOMINATIM_HEADERS = {
 }
 
 
-# =========================================================
-# Weather Code Descriptions
-# =========================================================
+# * =========================================================
+# * Weather Code Descriptions
+# * =========================================================
 
 WEATHER_CODES = {
     0: "clear skies",
@@ -75,9 +75,9 @@ WEATHER_CODES = {
     99: "a thunderstorm with heavy hail",
 }
 
-# =========================================================
-# Location Name Normalization
-# =========================================================
+# * =========================================================
+# * Location Name Normalization
+# * =========================================================
 
 LOCATION_ALIASES = {
     "banglore": "Bangalore",
@@ -112,9 +112,9 @@ def _normalize_location_name(location):
 
     return normalized
 
-# =========================================================
-# Nominatim Result Selection
-# =========================================================
+# * =========================================================
+# * Nominatim Result Selection
+# * =========================================================
 
 PREFERRED_PLACE_TYPES = {
     "city",
@@ -151,9 +151,9 @@ def _select_nominatim_result(results, requested_location):
         "administrative",
     }
 
-    # -----------------------------------------------------
-    # 1. Exact geographic result
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * 1. Exact geographic result
+    # * -----------------------------------------------------
 
     for result in results:
 
@@ -177,9 +177,9 @@ def _select_nominatim_result(results, requested_location):
             ):
                 return result
 
-    # -----------------------------------------------------
-    # 2. Geographic result whose name matches the request
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * 2. Geographic result whose name matches the request
+    # * -----------------------------------------------------
 
     for result in results:
 
@@ -206,10 +206,10 @@ def _select_nominatim_result(results, requested_location):
             ):
                 return result
 
-    # -----------------------------------------------------
-    # 3. POI whose address identifies the requested
-    #    geographic locality.
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * 3. POI whose address identifies the requested
+    # * geographic locality.
+    # * -----------------------------------------------------
 
     for result in results:
 
@@ -243,15 +243,15 @@ def _select_nominatim_result(results, requested_location):
 
                 return result
 
-    # -----------------------------------------------------
-    # 4. Final fallback
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * 4. Final fallback
+    # * -----------------------------------------------------
 
     return results[0]
 
-# =========================================================
-# Nominatim Geocoding
-# =========================================================
+# * =========================================================
+# * Nominatim Geocoding
+# * =========================================================
 
 def _query_nominatim(query):
     """
@@ -308,9 +308,9 @@ def _has_geographic_result(results):
 
     return False
 
-# =========================================================
-# Resolve Location
-# =========================================================
+# * =========================================================
+# * Resolve Location
+# * =========================================================
 
 def _resolve_location(location=None):
     """
@@ -336,9 +336,9 @@ def _resolve_location(location=None):
     if not location:
         return _detect_current_location()
 
-    # -----------------------------------------------------
-    # Normalize common speech-recognition variants
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Normalize common speech-recognition variants
+    # * -----------------------------------------------------
 
     original_location = location
 
@@ -354,9 +354,9 @@ def _resolve_location(location=None):
             f"to '{location}'."
         )
 
-    # -----------------------------------------------------
-    # Primary geocoder: Open-Meteo
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Primary geocoder: Open-Meteo
+    # * -----------------------------------------------------
 
     try:
 
@@ -382,13 +382,13 @@ def _resolve_location(location=None):
 
         if results:
 
-            # -----------------------------------------------------
-            # Prefer India results.
+            # * -----------------------------------------------------
+            # * Prefer India results.
             #
-            # Open-Meteo can return a similarly named place in
-            # another country. For JARVIS's current location
-            # context, reject those results.
-            # -----------------------------------------------------
+            # * Open-Meteo can return a similarly named place in
+            # * another country. For JARVIS's current location
+            # * context, reject those results.
+            # * -----------------------------------------------------
 
             india_results = [
                 candidate
@@ -421,9 +421,9 @@ def _resolve_location(location=None):
 
                 requested_lower = location.lower()
 
-                # -------------------------------------------------
-                # Prefer exact name match.
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Prefer exact name match.
+                # * -------------------------------------------------
 
                 for candidate in results:
 
@@ -471,15 +471,15 @@ def _resolve_location(location=None):
             "Trying Nominatim fallback."
         )
 
-    # -----------------------------------------------------
-    # Secondary geocoder: Nominatim
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Secondary geocoder: Nominatim
+    # * -----------------------------------------------------
 
     try:
 
-        # -------------------------------------------------
-        # First Nominatim query
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * First Nominatim query
+        # * -------------------------------------------------
 
         nominatim_queries = [
             location,
@@ -489,10 +489,10 @@ def _resolve_location(location=None):
             location
         )
 
-        # -------------------------------------------------
-        # If only POIs were returned, try more geographic
-        # search forms.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * If only POIs were returned, try more geographic
+        # * search forms.
+        # * -------------------------------------------------
 
         if not _has_geographic_result(results):
 
@@ -519,9 +519,9 @@ def _resolve_location(location=None):
                     results = candidate_results
                     break
 
-        # -------------------------------------------------
-        # Select the best geographic result.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Select the best geographic result.
+        # * -------------------------------------------------
 
         result = _select_nominatim_result(
             results,
@@ -548,9 +548,9 @@ def _resolve_location(location=None):
             f"{result.get('display_name', location)}"
         )
 
-        # -------------------------------------------------
-        # Best human-readable location name
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Best human-readable location name
+        # * -------------------------------------------------
 
         name = (
             address.get("city")
@@ -586,9 +586,9 @@ def _resolve_location(location=None):
         return None
 
 
-# =========================================================
-# Detect Current Location
-# =========================================================
+# * =========================================================
+# * Detect Current Location
+# * =========================================================
 
 def _detect_current_location():
     """
@@ -603,9 +603,9 @@ def _detect_current_location():
     as a fallback when Windows location is unavailable.
     """
 
-    # -----------------------------------------------------
-    # Primary: Windows Location
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Primary: Windows Location
+    # * -----------------------------------------------------
 
     try:
         location = asyncio.run(
@@ -641,9 +641,9 @@ def _detect_current_location():
             f"[WEATHER WINDOWS LOCATION ERROR] {e}"
         )
 
-    # -----------------------------------------------------
-    # Fallback: IP geolocation
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Fallback: IP geolocation
+    # * -----------------------------------------------------
 
     try:
 
@@ -685,9 +685,9 @@ def _detect_current_location():
             f"[WEATHER PRIMARY LOCATION ERROR] {e}"
         )
 
-    # -----------------------------------------------------
-    # Second fallback: ipwho.is
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Second fallback: ipwho.is
+    # * -----------------------------------------------------
 
     try:
 
@@ -744,9 +744,9 @@ def _detect_current_location():
 
     return None
 
-# =========================================================
-# Get Weather
-# =========================================================
+# * =========================================================
+# * Get Weather
+# * =========================================================
 
 def _get_weather(latitude, longitude):
     """
@@ -782,9 +782,9 @@ def _get_weather(latitude, longitude):
     return response.json()
 
 
-# =========================================================
-# Natural Weather Response
-# =========================================================
+# * =========================================================
+# * Natural Weather Response
+# * =========================================================
 
 def _build_message(location, weather):
     """
@@ -829,9 +829,9 @@ def _build_message(location, weather):
 
     parts = []
 
-    # -----------------------------------------------------
-    # Temperature
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Temperature
+    # * -----------------------------------------------------
 
     if temperature is not None:
 
@@ -839,9 +839,9 @@ def _build_message(location, weather):
             f"It's {round(temperature)} degrees"
         )
 
-    # -----------------------------------------------------
-    # Condition
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Condition
+    # * -----------------------------------------------------
 
     if condition:
 
@@ -855,9 +855,9 @@ def _build_message(location, weather):
         + "."
     )
 
-    # -----------------------------------------------------
-    # Feels Like
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Feels Like
+    # * -----------------------------------------------------
 
     if feels_like is not None:
 
@@ -866,9 +866,9 @@ def _build_message(location, weather):
             f"{round(feels_like)} degrees."
         )
 
-    # -----------------------------------------------------
-    # Humidity
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Humidity
+    # * -----------------------------------------------------
 
     if humidity is not None:
 
@@ -877,9 +877,9 @@ def _build_message(location, weather):
             f"{round(humidity)} percent."
         )
 
-    # -----------------------------------------------------
-    # Wind
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Wind
+    # * -----------------------------------------------------
 
     if wind is not None:
 
@@ -888,9 +888,9 @@ def _build_message(location, weather):
             f"{round(wind)} kilometers per hour."
         )
 
-    # -----------------------------------------------------
-    # Rain
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Rain
+    # * -----------------------------------------------------
 
     if precipitation is not None:
 
@@ -905,9 +905,9 @@ def _build_message(location, weather):
     return message
 
 
-# =========================================================
-# Weather Action
-# =========================================================
+# * =========================================================
+# * Weather Action
+# * =========================================================
 
 def weather(data=None):
     """
@@ -931,9 +931,9 @@ def weather(data=None):
 
     try:
 
-        # -------------------------------------------------
-        # Location
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Location
+        # * -------------------------------------------------
 
         location = (
             data.get("location")
@@ -946,9 +946,9 @@ def weather(data=None):
             f"{location or 'current location'}"
         )
 
-        # -------------------------------------------------
-        # Resolve location
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Resolve location
+        # * -------------------------------------------------
 
         resolved = _resolve_location(
             location
@@ -963,18 +963,18 @@ def weather(data=None):
 
             return False
 
-        # -------------------------------------------------
-        # Get weather
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Get weather
+        # * -------------------------------------------------
 
         weather_data = _get_weather(
             resolved["latitude"],
             resolved["longitude"],
         )
 
-        # -------------------------------------------------
-        # Natural response
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Natural response
+        # * -------------------------------------------------
 
         message = _build_message(
             resolved,
@@ -983,9 +983,9 @@ def weather(data=None):
 
         speak(message)
 
-        # -------------------------------------------------
-        # Debug
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # ! Debug
+        # * -------------------------------------------------
 
         current = weather_data.get(
             "current",
@@ -1029,9 +1029,9 @@ def weather(data=None):
         return False
 
 
-# =========================================================
-# Registry
-# =========================================================
+# * =========================================================
+# * Registry
+# * =========================================================
 
 register(
     "weather",

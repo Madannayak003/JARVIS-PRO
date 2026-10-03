@@ -1,30 +1,30 @@
 import re
 
 
-# =========================================================
-# JARVIS PRO
-# Vision Router
+# * =========================================================
+# * JARVIS PRO
+# * Vision Router
 #
-# Three independent domains:
+# * Three independent domains:
 #
-#   1. CAMERA
-#   2. YOLO VISION
-#   3. SCREEN VISION
+# * 1. CAMERA
+# * 2. YOLO VISION
+# * 3. SCREEN VISION
 #
-# This router ONLY decides which action to execute.
-# It does NOT start/stop engines directly.
-# =========================================================
+# * This router ONLY decides which action to execute.
+# * It does NOT start/stop engines directly.
+# * =========================================================
 
 
-# =========================================================
-# CAMERA COMMANDS
-# =========================================================
+# * =========================================================
+# * CAMERA COMMANDS
+# * =========================================================
 
 CAMERA_COMMANDS = {
 
-    # -----------------------------------------------------
-    # Photo
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Photo
+    # * -----------------------------------------------------
 
     "take photo": {
         "action": "capture"
@@ -50,9 +50,9 @@ CAMERA_COMMANDS = {
         "action": "capture"
     },
 
-    # -----------------------------------------------------
-    # Camera Preview
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Camera Preview
+    # * -----------------------------------------------------
 
     "open camera": {
         "action": "camera_preview"
@@ -70,9 +70,9 @@ CAMERA_COMMANDS = {
         "action": "camera_preview"
     },
 
-    # -----------------------------------------------------
-    # Camera Close
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Camera Close
+    # * -----------------------------------------------------
 
     "close camera": {
         "action": "camera_close"
@@ -86,9 +86,9 @@ CAMERA_COMMANDS = {
         "action": "camera_close"
     },
 
-    # -----------------------------------------------------
-    # Recording
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Recording
+    # * -----------------------------------------------------
 
     "start recording": {
         "action": "start_recording"
@@ -118,9 +118,9 @@ CAMERA_COMMANDS = {
         "action": "stop_recording"
     },
 
-    # -----------------------------------------------------
-    # Camera Status
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Camera Status
+    # * -----------------------------------------------------
 
     "camera status": {
         "action": "camera_status"
@@ -137,9 +137,9 @@ CAMERA_COMMANDS = {
 }
 
 
-# =========================================================
-# YOLO VISION COMMANDS
-# =========================================================
+# * =========================================================
+# * YOLO VISION COMMANDS
+# * =========================================================
 
 YOLO_VISION_COMMANDS = {
 
@@ -151,9 +151,9 @@ YOLO_VISION_COMMANDS = {
         "action": "vision_stop"
     },
 
-    # -----------------------------------------------------
-    # Scene Description
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Scene Description
+    # * -----------------------------------------------------
 
     "what do you see": {
         "action": "vision_describe"
@@ -191,9 +191,9 @@ YOLO_VISION_COMMANDS = {
         "action": "vision_describe"
     },
 
-    # -----------------------------------------------------
-    # Position
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Position
+    # * -----------------------------------------------------
 
     "what is in the center": {
         "action": "vision_position",
@@ -232,9 +232,9 @@ YOLO_VISION_COMMANDS = {
 
 }
 
-# =========================================================
-# LOCAL FACE REGISTRATION
-# =========================================================
+# * =========================================================
+# * LOCAL FACE REGISTRATION
+# * =========================================================
 
 FACE_REGISTRATION_COMMANDS = {
     "register face": {"action": "register_face"},
@@ -301,9 +301,9 @@ def _match_face_registration(command):
     return None
 
 
-# =========================================================
-# SCREEN VISION COMMANDS
-# =========================================================
+# * =========================================================
+# * SCREEN VISION COMMANDS
+# * =========================================================
 
 SCREEN_VISION_COMMANDS = {
 
@@ -358,9 +358,9 @@ SCREEN_VISION_COMMANDS = {
 }
 
 
-# =========================================================
-# YOLO OBJECT ALIASES
-# =========================================================
+# * =========================================================
+# * YOLO OBJECT ALIASES
+# * =========================================================
 
 OBJECT_ALIASES = {
 
@@ -388,9 +388,9 @@ OBJECT_ALIASES = {
 }
 
 
-# =========================================================
-# POSITION PATTERNS
-# =========================================================
+# * =========================================================
+# * POSITION PATTERNS
+# * =========================================================
 
 POSITION_PATTERNS = {
 
@@ -425,9 +425,9 @@ POSITION_PATTERNS = {
 }
 
 
-# =========================================================
-# NORMALIZE OBJECT
-# =========================================================
+# * =========================================================
+# * NORMALIZE OBJECT
+# * =========================================================
 
 def _normalize_object(object_name):
 
@@ -439,15 +439,15 @@ def _normalize_object(object_name):
     )
 
 
-# =========================================================
-# YOLO OBJECT COUNT
+# * =========================================================
+# * YOLO OBJECT COUNT
 #
-# Examples:
+# * Examples:
 #
-#   how many people
-#   how many cars are there
-#   how many bottles do you see
-# =========================================================
+# * how many people
+# * how many cars are there
+# * how many bottles do you see
+# * =========================================================
 
 def _match_object_count(command):
 
@@ -477,15 +477,15 @@ def _match_object_count(command):
     }
 
 
-# =========================================================
-# YOLO OBJECT EXISTENCE
+# * =========================================================
+# * YOLO OBJECT EXISTENCE
 #
-# Examples:
+# * Examples:
 #
-#   is there a person
-#   do you see a phone
-#   can you see a car
-# =========================================================
+# * is there a person
+# * do you see a phone
+# * can you see a car
+# * =========================================================
 
 def _match_object_existence(command):
 
@@ -516,9 +516,9 @@ def _match_object_existence(command):
     }
     
     
-# =========================================================
-# YOLO OBJECT LOCATION
-# =========================================================
+# * =========================================================
+# * YOLO OBJECT LOCATION
+# * =========================================================
 
 def _match_object_location(command):
 
@@ -545,9 +545,9 @@ def _match_object_location(command):
     }
 
 
-# =========================================================
-# YOLO OBJECT TARGET
-# =========================================================
+# * =========================================================
+# * YOLO OBJECT TARGET
+# * =========================================================
 
 _GENERIC_REFERENTIAL_TARGETS = {
     "one",
@@ -600,9 +600,9 @@ def _match_object_target(command):
     return plan
 
 
-# =========================================================
-# YOLO POSITION
-# =========================================================
+# * =========================================================
+# * YOLO POSITION
+# * =========================================================
 
 def _match_position(command):
 
@@ -620,21 +620,21 @@ def _match_position(command):
     return None
 
 
-# =========================================================
-# STATIC COMMAND MATCHER
-# =========================================================
+# * =========================================================
+# * STATIC COMMAND MATCHER
+# * =========================================================
 
 def _match_static(command, commands):
 
-    # Exact match first.
+    # * Exact match first.
 
     if command in commands:
 
         return commands[command]
 
-    # Longer phrases first.
-    # Prevents a shorter phrase from winning
-    # when a more specific phrase exists.
+    # * Longer phrases first.
+    # * Prevents a shorter phrase from winning
+    # * when a more specific phrase exists.
 
     for key in sorted(
         commands.keys(),
@@ -649,9 +649,9 @@ def _match_static(command, commands):
     return None
 
 
-# =========================================================
-# MAIN VISION ROUTER
-# =========================================================
+# * =========================================================
+# * MAIN VISION ROUTER
+# * =========================================================
 
 def vision_route(command):
 
@@ -662,8 +662,8 @@ def vision_route(command):
     raw_command = command.strip()
     command = raw_command.lower()
 
-    # Registration is deterministic and must be checked before generic
-    # object/scene routing. The actual name is sanitized by the skill.
+    # ! Registration is deterministic and must be checked before generic
+    # * object/scene routing. The actual name is sanitized by the skill.
     plan = _match_face_delete(raw_command)
     if plan:
         return [plan]
@@ -672,9 +672,9 @@ def vision_route(command):
     if plan:
         return [plan]
 
-    # =====================================================
-    # 1. CAMERA
-    # =====================================================
+    # * =====================================================
+    # * 1. CAMERA
+    # * =====================================================
 
     plan = _match_static(
         command,
@@ -685,20 +685,20 @@ def vision_route(command):
 
         return [plan]
 
-    # =====================================================
-    # 2. SCREEN VISION
+    # * =====================================================
+    # * 2. SCREEN VISION
     #
-    # IMPORTANT:
-    # Check screen vision BEFORE generic YOLO phrases.
+    # ! IMPORTANT:
+    # * Check screen vision BEFORE generic YOLO phrases.
     #
-    # Example:
+    # * Example:
     #
-    # "what do you see on my screen"
+    # * "what do you see on my screen"
     #
-    # must never become:
+    # ! must never become:
     #
-    # vision_describe
-    # =====================================================
+    # * vision_describe
+    # * =====================================================
 
     plan = _match_static(
         command,
@@ -709,9 +709,9 @@ def vision_route(command):
 
         return [plan]
 
-    # =====================================================
-    # 3. YOLO OBJECT COUNT
-    # =====================================================
+    # * =====================================================
+    # * 3. YOLO OBJECT COUNT
+    # * =====================================================
 
     plan = _match_object_count(
         command
@@ -721,9 +721,9 @@ def vision_route(command):
 
         return [plan]
 
-    # =====================================================
-    # 4. YOLO OBJECT EXISTENCE
-    # =====================================================
+    # * =====================================================
+    # * 4. YOLO OBJECT EXISTENCE
+    # * =====================================================
 
     plan = _match_object_existence(
         command
@@ -733,9 +733,9 @@ def vision_route(command):
 
         return [plan]
     
-    # =====================================================
-    # 5. YOLO OBJECT LOCATION
-    # =====================================================
+    # * =====================================================
+    # * 5. YOLO OBJECT LOCATION
+    # * =====================================================
 
     plan = _match_object_location(
         command
@@ -745,9 +745,9 @@ def vision_route(command):
         return [plan]
 
 
-    # =====================================================
-    # 6. YOLO OBJECT TARGET
-    # =====================================================
+    # * =====================================================
+    # * 6. YOLO OBJECT TARGET
+    # * =====================================================
 
     plan = _match_object_target(
         command
@@ -756,9 +756,9 @@ def vision_route(command):
     if plan:
         return [plan]
 
-    # =====================================================
-    # 7. YOLO POSITION
-    # =====================================================
+    # * =====================================================
+    # * 7. YOLO POSITION
+    # * =====================================================
 
     plan = _match_position(
         command
@@ -768,9 +768,9 @@ def vision_route(command):
 
         return [plan]
 
-    # =====================================================
-    # 8. YOLO SCENE DESCRIPTION
-    # =====================================================
+    # * =====================================================
+    # * 8. YOLO SCENE DESCRIPTION
+    # * =====================================================
 
     plan = _match_static(
         command,
@@ -781,8 +781,8 @@ def vision_route(command):
 
         return [plan]
 
-    # =====================================================
-    # No Vision Match
-    # =====================================================
+    # * =====================================================
+    # * No Vision Match
+    # * =====================================================
 
     return None

@@ -38,9 +38,9 @@ from config.environment import get_env
 from config.settings import get_assistant_display_name
 
 
-# =========================================================
-# Configuration
-# =========================================================
+# * =========================================================
+# * Configuration
+# * =========================================================
 
 OLLAMA_URL = get_env(
     "OLLAMA_API_URL",
@@ -51,9 +51,9 @@ OLLAMA_MODEL = "jarvis"
 
 OLLAMA_TIMEOUT = 120
 
-# =========================================================
-# Offline Voice Instructions
-# =========================================================
+# * =========================================================
+# * Offline Voice Instructions
+# * =========================================================
 
 def _offline_voice_instructions() -> str:
     return f"""
@@ -76,9 +76,9 @@ Response rules:
 """
 
 
-# =========================================================
-# Offline Brain
-# =========================================================
+# * =========================================================
+# * Offline Brain
+# * =========================================================
 
 class OfflineAI:
 
@@ -86,9 +86,9 @@ class OfflineAI:
 
         print("[OFFLINE AI] Initializing...")
 
-        # -------------------------------------------------
-        # Existing Stage 4 components
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Existing Stage 4 components
+        # * -------------------------------------------------
 
         self.profile = ProfileManager()
 
@@ -103,9 +103,9 @@ class OfflineAI:
 
         self.prompt_builder = PromptBuilder()
 
-        # Use the shared Ollama provider contract while forcing the provider
-        # to remain local. The model can still be selected explicitly through
-        # OLLAMA_MODEL, with the existing offline ``jarvis`` default retained.
+        # * Use the shared Ollama provider contract while forcing the provider
+        # * to remain local. The model can still be selected explicitly through
+        # * OLLAMA_MODEL, with the existing offline ``jarvis`` default retained.
         self.model = get_env("OLLAMA_MODEL", OLLAMA_MODEL)
         self.provider = provider or OllamaProvider(
             model=self.model,
@@ -135,9 +135,9 @@ class OfflineAI:
             )
             print(f"[OFFLINE AI ERROR] {self.last_error}")
 
-    # =====================================================
-    # Ollama
-    # =====================================================
+    # * =====================================================
+    # * Ollama
+    # * =====================================================
 
     def _ollama(self, prompt):
         started = time.perf_counter()
@@ -162,9 +162,9 @@ class OfflineAI:
         )
         return response.text.strip()
 
-    # =====================================================
-    # Ask
-    # =====================================================
+    # * =====================================================
+    # * Ask
+    # * =====================================================
 
     def ask(self, user_input):
 
@@ -191,17 +191,17 @@ class OfflineAI:
             "[OFFLINE AI] Building context..."
         )
 
-        # -------------------------------------------------
-        # Build existing Stage 4 context
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Build existing Stage 4 context
+        # * -------------------------------------------------
 
         context = self.context_builder.build(
             user_input
         )
 
-        # -------------------------------------------------
-        # Build existing Stage 4 prompt
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Build existing Stage 4 prompt
+        # * -------------------------------------------------
 
         base_prompt = self.prompt_builder.build(
             context
@@ -217,9 +217,9 @@ class OfflineAI:
             "[OFFLINE AI] Thinking..."
         )
 
-        # -------------------------------------------------
-        # Local Ollama
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Local Ollama
+        # * -------------------------------------------------
 
         response = self._ollama(
             prompt
@@ -229,9 +229,9 @@ class OfflineAI:
 
             return None
 
-        # -------------------------------------------------
-        # Save conversation
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Save conversation
+        # * -------------------------------------------------
 
         self.conversation.add_user_message(
             user_input
@@ -244,9 +244,9 @@ class OfflineAI:
         return response
 
 
-# =========================================================
-# Singleton
-# =========================================================
+# * =========================================================
+# * Singleton
+# * =========================================================
 
 _ai = None
 
@@ -262,9 +262,9 @@ def get_ai():
     return _ai
 
 
-# =========================================================
-# Simple API
-# =========================================================
+# * =========================================================
+# * Simple API
+# * =========================================================
 
 def ask(user_input):
 

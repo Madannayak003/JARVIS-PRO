@@ -28,7 +28,7 @@ class PythonApplier(BaseApplier):
     - Import Preservation
     """
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def apply(
         self,
@@ -38,19 +38,19 @@ class PythonApplier(BaseApplier):
 
         generated = generated.strip()
 
-        # Nothing generated
+        # * Nothing generated
         if not generated:
 
             return original
 
-        # --------------------------------------------------
-        # Phase 8
+        # * --------------------------------------------------
+        # * Phase 8
         #
-        # Full-file replacement.
+        # * Full-file replacement.
         #
-        # Phase 9+
+        # * Phase 9+
         #
-        # Replace this section with AST merge.
-        # --------------------------------------------------
+        # * Replace this section with AST merge.
+        # * --------------------------------------------------
 
         return generated + "\n"

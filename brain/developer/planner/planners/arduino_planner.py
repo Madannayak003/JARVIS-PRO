@@ -43,21 +43,21 @@ class ArduinoPlanner(BasePlanner):
 
         plan = self.create_base_plan(analysis)
 
-        # -------------------------------------
-        # Arduino IDE uses a flat sketch folder
-        # -------------------------------------
+        # * -------------------------------------
+        # * Arduino IDE uses a flat sketch folder
+        # * -------------------------------------
 
         plan.folders = []
 
-        # -------------------------------------
-        # Files
-        # -------------------------------------
+        # * -------------------------------------
+        # * Files
+        # * -------------------------------------
 
         import re
 
         request = analysis.user_request
 
-        # Remove common words
+        # * Remove common words
         name = re.sub(
 
             r"\b(create|make|build|generate|develop|design|write|an|a|the|arduino|project|sketch)\b",
@@ -95,9 +95,9 @@ class ArduinoPlanner(BasePlanner):
 
         ]
 
-        # -------------------------------------
-        # Libraries
-        # -------------------------------------
+        # * -------------------------------------
+        # * Libraries
+        # * -------------------------------------
 
         request = analysis.user_request.lower()
 
@@ -235,9 +235,9 @@ class ArduinoPlanner(BasePlanner):
         
         plan.dependencies = sorted(set(dependencies))
 
-        # -------------------------------------
-        # Tasks
-        # -------------------------------------
+        # * -------------------------------------
+        # * Tasks
+        # * -------------------------------------
 
         plan.tasks = [
 
@@ -257,7 +257,7 @@ class ArduinoPlanner(BasePlanner):
 
         ]
 
-        # -------------------------------------
+        # * -------------------------------------
 
         plan.notes.extend([
 

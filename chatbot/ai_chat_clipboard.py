@@ -129,7 +129,7 @@ def copy_text_to_system_clipboard(
             )
 
             if result:
-                # Windows now owns this memory handle.
+                # * Windows now owns this memory handle.
                 handle = None
                 return True
 

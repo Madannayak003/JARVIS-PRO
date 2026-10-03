@@ -39,9 +39,9 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 
-# ============================================================
-# Execution Context
-# ============================================================
+# * ============================================================
+# * Execution Context
+# * ============================================================
 
 @dataclass
 class ExecutionContext:
@@ -63,9 +63,9 @@ class ExecutionContext:
     objects: Optional[list[Any]] = None
 
 
-# ============================================================
-# Execution Context Resolver
-# ============================================================
+# * ============================================================
+# * Execution Context Resolver
+# * ============================================================
 
 class ExecutionContextResolver:
 
@@ -78,15 +78,15 @@ class ExecutionContextResolver:
     No AI is used here.
     """
 
-    # ========================================================
-    # Action Definitions
-    # ========================================================
+    # * ========================================================
+    # * Action Definitions
+    # * ========================================================
 
     ACTION_CONTEXT = {
 
-        # ----------------------------------------------------
-        # Spotify
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Spotify
+        # * ----------------------------------------------------
 
         "spotify_open": {
             "application": "spotify",
@@ -179,9 +179,9 @@ class ExecutionContextResolver:
         },
 
 
-        # ----------------------------------------------------
-        # YouTube
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * YouTube
+        # * ----------------------------------------------------
 
         "youtube_play_first": {
             "application": "youtube",
@@ -244,9 +244,9 @@ class ExecutionContextResolver:
         },
 
 
-        # ----------------------------------------------------
-        # Browser
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Browser
+        # * ----------------------------------------------------
 
         "google_search": {
             "application": "google",
@@ -288,9 +288,9 @@ class ExecutionContextResolver:
         },
 
 
-        # ----------------------------------------------------
-        # WhatsApp
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * WhatsApp
+        # * ----------------------------------------------------
 
         "whatsapp_open": {
             "application": "whatsapp",
@@ -323,9 +323,9 @@ class ExecutionContextResolver:
         },
 
 
-        # ----------------------------------------------------
-        # System
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * System
+        # * ----------------------------------------------------
 
         "volume": {
             "application": "system",
@@ -359,9 +359,9 @@ class ExecutionContextResolver:
     }
 
 
-    # ========================================================
-    # Resolve
-    # ========================================================
+    # * ========================================================
+    # * Resolve
+    # * ========================================================
 
     def resolve(
         self,
@@ -372,19 +372,19 @@ class ExecutionContextResolver:
 
         action_data = action_data or {}
 
-        # ----------------------------------------------------
-        # Start with known action definition
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Start with known action definition
+        # * ----------------------------------------------------
 
         definition = self.ACTION_CONTEXT.get(
             action_name,
             {}
         ).copy()
 
-        # ----------------------------------------------------
-        # Allow explicit metadata from an action plan
-        # to override defaults.
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Allow explicit metadata from an action plan
+        # * to override defaults.
+        # * ----------------------------------------------------
 
         for key in [
             "application",
@@ -403,16 +403,16 @@ class ExecutionContextResolver:
 
                 definition[key] = value
 
-        # ----------------------------------------------------
-        # Generic application metadata
+        # * ----------------------------------------------------
+        # * Generic application metadata
         #
-        # Existing routers use:
+        # * Existing routers use:
         #
-        #     {"action": "open", "app": "notepad"}
+        # * {"action": "open", "app": "notepad"}
         #
-        # Natural Conversation needs the application/object
-        # information preserved in conversational context.
-        # ----------------------------------------------------
+        # * Natural Conversation needs the application/object
+        # * information preserved in conversational context.
+        # * ----------------------------------------------------
 
         if action_name == "open":
 
@@ -425,7 +425,7 @@ class ExecutionContextResolver:
                 definition["application"] = app
                 definition["object"] = app
 
-                # Windows applications
+                # * Windows applications
                 if app in [
                     "notepad",
                     "calculator",
@@ -450,7 +450,7 @@ class ExecutionContextResolver:
                     )
                     definition["intent"] = "open"
 
-                # Browser applications / websites
+                # * Browser applications / websites
                 elif app in [
                     "google",
                     "youtube",
@@ -475,15 +475,15 @@ class ExecutionContextResolver:
                     )
                     definition["intent"] = "open"
 
-        # ----------------------------------------------------
-        # Generic close_process metadata
+        # * ----------------------------------------------------
+        # * Generic close_process metadata
         #
-        # Used by Natural Conversation:
+        # * Used by Natural Conversation:
         #
-        #     "close it"
+        # * "close it"
         #
-        # -> close_process(notepad)
-        # ----------------------------------------------------
+        # * -> close_process(notepad)
+        # * ----------------------------------------------------
 
         if action_name == "close_process":
 
@@ -507,19 +507,19 @@ class ExecutionContextResolver:
                 )
                 definition["object"] = process
                 
-        # ----------------------------------------------------
-        # Browser result context
+        # * ----------------------------------------------------
+        # * Browser result context
         #
-        # Preserve the real Google / YouTube results that
-        # were produced by the already-executed browser action.
+        # * Preserve the real Google / YouTube results that
+        # * were produced by the already-executed browser action.
         #
-        # This allows Natural Conversation references such as:
+        # * This allows Natural Conversation references such as:
         #
-        #     "open the second one"
-        #     "play the third one"
+        # * "open the second one"
+        # * "play the third one"
         #
-        # to resolve through the existing ConversationContext.
-        # ----------------------------------------------------
+        # * to resolve through the existing ConversationContext.
+        # * ----------------------------------------------------
 
         if action_name in {
             "google_search",
@@ -537,9 +537,9 @@ class ExecutionContextResolver:
                     browser_context,
                 )
 
-                # --------------------------------------------
-                # Google search results
-                # --------------------------------------------
+                # * --------------------------------------------
+                # * Google search results
+                # * --------------------------------------------
 
                 if action_name in {
                     "google_search",
@@ -594,9 +594,9 @@ class ExecutionContextResolver:
 
                             definition["object"] = current_result
 
-                # --------------------------------------------
-                # YouTube queue
-                # --------------------------------------------
+                # * --------------------------------------------
+                # * YouTube queue
+                # * --------------------------------------------
 
                 elif action_name in {
                     "youtube_search",
@@ -626,18 +626,18 @@ class ExecutionContextResolver:
                     f"Browser context enrichment failed: {e}"
                 )
 
-        # ----------------------------------------------------
-        # Action itself is always authoritative
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Action itself is always authoritative
+        # * ----------------------------------------------------
 
         definition.setdefault(
             "action",
             action_name
         )
 
-        # ----------------------------------------------------
-        # Build result
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Build result
+        # * ----------------------------------------------------
 
         return ExecutionContext(
 
@@ -675,9 +675,9 @@ class ExecutionContextResolver:
         )
 
 
-# ============================================================
-# Shared Resolver
-# ============================================================
+# * ============================================================
+# * Shared Resolver
+# * ============================================================
 
 execution_context_resolver = (
     ExecutionContextResolver()

@@ -45,9 +45,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
   const width = Math.max(1, container.clientWidth);
   const height = Math.max(1, container.clientHeight);
 
-  // ═══════════════════════════════════════════════
-  // SCENE
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * SCENE
+  // * ═══════════════════════════════════════════════
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(
@@ -69,9 +69,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
   renderer.toneMappingExposure = 0.85;
   container.appendChild(renderer.domElement);
 
-  // ═══════════════════════════════════════════════
-  // POST PROCESSING
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * POST PROCESSING
+  // * ═══════════════════════════════════════════════
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
 
@@ -83,8 +83,8 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
   );
   composer.addPass(bloom);
 
-  // The color is driven by uColor so the HUD can switch ULTRON
-  // between red / blue / cyan / purple / green / orange / white.
+  // * The color is driven by uColor so the HUD can switch ULTRON
+  // * between red / blue / cyan / purple / green / orange / white.
   const chromaticShader = {
     uniforms: {
       tDiffuse: { value: null },
@@ -143,8 +143,8 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
             cb.b
           );
 
-        // Convert the warm base image into a controlled
-        // ULTRON accent without destroying the glow.
+        // * Convert the warm base image into a controlled
+        // * ULTRON accent without destroying the glow.
         float luminance =
           dot(
             rgb,
@@ -170,9 +170,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
   const chromaticPass = new ShaderPass(chromaticShader);
   composer.addPass(chromaticPass);
 
-  // ═══════════════════════════════════════════════
-  // CAMERA CONTROLS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * CAMERA CONTROLS
+  // * ═══════════════════════════════════════════════
   const controls = new OrbitControls(
     camera,
     renderer.domElement,
@@ -185,13 +185,13 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
   controls.zoomSpeed = 1.4;
   controls.enablePan = false;
 
-  // ═══════════════════════════════════════════════
-  // ULTRON COLOR SYSTEM
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ULTRON COLOR SYSTEM
+  // * ═══════════════════════════════════════════════
   const ultronBaseColor = new THREE.Color(0xff2020);
 
-  // These are only the initial creation colors.
-  // Runtime color switching uses ultronBaseColor + role.
+  // * These are only the initial creation colors.
+  // * Runtime color switching uses ultronBaseColor + role.
   const C_BRIGHT = 0xff2020;
   const C_MID = 0xb80000;
   const C_DIM = 0x650000;
@@ -237,8 +237,8 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
         break;
 
       case "hot":
-        // Keep the central energy almost white while retaining
-        // a slight tint from the selected ULTRON color.
+        // * Keep the central energy almost white while retaining
+        // * a slight tint from the selected ULTRON color.
         color.offsetHSL(0, -0.05, 0.38);
         break;
     }
@@ -293,15 +293,15 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     return material;
   }
 
-  // ═══════════════════════════════════════════════
-  // ORB ROOT
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ORB ROOT
+  // * ═══════════════════════════════════════════════
   const orbGroup = new THREE.Group();
   scene.add(orbGroup);
 
-  // ═══════════════════════════════════════════════
-  // GEOMETRY HELPERS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * GEOMETRY HELPERS
+  // * ═══════════════════════════════════════════════
   function latRing(
     radius: number,
     lat: number,
@@ -360,9 +360,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       .setFromPoints(pts);
   }
 
-  // ═══════════════════════════════════════════════
-  // LAYER 1 — OUTER ULTRON SHELL
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * LAYER 1 — OUTER ULTRON SHELL
+  // * ═══════════════════════════════════════════════
   const outerShell = new THREE.Group();
   const R1 = 2.0;
 
@@ -414,7 +414,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     );
   }
 
-  // Four broad ULTRON cross-energy bands.
+  // * Four broad ULTRON cross-energy bands.
   const CROSS_LINES = 18;
   const CROSS_SPREAD = 0.25;
 
@@ -468,7 +468,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     }
   }
 
-  // Bright equator band.
+  // * Bright equator band.
   const EQ_LINES = 20;
   const EQ_SPREAD = 0.35;
 
@@ -517,9 +517,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(outerShell);
 
-  // ═══════════════════════════════════════════════
-  // LAYER 2 — GRID PANELS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * LAYER 2 — GRID PANELS
+  // * ═══════════════════════════════════════════════
   const panelGroup = new THREE.Group();
 
   function createSpherePanel(
@@ -670,9 +670,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(panelGroup);
 
-  // ═══════════════════════════════════════════════
-  // LAYER 3 — SECONDARY SHELL / ARCS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * LAYER 3 — SECONDARY SHELL / ARCS
+  // * ═══════════════════════════════════════════════
   const shell2 = new THREE.Group();
   const R2 = 2.12;
 
@@ -798,9 +798,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(shell2);
 
-  // ═══════════════════════════════════════════════
-  // LAYER 4 — INNER CORE
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * LAYER 4 — INNER CORE
+  // * ═══════════════════════════════════════════════
   const innerCore = new THREE.Group();
   const R3 = 0.9;
 
@@ -911,9 +911,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(innerCore);
 
-  // ═══════════════════════════════════════════════
-  // LAYER 5 — HOT CENTRAL CORE
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * LAYER 5 — HOT CENTRAL CORE
+  // * ═══════════════════════════════════════════════
   const coreR = 0.25;
 
   const icoGeo =
@@ -977,9 +977,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(glowSphere);
 
-  // ═══════════════════════════════════════════════
-  // ULTRON ENERGY ORBITALS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ULTRON ENERGY ORBITALS
+  // * ═══════════════════════════════════════════════
   const energyOrbitals: THREE.Line[] =
     [];
 
@@ -1077,9 +1077,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     0.08,
   );
 
-  // ═══════════════════════════════════════════════
-  // CENTRAL ENERGY BEAM
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * CENTRAL ENERGY BEAM
+  // * ═══════════════════════════════════════════════
   const beamGeometry =
     new THREE.CylinderGeometry(
       0.018,
@@ -1104,9 +1104,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(energyBeam);
 
-  // ═══════════════════════════════════════════════
-  // CODE TEXT
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * CODE TEXT
+  // * ═══════════════════════════════════════════════
   const codeSnippets = [
     "sys.init()",
     "0xFF3A",
@@ -1170,8 +1170,8 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     ctx.font =
       "bold 14px Courier New";
 
-    // White texture + SpriteMaterial color allows
-    // the complete text field to follow ULTRON color.
+    // * White texture + SpriteMaterial color allows
+    // * the complete text field to follow ULTRON color.
     ctx.fillStyle =
       "rgba(255,255,255,0.85)";
 
@@ -1343,9 +1343,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(textAmbient);
 
-  // ═══════════════════════════════════════════════
-  // ORBITING DEBRIS / TECH FRAGMENTS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ORBITING DEBRIS / TECH FRAGMENTS
+  // * ═══════════════════════════════════════════════
   const debrisGeos = [
     new THREE.IcosahedronGeometry(
       0.012,
@@ -1455,7 +1455,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     debris.push(mesh);
     orbGroup.add(mesh);
 
-    // Some fragments get a subtle energy trail.
+    // * Some fragments get a subtle energy trail.
     if (Math.random() > 0.85) {
       const trailPts: THREE.Vector3[] =
         [];
@@ -1504,9 +1504,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     }
   }
 
-  // ═══════════════════════════════════════════════
-  // DUST PARTICLES
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * DUST PARTICLES
+  // * ═══════════════════════════════════════════════
   const dustCount = 2000;
   const dustPos =
     new Float32Array(
@@ -1646,9 +1646,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   orbGroup.add(dustPoints);
 
-  // ═══════════════════════════════════════════════
-  // SCANNING RINGS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * SCANNING RINGS
+  // * ═══════════════════════════════════════════════
   function makeScanRing(
     radius: number,
     thickness = 0.015,
@@ -1695,9 +1695,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     scanRing2,
   );
 
-  // ═══════════════════════════════════════════════
-  // HEXAGONAL NODES
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * HEXAGONAL NODES
+  // * ═══════════════════════════════════════════════
   for (let i = 0; i < 15; i++) {
     const phi =
       Math.acos(
@@ -1750,9 +1750,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     outerShell.add(hex);
   }
 
-  // ═══════════════════════════════════════════════
-  // ENERGY ARCS
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ENERGY ARCS
+  // * ═══════════════════════════════════════════════
   const energyArcs: THREE.Line[] =
     [];
 
@@ -1833,9 +1833,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // COLOR CONTROL
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * COLOR CONTROL
+  // * ═══════════════════════════════════════════════
   function setUltronColor(
     color: string | number,
   ): void {
@@ -1867,14 +1867,14 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       ultronBaseColor.clone();
   }
 
-  // Apply the default red ULTRON palette.
+  // * Apply the default red ULTRON palette.
   setUltronColor(
     0xff2020,
   );
 
-  // ═══════════════════════════════════════════════
-  // GESTURE / PROGRAMMATIC CAMERA CONTROL
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * GESTURE / PROGRAMMATIC CAMERA CONTROL
+  // * ═══════════════════════════════════════════════
   const sphericalScratch =
     new THREE.Spherical();
 
@@ -1965,9 +1965,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     controls.update();
   }
 
-  // ═══════════════════════════════════════════════
-  // ANIMATION
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * ANIMATION
+  // * ═══════════════════════════════════════════════
   const clock =
     new THREE.Clock();
 
@@ -1986,7 +1986,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     const t =
       clock.getElapsedTime();
 
-    // Outer shell.
+    // * Outer shell.
     outerShell.rotation.y +=
       0.0015;
 
@@ -1995,7 +1995,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
         t * 0.08,
       ) * 0.05;
 
-    // Surface panels.
+    // * Surface panels.
     panelGroup.rotation.y +=
       0.0018;
 
@@ -2004,7 +2004,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
         t * 0.08 + 0.5,
       ) * 0.04;
 
-    // Secondary shell.
+    // * Secondary shell.
     shell2.rotation.y -=
       0.001;
 
@@ -2013,7 +2013,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
         t * 0.12,
       ) * 0.03;
 
-    // Energy orbitals.
+    // * Energy orbitals.
     energyOrbitals.forEach(
       (
         orbital,
@@ -2032,7 +2032,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       },
     );
 
-    // Energy arcs slowly rotate around the system.
+    // * Energy arcs slowly rotate around the system.
     energyArcs.forEach(
       (
         arc,
@@ -2061,7 +2061,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       },
     );
 
-    // Central beam pulse.
+    // * Central beam pulse.
     const beamPulse =
       0.10 +
       Math.pow(
@@ -2091,7 +2091,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     energyBeam.scale.z =
       beamScale;
 
-    // Inner core.
+    // * Inner core.
     innerCore.rotation.y -=
       0.005;
 
@@ -2103,14 +2103,14 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
         t * 0.1,
       ) * 0.08;
 
-    // Central wireframe.
+    // * Central wireframe.
     icoWire.rotation.x +=
       0.008;
 
     icoWire.rotation.y +=
       0.012;
 
-    // Core pulse.
+    // * Core pulse.
     const wave1 =
       Math.sin(
         t * 1.2,
@@ -2213,7 +2213,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
           surge * 0.4,
       );
 
-    // Orbiting debris.
+    // * Orbiting debris.
     debris.forEach(
       (debrisMesh) => {
         const u =
@@ -2256,7 +2256,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       },
     );
 
-    // Floating code drift.
+    // * Floating code drift.
     const driftGroups: [
       THREE.Group,
       number,
@@ -2306,7 +2306,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       );
     }
 
-    // Scanning rings.
+    // * Scanning rings.
     const scanY1 =
       Math.sin(
         t * 0.4,
@@ -2365,11 +2365,11 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     ).opacity =
       0.15 * scanS2;
 
-    // Dust rotation.
+    // * Dust rotation.
     dustPoints.rotation.y +=
       0.0002;
 
-    // Random panel flicker.
+    // * Random panel flicker.
     flickerTimer +=
       0.016;
 
@@ -2392,7 +2392,7 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
       );
     }
 
-    // Bloom pulse.
+    // * Bloom pulse.
     bloom.strength =
       1.6 +
       Math.sin(
@@ -2409,9 +2409,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
 
   animate();
 
-  // ═══════════════════════════════════════════════
-  // RESIZE
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * RESIZE
+  // * ═══════════════════════════════════════════════
   function onResize(): void {
     const w =
       Math.max(
@@ -2446,9 +2446,9 @@ export function createOrbScene(container: HTMLElement): OrbSceneApi {
     onResize,
   );
 
-  // ═══════════════════════════════════════════════
-  // CLEANUP
-  // ═══════════════════════════════════════════════
+  // * ═══════════════════════════════════════════════
+  // * CLEANUP
+  // * ═══════════════════════════════════════════════
   function dispose(): void {
     disposed = true;
 

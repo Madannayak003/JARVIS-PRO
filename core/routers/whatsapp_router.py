@@ -14,9 +14,9 @@ def whatsapp_route(command):
 
     command = command.lower().strip()
 
-    # =================================================
-    # Open / Close
-    # =================================================
+    # * =================================================
+    # * Open / Close
+    # * =================================================
 
     if command in (
         "open whatsapp",
@@ -41,9 +41,9 @@ def whatsapp_route(command):
             }
         ]
 
-    # =================================================
-    # Latest Photo
-    # =================================================
+    # * =================================================
+    # * Latest Photo
+    # * =================================================
 
     match = re.fullmatch(
 
@@ -67,9 +67,9 @@ def whatsapp_route(command):
             }
         ]
 
-    # =================================================
-    # Latest Screenshot
-    # =================================================
+    # * =================================================
+    # * Latest Screenshot
+    # * =================================================
 
     match = re.fullmatch(
 
@@ -93,9 +93,9 @@ def whatsapp_route(command):
             }
         ]    
 
-    # =================================================
-    # Scheduled WhatsApp Message
-    # =================================================
+    # * =================================================
+    # * Scheduled WhatsApp Message
+    # * =================================================
 
     scheduled = parse_scheduled_whatsapp(command)
 
@@ -118,13 +118,13 @@ def whatsapp_route(command):
             }
         ]
         
-     # =================================================
-    # Scheduled WhatsApp Management
-    # =================================================
+     # * =================================================
+    # * Scheduled WhatsApp Management
+    # * =================================================
 
-    # -------------------------------------------------
-    # List scheduled messages
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * List scheduled messages
+    # * -------------------------------------------------
 
     if parse_list_scheduled_whatsapp(command):
 
@@ -139,9 +139,9 @@ def whatsapp_route(command):
         ]
 
 
-    # -------------------------------------------------
-    # Cancel scheduled message
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Cancel scheduled message
+    # * -------------------------------------------------
 
     scheduled_id = parse_cancel_scheduled_whatsapp(
         command
@@ -162,9 +162,9 @@ def whatsapp_route(command):
         ]
 
 
-    # -------------------------------------------------
-    # Reschedule scheduled message
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Reschedule scheduled message
+    # * -------------------------------------------------
 
     reschedule = parse_reschedule_scheduled_whatsapp(
         command
@@ -186,9 +186,9 @@ def whatsapp_route(command):
             }
         ]      
         
-    # -------------------------------------------------
-    # WhatsApp Video Call
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * WhatsApp Video Call
+    # * -------------------------------------------------
 
     result = parse_whatsapp_video_call(command)
 
@@ -207,9 +207,9 @@ def whatsapp_route(command):
         ]
 
 
-    # -------------------------------------------------
-    # WhatsApp Voice Call
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * WhatsApp Voice Call
+    # * -------------------------------------------------
 
     result = parse_whatsapp_call(command)
 
@@ -227,9 +227,9 @@ def whatsapp_route(command):
             }
         ]    
 
-    # =================================================
-    # Normal WhatsApp Message
-    # =================================================
+    # * =================================================
+    # * Normal WhatsApp Message
+    # * =================================================
 
     result = parse_whatsapp(command)
 
@@ -245,17 +245,17 @@ def whatsapp_route(command):
             }
         ]
 
-    # =================================================
-    # Start WhatsApp conversation
+    # * =================================================
+    # * Start WhatsApp conversation
     #
-    # IMPORTANT:
-    # Only explicit WhatsApp wording is accepted.
+    # ! IMPORTANT:
+    # * Only explicit WhatsApp wording is accepted.
     #
-    # "send whatsapp to John"
-    # "message John on whatsapp"
+    # * "send whatsapp to John"
+    # * "message John on whatsapp"
     #
-    # Generic "tell John" is NOT accepted.
-    # =================================================
+    # * Generic "tell John" is NOT accepted.
+    # * =================================================
 
     match = re.fullmatch(
         r"send\s+whatsapp\s+to\s+(.+)",
@@ -276,9 +276,9 @@ def whatsapp_route(command):
                 }
             ]
 
-    # -------------------------------------------------
-    # Explicit "message ... on whatsapp"
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Explicit "message ... on whatsapp"
+    # * -------------------------------------------------
 
     match = re.fullmatch(
         r"message\s+(.+?)\s+on\s+whatsapp",
@@ -299,20 +299,20 @@ def whatsapp_route(command):
                 }
             ]
 
-    # -------------------------------------------------
-    # "message John" remains supported ONLY when
-    # explicitly followed by "on whatsapp" is absent?
+    # * -------------------------------------------------
+    # * "message John" remains supported ONLY when
+    # * explicitly followed by "on whatsapp" is absent?
     #
-    # We intentionally do NOT route generic:
+    # ! We intentionally do NOT route generic:
     #
-    # message John
+    # * message John
     #
-    # because "message" can have other meanings.
-    # -------------------------------------------------
+    # * because "message" can have other meanings.
+    # * -------------------------------------------------
 
-    # =================================================
-    # Send File
-    # =================================================
+    # * =================================================
+    # * Send File
+    # * =================================================
 
     match = re.fullmatch(
 
@@ -328,9 +328,9 @@ def whatsapp_route(command):
         filename = match.group(1).strip()
         contact = match.group(2).strip()
 
-        # ---------------------------------------------
-        # Don't steal normal message commands
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # ! Don't steal normal message commands
+        # * ---------------------------------------------
 
         blocked = (
             "message",
@@ -349,8 +349,8 @@ def whatsapp_route(command):
                 }
             ]
 
-    # =================================================
-    # No WhatsApp match
-    # =================================================
+    # * =================================================
+    # * No WhatsApp match
+    # * =================================================
 
     return None

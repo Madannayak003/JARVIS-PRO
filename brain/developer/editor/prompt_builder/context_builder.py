@@ -15,7 +15,7 @@ class ContextBuilder:
     Builds the edit context for the LLM.
     """
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def build(
         self,
@@ -42,9 +42,9 @@ class ContextBuilder:
 
         ]
 
-        # ------------------------------------------
-        # Execution Plan
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Execution Plan
+        # * ------------------------------------------
 
         if request.implementation_steps:
 
@@ -78,9 +78,9 @@ class ContextBuilder:
 
         )
 
-        # ------------------------------------------
-        # Selected Files
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Selected Files
+        # * ------------------------------------------
 
         if not request.target_files:
 
@@ -120,13 +120,13 @@ class ContextBuilder:
 
                 continue
 
-            # ------------------------------------------
-            # The editor requires complete-file responses.
-            # Never show the model a preview while asking
-            # it to preserve the complete original file.
-            # FileReader already enforces the editor's
-            # maximum supported file size.
-            # ------------------------------------------
+            # * ------------------------------------------
+            # * The editor requires complete-file responses.
+            # ! Never show the model a preview while asking
+            # * it to preserve the complete original file.
+            # * FileReader already enforces the editor's
+            # * maximum supported file size.
+            # * ------------------------------------------
 
             lines.append(f"```{extension}")
 

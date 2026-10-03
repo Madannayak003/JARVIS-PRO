@@ -2,34 +2,34 @@ import re
 from datetime import datetime, timedelta
 
 
-# =========================================================
-# MEMORY ROUTER
-# Notes + Reminders
+# * =========================================================
+# * MEMORY ROUTER
+# * Notes + Reminders
 #
-# IMPORTANT:
-# This router must NOT call AI.
-# =========================================================
+# ! IMPORTANT:
+# ! This router must NOT call AI.
+# * =========================================================
 
 def memory_route(command):
 
     command = command.lower().strip()
 
-    # =====================================================
-    # NOTES
-    # =====================================================
+    # * =====================================================
+    # * NOTES
+    # * =====================================================
 
-    # -----------------------------------------------------
-    # Create note
+    # * -----------------------------------------------------
+    # * Create note
     #
-    # make a note to buy milk
-    # make note to buy milk
-    # take a note to buy milk
-    # take note buy milk
-    # note buy milk
-    # note I have to buy milk
-    # write a note about project
-    # save a note saying call John
-    # -----------------------------------------------------
+    # * make a note to buy milk
+    # * make note to buy milk
+    # * take a note to buy milk
+    # * take note buy milk
+    # * note buy milk
+    # * note I have to buy milk
+    # * write a note about project
+    # * save a note saying call John
+    # * -----------------------------------------------------
 
     note_match = re.match(
         r"^(?:"
@@ -64,9 +64,9 @@ def memory_route(command):
                 }
             ]
 
-    # -----------------------------------------------------
-    # List notes
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * List notes
+    # * -----------------------------------------------------
 
     if command in (
         "list notes",
@@ -91,9 +91,9 @@ def memory_route(command):
             }
         ]
 
-    # -----------------------------------------------------
-    # Clear notes
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Clear notes
+    # * -----------------------------------------------------
 
     if command in (
         "clear notes",
@@ -114,17 +114,17 @@ def memory_route(command):
             }
         ]
 
-    # =====================================================
-    # REMINDERS
-    # =====================================================
+    # * =====================================================
+    # * REMINDERS
+    # * =====================================================
 
-    # -----------------------------------------------------
-    # Remind me in X seconds/minutes/hours
+    # * -----------------------------------------------------
+    # * Remind me in X seconds/minutes/hours
     #
-    # remind me in 30 seconds to check
-    # remind me in 5 minutes to call John
-    # remind me in 2 hours to check the oven
-    # -----------------------------------------------------
+    # * remind me in 30 seconds to check
+    # * remind me in 5 minutes to call John
+    # * remind me in 2 hours to check the oven
+    # * -----------------------------------------------------
 
     match = re.match(
         r"^remind\s+me\s+in\s+"
@@ -184,14 +184,14 @@ def memory_route(command):
             }
         ]
 
-    # -----------------------------------------------------
-    # Remind me at TIME
+    # * -----------------------------------------------------
+    # * Remind me at TIME
     #
-    # remind me at 10:30 PM to call John
-    # remind me at 10:30 p.m. to call John
-    # remind me at 10 PM to call John
-    # remind me at 8 AM to take medicine
-    # -----------------------------------------------------
+    # * remind me at 10:30 PM to call John
+    # * remind me at 10:30 p.m. to call John
+    # * remind me at 10 PM to call John
+    # * remind me at 8 AM to take medicine
+    # * -----------------------------------------------------
 
     match = re.match(
         r"^remind\s+me\s+at\s+"
@@ -236,11 +236,11 @@ def memory_route(command):
                 }
             ]
 
-    # -----------------------------------------------------
-    # Remind me tomorrow at TIME
+    # * -----------------------------------------------------
+    # * Remind me tomorrow at TIME
     #
-    # remind me tomorrow at 10 PM to call John
-    # -----------------------------------------------------
+    # * remind me tomorrow at 10 PM to call John
+    # * -----------------------------------------------------
 
     match = re.match(
         r"^remind\s+me\s+tomorrow\s+at\s+"
@@ -286,9 +286,9 @@ def memory_route(command):
                 }
             ]
 
-    # -----------------------------------------------------
-    # List reminders
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * List reminders
+    # * -----------------------------------------------------
 
     if command in (
         "list reminders",
@@ -311,12 +311,12 @@ def memory_route(command):
             }
         ]
 
-    # -----------------------------------------------------
-    # Cancel reminder
+    # * -----------------------------------------------------
+    # * Cancel reminder
     #
-    # cancel reminder 3
-    # cancel reminder number 3
-    # -----------------------------------------------------
+    # * cancel reminder 3
+    # * cancel reminder number 3
+    # * -----------------------------------------------------
 
     match = re.match(
         r"^cancel\s+(?:reminder\s+)?"
@@ -346,9 +346,9 @@ def memory_route(command):
     return None
 
 
-# =========================================================
-# CLOCK PARSER
-# =========================================================
+# * =========================================================
+# * CLOCK PARSER
+# * =========================================================
 
 def _parse_clock_time(
     value,

@@ -39,12 +39,12 @@ class VisionLoop:
 
         self.latest_scene = None
 
-        # Used to signal that the first scene is ready
+        # * Used to signal that the first scene is ready
         self.scene_ready = threading.Event()
 
-        # --------------------------------------------------
-        # Temporal stability
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Temporal stability
+        # * --------------------------------------------------
 
         self.stability_frames = max(
             1,
@@ -55,9 +55,9 @@ class VisionLoop:
         self._candidate_signature = None
         self._candidate_count = 0
 
-    # --------------------------------------------------
-    # Start
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Start
+    # * --------------------------------------------------
 
     def start(self):
 
@@ -77,7 +77,7 @@ class VisionLoop:
             "[VISION LOOP] Starting..."
         )
 
-        # Clear previous state
+        # * Clear previous state
         self.latest_scene = None
         self.scene_ready.clear()
 
@@ -126,9 +126,9 @@ class VisionLoop:
 
         return True
 
-    # --------------------------------------------------
-    # Detection Signature
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Detection Signature
+    # * --------------------------------------------------
 
     def _scene_signature(self, scene):
 
@@ -182,9 +182,9 @@ class VisionLoop:
             sorted(signature)
         )
 
-    # --------------------------------------------------
-    # Stability
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Stability
+    # * --------------------------------------------------
 
     def _reset_stability(self):
 
@@ -198,7 +198,7 @@ class VisionLoop:
             scene
         )
 
-        # No objects detected.
+        # * No objects detected.
         if not signature:
 
             self._candidate_scene = scene
@@ -218,7 +218,7 @@ class VisionLoop:
             self._candidate_signature = signature
             self._candidate_count = 1
 
-        # Stable enough to publish.
+        # * Stable enough to publish.
         if (
             self._candidate_count
             >= self.stability_frames
@@ -228,9 +228,9 @@ class VisionLoop:
 
         return None
 
-    # --------------------------------------------------
-    # Processing Loop
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Processing Loop
+    # * --------------------------------------------------
 
     def _run(self):
 
@@ -254,9 +254,9 @@ class VisionLoop:
 
                 detections = vision.track(frame)
 
-                # Reuse this frame and the existing YOLO detections. Face
-                # recognition only enriches person detections; it does not
-                # create a second camera or object-detection pipeline.
+                # * Reuse this frame and the existing YOLO detections. Face
+                # * recognition only enriches person detections; it does not
+                # * create a second camera or object-detection pipeline.
                 detections = face_recognizer.enrich_detections(
                     frame,
                     detections,
@@ -282,7 +282,7 @@ class VisionLoop:
 
                     self._announce_people(stable_scene)
 
-                    # Signal first stable scene
+                    # * Signal first stable scene
                     if not self.scene_ready.is_set():
 
                         self.scene_ready.set()
@@ -309,8 +309,8 @@ class VisionLoop:
         objects = (scene or {}).get("objects", [])
         message = (scene or {}).get("description") or people_message(objects)
         if not message:
-            # An empty stable scene is the leave transition. Clear the
-            # previous identity so a later return can speak again.
+            # * An empty stable scene is the leave transition. Clear the
+            # * previous identity so a later return can speak again.
             vision_speech_state.should_speak(objects)
             return
         if not vision_speech_state.should_speak(objects):
@@ -325,17 +325,17 @@ class VisionLoop:
         except Exception as exc:
             print("[VISION SPEECH ERROR]", exc)
 
-    # --------------------------------------------------
-    # Get Latest Scene
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Get Latest Scene
+    # * --------------------------------------------------
 
     def get_scene(self):
 
         return self.latest_scene
 
-    # --------------------------------------------------
-    # Status
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Status
+    # * --------------------------------------------------
 
     def status(self):
 
@@ -350,9 +350,9 @@ class VisionLoop:
             ),
         }
 
-    # --------------------------------------------------
-    # Stop
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Stop
+    # * --------------------------------------------------
 
     def stop(self):
 

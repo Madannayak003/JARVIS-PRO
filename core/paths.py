@@ -8,10 +8,10 @@ Every module should import paths from here.
 
 from pathlib import Path
 
-# Project Root
+# * Project Root
 ROOT = Path(__file__).resolve().parent.parent
 
-# Data Folder
+# * Data Folder
 DATA = ROOT / "data"
 
 SCREENSHOTS = DATA / "screenshots"
@@ -26,7 +26,7 @@ DOWNLOADS = DATA / "downloads"
 CACHE = DATA / "cache"
 EXPORTS = DATA / "exports"
 
-# Automatically create folders
+# * Automatically create folders
 for folder in [
 
     DATA,

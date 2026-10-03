@@ -17,38 +17,38 @@ class ProjectIndex:
     locate files, functions, classes and imports.
     """
 
-    # -------------------------------------
-    # All editable project files
-    # -------------------------------------
+    # * -------------------------------------
+    # * All editable project files
+    # * -------------------------------------
 
     files: list[str] = field(
         default_factory=list,
     )
 
-    # -------------------------------------
-    # function_name -> files
-    # Example:
+    # * -------------------------------------
+    # * function_name -> files
+    # * Example:
     #
-    # {
-    #     "login": ["src/auth.py"]
-    # }
-    # -------------------------------------
+    # * {
+    # * "login": ["src/auth.py"]
+    # * }
+    # * -------------------------------------
 
     functions: dict[str, list[str]] = field(
         default_factory=dict,
     )
 
-    # -------------------------------------
-    # class_name -> files
-    # -------------------------------------
+    # * -------------------------------------
+    # * class_name -> files
+    # * -------------------------------------
 
     classes: dict[str, list[str]] = field(
         default_factory=dict,
     )
 
-    # -------------------------------------
-    # imported_module -> files
-    # -------------------------------------
+    # * -------------------------------------
+    # * imported_module -> files
+    # * -------------------------------------
 
     imports: dict[str, list[str]] = field(
         default_factory=dict,

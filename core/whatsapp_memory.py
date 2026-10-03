@@ -16,9 +16,9 @@ def clear_contact():
     _pending_contact = None
 
 
-# -------------------------
-# Waiting for Contact
-# -------------------------
+# * -------------------------
+# * Waiting for Contact
+# * -------------------------
 
 def set_pending_message(message=""):
     global _pending_message

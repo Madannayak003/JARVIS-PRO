@@ -18,7 +18,7 @@ class EditRequest:
     Represents a user's edit request.
     """
 
-    # -------------------------------------
+    # * -------------------------------------
 
     user_request: str = ""
 
@@ -26,11 +26,11 @@ class EditRequest:
 
     project_path: str = ""
 
-    # -------------------------------------
+    # * -------------------------------------
 
     project_index: ProjectIndex | None = None
 
-    # -------------------------------------
+    # * -------------------------------------
 
     target_files: list[str] = field(
         default_factory=list,

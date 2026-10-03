@@ -177,8 +177,8 @@ class SpatialAnalyzer:
             else 0.5
         )
 
-        # Distance from the center of the
-        # camera frame, normalized to 0..1.
+        # * Distance from the center of the
+        # * camera frame, normalized to 0..1.
         dx = normalized_x - 0.5
         dy = normalized_y - 0.5
 
@@ -263,8 +263,8 @@ class SpatialAnalyzer:
         dx = first_x - second_x
         dy = first_y - second_y
 
-        # Small tolerance prevents tiny detection
-        # movements from creating meaningless relationships.
+        # * Small tolerance prevents tiny detection
+        # * movements from creating meaningless relationships.
         horizontal_tolerance = (
             self.frame_width * 0.08
         )

@@ -162,9 +162,9 @@ def _find_contact(name: str) -> list[dict[str, str]] | None:
     if matches:
         return matches
 
-    # Relationship aliases are evaluated in deterministic priority order.
-    # For example, "mom" prefers a unique contact containing "mother" over
-    # unrelated contacts containing the later fallback alias "amma".
+    # * Relationship aliases are evaluated in deterministic priority order.
+    # * For example, "mom" prefers a unique contact containing "mother" over
+    # * unrelated contacts containing the later fallback alias "amma".
     for alias in _RELATIONSHIP_ALIASES.get(target, ()):
         alias_tokens = set(_normalize_contact_name(alias).split())
         alias_matches = [
@@ -201,8 +201,8 @@ def _start_call(number: str, display_name: str = "") -> bool:
             print(f"[PHONE CALL] Outgoing state update skipped: {error}")
         return True
 
-    # A permission/security policy may reject ACTION_CALL. Keep the fallback
-    # safe and explicit: prepare the dialer, never simulate pressing Call.
+    # ! A permission/security policy may reject ACTION_CALL. Keep the fallback
+    # ! safe and explicit: prepare the dialer, never simulate pressing Call.
     try:
         opened = manager.launch_intent(
             IntentSpec(action=ACTION_DIAL, data=f"tel:{number}")

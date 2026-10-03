@@ -22,7 +22,7 @@ class AnalysisResult:
     Result produced by the Analyzer.
     """
 
-    # Original user request
+    # * Original user request
     user_request: str = ""
     
     intent: Optional[Intent] = None

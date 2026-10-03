@@ -48,8 +48,8 @@ class AndroidDeviceManager:
         endpoint = normalize_endpoint(address, port)
         result = self.adb.connect(address, port)
         if result.ok:
-            # Make the explicitly requested endpoint the active bridge target
-            # when it is visible, while retaining USB fallback after disconnect.
+            # * Make the explicitly requested endpoint the active bridge target
+            # * when it is visible, while retaining USB fallback after disconnect.
             self.adb.select_device(endpoint)
         return result
 
@@ -150,10 +150,10 @@ class AndroidDeviceManager:
             if not package:
                 return AppLaunchResult(False, app_name, error_code="not_installed")
 
-            # Resolve the launcher from the installed package. Some Android
-            # component names contain '$'; passing those through ``adb shell
-            # -n`` can be interpreted by the remote shell, so those use the
-            # package-scoped launcher intent instead.
+            # * Resolve the launcher from the installed package. Some Android
+            # * component names contain '$'; passing those through ``adb shell
+            # * -n`` can be interpreted by the remote shell, so those use the
+            # * package-scoped launcher intent instead.
             launcher = self.resolve_launcher_activity(package)
             intent = IntentSpec(
                 action=ACTION_MAIN,

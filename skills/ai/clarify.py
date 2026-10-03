@@ -13,9 +13,9 @@ def ai_clarify(data):
     
     context = data.get("context") or {}
 
-    # A clarification is conversational state, not a confirmation. Keeping it
-    # in the coordinator makes the next user turn available to the existing
-    # clarification/follow-up flow before normal routing begins.
+    # * A clarification is conversational state, not a confirmation. Keeping it
+    # * in the coordinator makes the next user turn available to the existing
+    # * clarification/follow-up flow before normal routing begins.
     original_request = (
         data.get("original_request")
         or context.get("original_request")
@@ -37,8 +37,8 @@ def ai_clarify(data):
         metadata=context,
     )
 
-    # Retire the legacy, hard-coded clarification interceptor. It must not
-    # override the generic coordinator path on the reply turn.
+    # ! Retire the legacy, hard-coded clarification interceptor. It must not
+    # * override the generic coordinator path on the reply turn.
     set_memory("clarify_context", None)
 
     speak(question)

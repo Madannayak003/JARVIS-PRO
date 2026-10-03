@@ -14,7 +14,7 @@ class RepairParser(ResponseParser):
     """
     Reuses the Generator ResponseParser
     because the repair response uses the
-    same # FILE: format.
+    same  # * FILE: format.
     """
 
     pass

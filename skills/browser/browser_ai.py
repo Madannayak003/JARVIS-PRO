@@ -67,7 +67,7 @@ def ai_open(data):
 
     app = data.get("app", "").lower()
 
-    # ---------- Websites ----------
+    # * ---------- Websites ----------
 
     if app in SITES:
 
@@ -81,7 +81,7 @@ def ai_open(data):
             site=app,
         )
 
-        # Action Memory
+        # * Action Memory
         set_memory("app", app)
         set_memory("site", app)
         set_memory("action", "open")
@@ -90,7 +90,7 @@ def ai_open(data):
 
         return True
 
-    # ---------- Windows Apps ----------
+    # * ---------- Windows Apps ----------
 
     if app in WINDOWS_APPS:
 
@@ -98,7 +98,7 @@ def ai_open(data):
 
         os.startfile(WINDOWS_APPS[app])
 
-        # Action Memory
+        # * Action Memory
         set_memory("app", app)
         set_memory("action", "open")
         
@@ -127,7 +127,7 @@ def ai_google(data):
         print("[Google] Search failed")
         return False
 
-    # Action Memory
+    # * Action Memory
     set_memory("site", "google")
     set_memory("search", query)
     set_memory("action", "google_search")

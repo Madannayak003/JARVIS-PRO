@@ -32,9 +32,9 @@ from skills.camera.face_registry import face_registry, sanitize_name
 from skills.camera.face_speech import people_message
 
 
-# =========================================================
-# Vision Session Helpers
-# =========================================================
+# * =========================================================
+# * Vision Session Helpers
+# * =========================================================
 
 def _start_vision():
     """
@@ -72,34 +72,34 @@ def _stop_vision():
     return vision_loop.stop()
 
 
-# =========================================================
-# Vision Start
+# * =========================================================
+# * Vision Start
 #
-# Compatibility command.
+# * Compatibility command.
 #
-# We keep this registered, but normal vision requests
-# no longer need it.
-# =========================================================
+# * We keep this registered, but normal vision requests
+# * no longer need it.
+# * =========================================================
 
 def vision_start(data=None):
 
     return _start_vision()
 
 
-# =========================================================
-# Vision Stop
+# * =========================================================
+# * Vision Stop
 #
-# Manual emergency/compatibility command.
-# =========================================================
+# * Manual emergency/compatibility command.
+# * =========================================================
 
 def vision_stop(data=None):
 
     return _stop_vision()
 
 
-# =========================================================
-# Describe Scene
-# =========================================================
+# * =========================================================
+# * Describe Scene
+# * =========================================================
 
 def vision_describe(data=None):
 
@@ -107,9 +107,9 @@ def vision_describe(data=None):
 
     try:
 
-        # ---------------------------------------------
-        # Start Vision
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Start Vision
+        # * ---------------------------------------------
 
         if not vision_loop.running:
 
@@ -121,9 +121,9 @@ def vision_describe(data=None):
 
             started = True
 
-        # ---------------------------------------------
-        # Query scene
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Query scene
+        # * ---------------------------------------------
 
         print(
             "[VISION] Describing scene..."
@@ -132,8 +132,8 @@ def vision_describe(data=None):
         description = vision_query.describe()
         scene = vision_query.get_scene()
         if people_message((scene or {}).get("objects", [])):
-            # The processing loop already emitted the state-aware person
-            # announcement through the existing voice/HUD path.
+            # * The processing loop already emitted the state-aware person
+            # * announcement through the existing voice/HUD path.
             return None
         return description
 
@@ -150,18 +150,18 @@ def vision_describe(data=None):
 
     finally:
 
-        # ---------------------------------------------
-        # Always shut Vision down after this request.
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Always shut Vision down after this request.
+        # * ---------------------------------------------
 
         if started:
 
             _stop_vision()
 
 
-# =========================================================
-# Count Object
-# =========================================================
+# * =========================================================
+# * Count Object
+# * =========================================================
 
 def vision_count(data=None):
 
@@ -169,9 +169,9 @@ def vision_count(data=None):
 
     try:
 
-        # ---------------------------------------------
-        # Start Vision
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Start Vision
+        # * ---------------------------------------------
 
         if not vision_loop.running:
 
@@ -183,9 +183,9 @@ def vision_count(data=None):
 
             started = True
 
-        # ---------------------------------------------
-        # Validate input
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Validate input
+        # * ---------------------------------------------
 
         if not isinstance(data, dict):
 
@@ -199,9 +199,9 @@ def vision_count(data=None):
                 "error": "Object name is required."
             }
 
-        # ---------------------------------------------
-        # Count
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Count
+        # * ---------------------------------------------
 
         print(
             f"[VISION] Counting: {object_name}"
@@ -229,9 +229,9 @@ def vision_count(data=None):
             _stop_vision()
 
 
-# =========================================================
-# Check Object
-# =========================================================
+# * =========================================================
+# * Check Object
+# * =========================================================
 
 def vision_check(data=None):
 
@@ -239,9 +239,9 @@ def vision_check(data=None):
 
     try:
 
-        # ---------------------------------------------
-        # Start Vision
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Start Vision
+        # * ---------------------------------------------
 
         if not vision_loop.running:
 
@@ -253,9 +253,9 @@ def vision_check(data=None):
 
             started = True
 
-        # ---------------------------------------------
-        # Validate input
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Validate input
+        # * ---------------------------------------------
 
         if not isinstance(data, dict):
 
@@ -269,9 +269,9 @@ def vision_check(data=None):
                 "error": "Object name is required."
             }
 
-        # ---------------------------------------------
-        # Check object
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Check object
+        # * ---------------------------------------------
 
         print(
             f"[VISION] Checking: {object_name}"
@@ -299,9 +299,9 @@ def vision_check(data=None):
             _stop_vision()
 
 
-# =========================================================
-# Objects At Position
-# =========================================================
+# * =========================================================
+# * Objects At Position
+# * =========================================================
 
 def vision_position(data=None):
 
@@ -309,9 +309,9 @@ def vision_position(data=None):
 
     try:
 
-        # ---------------------------------------------
-        # Start Vision
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Start Vision
+        # * ---------------------------------------------
 
         if not vision_loop.running:
 
@@ -323,9 +323,9 @@ def vision_position(data=None):
 
             started = True
 
-        # ---------------------------------------------
-        # Validate input
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Validate input
+        # * ---------------------------------------------
 
         if not isinstance(data, dict):
 
@@ -339,9 +339,9 @@ def vision_position(data=None):
                 "error": "Position is required."
             }
 
-        # ---------------------------------------------
-        # Query position
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Query position
+        # * ---------------------------------------------
 
         print(
             f"[VISION] Checking position: {position}"
@@ -469,9 +469,9 @@ def vision_target(data=None):
             _stop_vision()
 
 
-# =========================================================
-# Local Face Registration
-# =========================================================
+# * =========================================================
+# * Local Face Registration
+# * =========================================================
 
 def register_face(data=None):
     name = data.get("name") if isinstance(data, dict) else None
@@ -538,9 +538,9 @@ def delete_face(data=None):
         speak("I couldn't delete that face registration.")
         return True
 
-# =========================================================
-# Registry
-# =========================================================
+# * =========================================================
+# * Registry
+# * =========================================================
 
 register(
     "vision_start",

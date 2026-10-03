@@ -29,9 +29,9 @@ class PythonPlanner(BasePlanner):
 
         plan = self.create_base_plan(analysis)
 
-        # --------------------------------------------------
-        # Python Script
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Python Script
+        # * --------------------------------------------------
 
         if analysis.project_type == ProjectType.SCRIPT:
 
@@ -53,9 +53,9 @@ class PythonPlanner(BasePlanner):
 
             return plan
 
-        # --------------------------------------------------
-        # Full Python Project
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Full Python Project
+        # * --------------------------------------------------
 
         plan.folders = [
             "src",

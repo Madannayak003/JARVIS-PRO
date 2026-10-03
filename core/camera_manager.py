@@ -24,11 +24,11 @@ class CameraManager:
 
         self.current_frame = None
 
-        # Video recording
+        # * Video recording
         self.recording = False
         self.writer = None
 
-        # Audio recording
+        # * Audio recording
         self.audio_recording = False
         self.audio_thread = None
         self.audio_data = []
@@ -39,9 +39,9 @@ class CameraManager:
         self.audio_file = None
         self.video_file = None
 
-    # ---------------------------------------------------------
-    # CAMERA
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * CAMERA
+    # * ---------------------------------------------------------
 
     def start(self):
 
@@ -81,7 +81,7 @@ class CameraManager:
 
         return True
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def frame(self):
 
@@ -98,7 +98,7 @@ class CameraManager:
 
         return None
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def capture_with_countdown(self, seconds=3):
 
@@ -157,7 +157,7 @@ class CameraManager:
                 if elapsed >= 1:
                     break
 
-        # Flash effect
+        # * Flash effect
 
         if frame is not None:
 
@@ -180,9 +180,9 @@ class CameraManager:
 
         return self.current_frame
 
-    # ---------------------------------------------------------
-    # PREVIEW
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * PREVIEW
+    # * ---------------------------------------------------------
 
     def _preview_loop(self):
 
@@ -202,7 +202,7 @@ class CameraManager:
 
             self.current_frame = frame
 
-            # Write video frame while recording
+            # * Write video frame while recording
             if self.recording and self.writer:
 
                 self.writer.write(frame)
@@ -224,7 +224,7 @@ class CameraManager:
             "[CAMERA] Preview thread stopped."
         )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def show(self):
 
@@ -246,9 +246,9 @@ class CameraManager:
 
         return True
 
-    # ---------------------------------------------------------
-    # RECORDING
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * RECORDING
+    # * ---------------------------------------------------------
 
     def start_recording(self):
 
@@ -258,7 +258,7 @@ class CameraManager:
 
             return
 
-        # Make sure camera exists
+        # * Make sure camera exists
         if not self.start():
 
             print(
@@ -267,7 +267,7 @@ class CameraManager:
 
             return
 
-        # Start preview automatically
+        # * Start preview automatically
         if not (
             self.thread
             and self.thread.is_alive()
@@ -337,9 +337,9 @@ class CameraManager:
 
         self.audio_recording = True
 
-        # -------------------------------------------------
-        # AUDIO THREAD
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * AUDIO THREAD
+        # * -------------------------------------------------
 
         def record_audio():
 
@@ -387,7 +387,7 @@ class CameraManager:
             "[AUDIO] Recording started"
         )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def stop_recording(self):
 
@@ -403,16 +403,16 @@ class CameraManager:
             "[CAMERA] Stopping recording..."
         )
 
-        # -------------------------------------------------
-        # STOP RECORDING FLAGS
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * STOP RECORDING FLAGS
+        # * -------------------------------------------------
 
         self.recording = False
         self.audio_recording = False
 
-        # -------------------------------------------------
-        # STOP AUDIO THREAD
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * STOP AUDIO THREAD
+        # * -------------------------------------------------
 
         if (
             self.audio_thread
@@ -423,9 +423,9 @@ class CameraManager:
                 timeout=3
             )
 
-        # -------------------------------------------------
-        # SAVE AUDIO
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * SAVE AUDIO
+        # * -------------------------------------------------
 
         try:
 
@@ -472,9 +472,9 @@ class CameraManager:
                 f"[AUDIO ERROR] Save failed: {e}"
             )
 
-        # -------------------------------------------------
-        # STOP VIDEO WRITER
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * STOP VIDEO WRITER
+        # * -------------------------------------------------
 
         if self.writer:
 
@@ -487,9 +487,9 @@ class CameraManager:
                 f"{self.video_file}"
             )
 
-        # -------------------------------------------------
-        # STOP PREVIEW THREAD
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * STOP PREVIEW THREAD
+        # * -------------------------------------------------
 
         self.preview = False
 
@@ -510,9 +510,9 @@ class CameraManager:
 
         self.thread = None
 
-        # -------------------------------------------------
-        # RELEASE CAMERA
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * RELEASE CAMERA
+        # * -------------------------------------------------
 
         if self.camera:
 
@@ -520,9 +520,9 @@ class CameraManager:
 
             self.camera = None
 
-        # -------------------------------------------------
-        # CLOSE OPENCV WINDOW
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * CLOSE OPENCV WINDOW
+        # * -------------------------------------------------
 
         try:
 
@@ -536,9 +536,9 @@ class CameraManager:
             "[CAMERA] Camera released."
         )
 
-        # -------------------------------------------------
-        # CHECK AUDIO
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * CHECK AUDIO
+        # * -------------------------------------------------
 
         if not self.audio_file:
 
@@ -546,9 +546,9 @@ class CameraManager:
                 "[CAMERA] Audio file missing."
             )
 
-        # -------------------------------------------------
-        # COMBINE VIDEO + AUDIO
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * COMBINE VIDEO + AUDIO
+        # * -------------------------------------------------
 
         final_file = self.video_file.with_name(
             self.video_file.name.replace(
@@ -608,9 +608,9 @@ class CameraManager:
                     f"{final_file}"
                 )
 
-                # -------------------------------------------------
-                # DELETE TEMP FILES
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * DELETE TEMP FILES
+                # * -------------------------------------------------
 
                 try:
 
@@ -652,9 +652,9 @@ class CameraManager:
                 f"[FFMPEG ERROR] {e}"
             )
 
-        # -------------------------------------------------
-        # RESET STATE
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * RESET STATE
+        # * -------------------------------------------------
 
         self.video_file = None
         self.audio_file = None
@@ -669,9 +669,9 @@ class CameraManager:
             "[CAMERA] Recording finished."
         )
 
-    # ---------------------------------------------------------
-    # STOP CAMERA
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * STOP CAMERA
+    # * ---------------------------------------------------------
 
     def stop(self):
 
@@ -690,7 +690,7 @@ class CameraManager:
 
         self._cleanup()
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def _cleanup(self):
 
@@ -710,7 +710,7 @@ class CameraManager:
 
         cv2.destroyAllWindows()
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def opened(self):
 
@@ -719,7 +719,7 @@ class CameraManager:
             and self.camera.isOpened()
         )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def switch(self, index):
 

@@ -18,42 +18,42 @@ from voice.state import (
 from hud.integration import HUDIntegration
 
 
-# =========================================================
-# PRO TTS PIPELINE
+# * =========================================================
+# * PRO TTS PIPELINE
 #
 # AI Stream
-#     ↓
-# Sentence Queue
-#     ↓
-# Parallel TTS Generation Workers
-#     ↓
-# Ordered Audio Buffer
-#     ↓
-# Playback Worker
+# * ↓
+# * Sentence Queue
+# * ↓
+# * Parallel TTS Generation Workers
+# * ↓
+# * Ordered Audio Buffer
+# * ↓
+# * Playback Worker
 #
-# Example:
+# * Example:
 #
-# Sentence 1 ──┐
-# Sentence 2 ──┼── generate in parallel
-# Sentence 3 ──┘
-#                ↓
-#        ordered audio buffer
-#                ↓
-#        Sentence 1 → play
-#        Sentence 2 → play
-#        Sentence 3 → play
+# * Sentence 1 ──┐
+# * Sentence 2 ──┼── generate in parallel
+# * Sentence 3 ──┘
+# * ↓
+# * ordered audio buffer
+# * ↓
+# * Sentence 1 → play
+# * Sentence 2 → play
+# * Sentence 3 → play
 #
-# IMPORTANT:
+# ! IMPORTANT:
 #
-# Generation may happen in parallel.
-# Playback ALWAYS remains sequential.
+# * Generation may happen in parallel.
+# * Playback ALWAYS remains sequential.
 #
-# =========================================================
+# * =========================================================
 
 
-# =========================================================
-# Configuration
-# =========================================================
+# * =========================================================
+# * Configuration
+# * =========================================================
 
 TTS_WORKERS = 2
 
@@ -74,48 +74,48 @@ class TTSPipeline:
 
         self.session = session
 
-        # -------------------------------------------------
-        # Incoming sentences
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Incoming sentences
+        # * -------------------------------------------------
 
         self.sentence_queue = queue.Queue(
             maxsize=SENTENCE_QUEUE_SIZE
         )
 
-        # -------------------------------------------------
-        # Generated audio
+        # * -------------------------------------------------
+        # * Generated audio
         #
-        # IMPORTANT:
+        # ! IMPORTANT:
         #
-        # This queue contains ordered items.
+        # * This queue contains ordered items.
         #
-        # Each item:
+        # * Each item:
         #
-        # (
-        #     sentence_index,
-        #     audio_file,
-        #     sentence
-        # )
+        # * (
+        # * sentence_index,
+        # * audio_file,
+        # * sentence
+        # * )
         #
-        # -------------------------------------------------
+        # * -------------------------------------------------
 
         self.audio_queue = queue.Queue(
             maxsize=AUDIO_QUEUE_SIZE
         )
 
-        # -------------------------------------------------
-        # Generated results waiting for ordered playback
+        # * -------------------------------------------------
+        # * Generated results waiting for ordered playback
         #
-        # Example:
+        # * Example:
         #
-        # {
-        #     2: (file2, sentence2),
-        #     0: (file0, sentence0),
-        #     1: (file1, sentence1),
-        # }
+        # * {
+        # * 2: (file2, sentence2),
+        # * 0: (file0, sentence0),
+        # * 1: (file1, sentence1),
+        # * }
         #
-        # Playback waits for the next required index.
-        # -------------------------------------------------
+        # ! Playback waits for the next required index.
+        # * -------------------------------------------------
 
         self.pending_audio = {}
 
@@ -125,17 +125,17 @@ class TTSPipeline:
             self.pending_lock
         )
 
-        # -------------------------------------------------
-        # Workers
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Workers
+        # * -------------------------------------------------
 
         self.prefetch_threads = []
 
         self.playback_thread = None
 
-        # -------------------------------------------------
-        # State
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * State
+        # * -------------------------------------------------
 
         self.started = False
 
@@ -147,9 +147,9 @@ class TTSPipeline:
 
         self.worker_done_lock = threading.Lock()
 
-        # -------------------------------------------------
-        # Sentence ordering
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Sentence ordering
+        # * -------------------------------------------------
 
         self.next_sentence_index = 0
 
@@ -157,17 +157,17 @@ class TTSPipeline:
 
         self.index_lock = threading.Lock()
 
-        # -------------------------------------------------
-        # Number of sentences submitted
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Number of sentences submitted
+        # * -------------------------------------------------
 
         self.total_sentences = 0
 
         self.total_lock = threading.Lock()
 
-    # =====================================================
-    # Cancellation
-    # =====================================================
+    # * =====================================================
+    # * Cancellation
+    # * =====================================================
 
     def cancelled(self):
 
@@ -178,9 +178,9 @@ class TTSPipeline:
             or is_cancelled(self.session)
         )
 
-    # =====================================================
-    # Start
-    # =====================================================
+    # * =====================================================
+    # * Start
+    # * =====================================================
 
     def start(self):
 
@@ -194,9 +194,9 @@ class TTSPipeline:
             "[TTS PIPELINE] Starting"
         )
 
-        # -------------------------------------------------
-        # Start parallel TTS generation workers
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Start parallel TTS generation workers
+        # * -------------------------------------------------
 
         for worker_number in range(
             TTS_WORKERS
@@ -223,12 +223,12 @@ class TTSPipeline:
 
             thread.start()
 
-        # -------------------------------------------------
-        # Start ONE playback worker
+        # * -------------------------------------------------
+        # * Start ONE playback worker
         #
-        # Only one thread is allowed to control audio
-        # playback.
-        # -------------------------------------------------
+        # * Only one thread is allowed to control audio
+        # * playback.
+        # * -------------------------------------------------
 
         self.playback_thread = threading.Thread(
 
@@ -247,9 +247,9 @@ class TTSPipeline:
             f"with {TTS_WORKERS} TTS workers"
         )
 
-    # =====================================================
-    # Add Sentence
-    # =====================================================
+    # * =====================================================
+    # * Add Sentence
+    # * =====================================================
 
     def put(self, sentence):
 
@@ -267,12 +267,12 @@ class TTSPipeline:
 
             return False
         
-        # -------------------------------------------------
-        # Assign an ordering index.
+        # * -------------------------------------------------
+        # * Assign an ordering index.
         #
-        # This happens BEFORE placing the sentence into
-        # the queue.
-        # -------------------------------------------------
+        # * This happens BEFORE placing the sentence into
+        # * the queue.
+        # * -------------------------------------------------
 
         with self.index_lock:
 
@@ -282,18 +282,18 @@ class TTSPipeline:
 
             self.next_sentence_index += 1
 
-        # -------------------------------------------------
-        # Store indexed sentence.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Store indexed sentence.
+        # * -------------------------------------------------
 
         item = (
             sentence_index,
             sentence,
         )
 
-        # -------------------------------------------------
-        # Back-pressure
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Back-pressure
+        # * -------------------------------------------------
 
         while not self.cancelled():
 
@@ -316,9 +316,9 @@ class TTSPipeline:
 
         return False
 
-    # =====================================================
-    # Finish Input
-    # =====================================================
+    # * =====================================================
+    # * Finish Input
+    # * =====================================================
 
     def finish(self):
 
@@ -328,11 +328,11 @@ class TTSPipeline:
 
         self.finished = True
 
-        # -------------------------------------------------
-        # One sentinel per generation worker.
+        # * -------------------------------------------------
+        # * One sentinel per generation worker.
         #
-        # Every worker must receive its own sentinel.
-        # -------------------------------------------------
+        # ! Every worker must receive its own sentinel.
+        # * -------------------------------------------------
 
         for _ in range(
             TTS_WORKERS
@@ -353,11 +353,11 @@ class TTSPipeline:
 
                     continue
 
-    # =====================================================
-    # Prefetch Worker
+    # * =====================================================
+    # * Prefetch Worker
     #
-    # Multiple workers generate audio simultaneously.
-    # =====================================================
+    # * Multiple workers generate audio simultaneously.
+    # * =====================================================
 
     def _prefetch_worker(
         self,
@@ -389,9 +389,9 @@ class TTSPipeline:
 
                 continue
 
-            # -------------------------------------------------
-            # Worker shutdown
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Worker shutdown
+            # * -------------------------------------------------
 
             if item is None:
 
@@ -416,9 +416,9 @@ class TTSPipeline:
 
                     return
 
-                # -------------------------------------------------
-                # Clean sentence
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Clean sentence
+                # * -------------------------------------------------
 
                 sentence = sentence.strip()
 
@@ -432,15 +432,15 @@ class TTSPipeline:
                     f"sentence {sentence_index}"
                 )
 
-                # -------------------------------------------------
-                # Generate audio.
+                # * -------------------------------------------------
+                # * Generate audio.
                 #
-                # IMPORTANT:
+                # ! IMPORTANT:
                 #
-                # This only generates.
+                # * This only generates.
                 #
-                # It does NOT play.
-                # -------------------------------------------------
+                # * It does NOT play.
+                # * -------------------------------------------------
 
                 audio_file = prepare_speech(
 
@@ -450,9 +450,9 @@ class TTSPipeline:
 
                 )
 
-                # -------------------------------------------------
-                # Offline / fallback
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Offline / fallback
+                # * -------------------------------------------------
 
                 if audio_file is None:
 
@@ -465,9 +465,9 @@ class TTSPipeline:
 
                     continue
 
-                # -------------------------------------------------
-                # Check cancellation after generation.
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Check cancellation after generation.
+                # * -------------------------------------------------
 
                 if self.cancelled():
 
@@ -477,12 +477,12 @@ class TTSPipeline:
 
                     return
 
-                # -------------------------------------------------
-                # Store generated audio using its index.
+                # * -------------------------------------------------
+                # * Store generated audio using its index.
                 #
-                # It doesn't matter which worker finishes first.
-                # Playback will wait for the correct index.
-                # -------------------------------------------------
+                # * It doesn't matter which worker finishes first.
+                # * Playback will wait for the correct index.
+                # * -------------------------------------------------
 
                 with self.pending_condition:
 
@@ -506,12 +506,12 @@ class TTSPipeline:
 
                 self.sentence_queue.task_done()
 
-    # =====================================================
-    # Store Fallback
+    # * =====================================================
+    # * Store Fallback
     #
-    # If Edge TTS isn't available, keep the sentence
-    # in the ordered playback system.
-    # =====================================================
+    # * If Edge TTS isn't available, keep the sentence
+    # * in the ordered playback system.
+    # * =====================================================
 
     def _store_fallback(
         self,
@@ -530,17 +530,17 @@ class TTSPipeline:
 
             self.pending_condition.notify_all()
 
-    # =====================================================
-    # Playback Worker
+    # * =====================================================
+    # * Playback Worker
     #
-    # ONLY this worker controls playback.
+    # * ONLY this worker controls playback.
     #
-    # Playback order:
+    # * Playback order:
     #
-    # 0 → 1 → 2 → 3 ...
+    # * 0 → 1 → 2 → 3 ...
     #
-    # Never based on generation completion order.
-    # =====================================================
+    # ! Never based on generation completion order.
+    # * =====================================================
 
     def _playback_worker(self):
 
@@ -559,9 +559,9 @@ class TTSPipeline:
 
                     return
 
-                # -------------------------------------------------
-                # Wait for the next sentence's audio.
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Wait for the next sentence's audio.
+                # * -------------------------------------------------
 
                 with self.pending_condition:
 
@@ -609,13 +609,13 @@ class TTSPipeline:
 
                     self.next_play_index += 1
 
-                # -------------------------------------------------
-                # HUD — JARVIS has started speaking.
+                # * -------------------------------------------------
+                # * HUD — JARVIS has started speaking.
                 #
-                # This is intentionally triggered when the
-                # first sentence is actually ready for playback,
-                # not merely when the TTS pipeline starts.
-                # -------------------------------------------------
+                # * This is intentionally triggered when the
+                # * first sentence is actually ready for playback,
+                # * not merely when the TTS pipeline starts.
+                # * -------------------------------------------------
 
                 if not self.hud_speaking:
 
@@ -634,9 +634,9 @@ class TTSPipeline:
                             e
                         )
 
-                # -------------------------------------------------
-                # Play prepared audio.
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Play prepared audio.
+                # * -------------------------------------------------
 
                 try:
 
@@ -656,9 +656,9 @@ class TTSPipeline:
                         f"{current_index}"
                     )
 
-                    # -------------------------------------------------
-                    # Edge TTS prepared audio
-                    # -------------------------------------------------
+                    # * -------------------------------------------------
+                    # * Edge TTS prepared audio
+                    # * -------------------------------------------------
 
                     if audio_file:
 
@@ -670,9 +670,9 @@ class TTSPipeline:
 
                         )
 
-                    # -------------------------------------------------
-                    # Offline / fallback
-                    # -------------------------------------------------
+                    # * -------------------------------------------------
+                    # * Offline / fallback
+                    # * -------------------------------------------------
 
                     else:
 
@@ -695,16 +695,16 @@ class TTSPipeline:
 
         finally:
 
-            # -------------------------------------------------
-            # Entire TTS playback is finished.
+            # * -------------------------------------------------
+            # * Entire TTS playback is finished.
             #
-            # This executes even when:
+            # * This executes even when:
             #
-            # - playback completes normally
-            # - user interrupts
-            # - session is cancelled
-            # - an error occurs
-            # -------------------------------------------------
+            # * - playback completes normally
+            # * - user interrupts
+            # * - session is cancelled
+            # ! - an error occurs
+            # * -------------------------------------------------
 
             if self.hud_speaking:
 
@@ -721,9 +721,9 @@ class TTSPipeline:
 
                 self.hud_speaking = False
 
-    # =====================================================
-    # Generation Finished
-    # =====================================================
+    # * =====================================================
+    # * Generation Finished
+    # * =====================================================
 
     def _generation_finished(self):
 
@@ -744,9 +744,9 @@ class TTSPipeline:
             >= total
         )
 
-    # =====================================================
-    # Offline / Fallback
-    # =====================================================
+    # * =====================================================
+    # * Offline / Fallback
+    # * =====================================================
 
     def _play_fallback(
         self,
@@ -785,15 +785,15 @@ class TTSPipeline:
                 e
             )
 
-    # =====================================================
-    # Wait
-    # =====================================================
+    # * =====================================================
+    # * Wait
+    # * =====================================================
 
     def wait(self):
 
-        # -------------------------------------------------
-        # Wait for generation workers.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Wait for generation workers.
+        # * -------------------------------------------------
 
         for thread in self.prefetch_threads:
 
@@ -801,34 +801,34 @@ class TTSPipeline:
 
                 thread.join()
 
-        # -------------------------------------------------
-        # Wake playback worker after generation is done.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Wake playback worker after generation is done.
+        # * -------------------------------------------------
 
         with self.pending_condition:
 
             self.pending_condition.notify_all()
 
-        # -------------------------------------------------
-        # Wait for playback.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Wait for playback.
+        # * -------------------------------------------------
 
         if self.playback_thread:
 
             self.playback_thread.join()
 
-        # -------------------------------------------------
-        # Final cleanup.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Final cleanup.
+        # * -------------------------------------------------
 
         self._cleanup_pending_audio()
 
-        # -------------------------------------------------
-        # HUD — complete speech state.
+        # * -------------------------------------------------
+        # * HUD — complete speech state.
         #
-        # This happens only after ALL generated sentences
-        # have finished playing.
-        # -------------------------------------------------
+        # * This happens only after ALL generated sentences
+        # * have finished playing.
+        # * -------------------------------------------------
 
         try:
 
@@ -845,9 +845,9 @@ class TTSPipeline:
             "[TTS PIPELINE] Finished"
         )
         
-    # =====================================================
-    # Delete Audio
-    # =====================================================
+    # * =====================================================
+    # * Delete Audio
+    # * =====================================================
 
     def _delete_audio(
         self,
@@ -884,15 +884,15 @@ class TTSPipeline:
                 f" {e}"
             )
 
-    # =====================================================
-    # Cleanup Pending Audio
+    # * =====================================================
+    # * Cleanup Pending Audio
     #
-    # Called when:
+    # * Called when:
     #
-    # - user interrupts
-    # - session becomes invalid
-    # - pipeline finishes
-    # =====================================================
+    # * - user interrupts
+    # * - session becomes invalid
+    # * - pipeline finishes
+    # * =====================================================
 
     def _cleanup_pending_audio(self):
 

@@ -29,9 +29,9 @@ def main():
 
         project = Path(temp)
 
-        # ------------------------------------------
-        # Original project
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Original project
+        # * ------------------------------------------
 
         source = project / "main.py"
 
@@ -52,18 +52,18 @@ def main():
         print(source.read_text())
         print("PASS")
 
-        # ------------------------------------------
-        # Writer
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Writer
+        # * ------------------------------------------
 
         writer = PatchWriter()
 
         print("\n[2] PatchWriter created")
         print("PASS")
 
-        # ------------------------------------------
-        # Force failure AFTER first patch
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Force failure AFTER first patch
+        # * ------------------------------------------
 
         original_applier = writer.applier.apply
 
@@ -78,7 +78,7 @@ def main():
 
             call_count += 1
 
-            # First patch works
+            # * First patch works
             if call_count == 1:
 
                 return original_applier(
@@ -86,16 +86,16 @@ def main():
                     patch,
                 )
 
-            # Second patch fails
+            # * Second patch fails
             raise RuntimeError(
                 "Intentional test failure"
             )
 
         writer.applier.apply = failing_apply
 
-        # ------------------------------------------
-        # Two patches
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Two patches
+        # * ------------------------------------------
 
         patches = [
 
@@ -129,9 +129,9 @@ def main():
         print("\n[3] Failure scenario prepared")
         print("PASS")
 
-        # ------------------------------------------
-        # Execute
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Execute
+        # * ------------------------------------------
 
         failed = False
 
@@ -159,9 +159,9 @@ def main():
 
         print("PASS")
 
-        # ------------------------------------------
-        # Verify original restored
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Verify original restored
+        # * ------------------------------------------
 
         restored = source.read_text(
 
@@ -179,9 +179,9 @@ def main():
 
         print("PASS")
 
-        # ------------------------------------------
-        # Verify second file absent
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Verify second file absent
+        # * ------------------------------------------
 
         second = project / "second.py"
 
@@ -197,9 +197,9 @@ def main():
 
         print("PASS")
 
-        # ------------------------------------------
-        # Verify backup exists
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Verify backup exists
+        # * ------------------------------------------
 
         backup_root = (
 

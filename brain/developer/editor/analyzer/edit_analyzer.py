@@ -27,9 +27,9 @@ class EditAnalyzer:
 
     ACTION_RULES = {
 
-        # -------------------------------------
-        # Highest priority
-        # -------------------------------------
+        # * -------------------------------------
+        # * Highest priority
+        # * -------------------------------------
 
         "RENAME": [
 
@@ -84,9 +84,9 @@ class EditAnalyzer:
 
         ],
 
-        # -------------------------------------
-        # Lowest priority
-        # -------------------------------------
+        # * -------------------------------------
+        # * Lowest priority
+        # * -------------------------------------
 
         "ADD": [
 
@@ -101,14 +101,14 @@ class EditAnalyzer:
 
     DEFAULT_ACTION = "MODIFY"
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def __init__(self):
 
         self.target_locator = TargetLocator()
         self.scanner = ProjectScanner()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def analyze(
         self,
@@ -139,9 +139,9 @@ class EditAnalyzer:
 
             request.project_path = project_path
 
-            # ---------------------------------
-            # Build project index
-            # ---------------------------------
+            # * ---------------------------------
+            # * Build project index
+            # * ---------------------------------
 
             request.project_index = self.scanner.scan(
 
@@ -149,9 +149,9 @@ class EditAnalyzer:
 
             )
 
-            # ---------------------------------
-            # Locate relevant files
-            # ---------------------------------
+            # * ---------------------------------
+            # * Locate relevant files
+            # * ---------------------------------
 
             request.target_files = self.target_locator.locate(
 
@@ -163,7 +163,7 @@ class EditAnalyzer:
 
         return request
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _detect_action(
         self,
@@ -175,9 +175,9 @@ class EditAnalyzer:
 
         request = user_request.lower().strip()
 
-        # -------------------------------------
-        # Priority-based detection
-        # -------------------------------------
+        # * -------------------------------------
+        # * Priority-based detection
+        # * -------------------------------------
 
         for action, patterns in self.ACTION_RULES.items():
 

@@ -12,50 +12,50 @@ from typing import Any, Dict, List
 @dataclass
 class AIContext:
 
-    # Current user request
+    # * Current user request
     user_input: str = ""
 
-    # Permanent profile
+    # * Permanent profile
     profile: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # Recent conversation
+    # * Recent conversation
     conversation: List[Dict[str, Any]] = field(
         default_factory=list
     )
 
-    # Retrieved long-term memory
+    # * Retrieved long-term memory
     memories: List[Any] = field(
         default_factory=list
     )
 
-    # Planner state
+    # * Planner state
     planner: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # Active project
+    # * Active project
     project: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # Live screen context
+    # * Live screen context
     screen: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # Tool information
+    # * Tool information
     tools: Dict[str, Any] = field(
         default_factory=dict
     )
     
-    # Natural Conversation Intelligence
+    # * Natural Conversation Intelligence
     natural: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # Metadata
+    # * Metadata
     metadata: Dict[str, Any] = field(
         default_factory=dict
     )

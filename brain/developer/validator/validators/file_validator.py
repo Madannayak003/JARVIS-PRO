@@ -44,9 +44,9 @@ class FileValidator(BaseValidator):
 
         plan = context.execution_plan
 
-        # -------------------------------------
-        # Generated files
-        # -------------------------------------
+        # * -------------------------------------
+        # * Generated files
+        # * -------------------------------------
 
         generated_files = {
 
@@ -56,9 +56,9 @@ class FileValidator(BaseValidator):
 
         }
 
-        # -------------------------------------
-        # Required files
-        # -------------------------------------
+        # * -------------------------------------
+        # ! Required files
+        # * -------------------------------------
 
         expected_files = {
 
@@ -68,9 +68,9 @@ class FileValidator(BaseValidator):
 
         }
 
-        # -------------------------------------
-        # Compare
-        # -------------------------------------
+        # * -------------------------------------
+        # * Compare
+        # * -------------------------------------
 
         for filename in expected_files:
 

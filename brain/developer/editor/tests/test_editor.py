@@ -21,19 +21,19 @@ def main():
 
     tests = [
 
-        # Existing functions
+        # * Existing functions
         "Fix divide()",
         "Optimize multiply()",
         "Rename add() to addition()",
         "Rename calculator to simple_calculator",
 
-        # New feature
+        # * New feature
         "Add modulo() function",
 
-        # Formatting
+        # * Formatting
         "Format main.py",      
 
-        # Documentation
+        # * Documentation
         "Update README.md",
 
     ]

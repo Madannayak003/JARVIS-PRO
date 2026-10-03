@@ -27,7 +27,7 @@ class TaskManager:
 
         with self.lock:
 
-            # Stop previous task of same type
+            # * Stop previous task of same type
             self.stop(name)
 
             stop_event = threading.Event()

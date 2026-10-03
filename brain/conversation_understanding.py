@@ -23,9 +23,9 @@ from enum import Enum
 import re
 
 
-# ============================================================
-# Conversation Relationship
-# ============================================================
+# * ============================================================
+# * Conversation Relationship
+# * ============================================================
 
 class ConversationRelation(str, Enum):
 
@@ -52,9 +52,9 @@ class ConversationRelation(str, Enum):
     UNKNOWN = "unknown"
 
 
-# ============================================================
-# Understanding Result
-# ============================================================
+# * ============================================================
+# * Understanding Result
+# * ============================================================
 
 @dataclass
 class ConversationUnderstanding:
@@ -67,38 +67,38 @@ class ConversationUnderstanding:
 
     raw_input: str = ""
 
-    # Contextual references found in the input.
+    # * Contextual references found in the input.
     #
-    # Examples:
+    # * Examples:
     #
-    # "make it louder"
-    #     -> ["it"]
+    # * "make it louder"
+    # * -> ["it"]
     #
-    # "open the first one"
-    #     -> ["the first one"]
+    # * "open the first one"
+    # * -> ["the first one"]
     #
     references: list[str] = field(
         default_factory=list
     )
 
 
-# ============================================================
-# Conversation Understanding Engine
-# ============================================================
+# * ============================================================
+# * Conversation Understanding Engine
+# * ============================================================
 
 class ConversationUnderstandingEngine:
 
     def __init__(self):
 
-        # ----------------------------------------------------
-        # Confirmation phrases
+        # * ----------------------------------------------------
+        # * Confirmation phrases
         #
-        # IMPORTANT:
-        # Existing confirmation.py remains authoritative
-        # during real JARVIS execution.
+        # ! IMPORTANT:
+        # * Existing confirmation.py remains authoritative
+        # * during real JARVIS execution.
         #
-        # This list is only for understanding/classification.
-        # ----------------------------------------------------
+        # * This list is only for understanding/classification.
+        # * ----------------------------------------------------
 
         self.confirmation_phrases = {
             "yes",
@@ -116,9 +116,9 @@ class ConversationUnderstandingEngine:
             "yes switch",
         }
 
-        # ----------------------------------------------------
-        # Rejection phrases
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Rejection phrases
+        # * ----------------------------------------------------
 
         self.rejection_phrases = {
             "no",
@@ -129,9 +129,9 @@ class ConversationUnderstandingEngine:
             "not now",
         }
 
-        # ----------------------------------------------------
-        # Cancellation phrases
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Cancellation phrases
+        # * ----------------------------------------------------
 
         self.cancellation_phrases = {
             "cancel",
@@ -145,15 +145,15 @@ class ConversationUnderstandingEngine:
             "dont do it",
         }
 
-        # ----------------------------------------------------
-        # Continuation phrases
+        # * ----------------------------------------------------
+        # * Continuation phrases
         #
-        # "continue" is intentionally NOT inside the
-        # confirmation list.
+        # * "continue" is intentionally NOT inside the
+        # * confirmation list.
         #
-        # Existing confirmation handling in core.assistant
-        # still has priority when JARVIS is waiting.
-        # ----------------------------------------------------
+        # * Existing confirmation handling in core.assistant
+        # * still has priority when JARVIS is waiting.
+        # * ----------------------------------------------------
 
         self.continuation_phrases = {
             "continue",
@@ -168,9 +168,9 @@ class ConversationUnderstandingEngine:
             "do that again",
         }
 
-        # ----------------------------------------------------
-        # Correction indicators
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Correction indicators
+        # * ----------------------------------------------------
 
         self.correction_patterns = [
 
@@ -194,18 +194,18 @@ class ConversationUnderstandingEngine:
 
         ]
 
-        # ----------------------------------------------------
-        # Reference patterns
+        # * ----------------------------------------------------
+        # * Reference patterns
         #
-        # These are NOT automatically the main relation.
+        # * These are NOT automatically the main relation.
         #
-        # Example:
+        # * Example:
         #
-        # "make it louder"
+        # * "make it louder"
         #
-        # relation   = FOLLOW_UP
-        # references = ["it"]
-        # ----------------------------------------------------
+        # * relation   = FOLLOW_UP
+        # * references = ["it"]
+        # * ----------------------------------------------------
 
         self.reference_patterns = [
 
@@ -233,23 +233,23 @@ class ConversationUnderstandingEngine:
 
         ]
 
-        # ----------------------------------------------------
-        # Follow-up indicators
+        # * ----------------------------------------------------
+        # * Follow-up indicators
         #
-        # IMPORTANT:
+        # ! IMPORTANT:
         #
-        # Generic commands such as:
+        # * Generic commands such as:
         #
-        # open
-        # play
-        # pause
-        # close
-        # search
-        # send
+        # * open
+        # * play
+        # * pause
+        # * close
+        # * search
+        # * send
         #
-        # are NOT placed here because they can be completely
-        # valid NEW_REQUEST commands.
-        # ----------------------------------------------------
+        # * are NOT placed here because they can be completely
+        # * valid NEW_REQUEST commands.
+        # * ----------------------------------------------------
 
         self.follow_up_patterns = [
 
@@ -281,9 +281,9 @@ class ConversationUnderstandingEngine:
 
         ]
 
-    # ========================================================
-    # Public API
-    # ========================================================
+    # * ========================================================
+    # * Public API
+    # * ========================================================
 
     def understand(
         self,
@@ -296,9 +296,9 @@ class ConversationUnderstandingEngine:
 
         text = self._normalize(raw_input)
 
-        # ----------------------------------------------------
-        # Empty input
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Empty input
+        # * ----------------------------------------------------
 
         if not text:
 
@@ -309,18 +309,18 @@ class ConversationUnderstandingEngine:
                 raw_input=raw_input,
             )
 
-        # ----------------------------------------------------
-        # Extract references FIRST.
+        # * ----------------------------------------------------
+        # * Extract references FIRST.
         #
-        # Reference information is kept separately from the
-        # main conversational relationship.
-        # ----------------------------------------------------
+        # * Reference information is kept separately from the
+        # * main conversational relationship.
+        # * ----------------------------------------------------
 
         references = self._extract_references(text)
 
-        # ====================================================
-        # CANCELLATION
-        # ====================================================
+        # * ====================================================
+        # * CANCELLATION
+        # * ====================================================
 
         if text in self.cancellation_phrases:
 
@@ -332,9 +332,9 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # CONTINUATION
-        # ====================================================
+        # * ====================================================
+        # * CONTINUATION
+        # * ====================================================
 
         if text in self.continuation_phrases:
 
@@ -346,9 +346,9 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # CORRECTION
-        # ====================================================
+        # * ====================================================
+        # * CORRECTION
+        # * ====================================================
 
         if self._matches_any(
             text,
@@ -363,9 +363,9 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # CONFIRMATION
-        # ====================================================
+        # * ====================================================
+        # * CONFIRMATION
+        # * ====================================================
 
         if text in self.confirmation_phrases:
 
@@ -377,9 +377,9 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # REJECTION
-        # ====================================================
+        # * ====================================================
+        # * REJECTION
+        # * ====================================================
 
         if text in self.rejection_phrases:
 
@@ -391,23 +391,23 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # CONTEXT-AWARE CLARIFICATION
+        # * ====================================================
+        # * CONTEXT-AWARE CLARIFICATION
         #
-        # This check happens before generic follow-up logic.
+        # * This check happens before generic follow-up logic.
         #
-        # If JARVIS is explicitly waiting for an answer and
-        # the user gives a short response such as:
+        # * If JARVIS is explicitly waiting for an answer and
+        # * the user gives a short response such as:
         #
-        # "Rahul"
-        # "Chrome"
-        # "Google"
+        # * "Rahul"
+        # * "Chrome"
+        # * "Google"
         #
-        # it can be treated as a clarification answer.
+        # * it can be treated as a clarification answer.
         #
-        # Existing confirmation/WhatsApp logic still has
-        # priority in the real assistant loop.
-        # ====================================================
+        # * Existing confirmation/WhatsApp logic still has
+        # * priority in the real assistant loop.
+        # * ====================================================
 
         if self._has_waiting_state(state):
 
@@ -424,20 +424,20 @@ class ConversationUnderstandingEngine:
                     references=references,
                 )
 
-        # ====================================================
-        # FOLLOW-UP
+        # * ====================================================
+        # * FOLLOW-UP
         #
-        # This is checked AFTER explicit conversation states.
+        # * This is checked AFTER explicit conversation states.
         #
-        # Example:
+        # * Example:
         #
-        # "make it louder"
+        # * "make it louder"
         #
-        # becomes:
+        # * becomes:
         #
-        # relation   = FOLLOW_UP
-        # references = ["it"]
-        # ====================================================
+        # * relation   = FOLLOW_UP
+        # * references = ["it"]
+        # * ====================================================
 
         if self._matches_any(
             text,
@@ -452,17 +452,17 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # REFERENCE ONLY
+        # * ====================================================
+        # * REFERENCE ONLY
         #
-        # If the input contains a contextual reference but
-        # does not otherwise look like a follow-up, preserve
-        # REFERENCE as the relationship.
+        # * If the input contains a contextual reference but
+        # * does not otherwise look like a follow-up, preserve
+        # * REFERENCE as the relationship.
         #
-        # Example:
+        # * Example:
         #
-        # "the first one"
-        # ====================================================
+        # * "the first one"
+        # * ====================================================
 
         if references:
 
@@ -474,22 +474,22 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
             
-        # ====================================================
-        # CONTEXTUAL ACTION
+        # * ====================================================
+        # * CONTEXTUAL ACTION
         #
-        # Some commands are valid standalone commands but
-        # become conversational continuations when the active
-        # context matches the application.
+        # * Some commands are valid standalone commands but
+        # * become conversational continuations when the active
+        # * context matches the application.
         #
-        # Example:
+        # * Example:
         #
-        #     search ESP32 on YouTube
-        #     play the first video
+        # * search ESP32 on YouTube
+        # * play the first video
         #
-        # The second command remains a normal command at the
-        # router level, but Natural Conversation understands
-        # that it continues the active YouTube task.
-        # ====================================================
+        # * The second command remains a normal command at the
+        # * router level, but Natural Conversation understands
+        # * that it continues the active YouTube task.
+        # * ====================================================
 
         contextual_relation = (
             self._contextual_action_relation(
@@ -511,13 +511,13 @@ class ConversationUnderstandingEngine:
                 references=references,
             )
 
-        # ====================================================
-        # NEW REQUEST
-        # ====================================================    
+        # * ====================================================
+        # * NEW REQUEST
+        # * ====================================================
 
-        # ====================================================
-        # NEW REQUEST
-        # ====================================================
+        # * ====================================================
+        # * NEW REQUEST
+        # * ====================================================
 
         return self._result(
             relation=ConversationRelation.NEW_REQUEST,
@@ -530,9 +530,9 @@ class ConversationUnderstandingEngine:
             references=references,
         )
 
-    # ========================================================
-    # Normalize
-    # ========================================================
+    # * ========================================================
+    # * Normalize
+    # * ========================================================
 
     @staticmethod
     def _normalize(
@@ -549,9 +549,9 @@ class ConversationUnderstandingEngine:
 
         return text
 
-    # ========================================================
-    # Pattern Matching
-    # ========================================================
+    # * ========================================================
+    # * Pattern Matching
+    # * ========================================================
 
     @staticmethod
     def _matches_any(
@@ -570,9 +570,9 @@ class ConversationUnderstandingEngine:
 
         return False
 
-    # ========================================================
-    # Reference Extraction
-    # ========================================================
+    # * ========================================================
+    # * Reference Extraction
+    # * ========================================================
 
     @staticmethod
     def _extract_references(
@@ -680,14 +680,14 @@ class ConversationUnderstandingEngine:
 
         return references
 
-    # ========================================================
-    # Reference Position
+    # * ========================================================
+    # * Reference Position
     #
-    # Converts a recognized positional reference into a
-    # one-based position.
+    # * Converts a recognized positional reference into a
+    # * one-based position.
     #
-    # This method does NOT access BrowserContext.
-    # ========================================================
+    # * This method does NOT access BrowserContext.
+    # * ========================================================
 
     @staticmethod
     def reference_position(
@@ -715,9 +715,9 @@ class ConversationUnderstandingEngine:
             reference.strip().lower()
         )
 
-    # ========================================================
-    # Waiting State
-    # ========================================================
+    # * ========================================================
+    # * Waiting State
+    # * ========================================================
 
     @staticmethod
     def _has_waiting_state(
@@ -730,9 +730,9 @@ class ConversationUnderstandingEngine:
 
         try:
 
-            # --------------------------------------------
-            # ConversationStateManager
-            # --------------------------------------------
+            # * --------------------------------------------
+            # * ConversationStateManager
+            # * --------------------------------------------
 
             if hasattr(
                 state,
@@ -741,9 +741,9 @@ class ConversationUnderstandingEngine:
 
                 return state.is_waiting()
 
-            # --------------------------------------------
-            # Dictionary state
-            # --------------------------------------------
+            # * --------------------------------------------
+            # * Dictionary state
+            # * --------------------------------------------
 
             if isinstance(
                 state,
@@ -756,16 +756,16 @@ class ConversationUnderstandingEngine:
 
         except Exception:
 
-            # Conversation understanding must NEVER crash
-            # the main JARVIS runtime because of a state
-            # lookup problem.
+            # ! Conversation understanding must NEVER crash
+            # * the main JARVIS runtime because of a state
+            # * lookup problem.
             return False
 
         return False
 
-    # ========================================================
-    # Short Answer Detection
-    # ========================================================
+    # * ========================================================
+    # * Short Answer Detection
+    # * ========================================================
 
     @staticmethod
     def _looks_like_short_answer(
@@ -776,24 +776,24 @@ class ConversationUnderstandingEngine:
 
         return len(words) <= 6
     
-    # ========================================================
-    # Contextual Action Detection
+    # * ========================================================
+    # * Contextual Action Detection
     #
-    # Some commands are valid standalone NEW_REQUEST commands
-    # but become conversational continuations when an active
-    # application/task already exists.
+    # * Some commands are valid standalone NEW_REQUEST commands
+    # * but become conversational continuations when an active
+    # * application/task already exists.
     #
-    # Example:
+    # * Example:
     #
-    #   search ESP32 on YouTube
-    #   play the first video
+    # * search ESP32 on YouTube
+    # * play the first video
     #
-    # "play the first video" is a valid standalone command,
-    # so it must NOT globally become FOLLOW_UP.
+    # * "play the first video" is a valid standalone command,
+    # ! so it must NOT globally become FOLLOW_UP.
     #
-    # It becomes CONTINUATION only when the active context
-    # indicates YouTube.
-    # ========================================================
+    # * It becomes CONTINUATION only when the active context
+    # * indicates YouTube.
+    # * ========================================================
 
     @staticmethod
     def _contextual_action_relation(
@@ -812,9 +812,9 @@ class ConversationUnderstandingEngine:
         if state is None:
             return None
 
-        # ----------------------------------------------------
-        # Read active context safely
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Read active context safely
+        # * ----------------------------------------------------
 
         application = None
         skill = None
@@ -822,7 +822,7 @@ class ConversationUnderstandingEngine:
 
         try:
 
-            # ConversationContextManager
+            # * ConversationContextManager
             if hasattr(
                 state,
                 "application"
@@ -841,7 +841,7 @@ class ConversationUnderstandingEngine:
             ):
                 topic = state.topic
 
-            # Snapshot fallback
+            # * Snapshot fallback
             if hasattr(
                 state,
                 "snapshot"
@@ -868,8 +868,8 @@ class ConversationUnderstandingEngine:
 
         except Exception:
 
-            # Natural conversation must never break
-            # normal JARVIS execution.
+            # ! Natural conversation must never break
+            # * normal JARVIS execution.
             return None
 
         application = str(
@@ -884,9 +884,9 @@ class ConversationUnderstandingEngine:
             topic or ""
         ).strip().lower()
 
-        # ====================================================
-        # YouTube contextual actions
-        # ====================================================
+        # * ====================================================
+        # * YouTube contextual actions
+        # * ====================================================
 
         youtube_context = (
             application == "youtube"
@@ -937,9 +937,9 @@ class ConversationUnderstandingEngine:
                     ConversationRelation.CONTINUATION
                 )
 
-        # ====================================================
-        # Spotify contextual actions
-        # ====================================================
+        # * ====================================================
+        # * Spotify contextual actions
+        # * ====================================================
 
         spotify_context = (
             application == "spotify"
@@ -972,9 +972,9 @@ class ConversationUnderstandingEngine:
 
         return None
 
-    # ========================================================
-    # Result Builder
-    # ========================================================
+    # * ========================================================
+    # * Result Builder
+    # * ========================================================
 
     @staticmethod
     def _result(
@@ -1000,18 +1000,18 @@ class ConversationUnderstandingEngine:
         )
 
 
-# ============================================================
-# Shared Engine
-# ============================================================
+# * ============================================================
+# * Shared Engine
+# * ============================================================
 
 conversation_understanding = (
     ConversationUnderstandingEngine()
 )
 
 
-# ============================================================
-# Convenience Function
-# ============================================================
+# * ============================================================
+# * Convenience Function
+# * ============================================================
 
 def understand(
     user_input: str,

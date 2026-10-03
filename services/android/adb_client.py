@@ -93,11 +93,11 @@ class AdbClient:
         self.remote_port = os.getenv("ANDROID_REMOTE_PORT", "5555").strip() or "5555"
         self._remote_endpoint = None
         if self.remote_host:
-            # Validate configuration once, without attempting any network access.
+            # * Validate configuration once, without attempting any network access.
             try:
                 self._remote_endpoint = normalize_endpoint(self.remote_host, self.remote_port)
             except ValueError:
-                # Bad optional configuration must not make JARVIS unavailable.
+                # ! Bad optional configuration must not make JARVIS unavailable.
                 self.remote_host = ""
                 self.remote_port = "5555"
         self._last_remote_attempt = 0.0

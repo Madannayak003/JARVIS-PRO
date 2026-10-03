@@ -32,9 +32,9 @@ class AIPipeline:
         self.llm = llm
         self.memory = memory_manager
 
-    # ==========================================================
-    # Normal Response (Testing / Future REST API)
-    # ==========================================================
+    # * ==========================================================
+    # * Normal Response (Testing / Future REST API)
+    # * ==========================================================
 
     def process(self, user_input: str):
 
@@ -60,9 +60,9 @@ class AIPipeline:
 
         return response
 
-    # ==========================================================
-    # Streaming Response (Real JARVIS)
-    # ==========================================================
+    # * ==========================================================
+    # * Streaming Response (Real JARVIS)
+    # * ==========================================================
 
     def process_stream(
         self,
@@ -72,27 +72,27 @@ class AIPipeline:
         stop_event=None
     ):
 
-        # --------------------------------------------
-        # Save user message
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Save user message
+        # * --------------------------------------------
 
         self.conversation.add_user_message(user_input)
 
-        # --------------------------------------------
-        # Build Context
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Build Context
+        # * --------------------------------------------
 
         context = self.context_builder.build(user_input)
 
-        # --------------------------------------------
-        # Build Prompt
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Build Prompt
+        # * --------------------------------------------
 
         prompt = self.prompt_builder.build(context)
 
-        # --------------------------------------------
-        # Start Streaming
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Start Streaming
+        # * --------------------------------------------
 
         stream = stream_callback(
             system_prompt,
@@ -112,12 +112,12 @@ class AIPipeline:
             if text:
                 complete_response.append(text)
 
-            # Pass original chunk to existing code
+            # * Pass original chunk to existing code
             yield chunk
 
-        # --------------------------------------------
-        # Save Assistant Reply
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Save Assistant Reply
+        # * --------------------------------------------
 
         final_response = "".join(complete_response).strip()
 
@@ -127,8 +127,8 @@ class AIPipeline:
                 final_response
             )
 
-            # The stream is complete here, so the shared conversational
-            # context can be updated without waiting for TTS playback.
+            # * The stream is complete here, so the shared conversational
+            # * context can be updated without waiting for TTS playback.
             self._record_completed_response(
                 final_response,
                 user_input=user_input,
@@ -139,9 +139,9 @@ class AIPipeline:
                 final_response
             )
 
-    # ==========================================================
-    # Long-Term Memory
-    # ==========================================================
+    # * ==========================================================
+    # * Long-Term Memory
+    # * ==========================================================
 
     @staticmethod
     def _record_completed_response(
@@ -164,11 +164,11 @@ class AIPipeline:
                     user_input=user_input,
                 )
             except TypeError:
-                # Keep lightweight/test coordinators and older integrations
-                # compatible with the original one-argument hook.
+                # * Keep lightweight/test coordinators and older integrations
+                # * compatible with the original one-argument hook.
                 conversation_coordinator.record_response(response)
         except Exception as error:
-            # Context bookkeeping must never break streaming or playback.
+            # ! Context bookkeeping must never break streaming or playback.
             print(
                 "[Brain Conversation] Response update failed safely:",
                 error,

@@ -68,9 +68,9 @@ from hud.integration import HUDIntegration
 from config.environment import get_env
 from config.settings import get_assistant_display_name
 
-# =============================================================
-# CONFIGURATION
-# =============================================================
+# * =============================================================
+# * CONFIGURATION
+# * =============================================================
 
 DEFAULT_MODEL = "gemini-3.1-flash-live-preview"
 
@@ -85,15 +85,15 @@ OUTPUT_RATE = 24000
 CHANNELS = 1
 DTYPE = "int16"
 
-# 1024 samples at 16 kHz ~= 64 ms.
+# * 1024 samples at 16 kHz ~= 64 ms.
 BLOCK_SIZE = 1024
 
 INPUT_QUEUE_SIZE = 64
 
 
-# =============================================================
-# API KEY
-# =============================================================
+# * =============================================================
+# * API KEY
+# * =============================================================
 
 def _api_key() -> str:
     """
@@ -136,9 +136,9 @@ def _api_key() -> str:
         return ""
 
 
-# =============================================================
-# SYSTEM PROMPT
-# =============================================================
+# * =============================================================
+# * SYSTEM PROMPT
+# * =============================================================
 
 def _system_prompt() -> str:
     """
@@ -332,9 +332,9 @@ REFERENCE PRESERVATION
     )
 
 
-# =============================================================
-# JARVIS COMMAND TOOL
-# =============================================================
+# * =============================================================
+# * JARVIS COMMAND TOOL
+# * =============================================================
 
 def _build_jarvis_command_tool() -> dict:
     assistant_name = get_assistant_display_name()
@@ -381,14 +381,14 @@ def _build_jarvis_command_tool() -> dict:
     }
 
 
-# Keep the historical export for callers that import this tool definition.
-# Live sessions build a fresh definition so a runtime rename is reflected.
+# * Keep the historical export for callers that import this tool definition.
+# * Live sessions build a fresh definition so a runtime rename is reflected.
 JARVIS_COMMAND_TOOL = _build_jarvis_command_tool()
 
 
-# =============================================================
-# LIVE CONVERSATION CLASS
-# =============================================================
+# * =============================================================
+# * LIVE CONVERSATION CLASS
+# * =============================================================
 
 class LiveConversation:
 
@@ -405,58 +405,58 @@ class LiveConversation:
         self._running = False
         self._hud_speaking = False
         
-        # -----------------------------------------------------
-        # Live microphone state.
+        # * -----------------------------------------------------
+        # * Live microphone state.
         #
-        # This is separate from the normal JARVIS listener.
-        # Turning the HUD microphone OFF while Live is running
-        # must silence Live input without closing the session.
-        # -----------------------------------------------------
+        # * This is separate from the normal JARVIS listener.
+        # * Turning the HUD microphone OFF while Live is running
+        # ! must silence Live input without closing the session.
+        # * -----------------------------------------------------
 
         self._microphone_enabled = True
 
         self._microphone_lock = threading.Lock()
 
-        # -----------------------------------------------------
-        # Prevent duplicate pause/resume operations.
+        # * -----------------------------------------------------
+        # * Prevent duplicate pause/resume operations.
         #
-        # This is intentionally owned by LiveConversation so
-        # repeated calls cannot pause/resume the normal listener
-        # multiple times.
-        # -----------------------------------------------------
+        # * This is intentionally owned by LiveConversation so
+        # * repeated calls cannot pause/resume the normal listener
+        # * multiple times.
+        # * -----------------------------------------------------
 
         self._normal_mic_paused = False
 
         self._normal_mic_lock = threading.Lock()
 
-        # -----------------------------------------------------
-        # Gemini Live session resumption.
+        # * -----------------------------------------------------
+        # * Gemini Live session resumption.
         #
-        # Gemini provides a resumable handle before a Live
-        # connection reaches its server-side lifetime limit.
-        # The handle is used to continue the same conversation
-        # on the next Gemini connection.
-        # -----------------------------------------------------
+        # * Gemini provides a resumable handle before a Live
+        # * connection reaches its server-side lifetime limit.
+        # * The handle is used to continue the same conversation
+        # * on the next Gemini connection.
+        # * -----------------------------------------------------
 
         self._session_resumption_handle = None
 
         self._session_resumption_lock = threading.Lock()
 
-        # -----------------------------------------------------
-        # Typed Command Input -> Gemini Live bridge.
+        # * -----------------------------------------------------
+        # * Typed Command Input -> Gemini Live bridge.
         #
-        # These point only to the currently active Gemini
-        # connection. They are replaced automatically whenever
-        # Live performs a connection rollover.
-        # -----------------------------------------------------
+        # * These point only to the currently active Gemini
+        # ! connection. They are replaced automatically whenever
+        # * Live performs a connection rollover.
+        # * -----------------------------------------------------
 
         self._session = None
         self._session_loop = None
         self._session_lock = threading.Lock()
 
-    # =========================================================
-    # STATE
-    # =========================================================
+    # * =========================================================
+    # * STATE
+    # * =========================================================
 
     @property
     def running(self) -> bool:
@@ -475,9 +475,9 @@ class LiveConversation:
             self._running = value
             
     
-    # =========================================================
-    # LIVE MICROPHONE STATE
-    # =========================================================
+    # * =========================================================
+    # * LIVE MICROPHONE STATE
+    # * =========================================================
 
     def set_microphone_enabled(
         self,
@@ -495,7 +495,7 @@ class LiveConversation:
             "ON" if enabled else "OFF",
         )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def microphone_enabled(self) -> bool:
 
@@ -504,9 +504,9 @@ class LiveConversation:
             return self._microphone_enabled
         
         
-    # =========================================================
-    # HUD SPEAKING STATE
-    # =========================================================
+    # * =========================================================
+    # * HUD SPEAKING STATE
+    # * =========================================================
 
     def _hud_start_speaking(self):
         if self._hud_speaking:
@@ -526,7 +526,7 @@ class LiveConversation:
                 exc,
             )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def _hud_stop_speaking(self):
         if not self._hud_speaking:
@@ -548,9 +548,9 @@ class LiveConversation:
         finally:
             self._hud_speaking = False
         
-    # =========================================================
-    # GEMINI SESSION RESUMPTION
-    # =========================================================
+    # * =========================================================
+    # * GEMINI SESSION RESUMPTION
+    # * =========================================================
 
     def _get_session_resumption_handle(self):
 
@@ -558,7 +558,7 @@ class LiveConversation:
 
             return self._session_resumption_handle
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def _set_session_resumption_handle(
         self,
@@ -574,9 +574,9 @@ class LiveConversation:
             self._session_resumption_handle = handle
             
             
-    # =========================================================
-    # TYPED TEXT -> GEMINI LIVE
-    # =========================================================
+    # * =========================================================
+    # * TYPED TEXT -> GEMINI LIVE
+    # * =========================================================
 
     def send_text(
         self,
@@ -643,9 +643,9 @@ class LiveConversation:
 
             return False
 
-    # =========================================================
-    # START
-    # =========================================================
+    # * =========================================================
+    # * START
+    # * =========================================================
 
     def start(self):
 
@@ -679,9 +679,9 @@ class LiveConversation:
 
         self._thread.start()
 
-    # =========================================================
-    # STOP
-    # =========================================================
+    # * =========================================================
+    # * STOP
+    # * =========================================================
 
     def stop(self):
 
@@ -699,9 +699,9 @@ class LiveConversation:
 
         self._stop_event.set()
 
-    # =========================================================
-    # THREAD ENTRY
-    # =========================================================
+    # * =========================================================
+    # * THREAD ENTRY
+    # * =========================================================
 
     def _thread_main(self):
 
@@ -733,9 +733,9 @@ class LiveConversation:
                 "[LIVE] =================================================="
             )
 
-    # =========================================================
-    # MAIN SESSION
-    # =========================================================
+    # * =========================================================
+    # * MAIN SESSION
+    # * =========================================================
 
     async def _run(self):
 
@@ -759,9 +759,9 @@ class LiveConversation:
             f"[LIVE] Model: {LIVE_MODEL}"
         )
 
-        # -----------------------------------------------------
-        # Pause the normal JARVIS microphone exactly once.
-        # -----------------------------------------------------
+        # * -----------------------------------------------------
+        # * Pause the normal JARVIS microphone exactly once.
+        # * -----------------------------------------------------
 
         self._pause_normal_microphone()
         
@@ -784,9 +784,9 @@ class LiveConversation:
             api_key=api_key
         )
 
-        # =====================================================
-        # GEMINI LIVE CONFIGURATION
-        # =====================================================
+        # * =====================================================
+        # * GEMINI LIVE CONFIGURATION
+        # * =====================================================
 
         config = types.LiveConnectConfig(
 
@@ -828,16 +828,16 @@ class LiveConversation:
 
             ),
 
-            # Keep reasoning lightweight for realtime speech.
+            # * Keep reasoning lightweight for realtime speech.
             thinking_config=types.ThinkingConfig(
                 thinking_level="minimal"
             ),
 
-            # -------------------------------------------------
-            # Allow Gemini to provide a resumable session
-            # handle when this connection approaches its
-            # server-side lifetime limit.
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Allow Gemini to provide a resumable session
+            # * handle when this connection approaches its
+            # * server-side lifetime limit.
+            # * -------------------------------------------------
 
             session_resumption=types.SessionResumptionConfig(
                 handle=self._get_session_resumption_handle(),
@@ -845,9 +845,9 @@ class LiveConversation:
             ),
         )
 
-        # =====================================================
-        # MICROPHONE CALLBACK
-        # =====================================================
+        # * =====================================================
+        # * MICROPHONE CALLBACK
+        # * =====================================================
 
         def microphone_callback(
             indata,
@@ -860,12 +860,12 @@ class LiveConversation:
 
                 return
 
-            # -------------------------------------------------
-            # HUD microphone switch.
+            # * -------------------------------------------------
+            # * HUD microphone switch.
             #
-            # Live session remains connected while the
-            # microphone is OFF. Only audio input is muted.
-            # -------------------------------------------------
+            # * Live session remains connected while the
+            # * microphone is OFF. Only audio input is muted.
+            # * -------------------------------------------------
 
             if not self.microphone_enabled():
 
@@ -898,17 +898,17 @@ class LiveConversation:
 
         try:
 
-            # =================================================
-            # LIVE AUDIO DEVICES
-            # =================================================
+            # * =================================================
+            # * LIVE AUDIO DEVICES
+            # * =================================================
             #
-            # These remain alive across Gemini connection
-            # rollovers.
+            # * These remain alive across Gemini connection
+            # * rollovers.
             #
-            # The physical microphone and speaker belong to
-            # the LiveConversation instance, not to a single
-            # Gemini connection.
-            # =================================================
+            # * The physical microphone and speaker belong to
+            # * the LiveConversation instance, not to a single
+            # * Gemini connection.
+            # * =================================================
 
             microphone = sd.RawInputStream(
 
@@ -946,9 +946,9 @@ class LiveConversation:
                 "[LIVE] Speaker active."
             )
 
-            # =================================================
-            # STOP WATCHER
-            # =================================================
+            # * =================================================
+            # * STOP WATCHER
+            # * =================================================
 
             stop_task = asyncio.create_task(
                 self._wait_for_stop(),
@@ -957,22 +957,22 @@ class LiveConversation:
 
             try:
 
-                # =================================================
-                # PERSISTENT LIVE CONNECTION LOOP
-                # =================================================
+                # * =================================================
+                # * PERSISTENT LIVE CONNECTION LOOP
+                # * =================================================
                 #
-                # Gemini connections have a server-side lifetime.
+                # * Gemini connections have a server-side lifetime.
                 #
-                # This loop allows JARVIS to replace an expired
-                # connection automatically.
+                # * This loop allows JARVIS to replace an expired
+                # * connection automatically.
                 #
-                # The session-resumption handle captured from the
-                # previous connection is supplied to the next
-                # connection so Gemini can resume the conversation.
+                # * The session-resumption handle captured from the
+                # * previous connection is supplied to the next
+                # * connection so Gemini can resume the conversation.
                 #
-                # The user remains in ONE continuous JARVIS Live
-                # Conversation from their perspective.
-                # =================================================
+                # * The user remains in ONE continuous JARVIS Live
+                # * Conversation from their perspective.
+                # * =================================================
 
                 connection_number = 0
 
@@ -985,13 +985,13 @@ class LiveConversation:
                         f"connection #{connection_number}..."
                     )
 
-                    # ---------------------------------------------
-                    # Build configuration for THIS connection.
+                    # * ---------------------------------------------
+                    # * Build configuration for THIS connection.
                     #
-                    # Important:
-                    # The latest session-resumption handle is read
-                    # immediately before connecting.
-                    # ---------------------------------------------
+                    # ! Important:
+                    # * The latest session-resumption handle is read
+                    # * immediately before connecting.
+                    # * ---------------------------------------------
 
                     connection_config = types.LiveConnectConfig(
 
@@ -1080,9 +1080,9 @@ class LiveConversation:
                                 "[LIVE] Waiting for conversation..."
                             )
 
-                            # =========================================
-                            # AUDIO SENDER
-                            # =========================================
+                            # * =========================================
+                            # * AUDIO SENDER
+                            # * =========================================
 
                             sender_task = asyncio.create_task(
                                 self._send_audio(
@@ -1094,9 +1094,9 @@ class LiveConversation:
 
                             try:
 
-                                # =====================================
-                                # RECEIVE / STOP LOOP
-                                # =====================================
+                                # * =====================================
+                                # * RECEIVE / STOP LOOP
+                                # * =====================================
 
                                 while not self._stop_event.is_set():
 
@@ -1116,9 +1116,9 @@ class LiveConversation:
                                         return_when=asyncio.FIRST_COMPLETED,
                                     )
 
-                                    # ---------------------------------
-                                    # USER STOPPED LIVE
-                                    # ---------------------------------
+                                    # * ---------------------------------
+                                    # * USER STOPPED LIVE
+                                    # * ---------------------------------
 
                                     if stop_task in done:
 
@@ -1135,9 +1135,9 @@ class LiveConversation:
 
                                         break
 
-                                    # ---------------------------------
-                                    # GEMINI RECEIVE COMPLETED
-                                    # ---------------------------------
+                                    # * ---------------------------------
+                                    # * GEMINI RECEIVE COMPLETED
+                                    # * ---------------------------------
 
                                     if receive_task in done:
 
@@ -1160,21 +1160,21 @@ class LiveConversation:
 
                                                 continue
                                             
-                                            # ---------------------------------
-                                            # GEMINI GO-AWAY
-                                            # ---------------------------------
+                                            # * ---------------------------------
+                                            # * GEMINI GO-AWAY
+                                            # * ---------------------------------
                                             #
-                                            # Gemini has warned that this
-                                            # connection is reaching its
-                                            # server-side lifetime limit.
+                                            # * Gemini has warned that this
+                                            # * connection is reaching its
+                                            # * server-side lifetime limit.
                                             #
-                                            # The current connection must be
-                                            # allowed to close cleanly.
+                                            # ! The current connection must be
+                                            # * allowed to close cleanly.
                                             #
-                                            # The outer connection loop will
-                                            # then reconnect using the latest
-                                            # session-resumption handle.
-                                            # ---------------------------------
+                                            # * The outer connection loop will
+                                            # * then reconnect using the latest
+                                            # * session-resumption handle.
+                                            # * ---------------------------------
 
                                             if result == "go_away":
 
@@ -1188,12 +1188,12 @@ class LiveConversation:
 
                                                 break
 
-                                            # ---------------------------------
-                                            # Gemini ended receive normally.
+                                            # * ---------------------------------
+                                            # * Gemini ended receive normally.
                                             #
-                                            # Treat this as a connection event,
-                                            # not as a user stop.
-                                            # ---------------------------------
+                                            # * Treat this as a connection event,
+                                            # * not as a user stop.
+                                            # * ---------------------------------
 
                                             if result == "session_closed":
 
@@ -1253,20 +1253,20 @@ class LiveConversation:
 
                         connection_should_retry = True
 
-                    # ---------------------------------------------
-                    # DO NOT reconnect after an explicit stop.
-                    # ---------------------------------------------
+                    # * ---------------------------------------------
+                    # ! DO NOT reconnect after an explicit stop.
+                    # * ---------------------------------------------
 
                     if self._stop_event.is_set():
 
                         break
 
-                    # ---------------------------------------------
-                    # Gemini connection ended.
+                    # * ---------------------------------------------
+                    # * Gemini connection ended.
                     #
-                    # We have a resumption handle from the server,
-                    # so reconnect automatically.
-                    # ---------------------------------------------
+                    # * We have a resumption handle from the server,
+                    # * so reconnect automatically.
+                    # * ---------------------------------------------
 
                     if connection_should_retry:
 
@@ -1283,13 +1283,13 @@ class LiveConversation:
 
                         continue
 
-                    # ---------------------------------------------
-                    # Defensive fallback.
+                    # * ---------------------------------------------
+                    # * Defensive fallback.
                     #
-                    # If the connection somehow exits without an
-                    # explicit stop or retry request, keep Live
-                    # Conversation alive rather than silently ending.
-                    # ---------------------------------------------
+                    # * If the connection somehow exits without an
+                    # * explicit stop or retry request, keep Live
+                    # * Conversation alive rather than silently ending.
+                    # * ---------------------------------------------
 
                     print(
                         "[LIVE] Gemini Live connection ended."
@@ -1312,15 +1312,15 @@ class LiveConversation:
                 self._session = None
                 self._session_loop = None
             
-            # =================================================
-            # HUD SPEAKING CLEANUP
-            # =================================================
+            # * =================================================
+            # * HUD SPEAKING CLEANUP
+            # * =================================================
 
             self._hud_stop_speaking()
 
-            # =================================================
-            # CLOSE MICROPHONE
-            # =================================================
+            # * =================================================
+            # * CLOSE MICROPHONE
+            # * =================================================
 
             if microphone is not None:
 
@@ -1338,9 +1338,9 @@ class LiveConversation:
                 except Exception:
                     pass
 
-            # =================================================
-            # CLOSE SPEAKER
-            # =================================================
+            # * =================================================
+            # * CLOSE SPEAKER
+            # * =================================================
 
             if speaker is not None:
 
@@ -1362,9 +1362,9 @@ class LiveConversation:
                 "[LIVE] Audio devices closed."
             )
 
-            # =================================================
-            # RESUME NORMAL JARVIS MICROPHONE
-            # =================================================
+            # * =================================================
+            # * RESUME NORMAL JARVIS MICROPHONE
+            # * =================================================
 
             self._resume_normal_microphone()
 
@@ -1372,9 +1372,9 @@ class LiveConversation:
                 f"[LIVE] Normal {get_assistant_display_name()} microphone resumed."
             )
 
-    # =========================================================
-    # QUEUE AUDIO
-    # =========================================================
+    # * =========================================================
+    # * QUEUE AUDIO
+    # * =========================================================
 
     @staticmethod
     def _queue_audio(
@@ -1390,7 +1390,7 @@ class LiveConversation:
 
         except asyncio.QueueFull:
 
-            # Drop oldest audio chunk to keep latency bounded.
+            # * Drop oldest audio chunk to keep latency bounded.
 
             try:
 
@@ -1408,9 +1408,9 @@ class LiveConversation:
             except asyncio.QueueFull:
                 pass
             
-    # =========================================================
-    # INTERRUPT LIVE SPEAKER
-    # =========================================================
+    # * =========================================================
+    # * INTERRUPT LIVE SPEAKER
+    # * =========================================================
 
     @staticmethod
     def _interrupt_speaker(
@@ -1435,11 +1435,11 @@ class LiveConversation:
 
         try:
 
-            # Immediately discard currently buffered audio.
+            # * Immediately discard currently buffered audio.
             speaker.abort()
 
-            # Re-open the same active stream for the
-            # next Gemini response.
+            # * Re-open the same active stream for the
+            # * next Gemini response.
             speaker.start()
 
             print(
@@ -1457,9 +1457,9 @@ class LiveConversation:
                 exc,
             )
 
-    # =========================================================
-    # SEND AUDIO
-    # =========================================================
+    # * =========================================================
+    # * SEND AUDIO
+    # * =========================================================
 
     async def _send_audio(
         self,
@@ -1482,11 +1482,11 @@ class LiveConversation:
 
                     continue
 
-                # ------------------------------------------------
-                # DO NOT send audio_stream_end after each phrase.
+                # * ------------------------------------------------
+                # ! DO NOT send audio_stream_end after each phrase.
                 #
-                # Gemini's automatic VAD handles speech turns.
-                # ------------------------------------------------
+                # * Gemini's automatic VAD handles speech turns.
+                # * ------------------------------------------------
 
                 await session.send_realtime_input(
 
@@ -1514,9 +1514,9 @@ class LiveConversation:
 
             raise
 
-    # =========================================================
-    # RECEIVE ONE GEMINI TURN
-    # =========================================================
+    # * =========================================================
+    # * RECEIVE ONE GEMINI TURN
+    # * =========================================================
 
     async def _receive_one_turn(
         self,
@@ -1538,10 +1538,10 @@ class LiveConversation:
         
         output_text_parts = []
 
-        # True when an existing JARVIS skill already produced the
-        # authoritative response for this Live turn.
-        # In that case the normal voice/HUD path has already logged
-        # the response, so Live must not log it a second time.
+        # * True when an existing JARVIS skill already produced the
+        # * authoritative response for this Live turn.
+        # * In that case the normal voice/HUD path has already logged
+        # ! the response, so Live must not log it a second time.
         
         jarvis_authoritative_response = False
 
@@ -1553,18 +1553,18 @@ class LiveConversation:
 
             async for response in session.receive():
                 
-                # =============================================
-                # SERVER GO-AWAY NOTICE
-                # =============================================
+                # * =============================================
+                # * SERVER GO-AWAY NOTICE
+                # * =============================================
                 #
-                # Gemini is telling us that this Live
-                # connection is approaching closure.
+                # * Gemini is telling us that this Live
+                # * connection is approaching closure.
                 #
-                # Do not reconnect here.
-                # Do not create another Live session.
-                # Just report the server notice and allow
-                # the current receive operation to finish.
-                # =============================================
+                # ! Do not reconnect here.
+                # ! Do not create another Live session.
+                # * Just report the server notice and allow
+                # * the current receive operation to finish.
+                # * =============================================
 
                 if response.go_away:
 
@@ -1578,20 +1578,20 @@ class LiveConversation:
                         f"will close soon. Time left: {time_left}"
                     )
 
-                    # ---------------------------------------------
-                    # IMPORTANT:
+                    # * ---------------------------------------------
+                    # ! IMPORTANT:
                     #
-                    # Gemini has explicitly told us that this
-                    # connection is going to close.
+                    # * Gemini has explicitly told us that this
+                    # * connection is going to close.
                     #
-                    # Do NOT wait for Gemini to forcibly terminate
-                    # the connection with 1008.
+                    # ! Do NOT wait for Gemini to forcibly terminate
+                    # * the connection with 1008.
                     #
-                    # Return immediately so _run() can cleanly
-                    # exit this connection and create the next
-                    # Gemini connection using the latest
-                    # session-resumption handle.
-                    # ---------------------------------------------
+                    # * Return immediately so _run() can cleanly
+                    # * exit this connection and create the next
+                    # * Gemini connection using the latest
+                    # * session-resumption handle.
+                    # * ---------------------------------------------
 
                     print(
                         "[LIVE] GoAway received. "
@@ -1600,9 +1600,9 @@ class LiveConversation:
 
                     return "go_away"
 
-                # =============================================
-                # SESSION RESUMPTION UPDATE
-                # =============================================
+                # * =============================================
+                # * SESSION RESUMPTION UPDATE
+                # * =============================================
 
                 if response.session_resumption_update:
 
@@ -1619,19 +1619,19 @@ class LiveConversation:
                             update.new_handle
                         )
                 
-                # =============================================
-                # TOOL CALL CANCELLATION
-                # =============================================
+                # * =============================================
+                # * TOOL CALL CANCELLATION
+                # * =============================================
                 #
-                # Gemini may cancel a previously issued tool
-                # call, for example when the user interrupts
-                # the response or changes direction.
+                # * Gemini may cancel a previously issued tool
+                # * call, for example when the user interrupts
+                # * the response or changes direction.
                 #
-                # This is NOT a Live session failure.
+                # * This is NOT a Live session failure.
                 #
-                # Do not stop the entire conversation.
-                # Do not reconnect.
-                # =============================================
+                # ! Do not stop the entire conversation.
+                # ! Do not reconnect.
+                # * =============================================
 
                 if response.tool_call_cancellation:
 
@@ -1645,8 +1645,8 @@ class LiveConversation:
                         cancelled_ids,
                     )
 
-                    # Continue receiving from the SAME
-                    # persistent Gemini Live session.
+                    # * Continue receiving from the SAME
+                    # * persistent Gemini Live session.
                     continue
 
                 if response.tool_call:
@@ -1666,9 +1666,9 @@ class LiveConversation:
                             function_name,
                         )
 
-                        # -----------------------------------------
-                        # JARVIS COMMAND
-                        # -----------------------------------------
+                        # * -----------------------------------------
+                        # * JARVIS COMMAND
+                        # * -----------------------------------------
 
                         if function_name == "jarvis_command":
 
@@ -1702,10 +1702,10 @@ class LiveConversation:
 
                                 try:
 
-                                    # ---------------------------------
-                                    # Existing JARVIS dispatcher
-                                    # remains authoritative.
-                                    # ---------------------------------
+                                    # * ---------------------------------
+                                    # * Existing JARVIS dispatcher
+                                    # * remains authoritative.
+                                    # * ---------------------------------
 
                                     with live_execution():
 
@@ -1716,21 +1716,21 @@ class LiveConversation:
                                         live_responses = get_live_responses()
 
 
-                                    # -------------------------------------------------
-                                    # Prefer the actual response produced by the
-                                    # existing JARVIS skill.
+                                    # * -------------------------------------------------
+                                    # * Prefer the actual response produced by the
+                                    # * existing JARVIS skill.
                                     #
-                                    # Example:
+                                    # * Example:
                                     #
-                                    #     time_skill
-                                    #         ↓
-                                    #     speak("The time is 01:49 AM")
-                                    #         ↓
-                                    #     captured here
+                                    # * time_skill
+                                    # * ↓
+                                    # * speak("The time is 01:49 AM")
+                                    # * ↓
+                                    # * captured here
                                     #
-                                    # Gemini must receive that authoritative result
-                                    # instead of generating its own answer.
-                                    # -------------------------------------------------
+                                    # ! Gemini must receive that authoritative result
+                                    # * instead of generating its own answer.
+                                    # * -------------------------------------------------
 
                                     authoritative_response = " ".join(
                                         response.strip()
@@ -1821,9 +1821,9 @@ class LiveConversation:
                             )
                         )
 
-                    # ---------------------------------------------
-                    # Send result back to Gemini.
-                    # ---------------------------------------------
+                    # * ---------------------------------------------
+                    # * Send result back to Gemini.
+                    # * ---------------------------------------------
 
                     await session.send_tool_response(
                         function_responses=function_responses
@@ -1835,14 +1835,14 @@ class LiveConversation:
 
                     return "stopped"
 
-                # =============================================
-                # AUDIO OUTPUT
-                # =============================================
+                # * =============================================
+                # * AUDIO OUTPUT
+                # * =============================================
 
                 if response.data:
 
-                    # Gemini has produced actual speaker audio.
-                    # Tell the HUD that JARVIS is now speaking.
+                    # * Gemini has produced actual speaker audio.
+                    # * Tell the HUD that JARVIS is now speaking.
                     self._hud_start_speaking()
 
                     await asyncio.to_thread(
@@ -1850,9 +1850,9 @@ class LiveConversation:
                         response.data,
                     )
 
-                # =============================================
-                # SERVER CONTENT
-                # =============================================
+                # * =============================================
+                # * SERVER CONTENT
+                # * =============================================
 
                 server_content = (
                     response.server_content
@@ -1862,9 +1862,9 @@ class LiveConversation:
 
                     continue
 
-                # =============================================
-                # USER TRANSCRIPTION
-                # =============================================
+                # * =============================================
+                # * USER TRANSCRIPTION
+                # * =============================================
 
                 input_transcription = (
                     server_content.input_transcription
@@ -1896,9 +1896,9 @@ class LiveConversation:
                                 exc,
                             )
 
-                        # -------------------------------------
-                        # LOCAL STOP COMMAND
-                        # -------------------------------------
+                        # * -------------------------------------
+                        # * LOCAL STOP COMMAND
+                        # * -------------------------------------
 
                         if self._is_stop_command(
                             user_text
@@ -1912,9 +1912,9 @@ class LiveConversation:
 
                             return "stop_requested"
 
-                # =============================================
-                # JARVIS TRANSCRIPTION
-                # =============================================
+                # * =============================================
+                # * JARVIS TRANSCRIPTION
+                # * =============================================
 
                 output_transcription = (
                     server_content.output_transcription
@@ -1935,22 +1935,22 @@ class LiveConversation:
                             output_text
                         )
 
-                # =============================================
-                # MODEL RESPONSE INTERRUPTED
-                # =============================================
+                # * =============================================
+                # * MODEL RESPONSE INTERRUPTED
+                # * =============================================
                 #
-                # The user may begin speaking while Gemini is
-                # producing audio.
+                # * The user may begin speaking while Gemini is
+                # * producing audio.
                 #
-                # This is a normal Live Conversation event.
+                # * This is a normal Live Conversation event.
                 #
-                # IMPORTANT:
-                # Do NOT close the Gemini session.
-                # Do NOT reconnect.
-                # Do NOT set the global stop event.
-                # The same session continues with the user's
-                # new turn.
-                # =============================================
+                # ! IMPORTANT:
+                # ! Do NOT close the Gemini session.
+                # ! Do NOT reconnect.
+                # ! Do NOT set the global stop event.
+                # * The same session continues with the user's
+                # * new turn.
+                # * =============================================
 
                 if getattr(
                     server_content,
@@ -1981,9 +1981,9 @@ class LiveConversation:
                     return "turn_complete"
 
 
-                # =============================================
-                # TURN COMPLETE
-                # =============================================
+                # * =============================================
+                # * TURN COMPLETE
+                # * =============================================
 
                 if getattr(
                     server_content,
@@ -2022,13 +2022,13 @@ class LiveConversation:
                         "[LIVE] Turn complete."
                     )
 
-                    # -----------------------------------------
-                    # Only this receive operation ends.
+                    # * -----------------------------------------
+                    # * Only this receive operation ends.
                     #
-                    # Gemini session remains alive.
+                    # * Gemini session remains alive.
                     #
-                    # _run() calls receive() again.
-                    # -----------------------------------------
+                    # * _run() calls receive() again.
+                    # * -----------------------------------------
 
                     return "turn_complete"
 
@@ -2045,20 +2045,20 @@ class LiveConversation:
                 exc,
             )
 
-            # ---------------------------------------------
-            # A Gemini connection error is NOT the same as
-            # the user requesting Live to stop.
+            # * ---------------------------------------------
+            # ! A Gemini connection error is NOT the same as
+            # * the user requesting Live to stop.
             #
-            # _run() will detect the failed connection and
-            # automatically reconnect using the latest
-            # session-resumption handle.
-            # ---------------------------------------------
+            # * _run() will detect the failed connection and
+            # * automatically reconnect using the latest
+            # * session-resumption handle.
+            # * ---------------------------------------------
 
             raise
 
-    # =========================================================
-    # STOP COMMAND DETECTION
-    # =========================================================
+    # * =========================================================
+    # * STOP COMMAND DETECTION
+    # * =========================================================
 
     @staticmethod
     def _is_stop_command(
@@ -2098,9 +2098,9 @@ class LiveConversation:
             for command in stop_commands
         )
 
-    # =========================================================
-    # STOP WATCHER
-    # =========================================================
+    # * =========================================================
+    # * STOP WATCHER
+    # * =========================================================
 
     async def _wait_for_stop(self):
 
@@ -2112,9 +2112,9 @@ class LiveConversation:
 
         return "stop requested"
 
-    # =========================================================
-    # NORMAL JARVIS MICROPHONE
-    # =========================================================
+    # * =========================================================
+    # * NORMAL JARVIS MICROPHONE
+    # * =========================================================
 
     def _pause_normal_microphone(self):
         """
@@ -2197,16 +2197,16 @@ class LiveConversation:
                 )
 
 
-# =============================================================
-# GLOBAL LIVE INSTANCE
-# =============================================================
+# * =============================================================
+# * GLOBAL LIVE INSTANCE
+# * =============================================================
 
 _live = LiveConversation()
 
 
-# =============================================================
-# LIVE TEXT BRIDGE
-# =============================================================
+# * =============================================================
+# * LIVE TEXT BRIDGE
+# * =============================================================
 
 def send_live_text(
     text: str,
@@ -2218,9 +2218,9 @@ def send_live_text(
     return _live.send_text(text)
 
 
-# =============================================================
-# REGISTRY ACTIONS
-# =============================================================
+# * =============================================================
+# * REGISTRY ACTIONS
+# * =============================================================
 
 def start_live_conversation(
     _data=None,

@@ -97,24 +97,24 @@ export function createExpressiveRobot(
       50
     );
 
-  // ---------------------------------------------------
-  // EXPRESSIVE ROBOT FRAMING
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * EXPRESSIVE ROBOT FRAMING
+  // * ---------------------------------------------------
   //
-  // The RobotExpressive model is physically large
-  // relative to the JARVIS HUD viewport. Keep the
-  // model at its original scale and use a wider
-  // camera distance so the complete robot stays
-  // comfortably visible.
+  // * The RobotExpressive model is physically large
+  // * relative to the JARVIS HUD viewport. Keep the
+  // * model at its original scale and use a wider
+  // * camera distance so the complete robot stays
+  // * comfortably visible.
   //
-  // This is intentionally separate from the other
-  // avatar implementations.
-  // ---------------------------------------------------
+  // * This is intentionally separate from the other
+  // * avatar implementations.
+  // * ---------------------------------------------------
 
-  // The Expressive Robot must keep the same visual size
-  // in normal and fullscreen HUD modes. The final camera
-  // distance is calculated from the loaded model bounds
-  // instead of relying on a fixed distance.
+  // ! The Expressive Robot must keep the same visual size
+  // * in normal and fullscreen HUD modes. The final camera
+  // * distance is calculated from the loaded model bounds
+  // * instead of relying on a fixed distance.
   camera.position.set(
     0,
     1.35,
@@ -172,9 +172,9 @@ export function createExpressiveRobot(
     renderer.domElement
   );
 
-  // ---------------------------------------------------
-  // JARVIS HUD LIGHTING
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * JARVIS HUD LIGHTING
+  // * ---------------------------------------------------
 
   const ambient =
     new THREE.AmbientLight(
@@ -227,9 +227,9 @@ export function createExpressiveRobot(
 
   scene.add(rimLight);
 
-  // ---------------------------------------------------
-  // MODEL / ANIMATION STATE
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * MODEL / ANIMATION STATE
+  // * ---------------------------------------------------
 
   let model:
     | THREE.Object3D
@@ -266,34 +266,34 @@ export function createExpressiveRobot(
 
   let lastSituationKey = "";
 
-  // Keep the latest JARVIS situation even while the GLB
-  // is still loading. It will be applied immediately
-  // after the model and AnimationMixer are ready.
+  // * Keep the latest JARVIS situation even while the GLB
+  // * is still loading. It will be applied immediately
+  // * after the model and AnimationMixer are ready.
   let latestSituation:
     ExpressiveRobotSituation = {};
 
   let disposed = false;
 
-  // ---------------------------------------------------
-  // CAMERA / VIEW
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * CAMERA / VIEW
+  // * ---------------------------------------------------
   //
-  // Use the same OrbitControls architecture as the
-  // working JARVIS ROBOT avatar. This is important:
-  // mouse drag and HandTracker both operate on the same
-  // camera state instead of maintaining two competing
-  // rotation systems.
-  // ---------------------------------------------------
+  // * Use the same OrbitControls architecture as the
+  // ! working JARVIS ROBOT avatar. This is important:
+  // * mouse drag and HandTracker both operate on the same
+  // * camera state instead of maintaining two competing
+  // * rotation systems.
+  // * ---------------------------------------------------
 
   let zoom = 1;
 
-  // Keep the current, already-correct Expressive Robot
-  // size/framing while using OrbitControls for movement.
+  // * Keep the current, already-correct Expressive Robot
+  // * size/framing while using OrbitControls for movement.
   const DEFAULT_CAMERA_Z = 5.2;
   const DEFAULT_CAMERA_Y = 1.35;
   const DEFAULT_LOOK_AT_Y = 0.95;
 
-  // Target percentage of the available viewport height.
+  // * Target percentage of the available viewport height.
   const TARGET_SCREEN_HEIGHT = 0.52;
 
   let adaptiveCameraZ =
@@ -511,16 +511,16 @@ export function createExpressiveRobot(
     controls.update();
   }
 
-  // ---------------------------------------------------
-  // ANIMATION HELPERS
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * ANIMATION HELPERS
+  // * ---------------------------------------------------
 
   function findAction(
     name: string
   ) {
 
-    // Keep the official RobotExpressive animation names
-    // as the source of truth.
+    // * Keep the official RobotExpressive animation names
+    // * as the source of truth.
     if (
       !BASE_STATES.includes(
         name as BaseState
@@ -760,16 +760,16 @@ export function createExpressiveRobot(
     }
   }
 
-  // ---------------------------------------------------
-  // AUTOMATIC JARVIS BEHAVIOUR
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * AUTOMATIC JARVIS BEHAVIOUR
+  // * ---------------------------------------------------
 
   function setSituation(
     situation: ExpressiveRobotSituation
   ) {
 
-    // Always remember the latest JARVIS state.
-    // The model may still be loading.
+    // * Always remember the latest JARVIS state.
+    // * The model may still be loading.
     latestSituation = {
       ...situation,
     };
@@ -825,9 +825,9 @@ export function createExpressiveRobot(
     lastSituationKey =
       key;
 
-    // -------------------------------------------------
-    // ERROR / FAILURE
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // ! ERROR / FAILURE
+    // * -------------------------------------------------
 
     if (
       error ||
@@ -850,9 +850,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // SUCCESS
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * SUCCESS
+    // * -------------------------------------------------
 
     if (
       taskStatus.includes("success") ||
@@ -871,9 +871,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // LISTENING
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * LISTENING
+    // * -------------------------------------------------
 
     if (
       situation.listening
@@ -888,9 +888,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // THINKING
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * THINKING
+    // * -------------------------------------------------
 
     if (
       situation.thinking
@@ -898,8 +898,8 @@ export function createExpressiveRobot(
 
       clearExpressions();
 
-      // Standing is more natural for processing than
-      // making the robot walk in place.
+      // * Standing is more natural for processing than
+      // * making the robot walk in place.
       playBaseState(
         "Standing"
       );
@@ -907,9 +907,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // EXECUTING
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * EXECUTING
+    // * -------------------------------------------------
 
     if (
       situation.executing
@@ -917,8 +917,8 @@ export function createExpressiveRobot(
 
       clearExpressions();
 
-      // Use Walking for an active task. This is the
-      // closest continuous action in RobotExpressive.
+      // * Use Walking for an active task. This is the
+      // * closest continuous action in RobotExpressive.
       playBaseState(
         "Walking"
       );
@@ -926,9 +926,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // SPEAKING
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * SPEAKING
+    // * -------------------------------------------------
 
     if (
       situation.speaking
@@ -943,14 +943,14 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // EVENT / ACTION MAPPING
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * EVENT / ACTION MAPPING
+    // * -------------------------------------------------
     //
-    // These allow richer JARVIS events to trigger the
-    // RobotExpressive emotes without exposing manual
-    // animation buttons in the HUD.
-    // -------------------------------------------------
+    // * These allow richer JARVIS events to trigger the
+    // * RobotExpressive emotes without exposing manual
+    // * animation buttons in the HUD.
+    // * -------------------------------------------------
 
     const actionText =
       [
@@ -1031,9 +1031,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // AUTOMATIC FACE EXPRESSIONS
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * AUTOMATIC FACE EXPRESSIONS
+    // * -------------------------------------------------
 
     if (
       actionText.includes("surpris") ||
@@ -1092,9 +1092,9 @@ export function createExpressiveRobot(
       return;
     }
 
-    // -------------------------------------------------
-    // DEFAULT
-    // -------------------------------------------------
+    // * -------------------------------------------------
+    // * DEFAULT
+    // * -------------------------------------------------
 
     clearExpressions();
 
@@ -1103,9 +1103,9 @@ export function createExpressiveRobot(
     );
   }
 
-  // ---------------------------------------------------
-  // LOAD ROBOT EXPRESSIVE MODEL
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * LOAD ROBOT EXPRESSIVE MODEL
+  // * ---------------------------------------------------
 
   const loader =
     new GLTFLoader();
@@ -1126,15 +1126,15 @@ export function createExpressiveRobot(
         model
       );
 
-      // The official Three.js model
-      // is authored at a convenient
-      // human scale. Adjust it for
-      // the JARVIS viewport.
+      // * The official Three.js model
+      // * is authored at a convenient
+      // * human scale. Adjust it for
+      // * the JARVIS viewport.
 
-      // The RobotExpressive asset is much larger than
-      // the visual scale used by the other JARVIS
-      // avatars. Keep its proportions and animations
-      // intact, but render it at a compact HUD scale.
+      // * The RobotExpressive asset is much larger than
+      // * the visual scale used by the other JARVIS
+      // * avatars. Keep its proportions and animations
+      // * intact, but render it at a compact HUD scale.
       model.scale.setScalar(
         0.55
       );
@@ -1147,9 +1147,9 @@ export function createExpressiveRobot(
 
       updateAdaptiveCamera();
 
-      // -------------------------------------------------
-      // ANIMATION MIXER
-      // -------------------------------------------------
+      // * -------------------------------------------------
+      // * ANIMATION MIXER
+      // * -------------------------------------------------
 
       mixer =
         new THREE.AnimationMixer(
@@ -1185,9 +1185,9 @@ export function createExpressiveRobot(
         }
       }
 
-      // -------------------------------------------------
-      // FACE MORPHS
-      // -------------------------------------------------
+      // * -------------------------------------------------
+      // * FACE MORPHS
+      // * -------------------------------------------------
 
       model.traverse(
         (object) => {
@@ -1217,22 +1217,22 @@ export function createExpressiveRobot(
         }
       );
 
-      // Recalculate the correct camera distance using
-      // the loaded model's actual bounds, then frame it
-      // with the same camera architecture as the other
-      // JARVIS avatars.
+      // * Recalculate the correct camera distance using
+      // * the loaded model's actual bounds, then frame it
+      // * with the same camera architecture as the other
+      // * JARVIS avatars.
       updateAdaptiveCamera();
 
       resetView();
 
-      // Start in JARVIS idle mode.
+      // * Start in JARVIS idle mode.
       playBaseState(
         "Idle"
       );
 
-      // Apply the latest JARVIS situation immediately.
-      // This is important because the model can finish
-      // loading after JARVIS has already entered a state.
+      // * Apply the latest JARVIS situation immediately.
+      // ! This is important because the model can finish
+      // * loading after JARVIS has already entered a state.
       lastSituationKey = "";
 
       setSituation(
@@ -1253,15 +1253,15 @@ export function createExpressiveRobot(
     }
   );
 
-  // ---------------------------------------------------
-  // EXISTING JARVIS STATE BRIDGE
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * EXISTING JARVIS STATE BRIDGE
+  // * ---------------------------------------------------
   //
-  // The working JARVIS avatar already publishes
-  // "jarvis-assistant-state". Listen to the same event
-  // so EXPRESSIVE automatically follows the real JARVIS
-  // state without requiring manual animation buttons.
-  // ---------------------------------------------------
+  // * The working JARVIS avatar already publishes
+  // * "jarvis-assistant-state". Listen to the same event
+  // * so EXPRESSIVE automatically follows the real JARVIS
+  // * state without requiring manual animation buttons.
+  // * ---------------------------------------------------
 
   const handleJarvisState = (
     event: Event
@@ -1305,9 +1305,9 @@ export function createExpressiveRobot(
     handleJarvisState
   );
 
-  // ---------------------------------------------------
-  // RESIZE
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * RESIZE
+  // * ---------------------------------------------------
 
   const resizeObserver =
     new ResizeObserver(
@@ -1348,9 +1348,9 @@ export function createExpressiveRobot(
     container
   );
 
-  // ---------------------------------------------------
-  // RENDER LOOP
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * RENDER LOOP
+  // * ---------------------------------------------------
 
   let previousTime =
     performance.now();
@@ -1376,9 +1376,9 @@ export function createExpressiveRobot(
     previousTime =
       now;
 
-    // OrbitControls is the single camera controller for
-    // the Expressive Robot. Mouse, wheel, +/− buttons,
-    // and HandTracker all update the same camera state.
+    // * OrbitControls is the single camera controller for
+    // * the Expressive Robot. Mouse, wheel, +/− buttons,
+    // * and HandTracker all update the same camera state.
     mixer?.update(
       delta
     );
@@ -1401,9 +1401,9 @@ export function createExpressiveRobot(
       animate
     );
 
-  // ---------------------------------------------------
-  // DISPOSE
-  // ---------------------------------------------------
+  // * ---------------------------------------------------
+  // * DISPOSE
+  // * ---------------------------------------------------
 
   function dispose() {
 

@@ -20,17 +20,17 @@ from ai.memory_confidence import confidence
 
 MIN_SCORE = 40
 
-# ---------------------------------------
-# Score a Memory
-# ---------------------------------------
+# * ---------------------------------------
+# * Score a Memory
+# * ---------------------------------------
 
 def score_memory(memory, keywords):
 
     score = 0
 
-    # -----------------------
-    # Exact Key Match
-    # -----------------------
+    # * -----------------------
+    # * Exact Key Match
+    # * -----------------------
 
     for word in keywords:
 
@@ -42,9 +42,9 @@ def score_memory(memory, keywords):
 
             score += 80
 
-    # -----------------------
-    # Value Match
-    # -----------------------
+    # * -----------------------
+    # * Value Match
+    # * -----------------------
 
     if memory.value:
 
@@ -56,9 +56,9 @@ def score_memory(memory, keywords):
 
                 score += 40
 
-    # -----------------------
-    # Keyword Match
-    # -----------------------
+    # * -----------------------
+    # * Keyword Match
+    # * -----------------------
 
     if memory.keywords:
 
@@ -76,9 +76,9 @@ def score_memory(memory, keywords):
 
                 score += 35
 
-    # -----------------------
-    # Category Match
-    # -----------------------
+    # * -----------------------
+    # * Category Match
+    # * -----------------------
 
     if memory.category:
 
@@ -86,21 +86,21 @@ def score_memory(memory, keywords):
 
             score += 20
 
-    # -----------------------
-    # Importance Bonus
-    # -----------------------
+    # * -----------------------
+    # * Importance Bonus
+    # * -----------------------
 
     score += memory.importance * 10
 
-    # -----------------------
-    # Frequently Used Bonus
-    # -----------------------
+    # * -----------------------
+    # * Frequently Used Bonus
+    # * -----------------------
 
     score += min(memory.use_count * 2, 20)
 
-    # -----------------------
-    # Exact Value Bonus
-    # -----------------------
+    # * -----------------------
+    # * Exact Value Bonus
+    # * -----------------------
 
     if memory.value:
 
@@ -113,9 +113,9 @@ def score_memory(memory, keywords):
     return score
 
 
-# ---------------------------------------
-# Search
-# ---------------------------------------
+# * ---------------------------------------
+# * Search
+# * ---------------------------------------
 
 def search(query, limit=5):
 
@@ -130,9 +130,9 @@ def search(query, limit=5):
 
     candidates = {}
 
-    # ---------------------------------------
-    # Find Candidate Memories
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Find Candidate Memories
+    # * ---------------------------------------
 
     for word in keywords:
 
@@ -172,9 +172,9 @@ def search(query, limit=5):
 
     results = []
 
-    # ---------------------------------------
-    # Rank Candidates
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Rank Candidates
+    # * ---------------------------------------
 
     for row in candidates.values():
 
@@ -194,9 +194,9 @@ def search(query, limit=5):
 
     )
     
-    # -----------------------
-    # Final Ranking
-    # -----------------------
+    # * -----------------------
+    # * Final Ranking
+    # * -----------------------
 
     ranked = rank(
 
@@ -218,9 +218,9 @@ def search(query, limit=5):
 
         touch(memory.key)
 
-        # -----------------------
-        # Confidence Score
-        # -----------------------
+        # * -----------------------
+        # * Confidence Score
+        # * -----------------------
 
         info = confidence(
 
@@ -237,9 +237,9 @@ def search(query, limit=5):
     return final
 
 
-# ---------------------------------------
-# Search by Category
-# ---------------------------------------
+# * ---------------------------------------
+# * Search by Category
+# * ---------------------------------------
 
 def search_category(
 
@@ -294,9 +294,9 @@ def search_category(
     return memories
 
 
-# ---------------------------------------
-# Format Memories
-# ---------------------------------------
+# * ---------------------------------------
+# * Format Memories
+# * ---------------------------------------
 
 def format_memories(memories):
 

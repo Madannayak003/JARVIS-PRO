@@ -41,9 +41,9 @@ from brain.natural.natural_context import (
 )
 
 
-# ============================================================
-# NCI-4 Meaning
-# ============================================================
+# * ============================================================
+# * NCI-4 Meaning
+# * ============================================================
 
 @dataclass(frozen=True)
 class MeaningUnderstanding:
@@ -82,9 +82,9 @@ class MeaningUnderstanding:
     )
 
 
-# ============================================================
-# Meaning Understanding Engine
-# ============================================================
+# * ============================================================
+# * Meaning Understanding Engine
+# * ============================================================
 
 class MeaningUnderstandingEngine:
     """
@@ -99,9 +99,9 @@ class MeaningUnderstandingEngine:
         NCI-4 Meaning
     """
 
-    # ========================================================
-    # Main method
-    # ========================================================
+    # * ========================================================
+    # * Main method
+    # * ========================================================
 
     def understand(
         self,
@@ -144,9 +144,9 @@ class MeaningUnderstandingEngine:
             "object",
         )
         
-        # ====================================================
-        # Clarification
-        # ====================================================
+        # * ====================================================
+        # * Clarification
+        # * ====================================================
 
         if (
             decision.mode
@@ -169,10 +169,10 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # A contextual conversational request is a real follow-up even when
-        # it does not contain an explicit pronoun. Preserve that relationship
-        # for the existing FollowUpResolver so the dispatcher can choose the
-        # chat path before the planner sees the short, context-free wording.
+        # * A contextual conversational request is a real follow-up even when
+        # * it does not contain an explicit pronoun. Preserve that relationship
+        # * for the existing FollowUpResolver so the dispatcher can choose the
+        # * chat path before the planner sees the short, context-free wording.
         if decision.intent == "contextual_conversation":
 
             return self._result(
@@ -193,9 +193,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Empty input
-        # ====================================================
+        # * ====================================================
+        # * Empty input
+        # * ====================================================
 
         if not command:
 
@@ -214,15 +214,15 @@ class MeaningUnderstandingEngine:
                 ),
             )
             
-        # ====================================================
-        # Clarification
+        # * ====================================================
+        # * Clarification
         #
-        # NCI-3 has already determined that the user is
-        # asking for clarification.
+        # * NCI-3 has already determined that the user is
+        # * asking for clarification.
         #
-        # Preserve that decision instead of allowing the
-        # request to fall through into general conversation.
-        # ====================================================
+        # * Preserve that decision instead of allowing the
+        # * request to fall through into general conversation.
+        # * ====================================================
 
         if (
             decision.mode
@@ -245,9 +245,9 @@ class MeaningUnderstandingEngine:
                 ),
             )    
 
-        # ====================================================
-        # Explicit project discussion
-        # ====================================================
+        # * ====================================================
+        # * Explicit project discussion
+        # * ====================================================
 
         if self._starts_with_any(
             command,
@@ -279,9 +279,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Continue / previous work
-        # ====================================================
+        # * ====================================================
+        # * Continue / previous work
+        # * ====================================================
 
         if self._matches_any(
             command,
@@ -319,9 +319,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Tell me more
-        # ====================================================
+        # * ====================================================
+        # * Tell me more
+        # * ====================================================
 
         if self._matches_any(
             command,
@@ -357,9 +357,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Current application discussion
-        # ====================================================
+        # * ====================================================
+        # * Current application discussion
+        # * ====================================================
 
         if application:
 
@@ -390,9 +390,9 @@ class MeaningUnderstandingEngine:
                     ),
                 )
                 
-        # ====================================================
-        # What / why / how about current subject
-        # ====================================================
+        # * ====================================================
+        # * What / why / how about current subject
+        # * ====================================================
 
         if (
             active_topic
@@ -424,9 +424,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Follow-up reference
-        # ====================================================
+        # * ====================================================
+        # * Follow-up reference
+        # * ====================================================
 
         if self._contains_reference(
             command
@@ -452,9 +452,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Explicit conversation
-        # ====================================================
+        # * ====================================================
+        # * Explicit conversation
+        # * ====================================================
 
         if (
             decision.mode
@@ -477,9 +477,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Explicit action
-        # ====================================================
+        # * ====================================================
+        # * Explicit action
+        # * ====================================================
 
         if (
             decision.mode
@@ -505,9 +505,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Hybrid
-        # ====================================================
+        # * ====================================================
+        # * Hybrid
+        # * ====================================================
 
         if (
             decision.mode
@@ -530,9 +530,9 @@ class MeaningUnderstandingEngine:
                 ),
             )
 
-        # ====================================================
-        # Unknown
-        # ====================================================
+        # * ====================================================
+        # * Unknown
+        # * ====================================================
 
         return self._result(
             context=context,
@@ -550,9 +550,9 @@ class MeaningUnderstandingEngine:
             ),
         )
 
-    # ========================================================
-    # Result helper
-    # ========================================================
+    # * ========================================================
+    # * Result helper
+    # * ========================================================
 
     @staticmethod
     def _result(
@@ -601,9 +601,9 @@ class MeaningUnderstandingEngine:
 
         )
 
-    # ========================================================
-    # Helpers
-    # ========================================================
+    # * ========================================================
+    # * Helpers
+    # * ========================================================
 
     @staticmethod
     def _value(
@@ -659,9 +659,9 @@ class MeaningUnderstandingEngine:
 
         import re
 
-        # ----------------------------------------------------
-        # Pronoun references
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Pronoun references
+        # * ----------------------------------------------------
 
         if re.search(
             r"\b(?:it|that|this|they|them|those)\b",
@@ -669,19 +669,19 @@ class MeaningUnderstandingEngine:
         ):
             return True
 
-        # ----------------------------------------------------
-        # Positional references
+        # * ----------------------------------------------------
+        # * Positional references
         #
-        # Accept both:
+        # * Accept both:
         #
-        #     first one
-        #     the first one
+        # * first one
+        # * the first one
         #
-        #     second one
-        #     the second one
+        # * second one
+        # * the second one
         #
-        # and so on.
-        # ----------------------------------------------------
+        # * and so on.
+        # * ----------------------------------------------------
 
         positional_patterns = (
             r"\b(?:the\s+)?first one\b",
@@ -717,12 +717,12 @@ class MeaningUnderstandingEngine:
 
         import re
 
-        # ----------------------------------------------------
-        # Positional references
+        # * ----------------------------------------------------
+        # * Positional references
         #
-        # Canonical form is returned so downstream
-        # ReferenceResolver logic can use it consistently.
-        # ----------------------------------------------------
+        # * Canonical form is returned so downstream
+        # * ReferenceResolver logic can use it consistently.
+        # * ----------------------------------------------------
 
         positional_references = (
             (
@@ -804,9 +804,9 @@ class MeaningUnderstandingEngine:
             ):
                 return reference
 
-        # ----------------------------------------------------
-        # Pronoun references
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Pronoun references
+        # * ----------------------------------------------------
 
         for reference in (
             "it",
@@ -859,9 +859,9 @@ class MeaningUnderstandingEngine:
         return None
 
 
-# ============================================================
-# Shared Engine
-# ============================================================
+# * ============================================================
+# * Shared Engine
+# * ============================================================
 
 meaning_understanding_engine = (
     MeaningUnderstandingEngine()

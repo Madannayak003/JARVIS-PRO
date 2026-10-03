@@ -41,7 +41,7 @@ Rules:
 - If information is missing, ask.
 """.strip()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _profile_section(
         self,
@@ -66,7 +66,7 @@ Current Project: {profile.get("current_project","")}
 Response Style: {profile.get("response_style","")}
 """.strip()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _project_section(
         self,
@@ -80,7 +80,7 @@ Project:
 {context.project.get("name","")}
 """.strip()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _screen_section(
         self,
@@ -133,7 +133,7 @@ Analyzed At:
 {screen.get("analyzed_at", "")}
 """.strip()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _conversation_section(
         self,
@@ -162,7 +162,7 @@ Analyzed At:
 
         return "\n".join(lines)
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _memory_section(
         self,
@@ -187,7 +187,7 @@ Analyzed At:
 
         return "\n".join(lines)
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _planner_section(
         self,
@@ -203,7 +203,7 @@ Analyzed At:
 {context.planner}
 """.strip()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def _user_input_section(
         self,
@@ -217,9 +217,9 @@ Analyzed At:
 """.strip()
 
 
-    # --------------------------------------------------
-    # Natural Conversation Intelligence
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Natural Conversation Intelligence
+    # * --------------------------------------------------
 
     def _natural_section(
         self,
@@ -284,14 +284,14 @@ Analyzed At:
         return "\n".join(lines)
     
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def build(
         self,
         context: AIContext
     ) -> str:
 
-        # Customize can rename the assistant while the process is running.
+        # * Customize can rename the assistant while the process is running.
         self.system_prompt = self._build_system_prompt()
 
         sections = [

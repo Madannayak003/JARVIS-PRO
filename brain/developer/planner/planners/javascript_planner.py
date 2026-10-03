@@ -30,9 +30,9 @@ class JavaScriptPlanner(BasePlanner):
 
         plan = self.create_base_plan(analysis)
 
-        # -----------------------------
-        # Default JavaScript Structure
-        # -----------------------------
+        # * -----------------------------
+        # * Default JavaScript Structure
+        # * -----------------------------
 
         plan.folders = [
 

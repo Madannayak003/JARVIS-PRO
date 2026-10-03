@@ -33,7 +33,7 @@ class FolderBuilder:
 
         self.writer = FolderWriter()
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     def build(
         self,
@@ -46,9 +46,9 @@ class FolderBuilder:
 
         folders = set()
 
-        # -------------------------------------
-        # Collect Folder Paths
-        # -------------------------------------
+        # * -------------------------------------
+        # * Collect Folder Paths
+        # * -------------------------------------
 
         for generated_file in project.files:
 
@@ -58,9 +58,9 @@ class FolderBuilder:
 
                 folders.add(str(parent))
 
-        # -------------------------------------
-        # Create Folders
-        # -------------------------------------
+        # * -------------------------------------
+        # * Create Folders
+        # * -------------------------------------
 
         for folder in sorted(folders):
 
@@ -80,9 +80,9 @@ class FolderBuilder:
 
             result.folders.append(created)
 
-        # -------------------------------------
-        # Statistics
-        # -------------------------------------
+        # * -------------------------------------
+        # * Statistics
+        # * -------------------------------------
 
         result.folder_count = len(result.folders)
 

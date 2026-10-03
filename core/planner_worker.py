@@ -14,7 +14,7 @@ def planner_worker(command, stop_event):
         plan = create_plan(command, stop_event)
 
     finally:
-        # Planning finished here
+        # * Planning finished here
         finish_task()
 
     if stop_event.is_set():

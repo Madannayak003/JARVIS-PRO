@@ -7,11 +7,11 @@ Framework Planner Rules
 
 FRAMEWORK_PLANNER_RULES = {
 
-    # Future
+    # * Future
     #
-    # Framework.REACT: ReactPlanner,
-    # Framework.FLASK: FlaskPlanner,
-    # Framework.DJANGO: DjangoPlanner,
-    # Framework.FASTAPI: FastAPIPlanner,
+    # * Framework.REACT: ReactPlanner,
+    # * Framework.FLASK: FlaskPlanner,
+    # * Framework.DJANGO: DjangoPlanner,
+    # * Framework.FASTAPI: FastAPIPlanner,
 
 }

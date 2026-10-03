@@ -38,17 +38,17 @@ from config.settings import (
 
 ONLINE = False
 
-# =========================================================
-# TTS TEXT CLEANER
-# =========================================================
+# * =========================================================
+# * TTS TEXT CLEANER
+# * =========================================================
 #
-# Cleans Markdown only for spoken audio.
-# The original response remains untouched for:
-# - Activity Log
-# - Remote Dashboard
-# - UI
-# - Live Conversation
-# =========================================================
+# * Cleans Markdown only for spoken audio.
+# * The original response remains untouched for:
+# * - Activity Log
+# * - Remote Dashboard
+# * - UI
+# * - Live Conversation
+# * =========================================================
 
 def _clean_tts_text(text):
 
@@ -57,8 +57,8 @@ def _clean_tts_text(text):
 
     text = str(text)
 
-    # Give the configured name a natural spoken form without changing the
-    # original response shown in the activity log or dashboard.
+    # * Give the configured name a natural spoken form without changing the
+    # * original response shown in the activity log or dashboard.
     text = re.sub(
         rf"\b{re.escape(get_assistant_name())}\b",
         get_assistant_display_name(),
@@ -71,9 +71,9 @@ def _clean_tts_text(text):
 
 VOICE_THREAD = None
 
-# =========================================================
-# REMOTE SPEECH LISTENERS
-# =========================================================
+# * =========================================================
+# * REMOTE SPEECH LISTENERS
+# * =========================================================
 
 _SPEECH_LISTENERS = []
 
@@ -157,22 +157,22 @@ def _record_conversation_response(text):
 
         conversation_coordinator.record_response(str(text))
     except Exception as error:
-        # Conversation bookkeeping must never make speech fail.
+        # ! Conversation bookkeeping must never make speech fail.
         print(
             "[VOICE] Conversation response update failed safely:",
             error,
         )
 
-# =========================================================
-# Internet Detection
-# =========================================================
+# * =========================================================
+# * Internet Detection
+# * =========================================================
 
 def check_internet():
 
     global ONLINE
 
-    # main.py sets this before loading shared skills in Offline Mode. Keep
-    # local skill speech on Piper and avoid an import-time network probe.
+    # * main.py sets this before loading shared skills in Offline Mode. Keep
+    # * local skill speech on Piper and avoid an import-time network probe.
     if os.getenv("JARVIS_OFFLINE_MODE") == "1":
         ONLINE = False
         return
@@ -195,9 +195,9 @@ if os.getenv("JARVIS_OFFLINE_MODE") != "1":
     check_internet()
 
 
-# =========================================================
-# Start New Speech Session
-# =========================================================
+# * =========================================================
+# * Start New Speech Session
+# * =========================================================
 
 def start_speech_session():
 
@@ -207,7 +207,7 @@ def start_speech_session():
     Any previous response becomes permanently invalid.
     """
 
-    # Stop old audio first.
+    # * Stop old audio first.
     from voice.player import stop as stop_audio
 
     stop_audio()
@@ -222,9 +222,9 @@ def start_speech_session():
     return session
 
 
-# =========================================================
-# Voice Worker
-# =========================================================
+# * =========================================================
+# * Voice Worker
+# * =========================================================
 
 def _worker(text, session):
 
@@ -232,9 +232,9 @@ def _worker(text, session):
 
         return False
 
-    # -----------------------------------------------------
-    # Never speak cancelled session
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # ! Never speak cancelled session
+    # * -----------------------------------------------------
 
     if is_cancelled(session):
 
@@ -248,9 +248,9 @@ def _worker(text, session):
 
     success = False
 
-    # -----------------------------------------------------
-    # Online Edge TTS
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Online Edge TTS
+    # * -----------------------------------------------------
 
     if ONLINE:
 
@@ -269,9 +269,9 @@ def _worker(text, session):
                 e
             )
 
-    # -----------------------------------------------------
-    # Offline Piper
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Offline Piper
+    # * -----------------------------------------------------
 
     if not success and not is_cancelled(session):
 
@@ -286,17 +286,17 @@ def _worker(text, session):
                 e
             )
 
-    # -----------------------------------------------------
-    # HUD — Speech finished
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * HUD — Speech finished
+    # * -----------------------------------------------------
 
     HUDIntegration.idle()
 
     return bool(success)
 
-# =========================================================
-# PRO TTS PREPARE
-# =========================================================
+# * =========================================================
+# * PRO TTS PREPARE
+# * =========================================================
 
 def prepare_speech(
     text,
@@ -306,9 +306,9 @@ def prepare_speech(
     if not text:
         return None
 
-    # -----------------------------------------------------
-    # LIVE CONVERSATION SPEECH GATE
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * LIVE CONVERSATION SPEECH GATE
+    # * -----------------------------------------------------
 
     if is_live_execution():
 
@@ -327,9 +327,9 @@ def prepare_speech(
 
         return None
 
-    # -----------------------------------------------------
-    # Online Edge TTS
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Online Edge TTS
+    # * -----------------------------------------------------
 
     if ONLINE:
 
@@ -355,19 +355,19 @@ def prepare_speech(
 
             return None
 
-    # -----------------------------------------------------
-    # Offline mode
+    # * -----------------------------------------------------
+    # * Offline mode
     #
-    # Returning None tells the pipeline to use the
-    # normal synchronous fallback.
-    # -----------------------------------------------------
+    # * Returning None tells the pipeline to use the
+    # * normal synchronous fallback.
+    # * -----------------------------------------------------
 
     return None
 
 
-# =========================================================
-# PRO TTS PLAY PREPARED AUDIO
-# =========================================================
+# * =========================================================
+# * PRO TTS PLAY PREPARED AUDIO
+# * =========================================================
 
 def play_prepared_speech(
     audio_file,
@@ -411,9 +411,9 @@ def play_prepared_speech(
 
         return False
     
-# =========================================================
-# Speak
-# =========================================================
+# * =========================================================
+# * Speak
+# * =========================================================
 
 def speak(
     text,
@@ -429,12 +429,12 @@ def speak(
 
         return
     
-    # -----------------------------------------------------
-    # Notify connected Remote Dashboard
+    # * -----------------------------------------------------
+    # * Notify connected Remote Dashboard
     #
-    # This sends the same text that JARVIS is about to
-    # speak to the remote chat.
-    # -----------------------------------------------------
+    # * This sends the same text that JARVIS is about to
+    # * speak to the remote chat.
+    # * -----------------------------------------------------
 
     if notify_remote:
 
@@ -442,20 +442,20 @@ def speak(
             str(text)
         )
 
-    # Clean only the representation sent to the speech engine. The original
-    # text remains authoritative for conversation context and Live capture.
+    # * Clean only the representation sent to the speech engine. The original
+    # * text remains authoritative for conversation context and Live capture.
     speech_text = _clean_tts_text(text)
 
     if not speech_text:
         return
 
-    # -----------------------------------------------------
-    # LIVE CONVERSATION SPEECH GATE
+    # * -----------------------------------------------------
+    # * LIVE CONVERSATION SPEECH GATE
     #
-    # Gemini Live is already the active speaker.
-    # Prevent normal Edge/Piper TTS from speaking at the
-    # same time when a skill executes through Live mode.
-    # -----------------------------------------------------
+    # * Gemini Live is already the active speaker.
+    # * Prevent normal Edge/Piper TTS from speaking at the
+    # * same time when a skill executes through Live mode.
+    # * -----------------------------------------------------
 
     if is_live_execution():
 
@@ -474,31 +474,31 @@ def speak(
 
         return
     
-    # -----------------------------------------------------
-    # Resolve speech session
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Resolve speech session
+    # * -----------------------------------------------------
 
     if session is None:
 
         session = current_session()
 
-    # -----------------------------------------------------
-    # Current session may already be cancelled/invalid.
+    # * -----------------------------------------------------
+    # * Current session may already be cancelled/invalid.
     #
-    # This can happen when:
+    # * This can happen when:
     #
-    # old AI response
-    #       ↓
-    # user gives new command
-    #       ↓
-    # stop_speaking()
-    #       ↓
-    # old session cancelled
-    #       ↓
-    # new command wants to speak
+    # * old AI response
+    # * ↓
+    # * user gives new command
+    # * ↓
+    # * stop_speaking()
+    # * ↓
+    # * old session cancelled
+    # * ↓
+    # * new command wants to speak
     #
-    # Create a fresh session for the new independent speech.
-    # -----------------------------------------------------
+    # * Create a fresh session for the new independent speech.
+    # * -----------------------------------------------------
 
     if (
         session is None
@@ -508,9 +508,9 @@ def speak(
 
         session = start_speech_session()
 
-    # -----------------------------------------------------
-    # Old / cancelled session
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Old / cancelled session
+    # * -----------------------------------------------------
 
     if not is_current(session):
 
@@ -530,17 +530,17 @@ def speak(
 
     print("[VOICE] Speaking response.")
     
-    # -----------------------------------------------------
-    # HUD — JARVIS is speaking
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * HUD — JARVIS is speaking
+    # * -----------------------------------------------------
 
     HUDIntegration.speaking()
 
-    # -----------------------------------------------------
-    # Synchronous mode
+    # * -----------------------------------------------------
+    # * Synchronous mode
     #
-    # Used by AI speech queue.
-    # -----------------------------------------------------
+    # * Used by AI speech queue.
+    # * -----------------------------------------------------
 
     if wait:
 
@@ -551,9 +551,9 @@ def speak(
 
         return
 
-    # -----------------------------------------------------
-    # Async mode
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Async mode
+    # * -----------------------------------------------------
 
     VOICE_THREAD = threading.Thread(
 
@@ -573,9 +573,9 @@ def speak(
     VOICE_THREAD.start()
 
 
-# =========================================================
-# Wait For Speech
-# =========================================================
+# * =========================================================
+# * Wait For Speech
+# * =========================================================
 
 def wait_for_speech():
 
@@ -589,9 +589,9 @@ def wait_for_speech():
         VOICE_THREAD.join()
 
 
-# =========================================================
-# Stop Speaking
-# =========================================================
+# * =========================================================
+# * Stop Speaking
+# * =========================================================
 
 def stop_speaking():
 
@@ -601,8 +601,8 @@ def stop_speaking():
         "[VOICE] Stopping speech"
     )
 
-    # Cancel current response.
+    # * Cancel current response.
     cancel_current()
 
-    # Stop actual audio.
+    # * Stop actual audio.
     stop_audio()

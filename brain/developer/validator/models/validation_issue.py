@@ -19,9 +19,9 @@ class ValidationIssue:
     found during project validation.
     """
 
-    # ---------------------------------------
-    # Issue Information
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Issue Information
+    # * ---------------------------------------
 
     level: ValidationLevel
 
@@ -29,9 +29,9 @@ class ValidationIssue:
 
     message: str
 
-    # ---------------------------------------
-    # Optional Context
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Optional Context
+    # * ---------------------------------------
 
     file: str = ""
 
@@ -41,8 +41,8 @@ class ValidationIssue:
 
     suggestion: str = ""
 
-    # ---------------------------------------
-    # Extra Metadata
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Extra Metadata
+    # * ---------------------------------------
 
     metadata: dict = field(default_factory=dict)

@@ -21,7 +21,7 @@ class BaseApplier(ABC):
     and returns the merged file contents.
     """
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     @abstractmethod
     def apply(

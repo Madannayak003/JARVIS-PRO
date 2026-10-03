@@ -5,9 +5,9 @@ import sys
 import types
 from unittest.mock import Mock, patch
 
-# The production registry currently imports optional AI providers at import
-# time. Keep this unit test runnable in a minimal checkout when those runtime
-# dependencies are not installed; the application still uses core.registry.
+# * The production registry currently imports optional AI providers at import
+# * time. Keep this unit test runnable in a minimal checkout when those runtime
+# * dependencies are not installed; the application still uses core.registry.
 try:
     importlib.import_module("core.registry")
 except ImportError:

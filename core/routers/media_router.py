@@ -1,6 +1,6 @@
 MEDIA = {
 
-    # ---------- Volume ----------
+    # * ---------- Volume ----------
 
     "volume up": {
         "action": "volume",
@@ -42,7 +42,7 @@ MEDIA = {
         "direction": "mute"
     },
 
-    # ---------- Clipboard ----------
+    # * ---------- Clipboard ----------
 
     "read clipboard": {
         "action": "clipboard",
@@ -64,7 +64,7 @@ MEDIA = {
         "mode": "summary"
     },
 
-    # ---------- Screenshot ----------
+    # * ---------- Screenshot ----------
 
     "analyze screenshot": {
         "action": "screenshot_ai"
@@ -81,16 +81,16 @@ def media_route(command):
 
     command = command.lower().strip()
 
-    # -------------------------------------------------
-    # Exact media commands
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Exact media commands
+    # * -------------------------------------------------
 
     if command in MEDIA:
         return [MEDIA[command]]
 
-    # -------------------------------------------------
-    # Image generation
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Image generation
+    # * -------------------------------------------------
 
     image_prefixes = (
         "create an image of ",

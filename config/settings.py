@@ -1,6 +1,6 @@
-# ===========================
-# JARVIS PRO SETTINGS
-# ===========================
+# * ===========================
+# * JARVIS PRO SETTINGS
+# * ===========================
 
 import json
 from pathlib import Path
@@ -8,13 +8,13 @@ from pathlib import Path
 from config.environment import get_env
 
 
-# APP_NAME is the authoritative user-facing assistant identity. The existing
-# Customize Assistant value is loaded into this same setting when the source
-# is still using the built-in default.
+# * APP_NAME is the authoritative user-facing assistant identity. The existing
+# * Customize Assistant value is loaded into this same setting when the source
+# * is still using the built-in default.
 APP_NAME = "JARVIS PRO"
 
-# This marker identifies the built-in fallback only; it is not another active
-# assistant-name setting.
+# * This marker identifies the built-in fallback only; it is not another active
+# * assistant-name setting.
 _BUILT_IN_APP_NAME = "JARVIS PRO"
 _ASSISTANT_SETTINGS_FILE = (
     Path(__file__).resolve().parent.parent
@@ -76,8 +76,8 @@ if APP_NAME.casefold() == _BUILT_IN_APP_NAME.casefold():
     APP_NAME = _persisted_assistant_name() or APP_NAME
 
 
-# These are deliberately explicit pronunciation and compatibility aliases.
-# Do not expand them fuzzily from the configured name.
+# * These are deliberately explicit pronunciation and compatibility aliases.
+# ! Do not expand them fuzzily from the configured name.
 PRONUNCIATION_ALIASES = ()
 LEGACY_ASSISTANT_ALIASES = ("jarvis",)
 
@@ -145,8 +145,8 @@ VOICE = "male"
 
 LANGUAGE = "en"
 
-# Verbose provider/TTS diagnostics are opt-in. Runtime errors and warnings
-# continue to use their existing normal-output paths.
+# ! Verbose provider/TTS diagnostics are opt-in. Runtime errors and warnings
+# * continue to use their existing normal-output paths.
 DEBUG = get_env("JARVIS_DEBUG", "0").strip().casefold() in {
     "1",
     "true",
@@ -155,9 +155,9 @@ DEBUG = get_env("JARVIS_DEBUG", "0").strip().casefold() in {
     "debug",
 }
 
-# ===========================
+# * ===========================
 # AI
-# ===========================
+# * ===========================
 
 AI_PROVIDER = "auto"
 
@@ -168,9 +168,9 @@ OLLAMA_URL = get_env(
     "http://localhost:11434/api/generate",
 )
 
-# ===========================
-# Local Vision / Face Recognition
-# ===========================
+# * ===========================
+# * Local Vision / Face Recognition
+# * ===========================
 
 def _float_setting(name, default):
     try:

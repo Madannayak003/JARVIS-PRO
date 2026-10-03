@@ -55,7 +55,7 @@ def open_chat(contact):
 
     time.sleep(3)
 
-    # Focus search
+    # * Focus search
     pyautogui.hotkey("ctrl", "f")
     time.sleep(0.5)
 
@@ -108,13 +108,13 @@ def send_photo(contact, image_path):
 
     time.sleep(0.5)
 
-    # Paste image
+    # * Paste image
     pyautogui.hotkey("ctrl", "v")
 
-    # Wait for WhatsApp preview
+    # * Wait for WhatsApp preview
     time.sleep(2)
 
-    # Send image
+    # * Send image
     pyautogui.press("enter")
 
     return True
@@ -159,12 +159,12 @@ def send_file(contact, file_path):
 
     try:
 
-        # Open WhatsApp file picker
+        # * Open WhatsApp file picker
         pyautogui.hotkey("ctrl", "shift", "u")
 
         time.sleep(2)
 
-        # Paste full path
+        # * Paste full path
         pyperclip.copy(file_path)
 
         pyautogui.hotkey("ctrl", "v")
@@ -173,10 +173,10 @@ def send_file(contact, file_path):
 
         pyautogui.press("enter")
 
-        # Wait for preview/upload
+        # * Wait for preview/upload
         time.sleep(3)
 
-        # Send
+        # * Send
         pyautogui.press("enter")
 
         return True
@@ -187,9 +187,9 @@ def send_file(contact, file_path):
 
         return False
 
-# =========================================================
-# WhatsApp Voice Call
-# =========================================================
+# * =========================================================
+# * WhatsApp Voice Call
+# * =========================================================
 
 def call_contact(contact):
 
@@ -220,9 +220,9 @@ def call_contact(contact):
 
         return False
 
-# =========================================================
-# WhatsApp Video Call
-# =========================================================
+# * =========================================================
+# * WhatsApp Video Call
+# * =========================================================
 
 def video_call_contact(contact):
 

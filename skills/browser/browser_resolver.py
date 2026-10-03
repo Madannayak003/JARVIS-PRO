@@ -66,7 +66,7 @@ def resolve_browser_executable(settings: BrowserSettings) -> Path:
         if found is not None:
             return found
 
-    # This additionally supports a supported browser explicitly available on PATH.
+    # * This additionally supports a supported browser explicitly available on PATH.
     for command in ("chrome.exe", "msedge.exe", "chromium.exe"):
         found = shutil.which(command)
         if found:

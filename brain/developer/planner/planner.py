@@ -48,9 +48,9 @@ class Planner:
         5. General
         """
 
-        # -------------------------
-        # Board
-        # -------------------------
+        # * -------------------------
+        # * Board
+        # * -------------------------
 
         planner_class = BOARD_PLANNER_RULES.get(
             analysis.board
@@ -59,9 +59,9 @@ class Planner:
         if planner_class:
             return planner_class
 
-        # -------------------------
-        # Workspace
-        # -------------------------
+        # * -------------------------
+        # * Workspace
+        # * -------------------------
 
         planner_class = WORKSPACE_PLANNER_RULES.get(
             analysis.workspace
@@ -70,9 +70,9 @@ class Planner:
         if planner_class:
             return planner_class
 
-        # -------------------------
-        # Framework
-        # -------------------------
+        # * -------------------------
+        # * Framework
+        # * -------------------------
 
         planner_class = FRAMEWORK_PLANNER_RULES.get(
             analysis.framework
@@ -81,9 +81,9 @@ class Planner:
         if planner_class:
             return planner_class
 
-        # -------------------------
-        # Language
-        # -------------------------
+        # * -------------------------
+        # * Language
+        # * -------------------------
 
         planner_class = LANGUAGE_PLANNER_RULES.get(
             analysis.language
@@ -92,9 +92,9 @@ class Planner:
         if planner_class:
             return planner_class
 
-        # -------------------------
-        # Fallback
-        # -------------------------
+        # * -------------------------
+        # * Fallback
+        # * -------------------------
 
         return GeneralPlanner
 

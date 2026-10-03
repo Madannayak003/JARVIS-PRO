@@ -44,9 +44,9 @@ class LanguageValidator(BaseValidator):
 
         result.total_checks += 1
 
-        # -------------------------------------
-        # No language detected
-        # -------------------------------------
+        # * -------------------------------------
+        # * No language detected
+        # * -------------------------------------
 
         if not analysis.language:
 
@@ -70,9 +70,9 @@ class LanguageValidator(BaseValidator):
 
             return
 
-        # -------------------------------------
-        # Compare
-        # -------------------------------------
+        # * -------------------------------------
+        # * Compare
+        # * -------------------------------------
 
         expected = str(analysis.language).strip()
 

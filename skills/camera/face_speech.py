@@ -6,7 +6,7 @@ import time
 
 try:
     from config.settings import VISION_SPEECH_COOLDOWN
-except Exception:  # Keep this pure formatting layer importable without extras.
+except Exception:  # * Keep this pure formatting layer importable without extras.
     VISION_SPEECH_COOLDOWN = 5.0
 
 

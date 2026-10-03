@@ -28,7 +28,7 @@ class CodeExtractor:
 
         self.regex = RegexExtractor()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def extract(
         self,

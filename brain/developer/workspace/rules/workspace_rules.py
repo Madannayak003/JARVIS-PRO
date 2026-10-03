@@ -5,9 +5,9 @@ Developer Workspace
 Workspace Rules
 """
 
-# ---------------------------------------
-# Default Workspace Settings
-# ---------------------------------------
+# * ---------------------------------------
+# * Default Workspace Settings
+# * ---------------------------------------
 
 DEFAULT_PROJECT_NAME = "GeneratedProject"
 

@@ -21,9 +21,9 @@ from voice.speech_text import (
 )
 
 
-# =========================================================
-# Voice Text Cleaner
-# =========================================================
+# * =========================================================
+# * Voice Text Cleaner
+# * =========================================================
 
 def clean_for_speech(text):
     """Clean one complete text fragment for TTS only."""
@@ -32,9 +32,9 @@ def clean_for_speech(text):
     return cleaned
 
 
-# =========================================================
-# Run Chat
-# =========================================================
+# * =========================================================
+# * Run Chat
+# * =========================================================
 
 def run_chat(
     question,
@@ -45,9 +45,9 @@ def run_chat(
         "[AI WORKER] Thinking..."
     )
 
-    # =====================================================
-    # Memory
-    # =====================================================
+    # * =====================================================
+    # * Memory
+    # * =====================================================
 
     memory_result = learn(
         question
@@ -69,9 +69,9 @@ def run_chat(
             "[MEMORY] Already known."
         )
 
-    # =====================================================
-    # Start AI Request
-    # =====================================================
+    # * =====================================================
+    # * Start AI Request
+    # * =====================================================
 
     t0 = time.perf_counter()
 
@@ -93,21 +93,21 @@ def run_chat(
 
     print("[AI] Streaming response...")
 
-    # =====================================================
-    # Response State
-    # =====================================================
+    # * =====================================================
+    # * Response State
+    # * =====================================================
 
     answer = ""
 
     sentence_buffer = ""
 
-    # Fenced code can span several streamed sentence chunks. Carry the state
-    # so code stays visible in the UI/history but is silent by default.
+    # * Fenced code can span several streamed sentence chunks. Carry the state
+    # * so code stays visible in the UI/history but is silent by default.
     speech_in_code_block = False
 
-    # =====================================================
-    # TTS Pipeline
-    # =====================================================
+    # * =====================================================
+    # * TTS Pipeline
+    # * =====================================================
 
     voice_session = None
 
@@ -115,21 +115,21 @@ def run_chat(
 
     if not is_developer:
 
-        # -------------------------------------------------
-        # Create a NEW voice session for this response.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Create a NEW voice session for this response.
+        # * -------------------------------------------------
 
         voice_session = (
             start_speech_session()
         )
 
-        # -------------------------------------------------
-        # Create PRO TTS pipeline.
+        # * -------------------------------------------------
+        # * Create PRO TTS pipeline.
         #
-        # Sentence generation and playback are now
-        # separated so the next sentence can be prepared
-        # while the current sentence is playing.
-        # -------------------------------------------------
+        # * Sentence generation and playback are now
+        # * separated so the next sentence can be prepared
+        # * while the current sentence is playing.
+        # * -------------------------------------------------
 
         tts_pipeline = TTSPipeline(
 
@@ -141,15 +141,15 @@ def run_chat(
 
         tts_pipeline.start()
 
-    # =====================================================
-    # Developer Response Buffer
-    # =====================================================
+    # * =====================================================
+    # * Developer Response Buffer
+    # * =====================================================
 
     developer_answer = ""
 
-    # =====================================================
-    # Stream AI Response
-    # =====================================================
+    # * =====================================================
+    # * Stream AI Response
+    # * =====================================================
 
     try:
 
@@ -157,9 +157,9 @@ def run_chat(
 
         for data in stream:
 
-            # -------------------------------------------------
-            # Task interruption
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Task interruption
+            # * -------------------------------------------------
 
             if stop_event.is_set():
 
@@ -179,9 +179,9 @@ def run_chat(
 
                 return
 
-            # -------------------------------------------------
-            # Extract token
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Extract token
+            # * -------------------------------------------------
 
             token = data.get(
                 "response",
@@ -192,9 +192,9 @@ def run_chat(
 
                 continue
 
-            # -------------------------------------------------
-            # Terminal output
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Terminal output
+            # * -------------------------------------------------
 
             debug_print(
                 token,
@@ -202,15 +202,15 @@ def run_chat(
                 flush=True
             )
 
-            # -------------------------------------------------
-            # Store complete answer
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Store complete answer
+            # * -------------------------------------------------
 
             answer += token
 
-            # =================================================
-            # Developer Mode
-            # =================================================
+            # * =================================================
+            # * Developer Mode
+            # * =================================================
 
             if is_developer:
 
@@ -218,22 +218,22 @@ def run_chat(
 
                 continue
 
-            # =================================================
-            # Normal Chat
-            # =================================================
+            # * =================================================
+            # * Normal Chat
+            # * =================================================
 
             sentence_buffer += token
 
-            # -------------------------------------------------
-            # Extract complete sentences
+            # * -------------------------------------------------
+            # * Extract complete sentences
             #
-            # Decimal-safe:
+            # * Decimal-safe:
             #
-            # 1084.80
-            # 2.44%
+            # * 1084.80
+            # * 2.44%
             #
-            # will not be incorrectly split.
-            # -------------------------------------------------
+            # * will not be incorrectly split.
+            # * -------------------------------------------------
 
             while True:
 
@@ -256,18 +256,18 @@ def run_chat(
 
                     break
 
-                # -------------------------------------------------
-                # Extract sentence
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Extract sentence
+                # * -------------------------------------------------
 
                 sentence = (
                     match.group(0)
                     .strip()
                 )
 
-                # -------------------------------------------------
-                # Remove extracted sentence
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Remove extracted sentence
+                # * -------------------------------------------------
 
                 sentence_buffer = (
                     sentence_buffer[
@@ -275,9 +275,9 @@ def run_chat(
                     ]
                 )
 
-                # -------------------------------------------------
-                # Send to TTS pipeline
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Send to TTS pipeline
+                # * -------------------------------------------------
 
                 if sentence:
 
@@ -298,9 +298,9 @@ def run_chat(
 
         print()
 
-    # =====================================================
-    # Check Cancellation
-    # =====================================================
+    # * =====================================================
+    # * Check Cancellation
+    # * =====================================================
 
     if stop_event.is_set():
 
@@ -322,15 +322,15 @@ def run_chat(
         return
 
     if answer.strip():
-        # Publish the untouched completed response as soon as generation
-        # finishes. TTS can continue preparing/playing progressively without
-        # delaying the single coherent HUD/activity entry.
+        # * Publish the untouched completed response as soon as generation
+        # * finishes. TTS can continue preparing/playing progressively without
+        # * delaying the single coherent HUD/activity entry.
         HUDIntegration.response(answer)
         print("[AI] Response completed.")
 
-    # =====================================================
-    # Remaining Text
-    # =====================================================
+    # * =====================================================
+    # * Remaining Text
+    # * =====================================================
 
     remaining = (
         sentence_buffer.strip()
@@ -354,33 +354,33 @@ def run_chat(
                 cleaned
             )
 
-    # =====================================================
-    # Finish TTS Pipeline
-    # =====================================================
+    # * =====================================================
+    # * Finish TTS Pipeline
+    # * =====================================================
 
     if not is_developer:
 
-        # -------------------------------------------------
-        # Tell pipeline no more sentences are coming.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Tell pipeline no more sentences are coming.
+        # * -------------------------------------------------
 
         tts_pipeline.finish()
 
-        # -------------------------------------------------
-        # Wait until:
+        # * -------------------------------------------------
+        # * Wait until:
         #
-        # - remaining TTS is generated
-        # - queued audio is played
-        # - files are cleaned
+        # * - remaining TTS is generated
+        # * - queued audio is played
+        # * - files are cleaned
         #
-        # OR cancellation occurs.
-        # -------------------------------------------------
+        # * OR cancellation occurs.
+        # * -------------------------------------------------
 
         tts_pipeline.wait()
 
-    # =====================================================
-    # Save Conversation
-    # =====================================================
+    # * =====================================================
+    # * Save Conversation
+    # * =====================================================
 
     if not answer.strip():
 

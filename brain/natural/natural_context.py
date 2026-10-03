@@ -30,9 +30,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-# ============================================================
-# Natural Context
-# ============================================================
+# * ============================================================
+# * Natural Context
+# * ============================================================
 
 @dataclass(frozen=True)
 class NaturalContext:
@@ -41,84 +41,84 @@ class NaturalContext:
     Natural Conversation Intelligence.
     """
 
-    # --------------------------------------------------------
-    # Current user input
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Current user input
+    # * --------------------------------------------------------
 
     user_input: str = ""
 
-    # --------------------------------------------------------
-    # Existing conversation context
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing conversation context
+    # * --------------------------------------------------------
 
     conversation: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Recent conversation messages
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Recent conversation messages
+    # * --------------------------------------------------------
 
     recent_messages: tuple[dict[str, Any], ...] = ()
 
-    # --------------------------------------------------------
-    # Existing user profile
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing user profile
+    # * --------------------------------------------------------
 
     profile: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Existing memory information
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing memory information
+    # * --------------------------------------------------------
 
     memories: tuple[Any, ...] = ()
 
-    # --------------------------------------------------------
-    # Existing planner information
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing planner information
+    # * --------------------------------------------------------
 
     planner: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Existing project information
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing project information
+    # * --------------------------------------------------------
 
     project: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Existing screen information
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing screen information
+    # * --------------------------------------------------------
 
     screen: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Existing conversation state
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Existing conversation state
+    # * --------------------------------------------------------
 
     conversation_state: dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Metadata
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Metadata
+    # * --------------------------------------------------------
 
     metadata: dict[str, Any] = field(
         default_factory=dict
     )
 
 
-# ============================================================
-# Natural Context Aggregator
-# ============================================================
+# * ============================================================
+# * Natural Context Aggregator
+# * ============================================================
 
 class NaturalContextAggregator:
     """
@@ -129,9 +129,9 @@ class NaturalContextAggregator:
     Existing systems remain authoritative.
     """
 
-    # ========================================================
-    # Build
-    # ========================================================
+    # * ========================================================
+    # * Build
+    # * ========================================================
 
     def build(
         self,
@@ -144,41 +144,41 @@ class NaturalContextAggregator:
         ai_context=None,
     ) -> NaturalContext:
 
-        # ====================================================
-        # 1. Conversation Context
-        # ====================================================
+        # * ====================================================
+        # * 1. Conversation Context
+        # * ====================================================
 
         conversation = self._extract_conversation(
             conversation_context
         )
 
-        # ====================================================
-        # 2. Recent Messages
-        # ====================================================
+        # * ====================================================
+        # * 2. Recent Messages
+        # * ====================================================
 
         recent_messages = self._extract_recent_messages(
             conversation_manager
         )
 
-        # ====================================================
-        # 3. Profile
-        # ====================================================
+        # * ====================================================
+        # * 3. Profile
+        # * ====================================================
 
         profile = self._extract_profile(
             profile_manager
         )
 
-        # ====================================================
-        # 4. Conversation State
-        # ====================================================
+        # * ====================================================
+        # * 4. Conversation State
+        # * ====================================================
 
         conversation_state = self._extract_state(
             state_manager
         )
 
-        # ====================================================
-        # 5. Existing AI Context
-        # ====================================================
+        # * ====================================================
+        # * 5. Existing AI Context
+        # * ====================================================
 
         memories = ()
         planner = {}
@@ -208,8 +208,8 @@ class NaturalContextAggregator:
                 "screen",
             )
 
-            # Existing AI context may already contain
-            # the latest user input.
+            # * Existing AI context may already contain
+            # * the latest user input.
 
             ai_user_input = self._extract_value(
                 ai_context,
@@ -222,9 +222,9 @@ class NaturalContextAggregator:
                     ai_user_input
                 )
 
-        # ====================================================
-        # 6. Metadata
-        # ====================================================
+        # * ====================================================
+        # * 6. Metadata
+        # * ====================================================
 
         metadata = {
             "builder": (
@@ -257,9 +257,9 @@ class NaturalContextAggregator:
             ),
         }
 
-        # ====================================================
-        # 7. Return immutable context
-        # ====================================================
+        # * ====================================================
+        # * 7. Return immutable context
+        # * ====================================================
 
         return NaturalContext(
 
@@ -292,9 +292,9 @@ class NaturalContextAggregator:
             metadata=metadata,
         )
 
-    # ========================================================
-    # Conversation Extraction
-    # ========================================================
+    # * ========================================================
+    # * Conversation Extraction
+    # * ========================================================
 
     @staticmethod
     def _extract_conversation(
@@ -306,8 +306,8 @@ class NaturalContextAggregator:
 
         try:
 
-            # Your ConversationContextManager already
-            # exposes snapshot() in the existing system.
+            # * Your ConversationContextManager already
+            # * exposes snapshot() in the existing system.
 
             if hasattr(
                 conversation_context,
@@ -334,9 +334,9 @@ class NaturalContextAggregator:
 
         return {}
 
-    # ========================================================
-    # Recent Messages
-    # ========================================================
+    # * ========================================================
+    # * Recent Messages
+    # * ========================================================
 
     @staticmethod
     def _extract_recent_messages(
@@ -365,9 +365,9 @@ class NaturalContextAggregator:
 
             for message in messages:
 
-                # ------------------------------------------------
-                # Dataclass / object message
-                # ------------------------------------------------
+                # * ------------------------------------------------
+                # * Dataclass / object message
+                # * ------------------------------------------------
 
                 if hasattr(
                     message,
@@ -382,9 +382,9 @@ class NaturalContextAggregator:
 
                     continue
 
-                # ------------------------------------------------
-                # Dictionary message
-                # ------------------------------------------------
+                # * ------------------------------------------------
+                # * Dictionary message
+                # * ------------------------------------------------
 
                 if isinstance(
                     message,
@@ -406,9 +406,9 @@ class NaturalContextAggregator:
 
             return []
 
-    # ========================================================
-    # Profile
-    # ========================================================
+    # * ========================================================
+    # * Profile
+    # * ========================================================
 
     @staticmethod
     def _extract_profile(
@@ -420,7 +420,7 @@ class NaturalContextAggregator:
 
         try:
 
-            # Preferred API if available.
+            # * Preferred API if available.
 
             if hasattr(
                 profile_manager,
@@ -438,8 +438,8 @@ class NaturalContextAggregator:
 
                     return dict(profile)
 
-            # Some profile managers expose
-            # a profile attribute.
+            # * Some profile managers expose
+            # * a profile attribute.
 
             profile = getattr(
                 profile_manager,
@@ -463,9 +463,9 @@ class NaturalContextAggregator:
 
         return {}
 
-    # ========================================================
-    # Conversation State
-    # ========================================================
+    # * ========================================================
+    # * Conversation State
+    # * ========================================================
 
     @staticmethod
     def _extract_state(
@@ -518,9 +518,9 @@ class NaturalContextAggregator:
 
         return {}
 
-    # ========================================================
-    # Generic Value
-    # ========================================================
+    # * ========================================================
+    # * Generic Value
+    # * ========================================================
 
     @staticmethod
     def _extract_value(
@@ -546,9 +546,9 @@ class NaturalContextAggregator:
 
             return default
 
-    # ========================================================
-    # Generic Dictionary
-    # ========================================================
+    # * ========================================================
+    # * Generic Dictionary
+    # * ========================================================
 
     @staticmethod
     def _extract_dict(
@@ -575,9 +575,9 @@ class NaturalContextAggregator:
         return {}
 
 
-# ============================================================
-# Shared Aggregator
-# ============================================================
+# * ============================================================
+# * Shared Aggregator
+# * ============================================================
 
 natural_context_aggregator = (
     NaturalContextAggregator()

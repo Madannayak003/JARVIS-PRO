@@ -44,7 +44,7 @@ Always prioritize:
 """
 
 
-# Backwards-compatible import for integrations that still use the constant.
-# Runtime chat sessions call get_chat_prompt() so Customize changes apply
-# without restarting the process.
+# * Backwards-compatible import for integrations that still use the constant.
+# * Runtime chat sessions call get_chat_prompt() so Customize changes apply
+# * without restarting the process.
 CHAT_PROMPT = get_chat_prompt()

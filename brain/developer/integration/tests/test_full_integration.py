@@ -17,25 +17,25 @@ def main():
     print("FULL DEVELOPER END-TO-END INTEGRATION TEST")
     print("=" * 90)
 
-    # ==================================================
-    # Imports
-    # ==================================================
+    # * ==================================================
+    # * Imports
+    # * ==================================================
 
     import core.dispatcher as dispatcher
 
     import voice.manager as voice_manager
 
-    # ==================================================
-    # Disable unrelated AI memory learning
-    # ==================================================
+    # * ==================================================
+    # * Disable unrelated AI memory learning
+    # * ==================================================
 
     original_learn = dispatcher.learn
 
     dispatcher.learn = lambda command: {}
 
-    # ==================================================
-    # Disable voice output during test
-    # ==================================================
+    # * ==================================================
+    # * Disable voice output during test
+    # * ==================================================
 
     original_speak = voice_manager.speak
 
@@ -49,9 +49,9 @@ def main():
 
             project_path = Path(temp)
 
-            # ==========================================
-            # 1. Create temporary project
-            # ==========================================
+            # * ==========================================
+            # * 1. Create temporary project
+            # * ==========================================
 
             source = project_path / "main.py"
 
@@ -69,9 +69,9 @@ def main():
             print(project_path)
             print("PASS")
 
-            # ==========================================
-            # 2. Get actual Dispatcher BrainRouter
-            # ==========================================
+            # * ==========================================
+            # * 2. Get actual Dispatcher BrainRouter
+            # * ==========================================
 
             router = dispatcher.brain_router
 
@@ -81,9 +81,9 @@ def main():
             print(type(router).__name__)
             print("PASS")
 
-            # ==========================================
-            # 3. Configure active project
-            # ==========================================
+            # * ==========================================
+            # * 3. Configure active project
+            # * ==========================================
 
             memory = router.project_resolver.memory
 
@@ -109,9 +109,9 @@ def main():
             )
             print("PASS")
 
-            # ==========================================
-            # 4. Verify active project
-            # ==========================================
+            # * ==========================================
+            # * 4. Verify active project
+            # * ==========================================
 
             resolved = (
                 router.project_resolver.resolve()
@@ -128,9 +128,9 @@ def main():
             print(resolved)
             print("PASS")
 
-            # ==========================================
-            # 5. Install controlled Developer provider
-            # ==========================================
+            # * ==========================================
+            # * 5. Install controlled Developer provider
+            # * ==========================================
 
             def fake_generate(prompt):
 
@@ -152,9 +152,9 @@ def main():
             print("\n[5] Controlled Developer provider")
             print("PASS")
 
-            # ==========================================
-            # 6. Execute through REAL dispatcher
-            # ==========================================
+            # * ==========================================
+            # * 6. Execute through REAL dispatcher
+            # * ==========================================
 
             command = "add subtract function"
 
@@ -167,9 +167,9 @@ def main():
 
             print("PASS")
 
-            # ==========================================
-            # 7. Verify file modification
-            # ==========================================
+            # * ==========================================
+            # * 7. Verify file modification
+            # * ==========================================
 
             updated = source.read_text(
                 encoding="utf-8",
@@ -197,9 +197,9 @@ def main():
 
             print("PASS")
 
-            # ==========================================
-            # 8. Verify Developer result memory
-            # ==========================================
+            # * ==========================================
+            # * 8. Verify Developer result memory
+            # * ==========================================
 
             developer_memory = (
                 router.developer.memory.memory
@@ -241,9 +241,9 @@ def main():
 
             print("PASS")
 
-            # ==========================================
-            # 9. Verify active project memory
-            # ==========================================
+            # * ==========================================
+            # * 9. Verify active project memory
+            # * ==========================================
 
             session = (
                 developer_memory["session"]
@@ -262,9 +262,9 @@ def main():
 
             print("PASS")
 
-            # ==========================================
-            # 10. Verify persistent memory
-            # ==========================================
+            # * ==========================================
+            # * 10. Verify persistent memory
+            # * ==========================================
 
             reloaded_memory = (
                 type(
@@ -300,9 +300,9 @@ def main():
 
             print("PASS")
 
-            # ==========================================
-            # 11. Verify backup
-            # ==========================================
+            # * ==========================================
+            # * 11. Verify backup
+            # * ==========================================
 
             backup_root = (
                 project_path
@@ -321,9 +321,9 @@ def main():
             print(backups)
             print("PASS")
 
-            # ==========================================
-            # 12. Verify no unrelated files changed
-            # ==========================================
+            # * ==========================================
+            # * 12. Verify no unrelated files changed
+            # * ==========================================
 
             project_files = [
 
@@ -355,9 +355,9 @@ def main():
 
     finally:
 
-        # ==============================================
-        # Restore global functions
-        # ==============================================
+        # * ==============================================
+        # * Restore global functions
+        # * ==============================================
 
         dispatcher.learn = original_learn
 

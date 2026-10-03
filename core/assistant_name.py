@@ -87,7 +87,7 @@ def normalize_assistant_invocation(text: str | None) -> AssistantInvocation | No
     )
 
 
-# Compatibility exports. They are derived views, not independent identity
-# configuration, and existing callers can continue importing them.
+# * Compatibility exports. They are derived views, not independent identity
+# * configuration, and existing callers can continue importing them.
 CANONICAL_ASSISTANT_NAME = get_assistant_name_lower()
 ASSISTANT_NAME_ALIASES = get_assistant_aliases()

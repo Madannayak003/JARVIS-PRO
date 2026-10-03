@@ -27,8 +27,8 @@ def clean_for_speech_stateful(
 
     original = str(text)
 
-    # Also skip standalone structured lines in an otherwise conversational
-    # response, such as a JSON result printed after an explanation.
+    # * Also skip standalone structured lines in an otherwise conversational
+    # * response, such as a JSON result printed after an explanation.
     visible_lines = []
     for line in original.splitlines():
         try:
@@ -45,8 +45,8 @@ def clean_for_speech_stateful(
     if not original.strip():
         return "", bool(in_code_block)
 
-    # Do not narrate a complete raw JSON/dictionary payload. Structured
-    # results remain available in the original UI/history representation.
+    # ! Do not narrate a complete raw JSON/dictionary payload. Structured
+    # * results remain available in the original UI/history representation.
     if not in_code_block:
         try:
             structured = json.loads(original.strip())
@@ -69,7 +69,7 @@ def clean_for_speech_stateful(
     spoken = "".join(spoken_parts)
     spoken = _HORIZONTAL_RULE_PATTERN.sub(" ", spoken)
 
-    # Markdown links/images become their human-readable label.
+    # * Markdown links/images become their human-readable label.
     spoken = re.sub(
         r"!\[([^\]]*)\]\([^)]*\)",
         r"\1",
@@ -81,7 +81,7 @@ def clean_for_speech_stateful(
         spoken,
     )
 
-    # Remove presentation markers while retaining the actual words.
+    # * Remove presentation markers while retaining the actual words.
     spoken = re.sub(r"(?m)^\s*#{1,6}\s+", "", spoken)
     spoken = re.sub(
         r"(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|>\s?)",
@@ -95,10 +95,10 @@ def clean_for_speech_stateful(
         spoken,
     )
 
-    # Inline code is still useful as a word, but its backticks are not.
+    # * Inline code is still useful as a word, but its backticks are not.
     spoken = spoken.replace("`", "")
 
-    # Avoid reading formatting noise such as repeated punctuation.
+    # * Avoid reading formatting noise such as repeated punctuation.
     spoken = re.sub(r"([!?])\1+", r"\1", spoken)
     spoken = re.sub(r"([,.])\1{2,}", r"\1", spoken)
     spoken = re.sub(r"\s+", " ", spoken).strip()

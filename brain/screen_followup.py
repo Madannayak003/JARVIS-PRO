@@ -15,19 +15,19 @@ should be used by the normal conversational pipeline.
 from brain.screen_context import screen_context
 
 
-# =========================================================
-# Follow-up Detection
-# =========================================================
+# * =========================================================
+# * Follow-up Detection
+# * =========================================================
 
 SCREEN_REFERENCES = (
 
-    # Direct screen references
+    # * Direct screen references
     "this screen",
     "the screen",
     "my screen",
     "on screen",
 
-    # Visual references
+    # * Visual references
     "this image",
     "the image",
     "this picture",
@@ -35,7 +35,7 @@ SCREEN_REFERENCES = (
     "this photo",
     "the photo",
 
-    # Visible content
+    # * Visible content
     "what is this",
     "what are they",
     "who are they",
@@ -43,7 +43,7 @@ SCREEN_REFERENCES = (
     "what is happening",
     "what happened",
 
-    # Screen/application
+    # * Screen/application
     "what app",
     "which app",
     "what application",
@@ -51,44 +51,44 @@ SCREEN_REFERENCES = (
     "what window",
     "which window",
 
-    # Visible information
+    # * Visible information
     "what does it show",
     "what is shown",
     "what is displayed",
     "what is visible",
     "what can you see",
 
-    # Image information
+    # * Image information
     "image resolution",
     "image size",
     "file size",
     "what resolution",
 )
 
-# =========================================================
-# Screen Data Follow-ups
-# =========================================================
+# * =========================================================
+# * Screen Data Follow-ups
+# * =========================================================
 #
-# These are short requests that refer to information
-# visible on the currently analyzed screen.
+# * These are short requests that refer to information
+# * visible on the currently analyzed screen.
 #
-# Example:
+# * Example:
 #
-# Screen context:
-#   Tata Consumer Products
+# * Screen context:
+# * Tata Consumer Products
 #
-# User:
-#   "today low price"
+# * User:
+# * "today low price"
 #
-# This should continue the current screen conversation
-# instead of going to screenshot_ai.
+# * This should continue the current screen conversation
+# * instead of going to screenshot_ai.
 #
 
 SCREEN_DATA_FOLLOWUPS = (
 
-    # -----------------------------------------------------
-    # Stock / Financial
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Stock / Financial
+    # * -----------------------------------------------------
 
     "today low",
     "today's low",
@@ -116,9 +116,9 @@ SCREEN_DATA_FOLLOWUPS = (
     "how much is it down",
     "how much did it move",
 
-    # -----------------------------------------------------
-    # Stock identity
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Stock identity
+    # * -----------------------------------------------------
 
     "which stock",
     "what stock",
@@ -126,9 +126,9 @@ SCREEN_DATA_FOLLOWUPS = (
     "which company",
     "what company",
 
-    # -----------------------------------------------------
-    # Visible numeric information
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Visible numeric information
+    # * -----------------------------------------------------
 
     "what is the price",
     "what's the price",
@@ -155,9 +155,9 @@ FOLLOW_UP_WORDS = (
 )
 
 
-# =========================================================
-# Has Active Screen Context
-# =========================================================
+# * =========================================================
+# * Has Active Screen Context
+# * =========================================================
 
 def has_screen_context():
 
@@ -175,9 +175,9 @@ def has_screen_context():
         return False
 
 
-# =========================================================
-# Detect Screen Follow-up
-# =========================================================
+# * =========================================================
+# * Detect Screen Follow-up
+# * =========================================================
 
 def is_screen_followup(command):
 
@@ -192,9 +192,9 @@ def is_screen_followup(command):
     if not command:
         return False
 
-    # -----------------------------------------------------
-    # Explicit screen/image references
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Explicit screen/image references
+    # * -----------------------------------------------------
 
     for phrase in SCREEN_REFERENCES:
 
@@ -207,19 +207,19 @@ def is_screen_followup(command):
 
             return True
 
-    # -----------------------------------------------------
-    # Screen data follow-ups
+    # * -----------------------------------------------------
+    # * Screen data follow-ups
     #
-    # Example:
+    # * Example:
     #
-    # "today low price"
-    # "current price"
-    # "percentage change"
-    # "which stock"
+    # * "today low price"
+    # * "current price"
+    # * "percentage change"
+    # * "which stock"
     #
-    # These refer to information contained in the
-    # currently active screen context.
-    # -----------------------------------------------------
+    # * These refer to information contained in the
+    # * currently active screen context.
+    # * -----------------------------------------------------
 
     for phrase in SCREEN_DATA_FOLLOWUPS:
 
@@ -232,9 +232,9 @@ def is_screen_followup(command):
 
             return True
 
-    # -----------------------------------------------------
-    # Short natural follow-up questions
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Short natural follow-up questions
+    # * -----------------------------------------------------
 
     words = command.split()
 
@@ -253,9 +253,9 @@ def is_screen_followup(command):
 
     return False
 
-# =========================================================
-# Info
-# =========================================================
+# * =========================================================
+# * Info
+# * =========================================================
 
 def info():
 

@@ -2,9 +2,9 @@ def spotify_route(command):
 
     command = command.lower().strip()
 
-    # =====================================================
-    # Open / Close
-    # =====================================================
+    # * =====================================================
+    # * Open / Close
+    # * =====================================================
 
     if command == "open spotify":
         return [{"action": "spotify_open"}]
@@ -12,9 +12,9 @@ def spotify_route(command):
     if command == "close spotify":
         return [{"action": "spotify_close"}]
 
-    # =====================================================
-    # Play / Resume
-    # =====================================================
+    # * =====================================================
+    # * Play / Resume
+    # * =====================================================
 
     if command in [
 
@@ -31,9 +31,9 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_play"}]
 
-    # =====================================================
-    # Pause
-    # =====================================================
+    # * =====================================================
+    # * Pause
+    # * =====================================================
 
     if command in [
 
@@ -45,9 +45,9 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_pause"}]
 
-    # =====================================================
-    # Next
-    # =====================================================
+    # * =====================================================
+    # * Next
+    # * =====================================================
 
     if command in [
 
@@ -59,9 +59,9 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_next"}]
 
-    # =====================================================
-    # Previous
-    # =====================================================
+    # * =====================================================
+    # * Previous
+    # * =====================================================
 
     if command in [
 
@@ -73,9 +73,9 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_previous"}]
 
-    # =====================================================
-    # Spotify Volume Up
-    # =====================================================
+    # * =====================================================
+    # * Spotify Volume Up
+    # * =====================================================
 
     if command in [
 
@@ -90,9 +90,9 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_volume_up"}]
 
-    # =====================================================
-    # Spotify Volume Down
-    # =====================================================
+    # * =====================================================
+    # * Spotify Volume Down
+    # * =====================================================
 
     if command in [
 
@@ -107,30 +107,30 @@ def spotify_route(command):
     ]:
         return [{"action": "spotify_volume_down"}]
 
-    # =====================================================
-    # IMPORTANT:
-    # YouTube commands must NOT be captured by Spotify.
-    # =====================================================
+    # * =====================================================
+    # ! IMPORTANT:
+    # ! YouTube commands must NOT be captured by Spotify.
+    # * =====================================================
 
     if command in [
 
-        # First video
+        # * First video
         "play first video",
         "play the first video",
         "play first youtube video",
         "play the first youtube video",
 
-        # YouTube video
+        # * YouTube video
         "play youtube video",
         "play the youtube video",
 
-        # Next
+        # * Next
         "play next video",
         "play the next video",
         "play next youtube video",
         "play the next youtube video",
 
-        # Previous
+        # * Previous
         "play previous video",
         "play the previous video",
         "play previous youtube video",
@@ -139,9 +139,9 @@ def spotify_route(command):
     ]:
         return None
 
-    # =====================================================
-    # Play Specific Spotify Song
-    # =====================================================
+    # * =====================================================
+    # * Play Specific Spotify Song
+    # * =====================================================
 
     if command.startswith("play "):
 
@@ -150,23 +150,23 @@ def spotify_route(command):
         if song.endswith(" on spotify"):
             song = song[:-11].strip()
 
-        # =====================================================
-        # CONTEXTUAL / ORDINAL REFERENCES
+        # * =====================================================
+        # * CONTEXTUAL / ORDINAL REFERENCES
         #
-        # These commands must NEVER be interpreted as a
-        # Spotify song name.
+        # ! These commands must NEVER be interpreted as a
+        # * Spotify song name.
         #
-        # Examples:
+        # * Examples:
         #
-        #   play the first one
-        #   play the second one
-        #   play the third one
-        #   play the last one
-        #   play that one
-        #   play this one
+        # * play the first one
+        # * play the second one
+        # * play the third one
+        # * play the last one
+        # * play that one
+        # * play this one
         #
-        # Natural Conversation / Follow-Up routing owns these.
-        # =====================================================
+        # * Natural Conversation / Follow-Up routing owns these.
+        # * =====================================================
 
         contextual_play_phrases = {
 
@@ -197,9 +197,9 @@ def spotify_route(command):
 
             return None
 
-        # =====================================================
-        # Explicit YouTube references
-        # =====================================================
+        # * =====================================================
+        # * Explicit YouTube references
+        # * =====================================================
 
         if (
             "youtube" in song
@@ -208,9 +208,9 @@ def spotify_route(command):
 
             return None
 
-        # =====================================================
-        # Generic Spotify song
-        # =====================================================
+        # * =====================================================
+        # * Generic Spotify song
+        # * =====================================================
 
         if song not in [
             "spotify",

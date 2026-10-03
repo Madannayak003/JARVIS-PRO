@@ -42,15 +42,15 @@ class ObjectDetector:
         self.model = None
         self.loaded = False
 
-        # Prefer NVIDIA CUDA when available.
-        # Fall back safely to CPU.
+        # * Prefer NVIDIA CUDA when available.
+        # * Fall back safely to CPU.
         self.device = (
             0
             if torch.cuda.is_available()
             else "cpu"
         )
 
-        # FP16 is useful on CUDA, but must not be used on CPU.
+        # ! FP16 is useful on CUDA, but must not be used on CPU.
         self.half = torch.cuda.is_available()
 
     def load(self):
@@ -127,8 +127,8 @@ class ObjectDetector:
                     "box": coordinates,
                 }
 
-                # Native YOLO tracking ID.
-                # Normal detection mode does not have one.
+                # * Native YOLO tracking ID.
+                # * Normal detection mode does not have one.
                 if boxes.id is not None:
                     detection["track_id"] = int(
                         box.id[0]

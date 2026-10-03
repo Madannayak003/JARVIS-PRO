@@ -30,8 +30,8 @@ class HUDEvent:
         )
     )
 
-    # One logical HUD/activity event keeps the same identity across
-    # the desktop SSE bridge and the remote dashboard stream.
+    # * One logical HUD/activity event keeps the same identity across
+    # * the desktop SSE bridge and the remote dashboard stream.
     event_id: str = field(
         default_factory=lambda: uuid4().hex
     )
@@ -39,9 +39,9 @@ class HUDEvent:
     source: Optional[str] = None
 
 
-# =========================================================
-# Standard HUD Events
-# =========================================================
+# * =========================================================
+# * Standard HUD Events
+# * =========================================================
 
 HUD_IDLE = "idle"
 

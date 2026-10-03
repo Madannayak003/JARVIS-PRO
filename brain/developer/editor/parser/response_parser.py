@@ -24,7 +24,7 @@ class ResponseParser:
 
         self.file_parser = FileParser()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def parse(
         self,

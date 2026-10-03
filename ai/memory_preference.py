@@ -16,9 +16,9 @@ Responsibilities
 import re
 
 
-# ---------------------------------------
-# Preference Patterns
-# ---------------------------------------
+# * ---------------------------------------
+# * Preference Patterns
+# * ---------------------------------------
 
 PATTERNS = [
 
@@ -35,13 +35,13 @@ PATTERNS = [
 ]
 
 
-# ---------------------------------------
-# Preference Classification
-# ---------------------------------------
+# * ---------------------------------------
+# * Preference Classification
+# * ---------------------------------------
 
 PREFERENCE_KEYS = {
 
-    # Languages
+    # * Languages
     "python": "favorite_language",
     "c++": "favorite_language",
     "c": "favorite_language",
@@ -49,7 +49,7 @@ PREFERENCE_KEYS = {
     "javascript": "favorite_language",
     "typescript": "favorite_language",
 
-    # Browsers
+    # * Browsers
     "chrome": "preferred_browser",
     "google chrome": "preferred_browser",
     "edge": "preferred_browser",
@@ -57,22 +57,22 @@ PREFERENCE_KEYS = {
     "brave": "preferred_browser",
     "opera": "preferred_browser",
 
-    # Editors
+    # * Editors
     "vs code": "preferred_editor",
     "vscode": "preferred_editor",
     "visual studio code": "preferred_editor",
     "pycharm": "preferred_editor",
     "cursor": "preferred_editor",
 
-    # Theme
+    # * Theme
     "dark mode": "preferred_theme",
     "light mode": "preferred_theme",
 
-    # Drinks
+    # * Drinks
     "coffee": "favorite_drink",
     "tea": "favorite_drink",
 
-    # OS
+    # * OS
     "windows": "preferred_os",
     "windows 11": "preferred_os",
     "linux": "preferred_os",
@@ -81,9 +81,9 @@ PREFERENCE_KEYS = {
 }
 
 
-# ---------------------------------------
-# Normalize Value
-# ---------------------------------------
+# * ---------------------------------------
+# * Normalize Value
+# * ---------------------------------------
 
 def clean(value):
 
@@ -98,9 +98,9 @@ def clean(value):
     )
 
 
-# ---------------------------------------
-# Extract Preference
-# ---------------------------------------
+# * ---------------------------------------
+# * Extract Preference
+# * ---------------------------------------
 
 def extract(text):
 

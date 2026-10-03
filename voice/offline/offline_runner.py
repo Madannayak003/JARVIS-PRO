@@ -52,8 +52,8 @@ def process_command(
             or ("Done." if success else "I couldn't complete that local action.")
         )
         HUDAdapter.response(response)
-        # Existing local skills own their spoken result through the shared
-        # voice manager, so do not speak a second generic acknowledgement.
+        # * Existing local skills own their spoken result through the shared
+        # ! voice manager, so do not speak a second generic acknowledgement.
         return response
 
     ai = ai or get_ai()
@@ -91,8 +91,8 @@ def handle_text_command(
         emit_command=emit_command,
     )
 
-    # Local skills already speak their own result through the shared voice
-    # manager. Offline-only responses need Piper here.
+    # * Local skills already speak their own result through the shared voice
+    # * manager. Offline-only responses need Piper here.
     if response and (
         result.route != OfflineRoute.LOCAL_ACTION
         or not result.plan
@@ -105,9 +105,9 @@ def handle_text_command(
 
 
 def run():
-    # Audio dependencies are loaded only when the voice runtime is actually
-    # started, keeping the action bridge usable for tests and other local
-    # callers that do not need a microphone.
+    # * Audio dependencies are loaded only when the voice runtime is actually
+    # * started, keeping the action bridge usable for tests and other local
+    # ! callers that do not need a microphone.
     from voice.offline.offline_stt import calibrate, initialize, listen_once
     from voice.offline.offline_tts import piper_available, speak
     from brain import profile
@@ -127,8 +127,8 @@ def run():
     print("[OFFLINE] Runtime initialized")
     print("[OFFLINE] Skills ready")
     ai = get_ai()
-    # main.py has already selected this runtime mode. Do not probe the
-    # internet again while starting the offline runtime.
+    # ! main.py has already selected this runtime mode. Do not probe the
+    # * internet again while starting the offline runtime.
     HUDAdapter.voice_mode("offline")
     HUDAdapter.ai_model("ollama", ai.model)
     HUDAdapter.idle()
@@ -147,8 +147,8 @@ def run():
     print("[OFFLINE] Action layer ready")
     print(f"[OFFLINE] {get_assistant_display_name()} ready")
 
-    # Reuse the normal Greeting Engine. Passing offline Piper explicitly
-    # keeps startup independent from Gemini/OpenAI and voice.manager.
+    # * Reuse the normal Greeting Engine. Passing offline Piper explicitly
+    # * keeps startup independent from Gemini/OpenAI and voice.manager.
     speak_startup_greeting(speaker=speak, profile=profile)
 
     print("[OFFLINE VOICE] Speak a command.")

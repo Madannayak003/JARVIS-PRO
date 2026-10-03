@@ -23,9 +23,9 @@ import numpy as np
 import speech_recognition as sr
 
 
-# =========================================================
-# Configuration
-# =========================================================
+# * =========================================================
+# * Configuration
+# * =========================================================
 
 WHISPER_MODEL_NAME = "small"
 
@@ -35,22 +35,22 @@ WHISPER_COMPUTE_TYPE = "int8"
 
 LANGUAGE = "en"
 
-# ---------------------------------------------------------
-# Audio filtering
-# ---------------------------------------------------------
+# * ---------------------------------------------------------
+# * Audio filtering
+# * ---------------------------------------------------------
 
-# Minimum RMS level considered real microphone speech.
+# * Minimum RMS level considered real microphone speech.
 #
-# This prevents silence / very quiet background noise
-# from being sent to Whisper.
+# * This prevents silence / very quiet background noise
+# * from being sent to Whisper.
 MIN_RMS = 0.008
 
-# Ignore extremely short recordings.
+# * Ignore extremely short recordings.
 MIN_AUDIO_SECONDS = 0.25
 
-# ---------------------------------------------------------
-# Whisper quality settings
-# ---------------------------------------------------------
+# * ---------------------------------------------------------
+# * Whisper quality settings
+# * ---------------------------------------------------------
 
 BEAM_SIZE = 5
 
@@ -61,9 +61,9 @@ LOG_PROB_THRESHOLD = -1.0
 COMPRESSION_RATIO_THRESHOLD = 2.4
 
 
-# =========================================================
-# Load Faster-Whisper once
-# =========================================================
+# * =========================================================
+# * Load Faster-Whisper once
+# * =========================================================
 
 WHISPER_MODEL = None
 _WHISPER_INITIALIZED = False
@@ -98,34 +98,34 @@ def initialize():
         return False
 
 
-# =========================================================
-# Microphone
-# =========================================================
+# * =========================================================
+# * Microphone
+# * =========================================================
 
 recognizer = sr.Recognizer()
 
-# Starting threshold.
+# * Starting threshold.
 recognizer.energy_threshold = 300
 
-# Let SpeechRecognition adapt to room noise.
+# * Let SpeechRecognition adapt to room noise.
 recognizer.dynamic_energy_threshold = True
 
-# Shorter than your old 1.5 seconds.
+# * Shorter than your old 1.5 seconds.
 #
-# This makes JARVIS respond more naturally after
-# you finish speaking.
+# * This makes JARVIS respond more naturally after
+# * you finish speaking.
 recognizer.pause_threshold = 0.9
 
-# Detect speech sooner.
+# * Detect speech sooner.
 recognizer.phrase_threshold = 0.25
 
-# Keep a short amount of silence around speech.
+# * Keep a short amount of silence around speech.
 recognizer.non_speaking_duration = 0.5
 
 
-# =========================================================
-# AudioData -> NumPy
-# =========================================================
+# * =========================================================
+# * AudioData -> NumPy
+# * =========================================================
 
 def _audio_to_array(audio):
 
@@ -144,9 +144,9 @@ def _audio_to_array(audio):
     return audio_array
 
 
-# =========================================================
-# Audio Quality Check
-# =========================================================
+# * =========================================================
+# * Audio Quality Check
+# * =========================================================
 
 def _audio_quality(audio_array):
 
@@ -158,9 +158,9 @@ def _audio_quality(audio_array):
 
         return False
 
-    # -----------------------------------------------------
-    # Duration
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Duration
+    # * -----------------------------------------------------
 
     duration = (
         len(audio_array) / 16000.0
@@ -174,9 +174,9 @@ def _audio_quality(audio_array):
 
         return False
 
-    # -----------------------------------------------------
-    # RMS volume
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * RMS volume
+    # * -----------------------------------------------------
 
     rms = float(
         np.sqrt(
@@ -205,9 +205,9 @@ def _audio_quality(audio_array):
     return True
 
 
-# =========================================================
-# Transcribe Audio
-# =========================================================
+# * =========================================================
+# * Transcribe Audio
+# * =========================================================
 
 def transcribe_audio(audio):
 
@@ -220,17 +220,17 @@ def transcribe_audio(audio):
         if not initialize():
             return None
 
-        # -------------------------------------------------
-        # Convert microphone audio
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Convert microphone audio
+        # * -------------------------------------------------
 
         audio_array = _audio_to_array(
             audio
         )
 
-        # -------------------------------------------------
-        # Reject silence / extremely short audio
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Reject silence / extremely short audio
+        # * -------------------------------------------------
 
         if not _audio_quality(
             audio_array
@@ -242,9 +242,9 @@ def transcribe_audio(audio):
             "[OFFLINE STT] Transcribing..."
         )
 
-        # -------------------------------------------------
-        # Faster-Whisper
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Faster-Whisper
+        # * -------------------------------------------------
 
         transcription_started = time.perf_counter()
 
@@ -264,12 +264,12 @@ def transcribe_audio(audio):
                     "speech_pad_ms": 200,
                 },
 
-                # Important:
-                # Don't let previous transcription
-                # influence the next command.
+                # ! Important:
+                # ! Don't let previous transcription
+                # * influence the next command.
                 condition_on_previous_text=False,
 
-                # Reject likely hallucinations.
+                # * Reject likely hallucinations.
                 no_speech_threshold=(
                     NO_SPEECH_THRESHOLD
                 ),
@@ -284,9 +284,9 @@ def transcribe_audio(audio):
             )
         )
 
-        # -------------------------------------------------
-        # Collect segments
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Collect segments
+        # * -------------------------------------------------
 
         collected = []
 
@@ -314,9 +314,9 @@ def transcribe_audio(audio):
             f"{time.perf_counter() - transcription_started:.2f}s"
         )
 
-        # -------------------------------------------------
-        # Nothing recognized
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Nothing recognized
+        # * -------------------------------------------------
 
         if not collected:
 
@@ -335,9 +335,9 @@ def transcribe_audio(audio):
 
             return None
 
-        # -------------------------------------------------
-        # Basic hallucination protection
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Basic hallucination protection
+        # * -------------------------------------------------
 
         if len(text) < 2:
 
@@ -348,9 +348,9 @@ def transcribe_audio(audio):
 
             return None
 
-        # -------------------------------------------------
-        # Confidence information
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Confidence information
+        # * -------------------------------------------------
 
         valid_probs = [
             p
@@ -371,7 +371,7 @@ def transcribe_audio(audio):
                 f"{avg_logprob:.3f}"
             )
 
-            # Extremely low-confidence result.
+            # * Extremely low-confidence result.
             if avg_logprob < -1.5:
 
                 print(
@@ -382,9 +382,9 @@ def transcribe_audio(audio):
 
                 return None
 
-        # -------------------------------------------------
-        # Final result
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Final result
+        # * -------------------------------------------------
 
         print(
             "[OFFLINE STT] Recognized:",
@@ -403,9 +403,9 @@ def transcribe_audio(audio):
         return None
 
 
-# =========================================================
-# Calibrate Microphone
-# =========================================================
+# * =========================================================
+# * Calibrate Microphone
+# * =========================================================
 
 def calibrate():
 
@@ -433,9 +433,9 @@ def calibrate():
     return mic
 
 
-# =========================================================
-# Listen Once
-# =========================================================
+# * =========================================================
+# * Listen Once
+# * =========================================================
 
 def listen_once(
     mic=None,

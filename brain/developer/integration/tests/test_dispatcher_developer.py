@@ -35,9 +35,9 @@ def main():
         print("\n[1] Temporary project created")
         print("PASS")
 
-        # ------------------------------------------
-        # Configure existing BrainRouter
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Configure existing BrainRouter
+        # * ------------------------------------------
 
         router = dispatcher.brain_router
 
@@ -59,9 +59,9 @@ def main():
         print("\n[2] Active project configured")
         print("PASS")
 
-        # ------------------------------------------
-        # Controlled generator
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Controlled generator
+        # * ------------------------------------------
 
         def fake_generate(prompt):
 
@@ -83,9 +83,9 @@ def main():
         print("\n[3] Controlled generator installed")
         print("PASS")
 
-        # ------------------------------------------
-        # Dispatch
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Dispatch
+        # * ------------------------------------------
 
         dispatcher.dispatch(
             "add subtract function"
@@ -94,9 +94,9 @@ def main():
         print("\n[4] Dispatcher completed")
         print("PASS")
 
-        # ------------------------------------------
-        # Verify file
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Verify file
+        # * ------------------------------------------
 
         updated = source.read_text(
             encoding="utf-8",
@@ -116,9 +116,9 @@ def main():
         print(updated)
         print("PASS")
 
-        # ------------------------------------------
-        # Verify memory
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Verify memory
+        # * ------------------------------------------
 
         stored = (
             router.developer.memory.memory

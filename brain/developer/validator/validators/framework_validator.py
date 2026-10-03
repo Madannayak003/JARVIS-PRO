@@ -46,9 +46,9 @@ class FrameworkValidator(BaseValidator):
 
         result.total_checks += 1
 
-        # -------------------------------------
-        # No framework requested
-        # -------------------------------------
+        # * -------------------------------------
+        # * No framework requested
+        # * -------------------------------------
 
         if analysis.framework == Framework.NONE:
 
@@ -56,9 +56,9 @@ class FrameworkValidator(BaseValidator):
 
             return
 
-        # -------------------------------------
-        # Compare
-        # -------------------------------------
+        # * -------------------------------------
+        # * Compare
+        # * -------------------------------------
 
         expected = str(analysis.framework).strip()
 

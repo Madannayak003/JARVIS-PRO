@@ -23,9 +23,9 @@ from concurrent.futures import ThreadPoolExecutor
 from voice.offline.offline_player import play
 
 
-# =========================================================
-# Configuration
-# =========================================================
+# * =========================================================
+# * Configuration
+# * =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,22 +35,22 @@ PIPER_MODEL = (
     / "en_US-lessac-medium.onnx"
 )
 
-# Number of Piper generation workers.
+# * Number of Piper generation workers.
 PIPER_WORKERS = 2
 
-# Number of sentences to prepare ahead of playback.
-# 2 gives us:
+# * Number of sentences to prepare ahead of playback.
+# * 2 gives us:
 #
-# sentence currently playing
-# +
-# next sentence already preparing
+# * sentence currently playing
+# * +
+# * next sentence already preparing
 #
 PREFETCH = 2
 
 
-# =========================================================
-# Piper Check
-# =========================================================
+# * =========================================================
+# * Piper Check
+# * =========================================================
 
 def piper_available():
 
@@ -75,9 +75,9 @@ def piper_available():
         return False
 
 
-# =========================================================
-# Model Check
-# =========================================================
+# * =========================================================
+# * Model Check
+# * =========================================================
 
 def model_available():
 
@@ -87,9 +87,9 @@ def model_available():
     )
 
 
-# =========================================================
-# Prepare One Sentence
-# =========================================================
+# * =========================================================
+# * Prepare One Sentence
+# * =========================================================
 
 def generate(text):
 
@@ -193,9 +193,9 @@ def generate(text):
         return None
 
 
-# =========================================================
-# Split Text
-# =========================================================
+# * =========================================================
+# * Split Text
+# * =========================================================
 
 def split_sentences(text):
 
@@ -219,17 +219,17 @@ def split_sentences(text):
     ]
 
 
-# =========================================================
-# Prepare Multiple Sentences
+# * =========================================================
+# * Prepare Multiple Sentences
 #
-# Kept for compatibility.
+# * Kept for compatibility.
 #
-# This function still prepares all sentences and returns
-# them in the original order.
+# * This function still prepares all sentences and returns
+# * them in the original order.
 #
-# The main speak() function below uses the new streaming
-# pipeline instead.
-# =========================================================
+# * The main speak() function below uses the new streaming
+# * pipeline instead.
+# * =========================================================
 
 def prepare(text):
 
@@ -281,9 +281,9 @@ def prepare(text):
     return prepared
 
 
-# =========================================================
-# Play Prepared Sentences
-# =========================================================
+# * =========================================================
+# * Play Prepared Sentences
+# * =========================================================
 
 def play_prepared(prepared):
 
@@ -350,18 +350,18 @@ def play_prepared(prepared):
     return success
 
 
-# =========================================================
-# STREAMING OFFLINE TTS
+# * =========================================================
+# * STREAMING OFFLINE TTS
 #
-# IMPORTANT:
+# ! IMPORTANT:
 #
-# This is the main improvement.
+# * This is the main improvement.
 #
-# Piper prepares only a small number of sentences ahead.
-# Playback starts as soon as the first sentence is ready.
+# * Piper prepares only a small number of sentences ahead.
+# * Playback starts as soon as the first sentence is ready.
 #
-# We DO NOT wait for the entire response.
-# =========================================================
+# ! We DO NOT wait for the entire response.
+# * =========================================================
 
 def speak(text):
 
@@ -378,9 +378,9 @@ def speak(text):
 
     success = True
 
-    # -----------------------------------------------------
-    # Executor remains alive for the entire response.
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Executor remains alive for the entire response.
+    # * -----------------------------------------------------
 
     executor = ThreadPoolExecutor(
         max_workers=PIPER_WORKERS
@@ -390,11 +390,11 @@ def speak(text):
 
     try:
 
-        # -------------------------------------------------
-        # Initial prefetch
+        # * -------------------------------------------------
+        # * Initial prefetch
         #
-        # Generate only the first 2 sentences.
-        # -------------------------------------------------
+        # * Generate only the first 2 sentences.
+        # * -------------------------------------------------
 
         initial_count = min(
             PREFETCH,
@@ -408,18 +408,18 @@ def speak(text):
                 sentences[index]
             )
 
-        # -------------------------------------------------
-        # Playback in original order
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Playback in original order
+        # * -------------------------------------------------
 
         for index in range(len(sentences)):
 
-            # ---------------------------------------------
-            # Make sure this sentence has been submitted.
+            # * ---------------------------------------------
+            # * Make sure this sentence has been submitted.
             #
-            # After the initial prefetch, submit one new
-            # sentence as we move forward.
-            # ---------------------------------------------
+            # * After the initial prefetch, submit one new
+            # * sentence as we move forward.
+            # * ---------------------------------------------
 
             if index not in futures:
 
@@ -430,11 +430,11 @@ def speak(text):
 
             future = futures[index]
 
-            # ---------------------------------------------
-            # Wait ONLY for the current sentence.
+            # * ---------------------------------------------
+            # * Wait ONLY for the current sentence.
             #
-            # NOT for the entire response.
-            # ---------------------------------------------
+            # * NOT for the entire response.
+            # * ---------------------------------------------
 
             try:
 
@@ -450,9 +450,9 @@ def speak(text):
 
                 wav_file = None
 
-            # ---------------------------------------------
-            # Immediately submit another sentence ahead.
-            # ---------------------------------------------
+            # * ---------------------------------------------
+            # * Immediately submit another sentence ahead.
+            # * ---------------------------------------------
 
             next_index = index + PREFETCH
 
@@ -467,9 +467,9 @@ def speak(text):
                         )
                     )
 
-            # ---------------------------------------------
-            # Play current sentence
-            # ---------------------------------------------
+            # * ---------------------------------------------
+            # * Play current sentence
+            # * ---------------------------------------------
 
             if not wav_file:
 
@@ -504,9 +504,9 @@ def speak(text):
 
             finally:
 
-                # -----------------------------------------
-                # Delete after playback.
-                # -----------------------------------------
+                # * -----------------------------------------
+                # * Delete after playback.
+                # * -----------------------------------------
 
                 try:
 
@@ -527,9 +527,9 @@ def speak(text):
                         e
                     )
 
-            # ---------------------------------------------
-            # Remove completed future.
-            # ---------------------------------------------
+            # * ---------------------------------------------
+            # * Remove completed future.
+            # * ---------------------------------------------
 
             futures.pop(
                 index,
@@ -538,9 +538,9 @@ def speak(text):
 
     finally:
 
-        # -------------------------------------------------
-        # Cancel anything that hasn't started.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Cancel anything that hasn't started.
+        # * -------------------------------------------------
 
         for future in futures.values():
 
@@ -555,6 +555,6 @@ def speak(text):
     return success
 
 
-# =========================================================
-# End
-# =========================================================
+# * =========================================================
+# * End
+# * =========================================================

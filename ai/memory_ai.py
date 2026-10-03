@@ -14,7 +14,7 @@ Responsibilities
 
 import json
 
-# from ai.ollama import ask_ollama
+# * from ai.ollama import ask_ollama
 
 from ai.core.service import ai_service
 
@@ -113,7 +113,7 @@ Return ONLY JSON.
 
         response = ai_response.text.strip()
 
-        # Remove markdown if model adds it
+        # * Remove markdown if model adds it
         if response.startswith("```"):
             response = (
                 response
@@ -135,9 +135,9 @@ Return ONLY JSON.
 
         return None
     
-# ---------------------------------------
-# Normalize AI Output
-# ---------------------------------------
+# * ---------------------------------------
+# * Normalize AI Output
+# * ---------------------------------------
 
 KEY_MAP = {
 
@@ -204,11 +204,11 @@ CATEGORY_MAP = {
 
     "device": "device",
 
-    "laptop": "device",      # <-- add
+    "laptop": "device",  # * <-- add
 
-    "computer": "device",    # <-- add
+    "computer": "device",  # * <-- add
 
-    "hardware": "device",    # <-- add
+    "hardware": "device",  # * <-- add
 
     "email": "contact",
 
@@ -251,9 +251,9 @@ def normalize(data):
     )
     
     
-    # ---------------------------------------
-    # Reject Empty Values
-    # ---------------------------------------
+    # * ---------------------------------------
+    # * Reject Empty Values
+    # * ---------------------------------------
 
     value = str(
 

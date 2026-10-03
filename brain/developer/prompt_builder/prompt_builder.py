@@ -33,7 +33,7 @@ class PromptBuilder:
 
         self.instruction_builder = InstructionBuilder()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def build(
         self,
@@ -43,9 +43,9 @@ class PromptBuilder:
         Build the final prompt from the DeveloperContext.
         """
 
-        # --------------------------------------------
-        # Prompt Context
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Prompt Context
+        # * --------------------------------------------
 
         prompt_context = PromptContext(
 
@@ -57,9 +57,9 @@ class PromptBuilder:
 
         )
 
-        # --------------------------------------------
-        # Build Prompt Parts
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Build Prompt Parts
+        # * --------------------------------------------
 
         system_prompt = self.system_builder.build(
             prompt_context
@@ -73,9 +73,9 @@ class PromptBuilder:
             prompt_context
         )
 
-        # --------------------------------------------
-        # Final Prompt
-        # --------------------------------------------
+        # * --------------------------------------------
+        # * Final Prompt
+        # * --------------------------------------------
 
         user_prompt = (
             project_context

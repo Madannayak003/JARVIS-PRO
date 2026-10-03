@@ -39,23 +39,23 @@ ENGLISH_VOICES = {
 CACHE_MAX_AGE = 24 * 60 * 60
 
 
-# =========================================================
-# Select Voice
-# =========================================================
+# * =========================================================
+# * Select Voice
+# * =========================================================
 
 def _get_voice(text):
 
     if not text:
         return VOICE
 
-    # Kannada Unicode block: U+0C80 - U+0CFF
+    # * Kannada Unicode block: U+0C80 - U+0CFF
     if any(
         "\u0C80" <= character <= "\u0CFF"
         for character in text
     ):
         return KANNADA_VOICE
 
-    # Hindi / Devanagari Unicode block: U+0900 - U+097F
+    # * Hindi / Devanagari Unicode block: U+0900 - U+097F
     if any(
         "\u0900" <= character <= "\u097F"
         for character in text
@@ -64,9 +64,9 @@ def _get_voice(text):
 
     return VOICE
 
-# =========================================================
-# English Voice Selection
-# =========================================================
+# * =========================================================
+# * English Voice Selection
+# * =========================================================
 
 def set_english_voice(voice_name):
     global VOICE
@@ -100,9 +100,9 @@ def get_english_voice():
 
     return "Ryan"
 
-# =========================================================
-# Cache Cleanup
-# =========================================================
+# * =========================================================
+# * Cache Cleanup
+# * =========================================================
 
 def _cleanup_cache():
 
@@ -156,9 +156,9 @@ def _cleanup_cache():
 _cleanup_cache()
 
 
-# =========================================================
-# Delete Audio File
-# =========================================================
+# * =========================================================
+# * Delete Audio File
+# * =========================================================
 
 def _delete_file(file):
 
@@ -187,9 +187,9 @@ def _delete_file(file):
         )
 
 
-# =========================================================
-# Generate Speech
-# =========================================================
+# * =========================================================
+# * Generate Speech
+# * =========================================================
 
 async def _generate(
     text,
@@ -211,22 +211,22 @@ async def _generate(
     )
 
 
-# =========================================================
-# Generate Audio File
+# * =========================================================
+# * Generate Audio File
 #
-# IMPORTANT:
+# ! IMPORTANT:
 #
-# This function ONLY generates.
-# It does NOT play.
+# * This function ONLY generates.
+# * It does NOT play.
 #
-# This allows the next sentence to be prepared
-# while the previous sentence is playing.
-# =========================================================
-# =========================================================
-# Generate Audio Only
+# * This allows the next sentence to be prepared
+# * while the previous sentence is playing.
+# * =========================================================
+# * =========================================================
+# * Generate Audio Only
 #
-# Does NOT play the audio.
-# =========================================================
+# * Does NOT play the audio.
+# * =========================================================
 
 def generate_audio(
     text,
@@ -269,9 +269,9 @@ def generate_audio(
 
         )
 
-        # -------------------------------------------------
-        # Check session again.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Check session again.
+        # * -------------------------------------------------
 
         if (
             is_cancelled(session)
@@ -315,9 +315,9 @@ def generate_audio(
             pass
 
 
-# =========================================================
-# Play Prepared Audio
-# =========================================================
+# * =========================================================
+# * Play Prepared Audio
+# * =========================================================
 
 def play_audio(
     outfile,
@@ -349,13 +349,13 @@ def play_audio(
 
     finally:
 
-        # -------------------------------------------------
-        # play() has returned.
+        # * -------------------------------------------------
+        # * play() has returned.
         #
-        # pygame has unloaded the file.
+        # * pygame has unloaded the file.
         #
-        # Safe to delete.
-        # -------------------------------------------------
+        # * Safe to delete.
+        # * -------------------------------------------------
 
         _delete_file(
             outfile
@@ -388,9 +388,9 @@ def _worker(
     )
 
 
-# =========================================================
-# Public API
-# =========================================================
+# * =========================================================
+# * Public API
+# * =========================================================
 
 def speak_online(
     text,

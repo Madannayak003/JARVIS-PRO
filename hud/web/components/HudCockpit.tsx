@@ -445,7 +445,7 @@ export default function HudCockpit({
   const system =
     state.system || {};
 
-  // Live Clock State
+  // * Live Clock State
   const [currentTime, setCurrentTime] = useState("");
   const [todayDate, setTodayDate] = useState("");
 
@@ -481,7 +481,7 @@ export default function HudCockpit({
     return () => clearInterval(timer);
   }, []);
 
-  // Reference for the activity log container
+  // * Reference for the activity log container
   const activityLogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -495,11 +495,11 @@ export default function HudCockpit({
       log.scrollTop = log.scrollHeight;
     };
 
-    // Scroll when a new activity arrives.
+    // * Scroll when a new activity arrives.
     requestAnimationFrame(scrollToLatest);
 
-    // Keep the log pinned to the newest text while
-    // ActivityMessage is typing the response.
+    // * Keep the log pinned to the newest text while
+    // * ActivityMessage is typing the response.
     const observer = new MutationObserver(() => {
       requestAnimationFrame(scrollToLatest);
     });

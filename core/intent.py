@@ -16,7 +16,7 @@ def extract_intents(query):
 
     intents = []
 
-    # split multi-command
+    # * split multi-command
     commands = re.split(
         r"\b(?:then|and then|after that|next)\b|,",
         query
@@ -29,7 +29,7 @@ def extract_intents(query):
         if not cmd:
             continue
 
-        # Browser
+        # * Browser
         if "open" in cmd:
 
             intents.append(
@@ -40,7 +40,7 @@ def extract_intents(query):
             )
             continue
 
-        # Search
+        # * Search
         if "search" in cmd:
 
             intents.append(
@@ -51,7 +51,7 @@ def extract_intents(query):
             )
             continue
 
-        # Play
+        # * Play
         if "play" in cmd:
 
             intents.append(
@@ -62,7 +62,7 @@ def extract_intents(query):
             )
             continue
 
-        # WhatsApp
+        # * WhatsApp
         if "whatsapp" in cmd:
 
             intents.append(

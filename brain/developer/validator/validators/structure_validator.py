@@ -44,9 +44,9 @@ class StructureValidator(BaseValidator):
 
         plan = context.execution_plan
 
-        # -------------------------------------
-        # Generated folders
-        # -------------------------------------
+        # * -------------------------------------
+        # * Generated folders
+        # * -------------------------------------
 
         generated_folders = set()
 
@@ -58,15 +58,15 @@ class StructureValidator(BaseValidator):
 
                 generated_folders.add(folder)
 
-        # -------------------------------------
-        # Expected folders
-        # -------------------------------------
+        # * -------------------------------------
+        # * Expected folders
+        # * -------------------------------------
 
         expected_folders = set(plan.folders)
 
-        # -------------------------------------
-        # Compare
-        # -------------------------------------
+        # * -------------------------------------
+        # * Compare
+        # * -------------------------------------
 
         for folder in expected_folders:
 

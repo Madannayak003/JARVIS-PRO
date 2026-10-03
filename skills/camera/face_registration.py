@@ -12,7 +12,7 @@ try:
         VISION_REGISTRATION_SAMPLE_COUNT,
         VISION_REGISTRATION_SAMPLE_INTERVAL,
     )
-except Exception:  # Registration remains safely importable without optional deps.
+except Exception:  # * Registration remains safely importable without optional deps.
     VISION_FACE_MIN_QUALITY = 0.20
     VISION_REGISTRATION_MAX_ATTEMPTS = 30
     VISION_REGISTRATION_SAMPLE_COUNT = 5
@@ -134,8 +134,8 @@ class FaceRegistrationFlow:
             if len(faces) == 1:
                 face = faces[0]
                 if face.get("quality", 0.0) >= VISION_FACE_MIN_QUALITY:
-                    # Prefer visibly different samples, but take a periodic
-                    # sample when the person holds a steady pose.
+                    # * Prefer visibly different samples, but take a periodic
+                    # * sample when the person holds a steady pose.
                     if self._distinct_frame(frame, last_frame) or attempts % 3 == 0:
                         with self._lock:
                             self._samples.append(frame.copy() if hasattr(frame, "copy") else frame)

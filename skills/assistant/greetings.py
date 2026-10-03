@@ -18,9 +18,9 @@ from core.registry import register
 from config.settings import get_assistant_display_name
 
 
-# ---------------------------------------------------------------------------
-# Backward-compatible response collections
-# ---------------------------------------------------------------------------
+# * ---------------------------------------------------------------------------
+# * Backward-compatible response collections
+# * ---------------------------------------------------------------------------
 
 GREETINGS = (
     "Hello. What shall we work on?",
@@ -60,8 +60,8 @@ class _StartupVariant:
         return self.text.format(name=name_suffix)
 
 
-# Styles are deliberately complete utterances. The engine chooses one style
-# per context, so it does not produce an awkward stack of random fragments.
+# * Styles are deliberately complete utterances. The engine chooses one style
+# * per context, so it does not produce an awkward stack of random fragments.
 STARTUP = {
     "morning": (
         _StartupVariant("Good morning{name}. Ready to get started?", True),
@@ -176,7 +176,7 @@ def _preferred_name(profile=None) -> str | None:
 
     if profile is None:
         try:
-            # Lazy import avoids profile/file work while the skill is loaded.
+            # * Lazy import avoids profile/file work while the skill is loaded.
             from brain import profile as profile_manager
 
             profile = profile_manager
@@ -225,7 +225,7 @@ def startup_greeting(now: datetime | None = None, profile=None) -> str:
         print(f"[GREETING] Startup context: {context}")
         greeting = _engine.startup(context, name)
     except Exception as error:
-        # Greeting generation is never allowed to block JARVIS startup.
+        # ! Greeting generation is never allowed to block JARVIS startup.
         print(f"[GREETING] Startup selection failed safely: {error}")
         greeting = _fallback_startup(context, _preferred_name(profile))
 
@@ -250,8 +250,8 @@ def speak_startup_greeting(speaker=None, profile=None, now=None) -> bool:
         if _startup_spoken:
             return False
 
-        # Mark before TTS so concurrent/re-entrant startup calls cannot speak
-        # twice. A failed TTS call must not cause a startup retry storm.
+        # * Mark before TTS so concurrent/re-entrant startup calls cannot speak
+        # ! twice. A failed TTS call must not cause a startup retry storm.
         _startup_spoken = True
 
         try:
@@ -286,9 +286,9 @@ def _speak(text: str) -> None:
         print(f"[GREETING] Speech failed safely: {error}")
 
 
-# ---------------------------------------------------------------------------
-# Registered user-facing skill actions
-# ---------------------------------------------------------------------------
+# * ---------------------------------------------------------------------------
+# * Registered user-facing skill actions
+# * ---------------------------------------------------------------------------
 
 def greet(data):
     command = _command_text(data)

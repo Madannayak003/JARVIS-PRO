@@ -1,6 +1,6 @@
-// ========================================================================================================================================== //
-// FACE + BODY WITH WHITE FACE, BLACK TORSO, AND SUBTLE JARVIS LIGHTING jarvis.glb
-// ========================================================================================================================================== //
+// * ========================================================================================================================================== //
+// * FACE + BODY WITH WHITE FACE, BLACK TORSO, AND SUBTLE JARVIS LIGHTING jarvis.glb
+// * ========================================================================================================================================== //
 
 
 import * as THREE from "three";
@@ -32,8 +32,8 @@ const DIM = new THREE.Color(0x6a4314);
 
 const MODEL_URL = "/models/jarvis.glb";
 
-// The uploaded robot is ~0.40 scene-units tall.
-// Scale it to a useful HUD size without changing its geometry.
+// * The uploaded robot is ~0.40 scene-units tall.
+// * Scale it to a useful HUD size without changing its geometry.
 const MODEL_HEIGHT = 2.50;
 
 const MIN_DISTANCE = 2.35;
@@ -93,7 +93,7 @@ export function createJarvisAvatar(
     100,
   );
 
-  // Framed for the real robot bust.
+  // * Framed for the real robot bust.
   camera.position.set(0, 1.58, 6.05);
 
   const renderer = new THREE.WebGLRenderer({
@@ -117,12 +117,12 @@ export function createJarvisAvatar(
 
   container.appendChild(renderer.domElement);
 
-  // ----------------------------------------------------------
-  // Lighting
-  // Keep the original model opaque and realistic.
-  // The previous renderer made everything transparent/additive,
-  // which caused this robot's dark materials to disappear.
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Lighting
+  // * Keep the original model opaque and realistic.
+  // * The previous renderer made everything transparent/additive,
+  // * which caused this robot's dark materials to disappear.
+  // * ----------------------------------------------------------
 
   const ambient = new THREE.AmbientLight(
     0xffffff,
@@ -130,8 +130,8 @@ export function createJarvisAvatar(
   );
   scene.add(ambient);
 
-  // Neutral front light keeps the white face readable.
-  // JARVIS colour is intentionally NOT projected into the face.
+  // * Neutral front light keeps the white face readable.
+  // * JARVIS colour is intentionally NOT projected into the face.
   const keyLight = new THREE.DirectionalLight(
     0xffffff,
     1.05,
@@ -146,8 +146,8 @@ export function createJarvisAvatar(
   fillLight.position.set(-3.2, 1.2, 2.8);
   scene.add(fillLight);
 
-  // Amber is now a side/back rim, giving the model a JARVIS edge
-  // without turning the entire face orange.
+  // * Amber is now a side/back rim, giving the model a JARVIS edge
+  // * without turning the entire face orange.
   const rimLight = new THREE.PointLight(
     AMBER,
     2.0,
@@ -156,7 +156,7 @@ export function createJarvisAvatar(
   rimLight.position.set(2.8, 2.5, -1.8);
   scene.add(rimLight);
 
-  // A cool neutral rim reveals the black torso against the HUD.
+  // * A cool neutral rim reveals the black torso against the HUD.
   const bodyRimLight = new THREE.PointLight(
     0x8797aa,
     1.7,
@@ -165,8 +165,8 @@ export function createJarvisAvatar(
   bodyRimLight.position.set(-2.8, 1.3, -1.6);
   scene.add(bodyRimLight);
 
-  // Focused soft spotlights keep the face and black suit readable
-  // without washing the white face in amber.
+  // * Focused soft spotlights keep the face and black suit readable
+  // * without washing the white face in amber.
   const faceSpot = new THREE.SpotLight(
     0xffffff,
     1.55,
@@ -221,15 +221,15 @@ export function createJarvisAvatar(
   controls.target.set(0, 1.50, 0);
   controls.update();
 
-  // ----------------------------------------------------------
-  // Avatar container
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Avatar container
+  // * ----------------------------------------------------------
 
   const avatar = new THREE.Group();
   scene.add(avatar);
 
-  // Simple half-sleeve silhouette behind the source bust.
-  // This stays inside the avatar renderer so orbScene.ts remains untouched.
+  // * Simple half-sleeve silhouette behind the source bust.
+  // * This stays inside the avatar renderer so orbScene.ts remains untouched.
   const sleeves = new THREE.Group();
   sleeves.name = "JARVIS_HALF_SLEEVES";
   avatar.add(sleeves);
@@ -289,10 +289,10 @@ export function createJarvisAvatar(
   sleeves.add(createHalfSleeve(-1));
   sleeves.add(createHalfSleeve(1));
 
-  // ----------------------------------------------------------
-  // Ambient HUD rings
-  // They stay behind the actual face.
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Ambient HUD rings
+  // * They stay behind the actual face.
+  // * ----------------------------------------------------------
 
   const aura = new THREE.Group();
   aura.position.set(0, -0.95, -0.35);
@@ -323,9 +323,9 @@ export function createJarvisAvatar(
   ring3.position.y = 0.62;
   aura.add(ring3);
 
-  // ----------------------------------------------------------
-  // Subtle particles
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Subtle particles
+  // * ----------------------------------------------------------
 
   const particleCount = 180;
   const positions =
@@ -385,10 +385,10 @@ export function createJarvisAvatar(
 
   scene.add(particles);
 
-  // ----------------------------------------------------------
-  // Real model references.
-  // These names come from the uploaded GLB.
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Real model references.
+  // * These names come from the uploaded GLB.
+  // * ----------------------------------------------------------
 
   let model: THREE.Object3D | null = null;
 
@@ -408,8 +408,8 @@ export function createJarvisAvatar(
     }
   >();
 
-  // Small eye offsets make the real eyeball meshes look around
-  // without moving the surrounding face.
+  // * Small eye offsets make the real eyeball meshes look around
+  // * without moving the surrounding face.
   const eyeLookX = 0.0;
   const eyeLookY = 0.0;
 
@@ -426,9 +426,9 @@ export function createJarvisAvatar(
       model = gltf.scene;
       model.name = "JARVIS_REAL_ROBOT_FACE";
 
-      // --------------------------------------------------------
-      // Auto-fit the actual GLB instead of guessing its size.
-      // --------------------------------------------------------
+      // * --------------------------------------------------------
+      // * Auto-fit the actual GLB instead of guessing its size.
+      // * --------------------------------------------------------
 
       const rawBox = new THREE.Box3()
         .setFromObject(model);
@@ -444,8 +444,8 @@ export function createJarvisAvatar(
         );
       }
 
-      // Recalculate after scaling and center the model
-      // horizontally and vertically around the avatar target.
+      // * Recalculate after scaling and center the model
+      // * horizontally and vertically around the avatar target.
       const fittedBox = new THREE.Box3()
         .setFromObject(model);
 
@@ -458,7 +458,7 @@ export function createJarvisAvatar(
       model.position.y -= center.y;
       model.position.z -= center.z;
 
-      // Place the bust slightly behind the HUD center.
+      // * Place the bust slightly behind the HUD center.
       model.position.y += 1.55;
       model.position.z = -0.05;
 
@@ -502,9 +502,9 @@ export function createJarvisAvatar(
 
         if (!isMesh(object)) return;
 
-        // IMPORTANT:
-        // Preserve the model's original opaque materials.
-        // Only add subtle JARVIS emissive treatment.
+        // ! IMPORTANT:
+        // * Preserve the model's original opaque materials.
+        // * Only add subtle JARVIS emissive treatment.
         const materials =
           Array.isArray(object.material)
             ? object.material
@@ -514,9 +514,9 @@ export function createJarvisAvatar(
           const standard =
             material as THREE.MeshStandardMaterial;
 
-          // Preserve the white face and eyes.
-          // Only lift very dark source materials slightly so the
-          // black neck/chest remains visible on the black HUD.
+          // * Preserve the white face and eyes.
+          // * Only lift very dark source materials slightly so the
+          // * black neck/chest remains visible on the black HUD.
           if (standard.color) {
             const r = standard.color.r;
             const g = standard.color.g;
@@ -545,22 +545,22 @@ export function createJarvisAvatar(
           if (
             "emissive" in standard
           ) {
-            // No orange wash over the face.
+            // * No orange wash over the face.
             standard.emissiveIntensity = 0;
           }
 
           standard.needsUpdate = true;
         }
 
-        // No wireframe overlay. The source model already has clean
-        // mechanical surface detail and should remain recognizable.
+        // * No wireframe overlay. The source model already has clean
+        // * mechanical surface detail and should remain recognizable.
       });
 
       if (jaw) {
         jawBaseRotationX = jaw.rotation.x;
       }
 
-      // Store the exact original transforms.
+      // * Store the exact original transforms.
       for (
         const eye of [leftEye, rightEye]
       ) {
@@ -610,9 +610,9 @@ export function createJarvisAvatar(
     },
   );
 
-  // ----------------------------------------------------------
-  // JARVIS state bridge
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * JARVIS state bridge
+  // * ----------------------------------------------------------
 
   const handleState = (event: Event) => {
     const customEvent =
@@ -639,9 +639,9 @@ export function createJarvisAvatar(
     handleState,
   );
 
-  // ----------------------------------------------------------
-  // Gesture-compatible camera API
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Gesture-compatible camera API
+  // * ----------------------------------------------------------
 
   const spherical =
     new THREE.Spherical();
@@ -722,9 +722,9 @@ export function createJarvisAvatar(
     controls.update();
   }
 
-  // ----------------------------------------------------------
-  // Animation
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Animation
+  // * ----------------------------------------------------------
 
   const clock =
     new THREE.Clock();
@@ -736,8 +736,8 @@ export function createJarvisAvatar(
   let blinkActive = false;
   let blinkDuration = 0.18;
 
-  // Natural gaze target. The eyes are real GLB objects, so we move
-  // the actual eyeball assemblies rather than drawing fake eyes.
+  // * Natural gaze target. The eyes are real GLB objects, so we move
+  // * the actual eyeball assemblies rather than drawing fake eyes.
   let gazeX = 0;
   let gazeY = 0;
   let targetGazeX = 0;
@@ -766,7 +766,7 @@ export function createJarvisAvatar(
     const executing =
       state === "executing";
 
-    // Very subtle floating motion.
+    // * Very subtle floating motion.
     avatar.position.y =
       Math.sin(
         t *
@@ -778,7 +778,7 @@ export function createJarvisAvatar(
         ? 0.018
         : 0.010);
 
-    // Subtle hologram movement.
+    // * Subtle hologram movement.
     aura.rotation.y =
       t *
       (thinking
@@ -800,9 +800,9 @@ export function createJarvisAvatar(
         ? 0.035
         : 0.018);
 
-    // --------------------------------------------------------
-    // Face idle movement
-    // --------------------------------------------------------
+    // * --------------------------------------------------------
+    // * Face idle movement
+    // * --------------------------------------------------------
 
     if (faceRoot) {
       faceRoot.rotation.y =
@@ -816,9 +816,9 @@ export function createJarvisAvatar(
         0.008;
     }
 
-    // --------------------------------------------------------
-    // Forehead indicator
-    // --------------------------------------------------------
+    // * --------------------------------------------------------
+    // * Forehead indicator
+    // * --------------------------------------------------------
 
     if (forehead) {
       const pulse =
@@ -845,13 +845,13 @@ export function createJarvisAvatar(
       );
     }
 
-    // --------------------------------------------------------
-    // Real eye assemblies
+    // * --------------------------------------------------------
+    // * Real eye assemblies
     //
-    // The GLB has no facial morph targets, so we don't fake
-    // morph animations. We use the actual eye assemblies for
-    // subtle blink/look behavior.
-    // --------------------------------------------------------
+    // ! The GLB has no facial morph targets, so we don't fake
+    // * morph animations. We use the actual eye assemblies for
+    // * subtle blink/look behavior.
+    // * --------------------------------------------------------
 
     for (
       const eye of [leftEye, rightEye]
@@ -886,8 +886,8 @@ export function createJarvisAvatar(
         eyeBase.get(rightEye);
 
       if (leftBase && rightBase) {
-        // Occasionally choose a new natural gaze direction.
-        // Thinking looks around more; idle stays restrained.
+        // * Occasionally choose a new natural gaze direction.
+        // * Thinking looks around more; idle stays restrained.
         if (t >= nextGazeChange) {
           const horizontal =
             thinking
@@ -986,21 +986,21 @@ export function createJarvisAvatar(
       }
     }
 
-    // --------------------------------------------------------
-    // Speaking
+    // * --------------------------------------------------------
+    // * Speaking
     //
-    // The GLB has no mouth morph target. The jaw is therefore
-    // moved only by a tiny amount so the real face remains
-    // clean instead of producing a fake waveform over it.
-    // --------------------------------------------------------
+    // * The GLB has no mouth morph target. The jaw is therefore
+    // * moved only by a tiny amount so the real face remains
+    // * clean instead of producing a fake waveform over it.
+    // * --------------------------------------------------------
 
     if (jaw) {
       const baseX =
         jawBaseRotationX;
 
       if (speaking) {
-        // Speech envelope: several low-frequency components create
-        // changing mouth openings instead of a constant flap.
+        // * Speech envelope: several low-frequency components create
+        // * changing mouth openings instead of a constant flap.
         const envelope =
           0.50 +
           0.30 * Math.sin(t * 7.1) +
@@ -1029,9 +1029,9 @@ export function createJarvisAvatar(
       }
     }
 
-    // --------------------------------------------------------
-    // Controlled JARVIS lighting intensity
-    // --------------------------------------------------------
+    // * --------------------------------------------------------
+    // * Controlled JARVIS lighting intensity
+    // * --------------------------------------------------------
 
     rimLight.intensity =
       speaking
@@ -1085,9 +1085,9 @@ export function createJarvisAvatar(
   let rafId = 0;
   animate();
 
-  // ----------------------------------------------------------
-  // Resize
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Resize
+  // * ----------------------------------------------------------
 
   function onResize() {
     const w =
@@ -1123,9 +1123,9 @@ export function createJarvisAvatar(
     onResize,
   );
 
-  // ----------------------------------------------------------
-  // Cleanup
-  // ----------------------------------------------------------
+  // * ----------------------------------------------------------
+  // * Cleanup
+  // * ----------------------------------------------------------
 
   function dispose() {
     disposed = true;

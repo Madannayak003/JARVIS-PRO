@@ -1,4 +1,4 @@
-# Current conversation context
+# * Current conversation context
 
 _context = {
     "last_app": None,

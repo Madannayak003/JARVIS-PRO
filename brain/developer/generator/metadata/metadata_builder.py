@@ -26,9 +26,9 @@ class MetadataBuilder:
 
         }
 
-        # -------------------------------------
-        # Normalize Enum Values
-        # -------------------------------------
+        # * -------------------------------------
+        # * Normalize Enum Values
+        # * -------------------------------------
 
         language = str(project.language).upper()
 
@@ -36,11 +36,11 @@ class MetadataBuilder:
 
         workspace = str(project.workspace).upper()
 
-        # -------------------------------------
-        # Entry File
-        # -------------------------------------
+        # * -------------------------------------
+        # * Entry File
+        # * -------------------------------------
 
-        # Arduino / ESP32 (.ino)
+        # * Arduino / ESP32 (.ino)
         for path in sorted(file_paths):
 
             if path.lower().endswith(".ino"):
@@ -49,7 +49,7 @@ class MetadataBuilder:
 
                 break
 
-        # Python
+        # * Python
         if not project.entry_file:
 
             for candidate in (
@@ -66,7 +66,7 @@ class MetadataBuilder:
 
                     break
 
-        # C / C++
+        # * C / C++
         if not project.entry_file:
 
             for candidate in (
@@ -84,7 +84,7 @@ class MetadataBuilder:
 
                     break
 
-        # React
+        # * React
         if not project.entry_file:
 
             for candidate in (
@@ -100,9 +100,9 @@ class MetadataBuilder:
 
                     break
 
-        # -------------------------------------
-        # Run / Build Commands
-        # -------------------------------------
+        # * -------------------------------------
+        # * Run / Build Commands
+        # * -------------------------------------
 
         if "ARDUINO" in workspace:
 

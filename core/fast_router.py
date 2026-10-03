@@ -77,8 +77,8 @@ def fast_route(command):
             return android_plan
 
     for router in ROUTERS:
-        # Preserve the spoken casing for registration names while keeping the
-        # existing normalized input contract for every other router.
+        # * Preserve the spoken casing for registration names while keeping the
+        # * existing normalized input contract for every other router.
         route_command = (
             original_command
             if router in (vision_route, schedule_route)

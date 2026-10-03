@@ -65,7 +65,7 @@ def resolve(location):
 
     location = location.lower().strip()
 
-    # Remove common words
+    # * Remove common words
     for word in [
         "open",
         "my",
@@ -75,11 +75,11 @@ def resolve(location):
 
         location = location.replace(word, "").strip()
 
-    # Known folders
+    # * Known folders
     if location in PATHS:
         return PATHS[location]
 
-    # Drive letters
+    # * Drive letters
     for drive in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
 
         if location in [

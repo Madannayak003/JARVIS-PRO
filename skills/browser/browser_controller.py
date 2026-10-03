@@ -7,33 +7,33 @@ from skills.browser.browser_config import BrowserConfigurationError
 from skills.browser.browser_resolver import BrowserExecutableNotFoundError
 from skills.browser.browser_runtime import BrowserRuntime, BrowserRuntimeError
 
-# =========================================================
-# GLOBAL BROWSER LOCK
-# =========================================================
+# * =========================================================
+# * GLOBAL BROWSER LOCK
+# * =========================================================
 
 _browser_lock = threading.RLock()
 
 
-# =========================================================
-# BROWSER WORKER
-# =========================================================
+# * =========================================================
+# * BROWSER WORKER
+# * =========================================================
 #
-# IMPORTANT:
+# ! IMPORTANT:
 #
-# Playwright Sync API must NOT execute inside Gemini Live's
-# asyncio event loop.
+# ! Playwright Sync API must NOT execute inside Gemini Live's
+# * asyncio event loop.
 #
-# All browser operations are therefore routed through ONE
-# dedicated worker thread.
+# * All browser operations are therefore routed through ONE
+# * dedicated worker thread.
 #
-# This worker permanently owns:
+# * This worker permanently owns:
 #
-#     Playwright
-#     Browser
-#     Page
+# * Playwright
+# * Browser
+# * Page
 #
-# This also keeps Playwright objects on the same thread.
-# =========================================================
+# * This also keeps Playwright objects on the same thread.
+# * =========================================================
 
 class BrowserWorker:
 
@@ -48,9 +48,9 @@ class BrowserWorker:
 
     def run(self, function, *args, **kwargs):
 
-        # -------------------------------------------------
-        # Already inside browser worker
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Already inside browser worker
+        # * -------------------------------------------------
 
         if (
             self.worker_thread_id
@@ -62,9 +62,9 @@ class BrowserWorker:
                 **kwargs,
             )
 
-        # -------------------------------------------------
-        # Send operation to dedicated browser thread
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Send operation to dedicated browser thread
+        # * -------------------------------------------------
 
         future = self.executor.submit(
             self._execute,
@@ -106,36 +106,36 @@ class BrowserWorker:
 _browser_worker = BrowserWorker()
 
 
-# =========================================================
-# BROWSER CONTROLLER
-# =========================================================
+# * =========================================================
+# * BROWSER CONTROLLER
+# * =========================================================
 
 class BrowserController:
 
     def __init__(self):
 
-        # -------------------------------------------------
-        # Playwright state belongs to browser worker thread
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Playwright state belongs to browser worker thread
+        # * -------------------------------------------------
 
         self.playwright = None
         self.browser = None
         self.page = None
         self.runtime = None
         
-        # -------------------------------------------------
-        # Previous browser page
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Previous browser page
+        # * -------------------------------------------------
         #
-        # Used when JARVIS opens a new tab and the user says
-        # "go back". A newly-created tab has no history, so
-        # JARVIS should return to the previous tab.
+        # * Used when JARVIS opens a new tab and the user says
+        # * "go back". A newly-created tab has no history, so
+        # * JARVIS should return to the previous tab.
         #
         self.previous_page = None
         
-    # =====================================================
-    # BROWSER CONTEXT SYNCHRONIZATION
-    # =====================================================
+    # * =====================================================
+    # * BROWSER CONTEXT SYNCHRONIZATION
+    # * =====================================================
 
     def _sync_context(self):
 
@@ -207,9 +207,9 @@ class BrowserController:
                 f"Sync failed: {error}"
             )
 
-    # =====================================================
-    # INTERNAL EXECUTION
-    # =====================================================
+    # * =====================================================
+    # * INTERNAL EXECUTION
+    # * =====================================================
 
     def _run_browser(
         self,
@@ -224,9 +224,9 @@ class BrowserController:
             **kwargs,
         )
 
-    # =====================================================
-    # START
-    # =====================================================
+    # * =====================================================
+    # * START
+    # * =====================================================
 
     def start(self):
 
@@ -242,9 +242,9 @@ class BrowserController:
             f"ID: {threading.get_ident()}"
         )
 
-        # -------------------------------------------------
-        # Already connected
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Already connected
+        # * -------------------------------------------------
 
         try:
 
@@ -261,8 +261,8 @@ class BrowserController:
 
             pass
 
-        # This runtime owns a dedicated browser process. It never attaches to
-        # an arbitrary CDP endpoint that happens to already use a local port.
+        # ! This runtime owns a dedicated browser process. It never attaches to
+        # * an arbitrary CDP endpoint that happens to already use a local port.
         try:
 
             if self.runtime is None:
@@ -293,9 +293,9 @@ class BrowserController:
 
             return False
 
-        # -------------------------------------------------
-        # Start Playwright only after the owned CDP endpoint is ready.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Start Playwright only after the owned CDP endpoint is ready.
+        # * -------------------------------------------------
 
         if not self.playwright:
 
@@ -307,9 +307,9 @@ class BrowserController:
                 sync_playwright().start()
             )
 
-        # -------------------------------------------------
-        # Connect through CDP
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Connect through CDP
+        # * -------------------------------------------------
 
         try:
 
@@ -325,9 +325,9 @@ class BrowserController:
                 "[Browser] Connected to __ASSISTANT_NAME__ Chrome"
             )
 
-            # -------------------------------------------------
-            # Find existing YouTube tab
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Find existing YouTube tab
+            # * -------------------------------------------------
 
             for context in self.browser.contexts:
 
@@ -350,9 +350,9 @@ class BrowserController:
 
                         continue
 
-            # -------------------------------------------------
-            # Use first available page
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Use first available page
+            # * -------------------------------------------------
 
             if not self.browser.contexts:
 
@@ -393,9 +393,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # OPEN
-    # =====================================================
+    # * =====================================================
+    # * OPEN
+    # * =====================================================
 
     def open(self, url):
 
@@ -474,9 +474,9 @@ class BrowserController:
 
                 return False
 
-    # =====================================================
-    # GOOGLE SEARCH
-    # =====================================================
+    # * =====================================================
+    # * GOOGLE SEARCH
+    # * =====================================================
 
     def search_google(self, query):
 
@@ -561,9 +561,9 @@ class BrowserController:
                     f"[Google DEBUG] AFTER SYNC | URL: {self.page.url}"
                 )
 
-                # =========================================================
-                # GOOGLE SEARCH RESULT EXTRACTION
-                # =========================================================
+                # * =========================================================
+                # * GOOGLE SEARCH RESULT EXTRACTION
+                # * =========================================================
 
                 results = []
 
@@ -621,9 +621,9 @@ class BrowserController:
                     )
 
 
-                # =========================================================
-                # SAVE RESULTS
-                # =========================================================
+                # * =========================================================
+                # * SAVE RESULTS
+                # * =========================================================
 
                 from core.browser_context import browser_context
 
@@ -654,9 +654,9 @@ class BrowserController:
 
                 return False
 
-    # =====================================================
-    # YOUTUBE SEARCH
-    # =====================================================
+    # * =====================================================
+    # * YOUTUBE SEARCH
+    # * =====================================================
 
     def search_youtube(self, query):
 
@@ -743,9 +743,9 @@ class BrowserController:
 
                 return False
 
-    # =====================================================
-    # GITHUB SEARCH
-    # =====================================================
+    # * =====================================================
+    # * GITHUB SEARCH
+    # * =====================================================
 
     def search_github(self, query):
 
@@ -814,9 +814,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # PLAY VIDEO
-    # =====================================================
+    # * =====================================================
+    # * PLAY VIDEO
+    # * =====================================================
 
     def play_video(self, video_id):
 
@@ -920,9 +920,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # PLAY FIRST VIDEO
-    # =====================================================
+    # * =====================================================
+    # * PLAY FIRST VIDEO
+    # * =====================================================
 
     def play_first_video(self):
 
@@ -994,9 +994,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # SKIP AD
-    # =====================================================
+    # * =====================================================
+    # * SKIP AD
+    # * =====================================================
 
     def skip_ad(self):
 
@@ -1053,9 +1053,9 @@ class BrowserController:
 
         return False
 
-    # =====================================================
-    # YOUTUBE KEY
-    # =====================================================
+    # * =====================================================
+    # * YOUTUBE KEY
+    # * =====================================================
 
     def youtube_key(self, key):
 
@@ -1089,9 +1089,9 @@ class BrowserController:
 
             youtube_page = None
 
-            # -------------------------------------------------
-            # Prefer tracked page
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Prefer tracked page
+            # * -------------------------------------------------
 
             try:
 
@@ -1107,9 +1107,9 @@ class BrowserController:
 
                 youtube_page = None
 
-            # -------------------------------------------------
-            # Find YouTube video page
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Find YouTube video page
+            # * -------------------------------------------------
 
             if not youtube_page:
 
@@ -1170,9 +1170,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # PAUSE / RESUME
-    # =====================================================
+    # * =====================================================
+    # * PAUSE / RESUME
+    # * =====================================================
 
     def pause_video(self):
 
@@ -1186,9 +1186,9 @@ class BrowserController:
 
         return self.youtube_key("f")
 
-    # =====================================================
-    # NEXT VIDEO
-    # =====================================================
+    # * =====================================================
+    # * NEXT VIDEO
+    # * =====================================================
 
     def next_video(self):
 
@@ -1265,9 +1265,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # PREVIOUS VIDEO
-    # =====================================================
+    # * =====================================================
+    # * PREVIOUS VIDEO
+    # * =====================================================
 
     def previous_video(self):
 
@@ -1344,9 +1344,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # NEW TAB
-    # =====================================================
+    # * =====================================================
+    # * NEW TAB
+    # * =====================================================
 
     def new_tab(self):
 
@@ -1368,9 +1368,9 @@ class BrowserController:
 
             context = self.browser.contexts[0]
 
-            # -------------------------------------------------
-            # Remember current tab
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Remember current tab
+            # * -------------------------------------------------
 
             old_page = self.page
 
@@ -1381,9 +1381,9 @@ class BrowserController:
 
                 self.previous_page = old_page
 
-            # -------------------------------------------------
-            # Create new tab
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Create new tab
+            # * -------------------------------------------------
 
             new_page = context.new_page()
 
@@ -1391,9 +1391,9 @@ class BrowserController:
 
             self.page.bring_to_front()
 
-            # -------------------------------------------------
-            # Load Chrome's normal new-tab page
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Load Chrome's normal new-tab page
+            # * -------------------------------------------------
 
             try:
 
@@ -1427,9 +1427,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # CLOSE TAB
-    # =====================================================
+    # * =====================================================
+    # * CLOSE TAB
+    # * =====================================================
 
     def close_tab(self):
 
@@ -1449,9 +1449,9 @@ class BrowserController:
 
             closing_page.close()
 
-            # -------------------------------------------------
-            # Restore previous tab if available
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Restore previous tab if available
+            # * -------------------------------------------------
 
             if (
                 self.previous_page
@@ -1484,9 +1484,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # REFRESH
-    # =====================================================
+    # * =====================================================
+    # * REFRESH
+    # * =====================================================
 
     def refresh(self):
 
@@ -1516,9 +1516,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # BACK
-    # =====================================================
+    # * =====================================================
+    # * BACK
+    # * =====================================================
 
     def back(self):
 
@@ -1534,9 +1534,9 @@ class BrowserController:
 
                 return False
 
-            # -------------------------------------------------
-            # First: normal browser history
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * First: normal browser history
+            # * -------------------------------------------------
 
             try:
 
@@ -1567,11 +1567,11 @@ class BrowserController:
                 f"[Browser BACK ERROR] {e}"
             )
 
-            # -------------------------------------------------
-            # No usable browser history.
+            # * -------------------------------------------------
+            # * No usable browser history.
             #
-            # Return to the previous JARVIS tab.
-            # -------------------------------------------------
+            # * Return to the previous JARVIS tab.
+            # * -------------------------------------------------
 
             if (
                 self.previous_page
@@ -1593,9 +1593,9 @@ class BrowserController:
                     "Returned to previous tab"
                 )
 
-                # -------------------------------------------------
-                # Close temporary tab.
-                # -------------------------------------------------
+                # * -------------------------------------------------
+                # * Close temporary tab.
+                # * -------------------------------------------------
 
                 try:
 
@@ -1628,9 +1628,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # FORWARD
-    # =====================================================
+    # * =====================================================
+    # * FORWARD
+    # * =====================================================
 
     def forward(self):
 
@@ -1677,9 +1677,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # SCROLL DOWN
-    # =====================================================
+    # * =====================================================
+    # * SCROLL DOWN
+    # * =====================================================
 
     def scroll_down(self):
 
@@ -1710,9 +1710,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # SCROLL UP
-    # =====================================================
+    # * =====================================================
+    # * SCROLL UP
+    # * =====================================================
 
     def scroll_up(self):
 
@@ -1743,9 +1743,9 @@ class BrowserController:
 
             return False
 
-    # =====================================================
-    # CLOSE
-    # =====================================================
+    # * =====================================================
+    # * CLOSE
+    # * =====================================================
 
     def close(self):
 
@@ -1757,8 +1757,8 @@ class BrowserController:
 
         try:
 
-            # The runtime owns Chromium. Stop its whole owned process tree
-            # before dropping the CDP connection.
+            # * The runtime owns Chromium. Stop its whole owned process tree
+            # * before dropping the CDP connection.
             if self.runtime:
                 self.runtime.stop()
 
@@ -1803,8 +1803,8 @@ class BrowserController:
         return True
 
 
-# =========================================================
-# GLOBAL BROWSER INSTANCE
-# =========================================================
+# * =========================================================
+# * GLOBAL BROWSER INSTANCE
+# * =========================================================
 
 browser = BrowserController()

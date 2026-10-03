@@ -21,9 +21,9 @@ from ai.memory_store import (
 )
 
 
-# ---------------------------------------
-# Rules
-# ---------------------------------------
+# * ---------------------------------------
+# * Rules
+# * ---------------------------------------
 
 RULES = [
 
@@ -109,33 +109,33 @@ RULES = [
 ]
 
 
-# ---------------------------------------
-# Clean Value
-# ---------------------------------------
+# * ---------------------------------------
+# * Clean Value
+# * ---------------------------------------
 
 def clean_value(value, key=None):
 
     value = value.strip()
     value = " ".join(value.split())
 
-    # Preserve email exactly
+    # * Preserve email exactly
     if key == "email":
         return value.lower()
 
-    # Preserve phone numbers
+    # * Preserve phone numbers
     if key == "phone":
         return value
 
-    # Title-case only names/titles
+    # * Title-case only names/titles
     if len(value) < 60:
         value = value.title()
 
     return value
 
 
-# ---------------------------------------
-# Learn
-# ---------------------------------------
+# * ---------------------------------------
+# * Learn
+# * ---------------------------------------
 
 def learn(text):
 
@@ -168,9 +168,9 @@ def learn(text):
 
         existing = get(key)
 
-        # -------------------------
-        # Already Known
-        # -------------------------
+        # * -------------------------
+        # * Already Known
+        # * -------------------------
 
         if existing:
 
@@ -194,9 +194,9 @@ def learn(text):
 
                 }
 
-        # -------------------------
-        # Updated
-        # -------------------------
+        # * -------------------------
+        # * Updated
+        # * -------------------------
 
         updated = False
         old_value = None
@@ -207,9 +207,9 @@ def learn(text):
 
             old_value = existing.value
             
-        # -------------------------
-        # Debug
-        # -------------------------
+        # * -------------------------
+        # ! Debug
+        # * -------------------------
 
         print("\n[MEMORY MANAGER]")
 
@@ -229,9 +229,9 @@ def learn(text):
 
             print("Old Value :", old_value)    
             
-        # -------------------------
-        # Save Memory
-        # -------------------------    
+        # * -------------------------
+        # * Save Memory
+        # * -------------------------
 
         remember(
 

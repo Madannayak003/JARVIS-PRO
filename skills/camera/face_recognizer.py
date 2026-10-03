@@ -11,7 +11,7 @@ try:
         VISION_FACE_MIN_SIZE,
         VISION_FACE_RECOGNITION_THRESHOLD,
     )
-except Exception:  # Keep optional vision imports safe in minimal test envs.
+except Exception:  # * Keep optional vision imports safe in minimal test envs.
     VISION_FACE_MIN_SIZE = 80
     VISION_FACE_RECOGNITION_THRESHOLD = 75.0
 from skills.camera.face_registry import FaceRegistry, face_registry
@@ -81,8 +81,8 @@ class FaceRecognizer:
             if width < self.min_face_size or height < self.min_face_size:
                 continue
 
-            # YOLO person boxes include the whole body. Crop the head/upper
-            # body region for LBPH without introducing another detector.
+            # * YOLO person boxes include the whole body. Crop the head/upper
+            # * body region for LBPH without introducing another detector.
             margin_x = int(width * 0.18)
             head_box = [
                 x1 + margin_x,

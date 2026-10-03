@@ -8,9 +8,9 @@ def ai_play(data):
 
     target = data.get("target", "")
 
-    # -----------------------------------------
-    # YouTube first result
-    # -----------------------------------------
+    # * -----------------------------------------
+    # * YouTube first result
+    # * -----------------------------------------
 
     if target == "first_result":
 
@@ -18,9 +18,9 @@ def ai_play(data):
 
         return browser.play_first_video()
 
-    # -----------------------------------------
-    # Normal media resume
-    # -----------------------------------------
+    # * -----------------------------------------
+    # * Normal media resume
+    # * -----------------------------------------
 
     browser.resume_video()
 

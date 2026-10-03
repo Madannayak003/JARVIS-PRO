@@ -54,9 +54,9 @@ class ProjectNameResolver:
         output_directory: Path,
     ) -> str:
 
-        # -------------------------------
-        # Existing Project Name
-        # -------------------------------
+        # * -------------------------------
+        # * Existing Project Name
+        # * -------------------------------
 
         if project.name:
 
@@ -82,9 +82,9 @@ class ProjectNameResolver:
 
             text = project.user_request.strip()
 
-            # ---------------------------------
-            # Remove common command words
-            # ---------------------------------
+            # * ---------------------------------
+            # * Remove common command words
+            # * ---------------------------------
 
             text = re.sub(
 
@@ -98,9 +98,9 @@ class ProjectNameResolver:
 
             )
 
-            # ---------------------------------
-            # Remove filler words
-            # ---------------------------------
+            # * ---------------------------------
+            # * Remove filler words
+            # * ---------------------------------
 
             text = re.sub(
 
@@ -166,9 +166,9 @@ class ProjectNameResolver:
 
                 base_name = "".join(parts)
 
-        # -------------------------------
-        # Unique Folder Name
-        # -------------------------------
+        # * -------------------------------
+        # * Unique Folder Name
+        # * -------------------------------
 
         candidate = base_name
 

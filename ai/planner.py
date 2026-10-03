@@ -13,9 +13,9 @@ from core.action_memory import set_memory
 from core.app_resolver import resolve_app
 
 
-# Commands that already express an operation should continue through the
-# existing deterministic routes or the AI planner. A short input with none
-# of these indicators is an object/topic, not an implicit web-search request.
+# * Commands that already express an operation should continue through the
+# * existing deterministic routes or the AI planner. A short input with none
+# * of these indicators is an object/topic, not an implicit web-search request.
 _ACTION_WORDS = {
     "open", "launch", "go", "show", "visit", "search", "find", "look",
     "tell", "explain", "describe", "what", "who", "where", "when", "why",
@@ -44,18 +44,18 @@ def _looks_like_bare_topic(command: str) -> bool:
 
 def create_plan(command, stop_event):
 
-    # command = command.strip().lower()
+    # * command = command.strip().lower()
     
-    # if stop_event.is_set():
-    #     return None
+    # * if stop_event.is_set():
+    # * return None
     
-    # print("[PLANNER] Command:", command)
+    # * print("[PLANNER] Command:", command)
     
-    # plan = fast_route(command)
+    # * plan = fast_route(command)
     
-    # =========================================================
-    # Preserve original command
-    # =========================================================
+    # * =========================================================
+    # * Preserve original command
+    # * =========================================================
 
     original_command = command.strip()
 
@@ -67,16 +67,16 @@ def create_plan(command, stop_event):
     print("[PLANNER] Command:", command)
 
 
-    # =========================================================
-    # Natural Notes Routing
-    # =========================================================
+    # * =========================================================
+    # * Natural Notes Routing
+    # * =========================================================
 
     import re
 
 
-    # ---------------------------------------------------------
-    # Create note
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Create note
+    # * ---------------------------------------------------------
 
     note_patterns = [
         r"^(?:take|make|write|save|create|add)\s+(?:a\s+)?note(?:\s+(?:that|to|about|for|saying))?\s+(.+)$",
@@ -101,7 +101,7 @@ def create_plan(command, stop_event):
 
             note_text = match.group(1).strip()
 
-            # Remove accidental leading filler words
+            # * Remove accidental leading filler words
             note_text = re.sub(
                 r"^(?:that|to|about|for)\s+",
                 "",
@@ -122,9 +122,9 @@ def create_plan(command, stop_event):
                 }]
 
 
-    # ---------------------------------------------------------
-    # List notes
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * List notes
+    # * ---------------------------------------------------------
 
     if re.fullmatch(
         r"(?:show|list|read|display)\s+(?:my\s+)?notes?",
@@ -150,9 +150,9 @@ def create_plan(command, stop_event):
         }]
 
 
-    # ---------------------------------------------------------
-    # Clear notes
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Clear notes
+    # * ---------------------------------------------------------
 
     if re.fullmatch(
         r"(?:clear|delete|remove)\s+(?:all\s+)?(?:my\s+)?notes?",
@@ -166,9 +166,9 @@ def create_plan(command, stop_event):
         }]
 
 
-    # =========================================================
-    # Existing Fast Router
-    # =========================================================
+    # * =========================================================
+    # * Existing Fast Router
+    # * =========================================================
 
     plan = fast_route(command)
 
@@ -177,9 +177,9 @@ def create_plan(command, stop_event):
     if plan:
         return plan
 
-    # Do not guess an action for a standalone topic. This prevents the AI
-    # planner from treating an object such as "esp32" as a Google search while
-    # preserving explicit commands and informational questions.
+    # ! Do not guess an action for a standalone topic. This prevents the AI
+    # * planner from treating an object such as "esp32" as a Google search while
+    # * preserving explicit commands and informational questions.
     if _looks_like_bare_topic(command):
         return [{
             "action": "clarify",
@@ -190,15 +190,15 @@ def create_plan(command, stop_event):
             },
         }]
     
-    # -------------------------------
-    # Smart Search Platform Memory V2
-    # -------------------------------
+    # * -------------------------------
+    # * Smart Search Platform Memory V2
+    # * -------------------------------
 
     if command.startswith("search "):
 
         query = command.replace("search", "", 1).strip()
 
-        # ---------------- Explicit platform ----------------
+        # * ---------------- Explicit platform ----------------
 
         PLATFORM_MAP = {
             "youtube": "youtube_search",
@@ -231,7 +231,7 @@ def create_plan(command, stop_event):
                     "query": clean_query
                 }]
 
-        # ---------------- Use remembered platform ----------------
+        # * ---------------- Use remembered platform ----------------
 
         platform = get_memory("search_platform")
 
@@ -267,7 +267,7 @@ def create_plan(command, stop_event):
                     "query": query
                 }]
 
-        # ---------------- Ask first time ----------------
+        # * ---------------- Ask first time ----------------
 
         return [{
             "action": "clarify",
@@ -280,7 +280,7 @@ def create_plan(command, stop_event):
             }
         }]
     
-    # ---------- Simple browser shortcuts -----------
+    # * ---------- Simple browser shortcuts -----------
 
     if command.startswith("open google search"):
         return fast_route(command)
@@ -294,7 +294,7 @@ def create_plan(command, stop_event):
     if command.startswith("search youtube"):
         return fast_route(command)
     
-    # ---------- Fast System Commands ----------
+    # * ---------- Fast System Commands ----------
 
     if "shutdown" in command:
         return [{"action": "shutdown"}]
@@ -309,9 +309,9 @@ def create_plan(command, stop_event):
         return [{"action": "lock"}]
 
     
-    # -------------------------------
-    # Smart App Resolver
-    # -------------------------------
+    # * -------------------------------
+    # * Smart App Resolver
+    # * -------------------------------
 
     app = resolve_app(command)
 
@@ -324,7 +324,7 @@ def create_plan(command, stop_event):
             "app": app
         }]
     
-    # -------- Incomplete Commands --------
+    # * -------- Incomplete Commands --------
 
     if command == "open":
         return [{
@@ -344,7 +344,7 @@ def create_plan(command, stop_event):
             "question": "What would you like me to search for?"
         }]
 
-    # Continue with Ollama
+    # * Continue with Ollama
     if stop_event.is_set():
         return None
     
@@ -368,9 +368,9 @@ def create_plan(command, stop_event):
     User Command:
     {command}
     """
-    # ---------------------------------------
+    # * ---------------------------------------
     # AI Model System
-    # ---------------------------------------
+    # * ---------------------------------------
 
     response = ai_service.generate(
 

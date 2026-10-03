@@ -4,12 +4,12 @@ from __future__ import annotations
 
 
 ANDROID_APP_COMMANDS = {
-    # Core phone apps
+    # * Core phone apps
     "camera": "camera",
     "settings": "settings",
     "browser": "browser",
 
-    # Samsung Gallery
+    # * Samsung Gallery
     "gallery": "Gallery",
     "samsung gallery": "Gallery",
 
@@ -23,14 +23,14 @@ ANDROID_APP_COMMANDS = {
     "contacts": "contacts",
     "calculator": "calculator",
 
-    # Communication
+    # * Communication
     "whatsapp": "WhatsApp",
     "whatsapp messenger": "WhatsApp",
     "telegram": "Telegram",
     "messenger": "Messenger",
     "facebook messenger": "Messenger",
 
-    # Google / media
+    # * Google / media
     "youtube": "YouTube",
     "youtube music": "YouTube Music",
     "chrome": "Chrome",
@@ -42,21 +42,21 @@ ANDROID_APP_COMMANDS = {
     "google drive": "Google Drive",
     "drive": "Google Drive",
 
-    # Music / streaming
+    # * Music / streaming
     "spotify": "Spotify",
 
-    # OTT / streaming
+    # * OTT / streaming
     "jiohotstar": "JioHotstar",
     "jio hotstar": "JioHotstar",
     "hotstar": "JioHotstar",
 
-    # Payments
+    # * Payments
     "phonepe": "PhonePe",
     "google pay": "Google Pay",
     "gpay": "Google Pay",
     "paytm": "Paytm",
 
-    # Social media
+    # * Social media
     "instagram": "Instagram",
     "snapchat": "Snapchat",
     "facebook": "Facebook",
@@ -64,7 +64,7 @@ ANDROID_APP_COMMANDS = {
     "twitter": "Twitter",
     "x": "X",
 
-    # Common Android / Samsung apps
+    # * Common Android / Samsung apps
     "clock": "Clock",
     "calendar": "Calendar",
     "files": "Files",
@@ -98,12 +98,12 @@ LAUNCH_PREFIXES = (
 def _extract_android_target(command: str) -> str | None:
     """Extract an Android app name from phone/mobile commands."""
 
-    # ---------------------------------------------------------
-    # Style 1:
-    #   open phone camera
-    #   open mobile whatsapp
-    #   open my phone spotify
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Style 1:
+    # * open phone camera
+    # * open mobile whatsapp
+    # * open my phone spotify
+    # * ---------------------------------------------------------
     for prefix in PHONE_PREFIXES:
         if command.startswith(prefix):
             target = command.removeprefix(prefix).strip()
@@ -111,13 +111,13 @@ def _extract_android_target(command: str) -> str | None:
             if target:
                 return target
 
-    # ---------------------------------------------------------
-    # Style 2:
-    #   open camera on phone
-    #   open whatsapp on mobile
-    #   open spotify on my phone
-    #   open instagram on my mobile
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Style 2:
+    # * open camera on phone
+    # * open whatsapp on mobile
+    # * open spotify on my phone
+    # * open instagram on my mobile
+    # * ---------------------------------------------------------
     suffixes = (
         " on my phone",
         " on my mobile",
@@ -168,17 +168,17 @@ def android_route(command):
     }:
         return [{"action": "android_device_info"}]
 
-    # ---------------------------------------------------------
-    # Open Android apps
+    # * ---------------------------------------------------------
+    # * Open Android apps
     #
-    # Supports:
-    #   open phone camera
-    #   open mobile camera
-    #   open camera on phone
-    #   open camera on mobile
-    #   open phone whatsapp
-    #   open whatsapp on phone
-    # ---------------------------------------------------------
+    # * Supports:
+    # * open phone camera
+    # * open mobile camera
+    # * open camera on phone
+    # * open camera on mobile
+    # * open phone whatsapp
+    # * open whatsapp on phone
+    # * ---------------------------------------------------------
 
     target = _extract_android_target(command)
 
@@ -193,9 +193,9 @@ def android_route(command):
                 }
             ]
 
-    # ---------------------------------------------------------
-    # Launch Android apps
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Launch Android apps
+    # * ---------------------------------------------------------
 
     for prefix in LAUNCH_PREFIXES:
         if command.startswith(prefix):
@@ -214,7 +214,7 @@ def android_route(command):
                     }
                 ]
 
-    # Generic open/launch commands belong to the existing
-    # desktop/browser routes and must never be intercepted
-    # by Android Control.
+    # * Generic open/launch commands belong to the existing
+    # ! desktop/browser routes and must never be intercepted
+    # * by Android Control.
     return None

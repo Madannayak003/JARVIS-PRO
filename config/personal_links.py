@@ -13,15 +13,15 @@ from config.environment import get_env
 from config.settings import get_assistant_display_name
 from urllib.parse import urlparse
 
-# =========================================================
-# Personal Links
-# =========================================================
+# * =========================================================
+# * Personal Links
+# * =========================================================
 
 PERSONAL_LINKS = {
 
-    # -----------------------------------------------------
-    # Social / Profiles
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Social / Profiles
+    # * -----------------------------------------------------
 
     "github": get_env("PERSONAL_GITHUB_URL"),
     "github_profile": get_env("PERSONAL_GITHUB_PROFILE_URL"),
@@ -34,9 +34,9 @@ PERSONAL_LINKS = {
     "linkedin": get_env("PERSONAL_LINKEDIN_URL"),
     "linkedin_profile": get_env("PERSONAL_LINKEDIN_PROFILE_URL"),
 
-    # -----------------------------------------------------
-    # Personal Websites
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Personal Websites
+    # * -----------------------------------------------------
 
     "website": get_env("PERSONAL_WEBSITE_URL"),
     "portfolio": get_env("PERSONAL_PORTFOLIO_URL"),
@@ -44,24 +44,24 @@ PERSONAL_LINKS = {
     "iot": get_env("PERSONAL_IOT_URL"),
     "iot_website": get_env("PERSONAL_IOT_WEBSITE_URL"),
 
-    # -----------------------------------------------------
-    # JARVIS
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * JARVIS
+    # * -----------------------------------------------------
 
     "jarvis_github": get_env("JARVIS_GITHUB_URL"),
     "jarvis_repository": get_env("JARVIS_REPOSITORY_URL"),
 
-    # -----------------------------------------------------
-    # Projects
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Projects
+    # * -----------------------------------------------------
 
     "smart_parking": get_env("SMART_PARKING_URL"),
     "atmers": get_env("ATMERS_URL"),
 }
 
 
-# Friendly labels for the existing configuration keys. These labels are only
-# presentation metadata; URLs remain exclusively in PERSONAL_LINKS/.env.
+# * Friendly labels for the existing configuration keys. These labels are only
+# * presentation metadata; URLs remain exclusively in PERSONAL_LINKS/.env.
 PERSONAL_LINK_NAMES = {
     "github": "GitHub",
     "github_profile": "GitHub Profile",
@@ -123,9 +123,9 @@ def configured_links():
     return entries
 
 
-# =========================================================
-# Get Link
-# =========================================================
+# * =========================================================
+# * Get Link
+# * =========================================================
 
 def get_link(name):
     """
@@ -143,9 +143,9 @@ def get_link(name):
     return PERSONAL_LINKS.get(key)
 
 
-# =========================================================
-# Check Link
-# =========================================================
+# * =========================================================
+# * Check Link
+# * =========================================================
 
 def has_link(name):
     """

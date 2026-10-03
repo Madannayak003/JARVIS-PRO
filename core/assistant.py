@@ -57,9 +57,9 @@ from core.assistant_name import (
 )
 
 
-# ============================================================
-# MORNING BRIEF
-# ============================================================
+# * ============================================================
+# * MORNING BRIEF
+# * ============================================================
 
 from core.morning_brief import (
     start_news_fetch,
@@ -67,9 +67,9 @@ from core.morning_brief import (
 )
 
 
-# ============================================================
-# NATURAL CONVERSATION / BRAIN
-# ============================================================
+# * ============================================================
+# * NATURAL CONVERSATION / BRAIN
+# * ============================================================
 
 from brain.natural.natural_bridge import (
     natural_conversation_bridge,
@@ -84,9 +84,9 @@ from brain import (
 
 from hud.integration import HUDIntegration
 
-# ============================================================
-# MORNING BRIEF SETTINGS
-# ============================================================
+# * ============================================================
+# * MORNING BRIEF SETTINGS
+# * ============================================================
 
 MORNING_BRIEF_SETTINGS_FILE = (
     Path(__file__).resolve().parent.parent
@@ -132,15 +132,15 @@ def is_morning_brief_enabled() -> bool:
 
         return True
 
-# ============================================================
-# RUN
-# ============================================================
+# * ============================================================
+# * RUN
+# * ============================================================
 
 def run():
 
-    # ========================================================
-    # MORNING BRIEF SETTING
-    # ========================================================
+    # * ========================================================
+    # * MORNING BRIEF SETTING
+    # * ========================================================
 
     morning_brief_enabled = (
         is_morning_brief_enabled()
@@ -152,16 +152,16 @@ def run():
         f"{'ON' if morning_brief_enabled else 'OFF'}"
     )
 
-    # ========================================================
-    # STARTUP GREETING: this runs after wait_for_core() has observed the
-    # core-ready event, so it represents JARVIS being ready to use.
-    # ========================================================
+    # * ========================================================
+    # * STARTUP GREETING: this runs after wait_for_core() has observed the
+    # * core-ready event, so it represents JARVIS being ready to use.
+    # * ========================================================
 
     speak_startup_greeting(speak, profile=profile)
 
-    # ========================================================
-    # MORNING BRIEF
-    # ========================================================
+    # * ========================================================
+    # * MORNING BRIEF
+    # * ========================================================
 
     if morning_brief_enabled:
 
@@ -226,17 +226,17 @@ def run():
             "Startup news disabled."
         )
 
-    # ========================================================
-    # START EXISTING MICROPHONE
-    # ========================================================
+    # * ========================================================
+    # * START EXISTING MICROPHONE
+    # * ========================================================
 
     start_listener()
 
     while not shutdown_requested():
 
-        # =====================================================
-        # HUD — Waiting for user input
-        # =====================================================
+        # * =====================================================
+        # * HUD — Waiting for user input
+        # * =====================================================
 
         HUDIntegration.listening()
 
@@ -248,21 +248,21 @@ def run():
 
             continue
 
-        # =====================================================
-        # HUD — JARVIS is processing the command
-        # =====================================================
+        # * =====================================================
+        # * HUD — JARVIS is processing the command
+        # * =====================================================
 
         HUDIntegration.thinking()
 
-        # =====================================================
-        # New user input preempts TTS
-        # =====================================================
+        # * =====================================================
+        # * New user input preempts TTS
+        # * =====================================================
 
         stop_speaking()
 
-        # =====================================================
-        # HIGH PRIORITY RUNTIME EVENTS
-        # =====================================================
+        # * =====================================================
+        # * HIGH PRIORITY RUNTIME EVENTS
+        # * =====================================================
 
         if handle_priority(query):
 
@@ -272,18 +272,18 @@ def run():
 
         query = query.strip()
 
-        # =====================================================
-        # HUD — Record actual user command
+        # * =====================================================
+        # * HUD — Record actual user command
         #
-        # This is conversation/activity history.
-        # It is separate from LISTENING / THINKING status.
-        # =====================================================
+        # * This is conversation/activity history.
+        # * It is separate from LISTENING / THINKING status.
+        # * =====================================================
 
         HUDIntegration.command(query)
 
-        # =====================================================
-        # WAITING FOR WHATSAPP MESSAGE
-        # =====================================================
+        # * =====================================================
+        # * WAITING FOR WHATSAPP MESSAGE
+        # * =====================================================
 
         pending = get_pending_message()
 
@@ -297,9 +297,9 @@ def run():
 
             continue
 
-        # =====================================================
-        # WAITING FOR WHATSAPP CONTACT
-        # =====================================================
+        # * =====================================================
+        # * WAITING FOR WHATSAPP CONTACT
+        # * =====================================================
 
         contact = get_contact()
 
@@ -318,9 +318,9 @@ def run():
 
             continue
 
-        # =====================================================
-        # EXISTING CONFIRMATION
-        # =====================================================
+        # * =====================================================
+        # * EXISTING CONFIRMATION
+        # * =====================================================
 
         if waiting():
 
@@ -328,9 +328,9 @@ def run():
 
             pending = get()
 
-            # -------------------------------------------------
-            # Busy Manager Confirmation
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Busy Manager Confirmation
+            # * -------------------------------------------------
 
             if (
                 pending
@@ -381,9 +381,9 @@ def run():
 
                     continue
 
-            # -------------------------------------------------
-            # Search Platform Clarification
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Search Platform Clarification
+            # * -------------------------------------------------
 
             if (
                 pending
@@ -431,9 +431,9 @@ def run():
 
                     pending = get()
 
-            # -------------------------------------------------
-            # Normal Confirmation
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Normal Confirmation
+            # * -------------------------------------------------
 
             if q in [
                 "yes",
@@ -476,22 +476,22 @@ def run():
 
                 continue
 
-        # =====================================================
-        # NATURAL CONVERSATION
+        # * =====================================================
+        # * NATURAL CONVERSATION
         #
-        # ConversationRequest is now the common NCI interface.
+        # * ConversationRequest is now the common NCI interface.
         #
-        # NCI only understands the request here.
-        # It does NOT execute anything.
-        # =====================================================
+        # * NCI only understands the request here.
+        # * It does NOT execute anything.
+        # * =====================================================
 
         invocation = normalize_assistant_invocation(query)
 
         if invocation:
 
-            # The microphone path strips the invocation before dispatching.
-            # Cancel any stale clarification here so the fresh invocation is
-            # not later mistaken for its answer.
+            # * The microphone path strips the invocation before dispatching.
+            # * Cancel any stale clarification here so the fresh invocation is
+            # * not later mistaken for its answer.
             try:
                 from brain.conversation_coordinator import conversation_coordinator
 
@@ -623,14 +623,14 @@ def run():
 
             conversation_request = None
 
-        # =====================================================
-        # NCI FOLLOW-UP PREEMPTION
+        # * =====================================================
+        # * NCI FOLLOW-UP PREEMPTION
         #
-        # ConversationRequest is authoritative for the
-        # semantic understanding of the current request.
+        # * ConversationRequest is authoritative for the
+        # * semantic understanding of the current request.
         #
-        # Dispatcher remains responsible for execution.
-        # =====================================================
+        # * Dispatcher remains responsible for execution.
+        # * =====================================================
 
         nci_follow_up = (
 
@@ -678,15 +678,15 @@ def run():
 
             continue
 
-        # =====================================================
-        # ACTIVE TASK / CONVERSATION PREEMPTION
-        # =====================================================
+        # * =====================================================
+        # * ACTIVE TASK / CONVERSATION PREEMPTION
+        # * =====================================================
 
         if is_busy():
 
-            # =================================================
-            # FAST ACTION PREEMPTION
-            # =================================================
+            # * =================================================
+            # * FAST ACTION PREEMPTION
+            # * =================================================
 
             fast_plan = fast_route(
                 query
@@ -713,9 +713,9 @@ def run():
 
                 continue
 
-            # =================================================
-            # CHAT PREEMPTION
-            # =================================================
+            # * =================================================
+            # * CHAT PREEMPTION
+            # * =================================================
 
             mode = detect(
                 query
@@ -737,9 +737,9 @@ def run():
 
                 continue
 
-            # =================================================
-            # LONG-RUNNING TASK
-            # =================================================
+            # * =================================================
+            # * LONG-RUNNING TASK
+            # * =================================================
 
             ask_switch(
                 query
@@ -752,9 +752,9 @@ def run():
 
             continue
 
-        # =====================================================
-        # POWER STATE
-        # =====================================================
+        # * =====================================================
+        # * POWER STATE
+        # * =====================================================
 
         power_state = get_value(
             "state"
@@ -768,9 +768,9 @@ def run():
 
             continue
 
-        # =====================================================
-        # SLEEP
-        # =====================================================
+        # * =====================================================
+        # * SLEEP
+        # * =====================================================
 
         if query.lower() in [
 
@@ -784,9 +784,9 @@ def run():
 
             continue
 
-        # =====================================================
-        # SHUTDOWN
-        # =====================================================
+        # * =====================================================
+        # * SHUTDOWN
+        # * =====================================================
 
         if query.lower() in [
 
@@ -801,18 +801,18 @@ def run():
 
             continue
 
-        # =====================================================
-        # EXISTING CONTEXT MESSAGE
-        # =====================================================
+        # * =====================================================
+        # * EXISTING CONTEXT MESSAGE
+        # * =====================================================
 
         add_message(
             "user",
             query
         )
 
-        # =====================================================
-        # NORMAL DISPATCH
-        # =====================================================
+        # * =====================================================
+        # * NORMAL DISPATCH
+        # * =====================================================
 
         dispatch(
             query,

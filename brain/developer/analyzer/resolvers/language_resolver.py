@@ -26,16 +26,16 @@ class LanguageResolver(BaseResolver):
 
     def resolve(self, analysis: AnalysisResult) -> None:
 
-        # ------------------------------------
-        # Already detected
-        # ------------------------------------
+        # * ------------------------------------
+        # * Already detected
+        # * ------------------------------------
 
         if analysis.language != Language.UNKNOWN:
             return
 
-        # ------------------------------------
-        # Workspace Rules
-        # ------------------------------------
+        # * ------------------------------------
+        # * Workspace Rules
+        # * ------------------------------------
 
         if analysis.workspace == Workspace.ARDUINO:
             analysis.language = Language.CPP
@@ -45,9 +45,9 @@ class LanguageResolver(BaseResolver):
             analysis.language = Language.CPP
             return
 
-        # ------------------------------------
-        # Framework Rules
-        # ------------------------------------
+        # * ------------------------------------
+        # * Framework Rules
+        # * ------------------------------------
 
         language = FRAMEWORK_LANGUAGE_RULES.get(
             analysis.framework

@@ -82,9 +82,9 @@ class AIChatBot:
         self.model = model
         self._client = None
         
-    # ==========================================================
-    # Model
-    # ==========================================================
+    # * ==========================================================
+    # * Model
+    # * ==========================================================
 
     @staticmethod
     def is_supported_model(model: str) -> bool:
@@ -112,9 +112,9 @@ class AIChatBot:
 
         return self._client
 
-    # ==========================================================
-    # Build conversation
-    # ==========================================================
+    # * ==========================================================
+    # * Build conversation
+    # * ==========================================================
 
     def _build_contents(self, session_id: str):
         """
@@ -154,9 +154,9 @@ class AIChatBot:
 
         return contents
 
-    # ==========================================================
-    # Generate
-    # ==========================================================
+    # * ==========================================================
+    # * Generate
+    # * ==========================================================
 
     def generate(
         self,
@@ -175,7 +175,7 @@ class AIChatBot:
                 f"Chat session not found: {session_id}"
             )
 
-        # Save user message first.
+        # * Save user message first.
         chat_sessions.add_message(
             session_id=session_id,
             role="user",
@@ -205,7 +205,7 @@ class AIChatBot:
             "",
         ) or ""
 
-        # Save chatbot response.
+        # * Save chatbot response.
         chat_sessions.add_message(
             session_id=session_id,
             role="assistant",
@@ -214,9 +214,9 @@ class AIChatBot:
 
         return text
 
-    # ==========================================================
-    # Streaming
-    # ==========================================================
+    # * ==========================================================
+    # * Streaming
+    # * ==========================================================
 
     def stream(
         self,
@@ -237,7 +237,7 @@ class AIChatBot:
                     f"Chat session not found: {session_id}"
                 )
 
-            # Save user message.
+            # * Save user message.
             chat_sessions.add_message(
                 session_id=session_id,
                 role="user",
@@ -288,7 +288,7 @@ class AIChatBot:
                         done=False,
                     )
 
-            # Save complete response.
+            # * Save complete response.
             final_text = "".join(full_response)
 
             chat_sessions.add_message(
@@ -317,9 +317,9 @@ class AIChatBot:
             )
 
 
-# ==============================================================
-# Default standalone chatbot instance
-# ==============================================================
+# * ==============================================================
+# * Default standalone chatbot instance
+# * ==============================================================
 
 chatbot = AIChatBot()
 

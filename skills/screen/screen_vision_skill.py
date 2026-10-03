@@ -27,9 +27,9 @@ from brain.screen_context import screen_context
 from config.settings import get_assistant_display_name
 
 
-# =========================================================
-# Live Screen Analysis
-# =========================================================
+# * =========================================================
+# * Live Screen Analysis
+# * =========================================================
 
 def screen_vision_analyze(data=None):
     """
@@ -41,9 +41,9 @@ def screen_vision_analyze(data=None):
     The resulting analysis is stored as screen context.
     """
 
-    # -----------------------------------------------------
-    # Capture current screen
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Capture current screen
+    # * -----------------------------------------------------
 
     image = screen_vision.capture()
 
@@ -57,9 +57,9 @@ def screen_vision_analyze(data=None):
             "I couldn't access the current screen."
         )
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
     # AI Analysis
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     try:
 
@@ -98,9 +98,9 @@ def screen_vision_analyze(data=None):
             "I couldn't analyze the current screen."
         )
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
     # AI Failure
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     if not response.success:
 
@@ -113,9 +113,9 @@ def screen_vision_analyze(data=None):
             "I couldn't analyze the current screen."
         )
 
-    # -----------------------------------------------------
-    # Diagnostics
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Diagnostics
+    # * -----------------------------------------------------
 
     print(
         "[SCREEN VISION AI] Provider:",
@@ -127,9 +127,9 @@ def screen_vision_analyze(data=None):
         response.model,
     )
 
-    # -----------------------------------------------------
-    # Empty response
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Empty response
+    # * -----------------------------------------------------
 
     if not response.text:
 
@@ -138,19 +138,19 @@ def screen_vision_analyze(data=None):
             "of the current screen."
         )
 
-    # -----------------------------------------------------
-    # Final Analysis
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Final Analysis
+    # * -----------------------------------------------------
 
     analysis = response.text.strip()
 
-    # -----------------------------------------------------
-    # Store Screen Context
+    # * -----------------------------------------------------
+    # * Store Screen Context
     #
-    # IMPORTANT:
-    # The existing captured image is NOT captured again.
-    # Only the AI's understanding is stored.
-    # -----------------------------------------------------
+    # ! IMPORTANT:
+    # * The existing captured image is NOT captured again.
+    # * Only the AI's understanding is stored.
+    # * -----------------------------------------------------
 
     try:
 
@@ -178,23 +178,23 @@ def screen_vision_analyze(data=None):
 
     except Exception as e:
 
-        # Context storage must never break
-        # the existing screen vision feature.
+        # ! Context storage must never break
+        # * the existing screen vision feature.
 
         print(
             f"[SCREEN CONTEXT ERROR] {e}"
         )
 
-    # -----------------------------------------------------
-    # Return natural response
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Return natural response
+    # * -----------------------------------------------------
 
     return analysis
 
 
-# =========================================================
-# Registry
-# =========================================================
+# * =========================================================
+# * Registry
+# * =========================================================
 
 register(
     "screen_vision_analyze",

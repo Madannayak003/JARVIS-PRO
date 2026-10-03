@@ -2,9 +2,9 @@ import re
 from datetime import datetime, timedelta
 
 
-# =========================================================
-# Scheduled WhatsApp Message Parser
-# =========================================================
+# * =========================================================
+# * Scheduled WhatsApp Message Parser
+# * =========================================================
 
 def parse_scheduled_whatsapp(command):
 
@@ -12,15 +12,15 @@ def parse_scheduled_whatsapp(command):
 
     now = datetime.now()
 
-    # =====================================================
-    # IN X SECONDS / MINUTES / HOURS
+    # * =====================================================
+    # * IN X SECONDS / MINUTES / HOURS
     #
-    # Examples:
+    # * Examples:
     #
-    # send whatsapp to mom in 30 minutes saying I'm on the way
-    # send whatsapp to dad in 2 hours saying I will call
-    # send whatsapp to mom in 10 seconds saying hello
-    # =====================================================
+    # * send whatsapp to mom in 30 minutes saying I'm on the way
+    # * send whatsapp to dad in 2 hours saying I will call
+    # * send whatsapp to mom in 10 seconds saying hello
+    # * =====================================================
 
     match = re.fullmatch(
 
@@ -76,14 +76,14 @@ def parse_scheduled_whatsapp(command):
             "send_at": target.isoformat(),
         }
 
-    # =====================================================
-    # TOMORROW AT TIME
+    # * =====================================================
+    # * TOMORROW AT TIME
     #
-    # Examples:
+    # * Examples:
     #
-    # send whatsapp to dad tomorrow at 9 AM saying I'll call you
-    # send whatsapp to mom tomorrow at 10:30 PM saying good night
-    # =====================================================
+    # * send whatsapp to dad tomorrow at 9 AM saying I'll call you
+    # * send whatsapp to mom tomorrow at 10:30 PM saying good night
+    # * =====================================================
 
     match = re.fullmatch(
 
@@ -131,13 +131,13 @@ def parse_scheduled_whatsapp(command):
             "send_at": target.isoformat(),
         }
 
-    # =====================================================
-    # TODAY AT TIME
+    # * =====================================================
+    # * TODAY AT TIME
     #
-    # Examples:
+    # * Examples:
     #
-    # send whatsapp to mom today at 8 PM saying I'm home
-    # =====================================================
+    # * send whatsapp to mom today at 8 PM saying I'm home
+    # * =====================================================
 
     match = re.fullmatch(
 
@@ -188,9 +188,9 @@ def parse_scheduled_whatsapp(command):
     return None
 
 
-# =========================================================
-# List Scheduled WhatsApp
-# =========================================================
+# * =========================================================
+# * List Scheduled WhatsApp
+# * =========================================================
 
 def parse_list_scheduled_whatsapp(command):
 
@@ -216,9 +216,9 @@ def parse_list_scheduled_whatsapp(command):
     return False
 
 
-# =========================================================
-# Cancel Scheduled WhatsApp
-# =========================================================
+# * =========================================================
+# * Cancel Scheduled WhatsApp
+# * =========================================================
 
 def parse_cancel_scheduled_whatsapp(command):
 
@@ -244,17 +244,17 @@ def parse_cancel_scheduled_whatsapp(command):
     return None
 
 
-# =========================================================
-# Reschedule Scheduled WhatsApp
-# =========================================================
+# * =========================================================
+# * Reschedule Scheduled WhatsApp
+# * =========================================================
 
 def parse_reschedule_scheduled_whatsapp(command):
 
     command = command.strip()
 
-    # -----------------------------------------------------
-    # Tomorrow at TIME
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Tomorrow at TIME
+    # * -----------------------------------------------------
 
     match = re.fullmatch(
         r"reschedule\s+"
@@ -297,9 +297,9 @@ def parse_reschedule_scheduled_whatsapp(command):
 
         return None
 
-    # -----------------------------------------------------
-    # Today / next occurrence at TIME
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Today / next occurrence at TIME
+    # * -----------------------------------------------------
 
     match = re.fullmatch(
         r"reschedule\s+"
@@ -338,9 +338,9 @@ def parse_reschedule_scheduled_whatsapp(command):
                 "send_at": send_at.isoformat(),
             }
 
-    # -----------------------------------------------------
-    # In X minutes
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * In X minutes
+    # * -----------------------------------------------------
 
     match = re.fullmatch(
         r"reschedule\s+"
@@ -396,9 +396,9 @@ def parse_reschedule_scheduled_whatsapp(command):
     return None
 
 
-# =========================================================
-# Clock Helper
-# =========================================================
+# * =========================================================
+# * Clock Helper
+# * =========================================================
 
 def _parse_whatsapp_clock_time(
     value,
@@ -467,9 +467,9 @@ def _parse_whatsapp_clock_time(
 
         return None
 
-# =========================================================
-# Schedule Clock Parser
-# =========================================================
+# * =========================================================
+# * Schedule Clock Parser
+# * =========================================================
 
 def _parse_schedule_time(
     value,
@@ -520,8 +520,8 @@ def _parse_schedule_time(
 
         elif target <= now:
 
-            # "today at 8 PM" when 8 PM already passed
-            # should not accidentally schedule yesterday.
+            # * "today at 8 PM" when 8 PM already passed
+            # * should not accidentally schedule yesterday.
             return None
 
         return target
@@ -535,9 +535,9 @@ def _parse_schedule_time(
         return None
 
 
-# =========================================================
-# Normal WhatsApp Message Parser
-# =========================================================
+# * =========================================================
+# * Normal WhatsApp Message Parser
+# * =========================================================
 
 def parse_whatsapp(command):
 
@@ -545,37 +545,37 @@ def parse_whatsapp(command):
 
     patterns = [
 
-        # send whatsapp to John saying hello
+        # * send whatsapp to John saying hello
         (
             r"send\s+whatsapp\s+to\s+(.+?)"
             r"\s+saying\s+(.+)"
         ),
 
-        # send whatsapp message to John saying hello
+        # * send whatsapp message to John saying hello
         (
             r"send\s+whatsapp\s+message\s+to\s+(.+?)"
             r"\s+saying\s+(.+)"
         ),
 
-        # send message to John saying hello
+        # * send message to John saying hello
         (
             r"send\s+message\s+to\s+(.+?)"
             r"\s+saying\s+(.+)"
         ),
 
-        # send whatsapp message to John hello
+        # * send whatsapp message to John hello
         (
             r"send\s+whatsapp\s+message\s+to\s+(.+?)"
             r"\s+(.+)"
         ),
 
-        # send message to John hello
+        # * send message to John hello
         (
             r"send\s+message\s+to\s+(.+?)"
             r"\s+(.+)"
         ),
 
-        # send whatsapp to John hello
+        # * send whatsapp to John hello
         (
             r"send\s+whatsapp\s+to\s+(.+?)"
             r"\s+(.+)"
@@ -605,9 +605,9 @@ def parse_whatsapp(command):
 
     return None
 
-# =========================================================
-# WhatsApp Call Parser
-# =========================================================
+# * =========================================================
+# * WhatsApp Call Parser
+# * =========================================================
 
 def parse_whatsapp_call(command):
 
@@ -615,16 +615,16 @@ def parse_whatsapp_call(command):
 
     patterns = [
 
-        # call dad on whatsapp
+        # * call dad on whatsapp
         r"call\s+(.+?)\s+on\s+whatsapp",
 
-        # whatsapp call dad
+        # * whatsapp call dad
         r"whatsapp\s+call\s+(.+)",
 
-        # call dad via whatsapp
+        # * call dad via whatsapp
         r"call\s+(.+?)\s+via\s+whatsapp",
 
-        # make a whatsapp call to dad
+        # * make a whatsapp call to dad
         r"make\s+(?:a\s+)?whatsapp\s+call\s+to\s+(.+)",
 
     ]
@@ -650,9 +650,9 @@ def parse_whatsapp_call(command):
     return None
 
 
-# =========================================================
-# WhatsApp Video Call Parser
-# =========================================================
+# * =========================================================
+# * WhatsApp Video Call Parser
+# * =========================================================
 
 def parse_whatsapp_video_call(command):
 
@@ -660,16 +660,16 @@ def parse_whatsapp_video_call(command):
 
     patterns = [
 
-        # video call dad on whatsapp
+        # * video call dad on whatsapp
         r"video\s+call\s+(.+?)\s+on\s+whatsapp",
 
-        # whatsapp video call dad
+        # * whatsapp video call dad
         r"whatsapp\s+video\s+call\s+(.+)",
 
-        # video call dad via whatsapp
+        # * video call dad via whatsapp
         r"video\s+call\s+(.+?)\s+via\s+whatsapp",
 
-        # make a whatsapp video call to dad
+        # * make a whatsapp video call to dad
         r"make\s+(?:a\s+)?whatsapp\s+video\s+call\s+to\s+(.+)",
 
     ]

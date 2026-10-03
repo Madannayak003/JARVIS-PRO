@@ -35,9 +35,9 @@ class ESP32Planner(BasePlanner):
 
         plan = self.create_base_plan(analysis)
 
-        # -----------------------------
-        # Default ESP Structure
-        # -----------------------------
+        # * -----------------------------
+        # * Default ESP Structure
+        # * -----------------------------
 
         plan.folders = [
 

@@ -12,8 +12,8 @@ def execute_ai_plan(
 
     for raw_step in plan:
 
-        # Keep the planner's original request available to a clarification
-        # action without mutating the plan object shared by callers.
+        # * Keep the planner's original request available to a clarification
+        # * action without mutating the plan object shared by callers.
         step = dict(raw_step)
 
         if (
@@ -31,11 +31,11 @@ def execute_ai_plan(
 
         print(f"\nExecuting {action}")
 
-        # Existing context
+        # * Existing context
         set_value("last_action", action)
         set_value("last_query", step)
 
-        # -------- Action Memory --------
+        # * -------- Action Memory --------
 
         set_memory("action", action)
 

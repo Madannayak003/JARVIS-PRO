@@ -33,7 +33,7 @@ class FileBuilder:
 
         self.writer = FileWriter()
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     def build(
         self,
@@ -46,34 +46,34 @@ class FileBuilder:
 
         for generated_file in project.files:
 
-            # -------------------------------------
-            # Skip invalid paths
-            # -------------------------------------
+            # * -------------------------------------
+            # * Skip invalid paths
+            # * -------------------------------------
 
             if not generated_file.path.strip():
 
                 continue
 
-            # -------------------------------------
-            # Normalize path
-            # -------------------------------------
+            # * -------------------------------------
+            # * Normalize path
+            # * -------------------------------------
 
             normalized_path = generated_file.path.replace("\\", "/")
 
-            # -------------------------------------
-            # Arduino IDE
+            # * -------------------------------------
+            # * Arduino IDE
             #
-            # Keep the sketch filename exactly as
-            # generated (ProjectName.ino)
-            # -------------------------------------
+            # * Keep the sketch filename exactly as
+            # * generated (ProjectName.ino)
+            # * -------------------------------------
 
             if generated_file.extension == ".ino":
 
                 normalized_path = generated_file.name
 
-            # -------------------------------------
-            # Final path
-            # -------------------------------------
+            # * -------------------------------------
+            # * Final path
+            # * -------------------------------------
 
             full_path = (
 
@@ -83,9 +83,9 @@ class FileBuilder:
 
             )
 
-            # -------------------------------------
-            # Write file
-            # -------------------------------------
+            # * -------------------------------------
+            # * Write file
+            # * -------------------------------------
 
             success = self.writer.write(
 
@@ -105,9 +105,9 @@ class FileBuilder:
 
                 )
 
-            # -------------------------------------
-            # Record created file
-            # -------------------------------------
+            # * -------------------------------------
+            # * Record created file
+            # * -------------------------------------
 
             created = CreatedFile(
 
@@ -131,9 +131,9 @@ class FileBuilder:
 
             result.files.append(created)
 
-        # -------------------------------------
-        # Statistics
-        # -------------------------------------
+        # * -------------------------------------
+        # * Statistics
+        # * -------------------------------------
 
         result.file_count = sum(
 

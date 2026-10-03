@@ -21,7 +21,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-// Register lightweight language grammars to keep main thread fast
+// * Register lightweight language grammars to keep main thread fast
 import javascript from "react-syntax-highlighter/dist/esm/languages/prism/javascript";
 import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
 import tsx from "react-syntax-highlighter/dist/esm/languages/prism/tsx";
@@ -58,8 +58,8 @@ type ChatSession = {
 
 const LOCAL_DASHBOARD_URL =
   typeof window !== "undefined"
-    ? `http://${window.location.hostname}:8765`
-    : "http://127.0.0.1:8765";
+    ? `http:  // * ${window.location.hostname}:8765`
+    : "http:  // * 127.0.0.1:8765";
 
 const DASHBOARD_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
@@ -224,7 +224,7 @@ export default function AIChatBot({
   const handleScroll = useCallback(() => {
     const el = messagesRef.current;
     if (!el) return;
-    // User is near bottom if within 120px threshold
+    // * User is near bottom if within 120px threshold
     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     isNearBottomRef.current = distanceToBottom < 120;
   }, []);
@@ -232,7 +232,7 @@ export default function AIChatBot({
   useEffect(() => {
     if (!messagesRef.current || !isNearBottomRef.current) return;
 
-    // Smoothly push view down only when user is actually pinned to the bottom
+    // * Smoothly push view down only when user is actually pinned to the bottom
     requestAnimationFrame(() => {
       if (messages.length > 0) {
         virtualizer.scrollToIndex(messages.length - 1, {

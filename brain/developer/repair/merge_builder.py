@@ -30,17 +30,17 @@ class MergeBuilder:
 
         }
 
-        # -----------------------------
-        # Replace / Add repaired files
-        # -----------------------------
+        # * -----------------------------
+        # * Replace / Add repaired files
+        # * -----------------------------
 
         for file in repaired_project.files:
 
             existing[file.path] = file
 
-        # -----------------------------
-        # Update project
-        # -----------------------------
+        # * -----------------------------
+        # * Update project
+        # * -----------------------------
 
         project.files = list(existing.values())
 

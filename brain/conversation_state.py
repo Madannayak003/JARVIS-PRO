@@ -34,7 +34,7 @@ class ConversationStateManager:
 
         self.state = ConversationState()
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def start(
 
@@ -54,7 +54,7 @@ class ConversationStateManager:
 
         self.state.created_at = time()
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def finish(self):
 
@@ -66,7 +66,7 @@ class ConversationStateManager:
 
         self.state.created_at = 0
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def is_waiting(self):
 
@@ -84,25 +84,25 @@ class ConversationStateManager:
 
         return True
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def owner(self):
 
         return self.state.owner
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def reason(self):
 
         return self.state.reason
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def reset(self):
 
         self.finish()
 
-    # --------------------------------------------
+    # * --------------------------------------------
 
     def info(self):
 

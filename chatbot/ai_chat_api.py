@@ -21,9 +21,9 @@ from chatbot.ai_chat_bot import (
 from chatbot.ai_chat_session import chat_sessions
 
 
-# ==========================================================
-# Serialization
-# ==========================================================
+# * ==========================================================
+# * Serialization
+# * ==========================================================
 
 def _session_to_dict(session):
     """Convert a chatbot session into JSON-safe data."""
@@ -46,9 +46,9 @@ def _session_to_dict(session):
     }
 
 
-# ==========================================================
-# Session API
-# ==========================================================
+# * ==========================================================
+# * Session API
+# * ==========================================================
 
 def create_chat():
     """Create a new independent chatbot session."""
@@ -79,10 +79,10 @@ def list_chats():
     return {
         "success": True,
 
-        # Frontend-friendly name.
+        # * Frontend-friendly name.
         "chats": chats,
 
-        # Backward-compatible API name.
+        # * Backward-compatible API name.
         "sessions": chats,
     }
 
@@ -105,10 +105,10 @@ def get_chat(session_id: str):
     return {
         "success": True,
 
-        # Frontend-friendly name.
+        # * Frontend-friendly name.
         "chat": chat,
 
-        # Backward-compatible name.
+        # * Backward-compatible name.
         "session": chat,
     }
 
@@ -168,9 +168,9 @@ def rename_chat(
         "title": session.title if session else title,
     }
 
-# ==========================================================
-# Message API
-# ==========================================================
+# * ==========================================================
+# * Message API
+# * ==========================================================
 
 def send_message(
     session_id: str,
@@ -223,9 +223,9 @@ def send_message(
 
         error_text = str(exc)
 
-        # --------------------------------------------------
-        # Gemini quota / rate-limit handling
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Gemini quota / rate-limit handling
+        # * --------------------------------------------------
 
         if (
             "429" in error_text
@@ -254,9 +254,9 @@ def send_message(
         }
 
 
-# ==========================================================
-# Streaming API
-# ==========================================================
+# * ==========================================================
+# * Streaming API
+# * ==========================================================
 
 def stream_message(
     session_id: str,
@@ -294,9 +294,9 @@ def stream_message(
     )
 
 
-# ==========================================================
-# Model API
-# ==========================================================
+# * ==========================================================
+# * Model API
+# * ==========================================================
 
 def get_model():
     """Return the configured chatbot model."""
@@ -371,9 +371,9 @@ def set_model(
     }
 
 
-# ==========================================================
-# Public API
-# ==========================================================
+# * ==========================================================
+# * Public API
+# * ==========================================================
 
 __all__ = [
     "create_chat",

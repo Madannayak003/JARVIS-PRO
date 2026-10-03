@@ -12,7 +12,7 @@ def _say(message: str) -> None:
         from voice.manager import speak
         speak(message)
     except Exception:
-        # Keep headless/test environments usable without the optional voice stack.
+        # * Keep headless/test environments usable without the optional voice stack.
         pass
 
 

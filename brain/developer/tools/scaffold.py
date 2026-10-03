@@ -30,7 +30,7 @@ STRUCTURES = {
 
         "files": [
 
-            # Root
+            # * Root
             "memory/__init__.py",
             "memory/developer_memory.py",
             "memory/memory_manager.py",
@@ -42,7 +42,7 @@ STRUCTURES = {
             "memory/memory_builder.py",
             "memory/memory_context.py",
 
-            # Specialized Memory
+            # * Specialized Memory
             "memory/project_memory.py",
             "memory/file_memory.py",
             "memory/symbol_memory.py",
@@ -51,7 +51,7 @@ STRUCTURES = {
             "memory/session_memory.py",
             "memory/edit_history.py",
 
-            # Models
+            # * Models
             "memory/models/__init__.py",
             "memory/models/memory_record.py",
             "memory/models/project_profile.py",
@@ -62,11 +62,11 @@ STRUCTURES = {
             "memory/models/edit_record.py",
             "memory/models/session_state.py",
 
-            # Rules
+            # * Rules
             "memory/rules/__init__.py",
             "memory/rules/memory_rules.py",
 
-            # Tests
+            # * Tests
             "memory/tests/__init__.py",
             "memory/tests/test_memory.py",
             "memory/tests/test_manager.py",

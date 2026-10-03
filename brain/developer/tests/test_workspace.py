@@ -4,7 +4,7 @@ JARVIS PRO
 Workspace Test
 """
 
-#  python -m brain.developer.tests.test_workspace
+# * python -m brain.developer.tests.test_workspace
 
 from brain.developer.pipeline import DeveloperPipeline
 
@@ -15,12 +15,12 @@ def main():
 
     context = pipeline.process(
 
-        # "create a python calculator"
-        # "Create a Arduino RFID door lock"
+        # * "create a python calculator"
+        # * "Create a Arduino RFID door lock"
         "Create an ESP32 weather station using WiFi"
-        # "Create a personal portfolio website"
-        #  "Create a React Todo App"
-        # "Create a Flask login system"
+        # * "Create a personal portfolio website"
+        # * "Create a React Todo App"
+        # * "Create a Flask login system"
 
     )
 

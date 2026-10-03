@@ -13,13 +13,13 @@ _memory = {
     "folder": None,
     "file": None,
 
-    # Search preference
+    # * Search preference
     "search_platform": None,
 
-    # Legacy (will remove later)
+    # * Legacy (will remove later)
     "pending_subject": None,
 
-    # NEW
+    # * NEW
     "clarify_context": None
 }
 

@@ -44,14 +44,14 @@ def make_payment(data=None):
             else:
                 _say(f"I could not open {app_name}.")
             return False
-        # The audited PhonePe and Google Pay packages expose normal launcher
-        # activities and UPI handlers, but no documented scanner-specific
-        # launcher. Do not infer a scanner action from internal activity names.
+        # * The audited PhonePe and Google Pay packages expose normal launcher
+        # * activities and UPI handlers, but no documented scanner-specific
+        # ! launcher. Do not infer a scanner action from internal activity names.
         _say("Payment app opened. Please open its QR scanner.")
         return True
 
-    # Generic UPI VIEW delegates app selection to Android's normal resolver.
-    # It carries no recipient, amount, or payment credentials.
+    # * Generic UPI VIEW delegates app selection to Android's normal resolver.
+    # * It carries no recipient, amount, or payment credentials.
     chooser_opened = manager.launch_intent(IntentSpec(action=ACTION_VIEW, data="upi://pay"))
     if not chooser_opened:
         _say("I could not open the Android payment-app chooser.")

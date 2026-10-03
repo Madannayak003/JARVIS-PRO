@@ -20,9 +20,9 @@ def chat_worker(question, stop_event):
 
     try:
 
-        # ---------------------------------
-        # Instant Memory Answers
-        # ---------------------------------
+        # * ---------------------------------
+        # * Instant Memory Answers
+        # * ---------------------------------
 
         memory_reply = answer(question)
 
@@ -36,9 +36,9 @@ def chat_worker(question, stop_event):
 
             return
 
-        # ---------------------------------
+        # * ---------------------------------
         # AI Chat
-        # ---------------------------------
+        # * ---------------------------------
 
         run_chat(question, stop_event)
 

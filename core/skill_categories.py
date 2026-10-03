@@ -161,9 +161,9 @@ CATEGORIES = {
 }
 
 
-# ---------------------------------------------------------
-# Build reverse lookup
-# ---------------------------------------------------------
+# * ---------------------------------------------------------
+# * Build reverse lookup
+# * ---------------------------------------------------------
 
 ACTION_CATEGORIES = {}
 
@@ -172,17 +172,17 @@ for category, actions in CATEGORIES.items():
         ACTION_CATEGORIES[action] = category
 
 
-# ---------------------------------------------------------
-# Default category
-# ---------------------------------------------------------
+# * ---------------------------------------------------------
+# * Default category
+# * ---------------------------------------------------------
 
 DEFAULT_CATEGORY = "uncategorized"
 
 
-# Actions in this set require a remote service or a network-backed browser
-# destination.  Local actions remain shared by online and offline runtimes;
-# this metadata only lets an offline runtime fail closed before an action can
-# accidentally open a remote page or call an external API.
+# * Actions in this set require a remote service or a network-backed browser
+# * destination.  Local actions remain shared by online and offline runtimes;
+# * this metadata only lets an offline runtime fail closed before an action can
+# * accidentally open a remote page or call an external API.
 NETWORK_REQUIRED_ACTIONS = {
     "google_search",
     "youtube_search",

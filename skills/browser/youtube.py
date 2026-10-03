@@ -15,9 +15,9 @@ youtube_queue = []
 youtube_index = -1
 current_youtube_query = ""
 
-# =====================================================
-# YouTube Search
-# =====================================================
+# * =====================================================
+# * YouTube Search
+# * =====================================================
 
 def ai_youtube(data):
 
@@ -37,22 +37,22 @@ def ai_youtube(data):
             f"Searching YouTube for {query}"
         )
 
-    # -------------------------------------------------
-    # Open YouTube search page
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Open YouTube search page
+    # * -------------------------------------------------
 
     browser.search_youtube(query)
 
-    # -------------------------------------------------
-    # Capture search results for NCI
+    # * -------------------------------------------------
+    # * Capture search results for NCI
     #
-    # This is important:
+    # ! This is important:
     #
-    # "play the second one"
+    # * "play the second one"
     #
-    # must have actual YouTube result objects
-    # available to ReferenceResolver.
-    # -------------------------------------------------
+    # ! must have actual YouTube result objects
+    # * available to ReferenceResolver.
+    # * -------------------------------------------------
 
     videos = get_video_list(
         query,
@@ -62,9 +62,9 @@ def ai_youtube(data):
     if not videos:
         return True
 
-    # -------------------------------------------------
-    # Store generic browser search context
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Store generic browser search context
+    # * -------------------------------------------------
 
     browser_context.set_search(
         query=query,
@@ -72,18 +72,18 @@ def ai_youtube(data):
         results=videos,
     )
 
-    # -------------------------------------------------
-    # Store YouTube-specific queue
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Store YouTube-specific queue
+    # * -------------------------------------------------
 
     browser_context.set_youtube_queue(
         query=query,
         videos=videos,
     )
 
-    # -------------------------------------------------
-    # Keep existing YouTube runtime queue synchronized
-    # -------------------------------------------------
+    # * -------------------------------------------------
+    # * Keep existing YouTube runtime queue synchronized
+    # * -------------------------------------------------
 
     youtube_queue = videos
 
@@ -93,20 +93,20 @@ def ai_youtube(data):
         else -1
     )
 
-    # -------------------------------------------------
-    # Record successful YouTube search for NCI
+    # * -------------------------------------------------
+    # * Record successful YouTube search for NCI
     #
-    # This connects the existing BrowserContext result
-    # list to ConversationContext.
+    # * This connects the existing BrowserContext result
+    # * list to ConversationContext.
     #
-    # It allows:
+    # * It allows:
     #
-    #     "play the second one"
-    #     "play the third one"
-    #     "open the first one"
+    # * "play the second one"
+    # * "play the third one"
+    # * "open the first one"
     #
-    # to resolve against the actual YouTube results.
-    # -------------------------------------------------
+    # * to resolve against the actual YouTube results.
+    # * -------------------------------------------------
 
     try:
 
@@ -165,9 +165,9 @@ def ai_youtube(data):
     return True
 
 
-# =====================================================
-# YouTube Controls
-# =====================================================
+# * =====================================================
+# * YouTube Controls
+# * =====================================================
 
 def youtube_play_first(data):
     
@@ -181,7 +181,7 @@ def youtube_play_first(data):
 
     query = data.get("query", "").strip()
 
-    # Use the previous YouTube search if no new query was supplied
+    # * Use the previous YouTube search if no new query was supplied
     if not query:
         query = current_youtube_query
 
@@ -198,7 +198,7 @@ def youtube_play_first(data):
         speak("I could not find YouTube videos.")
         return False
     
-    # Save YouTube search results to browser context
+    # * Save YouTube search results to browser context
     browser_context.set_search(
         query=query,
         platform="youtube",
@@ -210,7 +210,7 @@ def youtube_play_first(data):
         videos=videos,
     )
 
-    # Save search results as JARVIS queue
+    # * Save search results as JARVIS queue
     youtube_queue = videos
     youtube_index = 0
 
@@ -253,7 +253,7 @@ def youtube_next(data):
         speak("There is no YouTube queue.")
         return False
 
-    # Move to next video
+    # * Move to next video
     if youtube_index + 1 >= len(youtube_queue):
         speak("There are no more videos in the queue.")
         return False
@@ -283,7 +283,7 @@ def youtube_previous(data):
         speak("There is no YouTube queue.")
         return False
 
-    # Move to previous video
+    # * Move to previous video
     if youtube_index <= 0:
         speak("This is the first video in the queue.")
         return False
@@ -325,9 +325,9 @@ def youtube_play_result(data):
     if not video_id:
         return False
 
-    # =====================================================
-    # Synchronize BrowserContext with the requested video
-    # =====================================================
+    # * =====================================================
+    # * Synchronize BrowserContext with the requested video
+    # * =====================================================
 
     video = None
 
@@ -354,9 +354,9 @@ def youtube_play_result(data):
 
             break
 
-    # =====================================================
-    # Speak the actual video being played
-    # =====================================================
+    # * =====================================================
+    # * Speak the actual video being played
+    # * =====================================================
 
     if video is not None:
 
@@ -372,18 +372,18 @@ def youtube_play_result(data):
                 f"Playing {title}"
             )
 
-    # =====================================================
-    # Play
-    # =====================================================
+    # * =====================================================
+    # * Play
+    # * =====================================================
 
     return browser.play_video(
         video_id
     )
 
 
-# =====================================================
-# Registry
-# =====================================================
+# * =====================================================
+# * Registry
+# * =====================================================
 
 register("youtube_search", ai_youtube)
 

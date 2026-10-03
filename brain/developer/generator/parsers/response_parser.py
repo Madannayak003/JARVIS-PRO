@@ -22,7 +22,7 @@ class ResponseParser:
 
         self.markdown_parser = MarkdownParser()
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     def parse(
         self,
@@ -32,9 +32,9 @@ class ResponseParser:
         Parse an LLM response.
         """
 
-        # ---------------------------------------
-        # Empty Response
-        # ---------------------------------------
+        # * ---------------------------------------
+        # * Empty Response
+        # * ---------------------------------------
 
         if not response or not response.strip():
 
@@ -50,9 +50,9 @@ class ResponseParser:
 
             return project
 
-        # ---------------------------------------
-        # Markdown Parser
-        # ---------------------------------------
+        # * ---------------------------------------
+        # * Markdown Parser
+        # * ---------------------------------------
 
         project = self.markdown_parser.parse(
 
@@ -60,18 +60,18 @@ class ResponseParser:
 
         )
 
-        # ---------------------------------------
-        # Future Parser Selection
-        # ---------------------------------------
+        # * ---------------------------------------
+        # * Future Parser Selection
+        # * ---------------------------------------
         #
-        # Future versions can automatically
-        # choose between:
+        # * Future versions can automatically
+        # * choose between:
         #
-        # MarkdownParser
-        # JSONParser
-        # XMLParser
-        # ArchiveParser
+        # * MarkdownParser
+        # * JSONParser
+        # * XMLParser
+        # * ArchiveParser
         #
-        # ---------------------------------------
+        # * ---------------------------------------
 
         return project

@@ -13,9 +13,9 @@ Responsibilities
 import re
 
 
-# ---------------------------------------
-# Stop Words
-# ---------------------------------------
+# * ---------------------------------------
+# * Stop Words
+# * ---------------------------------------
 
 STOP_WORDS = {
 
@@ -72,9 +72,9 @@ STOP_WORDS = {
 }
 
 
-# ---------------------------------------
-# Synonyms
-# ---------------------------------------
+# * ---------------------------------------
+# * Synonyms
+# * ---------------------------------------
 
 SYNONYMS = {
 
@@ -120,9 +120,9 @@ SYNONYMS = {
 }
 
 
-# ---------------------------------------
-# Normalize
-# ---------------------------------------
+# * ---------------------------------------
+# * Normalize
+# * ---------------------------------------
 
 def normalize(text):
 
@@ -141,9 +141,9 @@ def normalize(text):
     return text.strip()
 
 
-# ---------------------------------------
-# Extract Keywords
-# ---------------------------------------
+# * ---------------------------------------
+# * Extract Keywords
+# * ---------------------------------------
 
 def extract_keywords(query):
 
@@ -151,7 +151,7 @@ def extract_keywords(query):
 
     keywords = []
 
-    # Phrase Synonyms
+    # * Phrase Synonyms
 
     for phrase, words in SYNONYMS.items():
 
@@ -159,7 +159,7 @@ def extract_keywords(query):
 
             keywords.extend(words)
 
-    # Single Words
+    # * Single Words
 
     for word in query.split():
 
@@ -167,7 +167,7 @@ def extract_keywords(query):
 
             keywords.append(word)
 
-    # Remove duplicates
+    # * Remove duplicates
 
     seen = set()
 

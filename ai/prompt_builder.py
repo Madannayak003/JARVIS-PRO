@@ -18,9 +18,9 @@ from ai.memory_search import (
 from core.context import get_history
 
 
-# ---------------------------------------
-# Conversation
-# ---------------------------------------
+# * ---------------------------------------
+# * Conversation
+# * ---------------------------------------
 
 def build_conversation(limit=6):
 
@@ -40,9 +40,9 @@ def build_conversation(limit=6):
     return text.strip()
 
 
-# ---------------------------------------
-# Memory
-# ---------------------------------------
+# * ---------------------------------------
+# * Memory
+# * ---------------------------------------
 
 def build_memory(question):
 
@@ -51,9 +51,9 @@ def build_memory(question):
     return format_memories(memories)
 
 
-# ---------------------------------------
-# Prompt
-# ---------------------------------------
+# * ---------------------------------------
+# * Prompt
+# * ---------------------------------------
 
 def build_prompt(question):
 

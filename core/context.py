@@ -27,9 +27,9 @@ class Context:
 
 CONTEXT = Context()
 
-# -----------------------
-# Generic Context Methods
-# -----------------------
+# * -----------------------
+# * Generic Context Methods
+# * -----------------------
 
 def set_value(key, value):
 
@@ -40,9 +40,9 @@ def get_value(key):
 
     return getattr(CONTEXT, key, None)
 
-# -----------------------
-# Conversation History
-# -----------------------
+# * -----------------------
+# * Conversation History
+# * -----------------------
 
 def add_message(role, text):
 
@@ -86,9 +86,9 @@ def update_result(result):
 
     CONTEXT.last_result = result
 
-# -----------------------
-# Debug
-# -----------------------
+# * -----------------------
+# ! Debug
+# * -----------------------
 
 def show():
 

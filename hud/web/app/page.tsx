@@ -208,8 +208,8 @@ const EMPTY_ANDROID_STATUS: AndroidStatus = {
 
 const LOCAL_DASHBOARD_URL =
   typeof window !== "undefined"
-    ? `http://${window.location.hostname}:8765`
-    : "http://127.0.0.1:8765";
+    ? `http:  // * ${window.location.hostname}:8765`
+    : "http:  // * 127.0.0.1:8765";
 
 const JARVIS_DASHBOARD_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
@@ -219,12 +219,12 @@ const JARVIS_DASHBOARD_URL =
 const HUD_BRIDGE_URL =
   process.env.NEXT_PUBLIC_JARVIS_OFFLINE === "1"
     ? (typeof window !== "undefined"
-        ? `http://${window.location.hostname}:8766`
-        : "http://127.0.0.1:8766")
+        ? `http:  // * ${window.location.hostname}:8766`
+        : "http:  // * 127.0.0.1:8766")
     : process.env.NEXT_PUBLIC_JARVIS_HUD_BRIDGE_URL ||
       (typeof window !== "undefined"
-        ? `http://${window.location.hostname}:8766`
-        : "http://127.0.0.1:8766");
+        ? `http:  // * ${window.location.hostname}:8766`
+        : "http:  // * 127.0.0.1:8766");
 
 const DEFAULT_ASSISTANT_NAME = "";
 
@@ -366,7 +366,7 @@ export default function Home() {
   const [commandInput, setCommandInput] = useState("");
   const [commandSending, setCommandSending] = useState(false);
 
-  // 1. Inside your component, add an input ref:
+  // * 1. Inside your component, add an input ref:
   const commandInputRef = useRef<HTMLInputElement | null>(null);
 
   const applyPhoneCallState = useCallback((value: unknown) => {
@@ -375,9 +375,9 @@ export default function Home() {
       return;
     }
 
-    // HUDManager retains the last structured call payload in its state.
-    // Ignore that stale DISCONNECTED snapshot after the island has exited;
-    // a new call state below starts a fresh session.
+    // * HUDManager retains the last structured call payload in its state.
+    // * Ignore that stale DISCONNECTED snapshot after the island has exited;
+    // * a new call state below starts a fresh session.
     if (nextCall.state === "disconnected" && phoneCallDismissedRef.current) {
       return;
     }
@@ -559,7 +559,7 @@ export default function Home() {
     }
   };
 
-  // 2. Automatically restore cursor focus whenever sending completes:
+  // ! 2. Automatically restore cursor focus whenever sending completes:
   useEffect(() => {
     if (!commandSending) {
       commandInputRef.current?.focus();
@@ -938,9 +938,9 @@ export default function Home() {
     const consumedHudEventIds = new Set<string>();
 
     const stopHudSpeaking = () => {
-      // End the temporary morning-brief speaking lock.
-      // The brief overlay can remain visible, but speech itself
-      // must no longer keep the HUD in SPEAKING state.
+      // * End the temporary morning-brief speaking lock.
+      // * The brief overlay can remain visible, but speech itself
+      // ! must no longer keep the HUD in SPEAKING state.
       setMorningBriefStartedSpeaking(false);
       morningBriefStartedSpeakingRef.current = false;
 
@@ -967,8 +967,8 @@ export default function Home() {
       handleHUDState,
       (event: HUDBridgeEvent) => {
         if (event.name === "system_update") {
-          // State delivery is authoritative; this fallback also supports
-          // older bridge payloads that omit the nested state snapshot.
+          // * State delivery is authoritative; this fallback also supports
+          // * older bridge payloads that omit the nested state snapshot.
           applyPhoneCallState(event.data?.phone_call);
           return;
         }
@@ -1000,9 +1000,9 @@ export default function Home() {
           setMorningBriefStartedSpeaking(true);
           morningBriefStartedSpeakingRef.current = true;
 
-          // Morning Brief can contain several headlines and may
-          // speak for much longer than the normal response window.
-          // Do NOT use the normal fixed speaking timer here.
+          // * Morning Brief can contain several headlines and may
+          // * speak for much longer than the normal response window.
+          // ! Do NOT use the normal fixed speaking timer here.
           setHudState((prev) => ({
             ...prev,
             speaking: true,
@@ -1065,7 +1065,7 @@ export default function Home() {
           return;
         }
 
-        // Consume pending user command marker to prevent duplicate logs
+        // * Consume pending user command marker to prevent duplicate logs
         if (speaker === "user") {
           const pendingIndex = pendingHudCommandsRef.current.indexOf(text);
           if (pendingIndex !== -1) {
@@ -1088,13 +1088,13 @@ export default function Home() {
             status: "speaking",
           }));
 
-          // Each new response chunk extends the speaking window.
-          // The HUD returns to idle/listening only after speech
-          // activity has stopped for the full delay.
+          // * Each new response chunk extends the speaking window.
+          // * The HUD returns to idle/listening only after speech
+          // * activity has stopped for the full delay.
           scheduleHudSpeakingStop(4000);
         }
 
-        // Strict global deduplication check
+        // * Strict global deduplication check
         setActivities((previous) => {
           const activity: HUDActivity = {
             id: eventId || `${event.timestamp}-${Math.random()}`,
@@ -1513,7 +1513,7 @@ export default function Home() {
     const rgb = hexToRgb(value);
     const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 35, s: 1, v: 1 };
     
-    // Top-aligned angle offset (-90 deg) to match CSS conic-gradient orientation
+    // * Top-aligned angle offset (-90 deg) to match CSS conic-gradient orientation
     const angle = ((hsv.h - 90) * Math.PI) / 180;
     const radius = 38;
     const handleX = 50 + Math.cos(angle) * radius * Math.max(0.4, hsv.s);
@@ -1531,7 +1531,7 @@ export default function Home() {
       const distance = Math.hypot(x, y);
       const maxRadius = rect.width / 2;
       
-      // Compute angle and offset by +90 deg so Red is at 12 o'clock (0 deg)
+      // * Compute angle and offset by +90 deg so Red is at 12 o'clock (0 deg)
       let hue = Math.atan2(y, x) * (180 / Math.PI) + 90;
       if (hue < 0) hue += 360;
       if (hue >= 360) hue -= 360;
@@ -1772,7 +1772,7 @@ export default function Home() {
               width="16"
               height="16"
               fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http:  // * www.w3.org/2000/svg"
               aria-hidden="true"
             >
               <path
@@ -1832,7 +1832,7 @@ export default function Home() {
               className="btn-icon"
               viewBox="0 0 24 24"
               fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http:  // * www.w3.org/2000/svg"
               aria-hidden="true"
             >
               {/* Main 4-point AI Star */}
@@ -1950,7 +1950,7 @@ export default function Home() {
               viewBox="0 0 1000 120"
               preserveAspectRatio="none"
               fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http:  // * www.w3.org/2000/svg"
             >
               <defs>
                 {/* Gradients matching image exact colors */}

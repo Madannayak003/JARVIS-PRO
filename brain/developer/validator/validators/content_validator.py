@@ -43,7 +43,7 @@ class ContentValidator(BaseValidator):
 
     )
 
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
 
     def validate(
         self,
@@ -59,9 +59,9 @@ class ContentValidator(BaseValidator):
 
             content = file.content.strip()
 
-            # -------------------------------------
-            # Empty File
-            # -------------------------------------
+            # * -------------------------------------
+            # * Empty File
+            # * -------------------------------------
 
             if not content:
 
@@ -89,9 +89,9 @@ class ContentValidator(BaseValidator):
 
                 continue
 
-            # -------------------------------------
-            # Placeholder Detection
-            # -------------------------------------
+            # * -------------------------------------
+            # * Placeholder Detection
+            # * -------------------------------------
 
             found_placeholder = False
 
@@ -127,9 +127,9 @@ class ContentValidator(BaseValidator):
 
                 continue
 
-            # -------------------------------------
-            # Very Small Source File
-            # -------------------------------------
+            # * -------------------------------------
+            # * Very Small Source File
+            # * -------------------------------------
 
             if (
 
@@ -185,8 +185,8 @@ class ContentValidator(BaseValidator):
 
                 continue
 
-            # -------------------------------------
-            # Passed
-            # -------------------------------------
+            # * -------------------------------------
+            # * Passed
+            # * -------------------------------------
 
             result.passed_checks += 1

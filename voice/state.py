@@ -30,9 +30,9 @@ _current_session = None
 _session_counter = 0
 
 
-# =========================================================
-# Create New Session
-# =========================================================
+# * =========================================================
+# * Create New Session
+# * =========================================================
 
 def create_session():
 
@@ -41,7 +41,7 @@ def create_session():
 
     with _lock:
 
-        # Cancel previous session first.
+        # * Cancel previous session first.
         if _current_session is not None:
 
             _current_session.cancel_event.set()
@@ -63,9 +63,9 @@ def create_session():
         return session
 
 
-# =========================================================
-# Get Current Session
-# =========================================================
+# * =========================================================
+# * Get Current Session
+# * =========================================================
 
 def current_session():
 
@@ -74,9 +74,9 @@ def current_session():
         return _current_session
 
 
-# =========================================================
-# Cancel Current Session
-# =========================================================
+# * =========================================================
+# * Cancel Current Session
+# * =========================================================
 
 def cancel_current():
 
@@ -91,9 +91,9 @@ def cancel_current():
     return None
 
 
-# =========================================================
-# Check Current
-# =========================================================
+# * =========================================================
+# * Check Current
+# * =========================================================
 
 def is_current(session):
 
@@ -108,9 +108,9 @@ def is_current(session):
         )
 
 
-# =========================================================
-# Cancelled Check
-# =========================================================
+# * =========================================================
+# * Cancelled Check
+# * =========================================================
 
 def is_cancelled(session):
 
@@ -121,13 +121,13 @@ def is_cancelled(session):
     return session.cancel_event.is_set()
 
 
-# =========================================================
-# Legacy Compatibility
-# =========================================================
+# * =========================================================
+# * Legacy Compatibility
+# * =========================================================
 
-# Keep this so older modules importing STOP_EVENT
-# don't immediately break.
+# * Keep this so older modules importing STOP_EVENT
+# ! don't immediately break.
 #
-# New voice code should NOT use this event.
+# * New voice code should NOT use this event.
 
 STOP_EVENT = threading.Event()

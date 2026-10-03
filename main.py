@@ -1,20 +1,21 @@
 """
-=============================================================
-JARVIS PRO — MAIN APPLICATION ENTRY POINT
-=============================================================
+# * ============================================================
+# * ! JARVIS PRO — MAIN APPLICATION ENTRY POINT
+# * ============================================================
 
-Single-application desktop architecture.
+# * * Single-application desktop architecture.
 
-JARVIS:
-    - Runs the existing Python voice engine
-    - Runs the existing HUD bridge
-    - Starts Next.js silently
-    - Displays the HUD through native pywebview
-    - Does NOT open the HUD in a normal browser
-    - Closing the native HUD shuts down JARVIS
+# * ! JARVIS:
+# * * Runs the existing Python voice engine
+# * * Runs the existing HUD bridge
+# * * Starts Next.js silently
+# * * Displays the HUD through native pywebview
+# * * Does NOT open the HUD in a normal browser
+# * ! Closing the native HUD shuts down JARVIS
 
-IMPORTANT:
-    pywebview.start() MUST run on the MAIN THREAD.
+# ! ! IMPORTANT:
+# ! ! pywebview.start() MUST run on the MAIN THREAD.
+
 """
 
 from __future__ import annotations
@@ -26,13 +27,13 @@ import threading
 import time
 from pathlib import Path
 
-# Load local configuration before importing application components.
-import config  # noqa: F401
+# * Load local configuration before importing application components.
+import config  # * noqa: F401
 from config.settings import get_assistant_display_name
 
-# =============================================================
-# JARVIS CORE
-# =============================================================
+# * * =============================================================
+# * ! JARVIS CORE
+# * * =============================================================
 
 from skills.loader import load_all
 from ai.memory import init_memory
@@ -48,9 +49,9 @@ from hud.web_bridge import hud_web
 
 from dashboard.server import DashboardServer
 
-# =============================================================
-# GLOBAL STATE
-# =============================================================
+# * =============================================================
+# * GLOBAL STATE
+# * =============================================================
 
 _web_hud_process = None
 _voice_thread = None
@@ -58,18 +59,18 @@ _shutdown_event = threading.Event()
 _shutdown_lock = threading.Lock()
 _shutdown_started = False
 
-# =============================================================
-# PATHS
-# =============================================================
+# * =============================================================
+# * PATHS
+# * =============================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_HUD_DIRECTORY = PROJECT_ROOT / "hud" / "web"
 WEB_HUD_URL = "http://127.0.0.1:3000"
 
 
-# =============================================================
-# START NEXT.JS HUD
-# =============================================================
+# * =============================================================
+# * START NEXT.JS HUD
+# * =============================================================
 
 def start_web_hud() -> bool:
     global _web_hud_process
@@ -120,9 +121,9 @@ def start_web_hud() -> bool:
         return False
 
 
-# =============================================================
-# WAIT FOR NEXT.JS
-# =============================================================
+# * =============================================================
+# * WAIT FOR NEXT.JS
+# * =============================================================
 
 def wait_for_web_hud(timeout: float = 30.0) -> bool:
     import urllib.request
@@ -145,9 +146,9 @@ def wait_for_web_hud(timeout: float = 30.0) -> bool:
     return False
 
 
-# =============================================================
-# VOICE ENGINE
-# =============================================================
+# * =============================================================
+# * VOICE ENGINE
+# * =============================================================
 
 def run_voice_engine():
     try:
@@ -218,9 +219,9 @@ def start_offline_voice_engine():
     print("[MAIN] Offline voice engine thread started.")
 
 
-# =============================================================
-# SHUTDOWN
-# =============================================================
+# * =============================================================
+# * SHUTDOWN
+# * =============================================================
 
 def request_jarvis_shutdown():
     global _shutdown_started
@@ -236,14 +237,14 @@ def request_jarvis_shutdown():
     )
     _shutdown_event.set()
 
-    # 1. Stop microphone listener
+    # * 1. Stop microphone listener
     try:
         from core.listener import request_shutdown
         request_shutdown()
     except Exception as error:
         print(f"[MAIN] Listener shutdown error: {error}")
 
-    # 2. Close native pywebview HUD
+    # * 2. Close native pywebview HUD
     try:
         from hud.desktop_window import close_native_window
         close_native_window()
@@ -251,18 +252,18 @@ def request_jarvis_shutdown():
         print(f"[MAIN HUD] Native window shutdown error: {error}")
 
 
-# =============================================================
-# HUD SHUTDOWN CALLBACK
-# =============================================================
+# * =============================================================
+# * HUD SHUTDOWN CALLBACK
+# * =============================================================
 
 def configure_hud_shutdown():
     hud_web.set_shutdown_callback(request_jarvis_shutdown)
     print("[MAIN HUD] Desktop shutdown callback registered.")
 
 
-# =============================================================
-# START NATIVE HUD
-# =============================================================
+# * =============================================================
+# * START NATIVE HUD
+# * =============================================================
 
 def start_native_hud():
     if not wait_for_web_hud():
@@ -281,7 +282,7 @@ def start_native_hud():
     try:
         from hud.desktop_window import run
 
-        # pywebview requires the MAIN THREAD.
+        # * pywebview requires the MAIN THREAD.
         result = run()
         print(f"[MAIN HUD] Desktop HUD exited: {result}")
 
@@ -296,9 +297,9 @@ def start_native_hud():
         return False
 
 
-# =============================================================
-# STOP NEXT.JS (INSTANT PROCESS TREE TERMINATION)
-# =============================================================
+# * =============================================================
+# * STOP NEXT.JS (INSTANT PROCESS TREE TERMINATION)
+# * =============================================================
 
 def stop_web_hud():
     global _web_hud_process
@@ -329,9 +330,9 @@ def stop_web_hud():
         print(f"[MAIN HUD] Next.js cleanup error: {error}")
 
 
-# =============================================================
-# BACKGROUND CORE INITIALIZATION
-# =============================================================
+# * =============================================================
+# * BACKGROUND CORE INITIALIZATION
+# * =============================================================
 
 def initialize_core_background():
     try:
@@ -353,9 +354,9 @@ def initialize_core_background():
         raise
 
 
-# =============================================================
-# MAIN
-# =============================================================
+# * =============================================================
+# * MAIN
+# * =============================================================
 
 def main():
     try:
@@ -371,13 +372,13 @@ def main():
                 "in offline mode..."
             )
 
-            # Keep shared local skills on Piper and prevent voice.manager's
-            # import-time online probe from running during core loading.
+            # * Keep shared local skills on Piper and prevent voice.manager's
+            # * import-time online probe from running during core loading.
             os.environ["JARVIS_OFFLINE_MODE"] = "1"
 
-            # Offline changes only the providers. The core, skills, action
-            # registry, HUD bridge, and native PyWebView window remain the
-            # same runtime used by online mode.
+            # * Offline changes only the providers. The core, skills, action
+            # * registry, HUD bridge, and native PyWebView window remain the
+            # * same runtime used by online mode.
             core_thread = threading.Thread(
                 target=initialize_core_background,
                 name="jarvis-offline-core-init",
@@ -396,18 +397,18 @@ def main():
 
             configure_hud_shutdown()
 
-            # Tell the local Next.js client to prefer the local Dashboard API
-            # even when a remote dashboard URL was configured for online use.
+            # * Tell the local Next.js client to prefer the local Dashboard API
+            # * even when a remote dashboard URL was configured for online use.
             os.environ["NEXT_PUBLIC_JARVIS_OFFLINE"] = "1"
 
             if not start_web_hud():
                 print("[MAIN HUD] Next.js HUD failed to start.")
                 return 1
 
-            # The Next.js HUD uses the local DashboardServer on port 8765 for
-            # typed commands and local settings/history APIs. Online mode
-            # already starts this server; offline mode must expose the same
-            # local endpoints so the HUD remains fully usable.
+            # * The Next.js HUD uses the local DashboardServer on port 8765 for
+            # * typed commands and local settings/history APIs. Online mode
+            # ! already starts this server; offline mode must expose the same
+            # * local endpoints so the HUD remains fully usable.
             from voice.offline.offline_runner import handle_text_command
 
             def offline_dashboard_command(text):
@@ -471,7 +472,7 @@ def main():
             print("[MAIN HUD] Next.js HUD failed to start.")
             return 1
 
-        # Register live conversation actions
+        # * Register live conversation actions
         from core.registry import register
         from voice.live_conversation import (
             start_live_conversation,
@@ -484,7 +485,7 @@ def main():
         register("live_conversation_status", live_conversation_status, category="voice")
         print("[LIVE] Live Conversation actions registered.")
 
-        # Remote dashboard
+        # * Remote dashboard
         from core.dispatcher import dispatch
 
         remote_server = DashboardServer(
@@ -511,7 +512,7 @@ def main():
         print("[MAIN] Native HUD closed.")
         request_jarvis_shutdown()
 
-        # Instant check instead of hanging on join
+        # * Instant check instead of hanging on join
         if _voice_thread is not None and _voice_thread.is_alive():
             _voice_thread.join(timeout=0.5)
 
@@ -550,13 +551,13 @@ def main():
             print(f"[HEARTBEAT] Shutdown skipped: {error}")
 
         print(f"[MAIN] {get_assistant_display_name()} shutdown complete.")
-        # Instantly releases terminal prompt without socket/thread hanging
+        # * Instantly releases terminal prompt without socket/thread hanging
         os._exit(0)
 
 
-# =============================================================
-# ENTRY POINT
-# =============================================================
+# * =============================================================
+# * ENTRY POINT
+# * =============================================================
 
 if __name__ == "__main__":
     sys.exit(main() or 0)

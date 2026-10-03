@@ -27,9 +27,9 @@ class ActiveProjectResolver:
         the project itself.
     """
 
-    # ==================================================
-    # Global Active Project Storage
-    # ==================================================
+    # * ==================================================
+    # * Global Active Project Storage
+    # * ==================================================
 
     GLOBAL_DIRECTORY = (
         Path.home()
@@ -42,9 +42,9 @@ class ActiveProjectResolver:
         / "active_project.json"
     )
 
-    # ==================================================
-    # Init
-    # ==================================================
+    # * ==================================================
+    # * Init
+    # * ==================================================
 
     def __init__(
         self,
@@ -56,9 +56,9 @@ class ActiveProjectResolver:
             or DeveloperMemory()
         )
 
-    # ==================================================
-    # Configure
-    # ==================================================
+    # * ==================================================
+    # * Configure
+    # * ==================================================
 
     def configure(
         self,
@@ -80,9 +80,9 @@ class ActiveProjectResolver:
             .resolve()
         )
 
-        # ----------------------------------------------
-        # Validate
-        # ----------------------------------------------
+        # * ----------------------------------------------
+        # * Validate
+        # * ----------------------------------------------
 
         if not path.exists():
 
@@ -106,9 +106,9 @@ class ActiveProjectResolver:
 
         project_path = str(path)
 
-        # ----------------------------------------------
-        # Configure project memory
-        # ----------------------------------------------
+        # * ----------------------------------------------
+        # * Configure project memory
+        # * ----------------------------------------------
 
         self.memory.configure(
             project_path,
@@ -123,9 +123,9 @@ class ActiveProjectResolver:
 
         self.memory.save()
 
-        # ----------------------------------------------
-        # Persist global active project
-        # ----------------------------------------------
+        # * ----------------------------------------------
+        # * Persist global active project
+        # * ----------------------------------------------
 
         if not self._save_active_project(
             project_path,
@@ -145,9 +145,9 @@ class ActiveProjectResolver:
 
         return True
 
-    # ==================================================
-    # Resolve
-    # ==================================================
+    # * ==================================================
+    # * Resolve
+    # * ==================================================
 
     def resolve(self) -> str | None:
         """
@@ -160,9 +160,9 @@ class ActiveProjectResolver:
             3. Project memory project path
         """
 
-        # ----------------------------------------------
-        # Global active project
-        # ----------------------------------------------
+        # * ----------------------------------------------
+        # * Global active project
+        # * ----------------------------------------------
 
         project_path = (
             self._load_active_project()
@@ -179,9 +179,9 @@ class ActiveProjectResolver:
                 and path.is_dir()
             ):
 
-                # Configure DeveloperMemory so the
-                # rest of Developer can immediately
-                # use this project's memory.
+                # * Configure DeveloperMemory so the
+                # * rest of Developer can immediately
+                # * use this project's memory.
 
                 self.memory.configure(
                     str(path),
@@ -193,9 +193,9 @@ class ActiveProjectResolver:
                     path.resolve(),
                 )
 
-            # ------------------------------------------
-            # Stale project
-            # ------------------------------------------
+            # * ------------------------------------------
+            # * Stale project
+            # * ------------------------------------------
 
             print(
                 "[ACTIVE PROJECT] "
@@ -207,9 +207,9 @@ class ActiveProjectResolver:
 
         return None
 
-    # ==================================================
-    # Save Global Active Project
-    # ==================================================
+    # * ==================================================
+    # * Save Global Active Project
+    # * ==================================================
 
     def _save_active_project(
         self,
@@ -261,9 +261,9 @@ class ActiveProjectResolver:
 
             return False
 
-    # ==================================================
-    # Load Global Active Project
-    # ==================================================
+    # * ==================================================
+    # * Load Global Active Project
+    # * ==================================================
 
     def _load_active_project(
         self,
@@ -310,9 +310,9 @@ class ActiveProjectResolver:
 
             return None
 
-    # ==================================================
-    # Clear
-    # ==================================================
+    # * ==================================================
+    # * Clear
+    # * ==================================================
 
     def _clear_active_project(
         self,

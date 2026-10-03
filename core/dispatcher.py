@@ -51,9 +51,9 @@ from core.live_execution import is_live_execution
 from core.core_state import wait_for_core
 from core.diagnostics import debug_print
 
-# =========================================================
-# DISPATCHER
-# =========================================================
+# * =========================================================
+# * DISPATCHER
+# * =========================================================
 
 def dispatch(
     command,
@@ -80,9 +80,9 @@ def dispatch(
     if not command:
         return
 
-    # The preferred ConversationRequest path is intentionally read-only. The
-    # dispatcher owns the turn boundary, so record the current input here for
-    # both microphone and dashboard/remote callers before NCI reads context.
+    # * The preferred ConversationRequest path is intentionally read-only. The
+    # * dispatcher owns the turn boundary, so record the current input here for
+    # * both microphone and dashboard/remote callers before NCI reads context.
     try:
         conversation_context.set_user_input(command)
     except Exception as error:
@@ -91,13 +91,13 @@ def dispatch(
             f"{error}"
         )
 
-    # Normalize assistant invocations before clarification, NCI, or planner
-    # handling. Microphone, HUD, and remote commands therefore share one path.
+    # * Normalize assistant invocations before clarification, NCI, or planner
+    # * handling. Microphone, HUD, and remote commands therefore share one path.
     invocation = normalize_assistant_invocation(command)
     if invocation:
-        # A fresh known assistant invocation is a new request, never an answer
-        # to an older clarification. Keep normal clarification replies such as
-        # "github" and "google" unchanged.
+        # ! A fresh known assistant invocation is a new request, never an answer
+        # * to an older clarification. Keep normal clarification replies such as
+        # * "github" and "google" unchanged.
         if conversation_coordinator.clarification.is_waiting():
             print(
                 "[CLARIFICATION] Current assistant invocation "
@@ -111,19 +111,19 @@ def dispatch(
         if fast_plan:
             skip_nci = True
 
-    # A face registration flow owns its next reply until it completes or is
-    # cancelled. This keeps a name such as "Madan" from becoming a new task.
+    # * A face registration flow owns its next reply until it completes or is
+    # * cancelled. This keeps a name such as "Madan" from becoming a new task.
     from skills.camera.face_registration import face_registration
     if face_registration.handle_pending_input(command):
         return
 
-    # =====================================================
-    # PENDING CLARIFICATION
-    # =====================================================
+    # * =====================================================
+    # * PENDING CLARIFICATION
+    # * =====================================================
     #
-    # A clarification reply must be consumed before email, fast routing, or
-    # the normal planner can reinterpret it as a brand-new request.
-    # =====================================================
+    # ! A clarification reply must be consumed before email, fast routing, or
+    # * the normal planner can reinterpret it as a brand-new request.
+    # * =====================================================
 
     clarification_reply = (
         conversation_coordinator.consume_clarification_reply(
@@ -137,9 +137,9 @@ def dispatch(
 
         if status == "new_request":
 
-            # The user explicitly abandoned the question in favour of a new
-            # command. Do not let stale clarification state capture a later
-            # turn after that command finishes.
+            # * The user explicitly abandoned the question in favour of a new
+            # ! command. Do not let stale clarification state capture a later
+            # * turn after that command finishes.
             conversation_coordinator.clarification.clear()
             conversation_coordinator.context.clear_pending()
 
@@ -180,9 +180,9 @@ def dispatch(
 
             return
 
-    # =====================================================
-    # PENDING EMAIL COMPOSITION
-    # =====================================================
+    # * =====================================================
+    # * PENDING EMAIL COMPOSITION
+    # * =====================================================
 
     from skills.communication.email import (
         has_pending_email,
@@ -201,9 +201,9 @@ def dispatch(
 
         return
     
-    # =====================================================
-    # LIVE CONVERSATION CONTROL
-    # =====================================================
+    # * =====================================================
+    # * LIVE CONVERSATION CONTROL
+    # * =====================================================
 
     live_command = command.lower().strip()
 
@@ -238,9 +238,9 @@ def dispatch(
             "live_conversation_status"
         )
 
-    # =====================================================
-    # CLARIFICATION CONTEXT
-    # =====================================================
+    # * =====================================================
+    # * CLARIFICATION CONTEXT
+    # * =====================================================
 
     clarify = get_memory(
         "clarify_context"
@@ -260,9 +260,9 @@ def dispatch(
 
             cmd = command.lower()
 
-            # -------------------------------------------------
-            # Google
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Google
+            # * -------------------------------------------------
 
             if cmd in [
                 "google",
@@ -290,9 +290,9 @@ def dispatch(
 
                 return
 
-            # -------------------------------------------------
-            # YouTube
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * YouTube
+            # * -------------------------------------------------
 
             elif cmd in [
                 "youtube",
@@ -320,9 +320,9 @@ def dispatch(
 
                 return
 
-            # -------------------------------------------------
-            # GitHub
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * GitHub
+            # * -------------------------------------------------
 
             elif cmd in [
                 "github",
@@ -348,9 +348,9 @@ def dispatch(
 
                 return
 
-            # -------------------------------------------------
-            # ChatGPT
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * ChatGPT
+            # * -------------------------------------------------
 
             elif cmd in [
                 "chatgpt",
@@ -376,29 +376,29 @@ def dispatch(
 
                 return
             
-    # =====================================================
-    # NATURAL CONVERSATION ANALYSIS
-    # =====================================================
+    # * =====================================================
+    # * NATURAL CONVERSATION ANALYSIS
+    # * =====================================================
     #
-    # ConversationRequest is now the preferred common
-    # conversational interface.
+    # * ConversationRequest is now the preferred common
+    # * conversational interface.
     #
-    # During migration, the existing ConversationCoordinator
-    # remains as a compatibility fallback.
+    # * During migration, the existing ConversationCoordinator
+    # * remains as a compatibility fallback.
     #
-    # IMPORTANT:
-    # This section only prepares conversational information.
-    # It does not execute anything.
-    # =====================================================
+    # ! IMPORTANT:
+    # * This section only prepares conversational information.
+    # * It does not execute anything.
+    # * =====================================================
 
     conversation_analysis = None
 
     try:
 
-        # Dashboard/remote/Live callers may enter through dispatch() without
-        # the assistant loop's pre-built ConversationRequest. Build the same
-        # read-only NCI request here so short conversational follow-ups use
-        # the same context-aware route across input surfaces.
+        # * Dashboard/remote/Live callers may enter through dispatch() without
+        # * the assistant loop's pre-built ConversationRequest. Build the same
+        # * read-only NCI request here so short conversational follow-ups use
+        # * the same context-aware route across input surfaces.
         if not skip_nci and conversation_request is None:
             try:
                 from brain import (
@@ -436,13 +436,13 @@ def dispatch(
                 FollowUpResolution,
             )
 
-            # -------------------------------------------------
-            # Adapt the new common ConversationRequest into
-            # the existing FollowUpResolution interface.
+            # * -------------------------------------------------
+            # * Adapt the new common ConversationRequest into
+            # * the existing FollowUpResolution interface.
             #
-            # This allows the existing FollowUpExecutionBridge
-            # to remain unchanged during the migration.
-            # -------------------------------------------------
+            # * This allows the existing FollowUpExecutionBridge
+            # * to remain unchanged during the migration.
+            # * -------------------------------------------------
 
             conversation_analysis = type(
                 "ConversationAnalysisAdapter",
@@ -542,9 +542,9 @@ def dispatch(
 
         else:
 
-            # -------------------------------------------------
-            # Compatibility fallback
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Compatibility fallback
+            # * -------------------------------------------------
 
             conversation_analysis = (
                 conversation_coordinator.analyze(
@@ -564,21 +564,21 @@ def dispatch(
             f"Analysis failed safely: {e}"
         )
         
-    # =====================================================
-    # NATURAL CONVERSATION FOLLOW-UP PRIORITY
-    # =====================================================
+    # * =====================================================
+    # * NATURAL CONVERSATION FOLLOW-UP PRIORITY
+    # * =====================================================
     #
-    # If NCI has a valid contextual follow-up, let the
-    # Follow-Up Execution Bridge handle it before FAST ROUTE.
+    # * If NCI has a valid contextual follow-up, let the
+    # * Follow-Up Execution Bridge handle it before FAST ROUTE.
     #
-    # This prevents generic fast commands from stealing
-    # context-sensitive commands such as:
+    # * This prevents generic fast commands from stealing
+    # * context-sensitive commands such as:
     #
-    #     YouTube → "play the next one"
-    #     YouTube → "play the first one"
+    # * YouTube → "play the next one"
+    # * YouTube → "play the first one"
     #
-    # Normal commands still continue to FAST ROUTE.
-    # =====================================================
+    # * Normal commands still continue to FAST ROUTE.
+    # * =====================================================
 
     if (
         not skip_fast
@@ -587,18 +587,18 @@ def dispatch(
         and conversation_analysis.follow_up.is_follow_up
     ):
 
-        # -------------------------------------------------
-        # Re-resolve the follow-up against the LIVE
-        # conversation context.
+        # * -------------------------------------------------
+        # * Re-resolve the follow-up against the LIVE
+        # * conversation context.
         #
-        # This is important for references such as:
+        # ! This is important for references such as:
         #
-        #     "the second one"
+        # * "the second one"
         #
-        # ConversationRequest understands the reference,
-        # but FollowUpResolver resolves it to the actual
-        # contextual object.
-        # -------------------------------------------------
+        # * ConversationRequest understands the reference,
+        # * but FollowUpResolver resolves it to the actual
+        # * contextual object.
+        # * -------------------------------------------------
 
         follow_up = FollowUpResolver().resolve(
             conversation_analysis.follow_up,
@@ -673,19 +673,19 @@ def dispatch(
                     repr(result),
                 )
 
-                # -----------------------------------------
-                # Synchronize conversational context after
-                # follow-up execution.
+                # * -----------------------------------------
+                # * Synchronize conversational context after
+                # * follow-up execution.
                 #
-                # The follow-up may have changed the active
-                # browser object, for example:
+                # * The follow-up may have changed the active
+                # * browser object, for example:
                 #
-                #     "play the second one"
+                # * "play the second one"
                 #
-                # The existing normal execution path already
-                # performs this synchronization. The
-                # contextual follow-up path must do the same.
-                # -----------------------------------------
+                # * The existing normal execution path already
+                # * performs this synchronization. The
+                # ! contextual follow-up path must do the same.
+                # * -----------------------------------------
 
                 try:
 
@@ -732,10 +732,10 @@ def dispatch(
 
                 except Exception as e:
 
-                    # -------------------------------------
-                    # Natural Conversation must NEVER
-                    # break existing JARVIS execution.
-                    # -------------------------------------
+                    # * -------------------------------------
+                    # ! Natural Conversation must NEVER
+                    # * break existing JARVIS execution.
+                    # * -------------------------------------
 
                     print(
                         "[CONVERSATION] "
@@ -744,43 +744,43 @@ def dispatch(
 
             return            
 
-    # =====================================================
-    # FAST ROUTE
-    # =====================================================
+    # * =====================================================
+    # * FAST ROUTE
+    # * =====================================================
     #
-    # There are now TWO possible ways to reach here:
+    # * There are now TWO possible ways to reach here:
     #
-    # 1. Normal dispatch:
+    # * 1. Normal dispatch:
     #
-    #       dispatch(command)
+    # * dispatch(command)
     #
-    #       → dispatcher calculates fast_plan
+    # * → dispatcher calculates fast_plan
     #
-    # 2. FAST PREEMPTION:
+    # * 2. FAST PREEMPTION:
     #
-    #       assistant.py calculates fast_plan
+    # * assistant.py calculates fast_plan
     #
-    #       → interrupt()
+    # * → interrupt()
     #
-    #       → dispatch(
-    #             command,
-    #             fast_plan=fast_plan
-    #         )
+    # * → dispatch(
+    # * command,
+    # * fast_plan=fast_plan
+    # * )
     #
-    # In case #2 we reuse the existing plan.
+    # * In case #2 we reuse the existing plan.
     #
-    # This prevents:
+    # * This prevents:
     #
-    #       fast_route()
-    #       fast_route()
+    # * fast_route()
+    # * fast_route()
     #
-    # for the same command.
-    # =====================================================
+    # * for the same command.
+    # * =====================================================
 
-    # A generic fast-router match must not steal an already-classified
-    # conversational continuation. Action follow-ups that the existing bridge
-    # can execute have already returned above; only unresolved AI follow-ups
-    # are protected here.
+    # ! A generic fast-router match must not steal an already-classified
+    # * conversational continuation. Action follow-ups that the existing bridge
+    # * can execute have already returned above; only unresolved AI follow-ups
+    # * are protected here.
     contextual_chat_follow_up = (
         conversation_request is not None
         and conversation_request.relation in {
@@ -796,10 +796,10 @@ def dispatch(
 
     if not skip_fast and not contextual_chat_follow_up:
 
-        # -------------------------------------------------
-        # Reuse existing plan if assistant already
-        # calculated it.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Reuse existing plan if assistant already
+        # * calculated it.
+        # * -------------------------------------------------
 
         if fast_plan is None:
 
@@ -807,9 +807,9 @@ def dispatch(
                 command
             )
 
-        # -------------------------------------------------
-        # Execute FAST plan
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Execute FAST plan
+        # * -------------------------------------------------
 
         if fast_plan:
 
@@ -838,14 +838,14 @@ def dispatch(
                     repr(result),
                 )
 
-                # =========================================
-                # NATURAL CONVERSATION
+                # * =========================================
+                # * NATURAL CONVERSATION
                 #
-                # Convert the already-executed action into
-                # semantic conversational context.
+                # * Convert the already-executed action into
+                # * semantic conversational context.
                 #
-                # This does NOT execute anything.
-                # =========================================
+                # * This does NOT execute anything.
+                # * =========================================
 
                 try:
 
@@ -892,36 +892,36 @@ def dispatch(
 
                 except Exception as e:
 
-                    # -------------------------------------
-                    # Natural Conversation must NEVER
-                    # break existing JARVIS execution.
-                    # -------------------------------------
+                    # * -------------------------------------
+                    # ! Natural Conversation must NEVER
+                    # * break existing JARVIS execution.
+                    # * -------------------------------------
 
                     print(
                         "[CONVERSATION] "
                         f"Execution context update failed: {e}"
                     )
 
-                # -----------------------------------------
-                # Speak skill result
-                # -----------------------------------------
+                # * -----------------------------------------
+                # * Speak skill result
+                # * -----------------------------------------
                 #
-                # Normal JARVIS:
-                #     Skill result -> Edge TTS
+                # * Normal JARVIS:
+                # * Skill result -> Edge TTS
                 #
-                # Live JARVIS:
-                #     Skill result -> Gemini Live
+                # * Live JARVIS:
+                # * Skill result -> Gemini Live
                 #
-                # Gemini Live must remain the only speaker
-                # while a command is being executed through
-                # the Live tool bridge.
-                # -----------------------------------------
+                # ! Gemini Live must remain the only speaker
+                # * while a command is being executed through
+                # * the Live tool bridge.
+                # * -----------------------------------------
 
                 if result is not None:
 
-                    # =====================================
-                    # LIVE EXECUTION
-                    # =====================================
+                    # * =====================================
+                    # * LIVE EXECUTION
+                    # * =====================================
 
                     if is_live_execution():
 
@@ -931,17 +931,17 @@ def dispatch(
                             "suppressing normal TTS."
                         )
 
-                    # =====================================
-                    # NORMAL JARVIS EXECUTION
-                    # =====================================
+                    # * =====================================
+                    # * NORMAL JARVIS EXECUTION
+                    # * =====================================
 
                     else:
 
                         from voice.manager import speak
 
-                        # ---------------------------------
-                        # Boolean result
-                        # ---------------------------------
+                        # * ---------------------------------
+                        # * Boolean result
+                        # * ---------------------------------
 
                         if isinstance(
                             result,
@@ -960,9 +960,9 @@ def dispatch(
                                     message
                                 )
 
-                        # ---------------------------------
-                        # Dictionary result
-                        # ---------------------------------
+                        # * ---------------------------------
+                        # * Dictionary result
+                        # * ---------------------------------
 
                         elif isinstance(
                             result,
@@ -978,9 +978,9 @@ def dispatch(
                             if message:
                                 speak(message)
 
-                        # ---------------------------------
-                        # Normal result
-                        # ---------------------------------
+                        # * ---------------------------------
+                        # * Normal result
+                        # * ---------------------------------
 
                         else:
 
@@ -1013,26 +1013,26 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # CONTEXT-AWARE GENERIC SEARCH
-    # =====================================================
+    # * =====================================================
+    # * CONTEXT-AWARE GENERIC SEARCH
+    # * =====================================================
     #
-    # If the user previously selected a search platform,
-    # a natural "search ..." continuation should inherit
-    # that platform.
+    # * If the user previously selected a search platform,
+    # * a natural "search ..." continuation should inherit
+    # * that platform.
     #
-    # Example:
+    # * Example:
     #
-    #   Open YouTube
-    #   Search ESP32 weather station
+    # * Open YouTube
+    # * Search ESP32 weather station
     #
-    # becomes:
+    # * becomes:
     #
-    #   youtube_search("ESP32 weather station")
+    # * youtube_search("ESP32 weather station")
     #
-    # This is shared by voice and Remote Control because
-    # both use the same dispatcher and action memory.
-    # =====================================================
+    # * This is shared by voice and Remote Control because
+    # * both use the same dispatcher and action memory.
+    # * =====================================================
 
     if (
         not skip_fast
@@ -1053,9 +1053,9 @@ def dispatch(
 
         if query:
 
-            # -------------------------------------------------
-            # YouTube context
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * YouTube context
+            # * -------------------------------------------------
 
             if current_site == "youtube":
 
@@ -1086,9 +1086,9 @@ def dispatch(
 
                 return
 
-            # -------------------------------------------------
-            # Google context
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * Google context
+            # * -------------------------------------------------
 
             if current_site == "google":
 
@@ -1119,9 +1119,9 @@ def dispatch(
 
                 return
 
-            # -------------------------------------------------
-            # GitHub context
-            # -------------------------------------------------
+            # * -------------------------------------------------
+            # * GitHub context
+            # * -------------------------------------------------
 
             if current_site == "github":
 
@@ -1152,26 +1152,26 @@ def dispatch(
 
                 return
 
-    # =====================================================
-    # NATURAL CONVERSATION FOLLOW-UP EXECUTION
-    # =====================================================
+    # * =====================================================
+    # * NATURAL CONVERSATION FOLLOW-UP EXECUTION
+    # * =====================================================
     #
-    # Fast routing has already been given priority.
+    # * Fast routing has already been given priority.
     #
-    # The conversation analysis was already performed
-    # BEFORE FAST ROUTE.
+    # * The conversation analysis was already performed
+    # * BEFORE FAST ROUTE.
     #
-    # We reuse that analysis here.
+    # * We reuse that analysis here.
     #
-    # Natural Conversation does NOT execute directly.
-    # The normal registry executor remains authoritative.
-    # =====================================================
+    # * Natural Conversation does NOT execute directly.
+    # * The normal registry executor remains authoritative.
+    # * =====================================================
 
     try:
 
-        # -------------------------------------------------
-        # Reuse existing conversation analysis
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Reuse existing conversation analysis
+        # * -------------------------------------------------
 
         if conversation_analysis is not None:
 
@@ -1193,9 +1193,9 @@ def dispatch(
 
             follow_up_plan = None
 
-        # -------------------------------------------------
-        # Execute resolved follow-up
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Execute resolved follow-up
+        # * -------------------------------------------------
 
         if follow_up_plan:
 
@@ -1229,9 +1229,9 @@ def dispatch(
                     repr(result),
                 )
 
-                # -----------------------------------------
-                # Update conversational context
-                # -----------------------------------------
+                # * -----------------------------------------
+                # * Update conversational context
+                # * -----------------------------------------
 
                 try:
 
@@ -1287,18 +1287,18 @@ def dispatch(
 
     except Exception as e:
 
-        # -------------------------------------------------
-        # Natural Conversation must NEVER break JARVIS.
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # ! Natural Conversation must NEVER break JARVIS.
+        # * -------------------------------------------------
 
         print(
             "[CONVERSATION] "
             f"Follow-up execution failed safely: {e}"
         )
 
-    # =====================================================
-    # SCREEN CONTEXT FOLLOW-UP
-    # =====================================================
+    # * =====================================================
+    # * SCREEN CONTEXT FOLLOW-UP
+    # * =====================================================
 
     if is_screen_followup(
         command
@@ -1317,9 +1317,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # DEVELOPER INTENT
-    # =====================================================
+    # * =====================================================
+    # * DEVELOPER INTENT
+    # * =====================================================
 
     mode = detect(
         command
@@ -1337,9 +1337,9 @@ def dispatch(
             "Developer request received."
         )
 
-        # -------------------------------------------------
-        # Send directly to Brain Router
-        # -------------------------------------------------
+        # * -------------------------------------------------
+        # * Send directly to Brain Router
+        # * -------------------------------------------------
 
         brain_result = brain_router.route(
             command
@@ -1353,9 +1353,9 @@ def dispatch(
                 "module handled request."
             )
 
-            # ---------------------------------------------
-            # Developer Result
-            # ---------------------------------------------
+            # * ---------------------------------------------
+            # * Developer Result
+            # * ---------------------------------------------
 
             if (
                 brain_result.module
@@ -1376,9 +1376,9 @@ def dispatch(
 
                 if result.success:
 
-                    # -------------------------------------
-                    # Developer CREATE result
-                    # -------------------------------------
+                    # * -------------------------------------
+                    # * Developer CREATE result
+                    # * -------------------------------------
 
                     if hasattr(
                         result,
@@ -1419,9 +1419,9 @@ def dispatch(
                                 "created successfully."
                             )
 
-                    # -------------------------------------
-                    # Developer EDIT result
-                    # -------------------------------------
+                    # * -------------------------------------
+                    # * Developer EDIT result
+                    # * -------------------------------------
 
                     elif hasattr(
                         result,
@@ -1472,9 +1472,9 @@ def dispatch(
                                 "completed successfully."
                             )
 
-                    # -------------------------------------
-                    # Unknown Developer result
-                    # -------------------------------------
+                    # * -------------------------------------
+                    # * Unknown Developer result
+                    # * -------------------------------------
 
                     else:
 
@@ -1519,9 +1519,9 @@ def dispatch(
 
                 return
 
-        # ---------------------------------------------
-        # Developer request detected but not handled
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Developer request detected but not handled
+        # * ---------------------------------------------
 
         print(
             "[DEVELOPER] "
@@ -1535,20 +1535,20 @@ def dispatch(
 
         return
     
-    # =====================================================
-    # ACTION MEMORY
-    # =====================================================
+    # * =====================================================
+    # * ACTION MEMORY
+    # * =====================================================
 
-    # Only the existing rule-based explicit-memory recognizer belongs in the
-    # dispatcher. Broad AI memory extraction must not consume normal commands
-    # before the planner gets a chance to route or clarify them.
+    # * Only the existing rule-based explicit-memory recognizer belongs in the
+    # ! dispatcher. Broad AI memory extraction must not consume normal commands
+    # * before the planner gets a chance to route or clarify them.
     memory_result = learn_explicit_memory(
         command
     )
 
-    # =====================================================
-    # MEMORY SAVED
-    # =====================================================
+    # * =====================================================
+    # * MEMORY SAVED
+    # * =====================================================
 
     if memory_result.get(
         "saved"
@@ -1579,9 +1579,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # ALREADY KNOWN
-    # =====================================================
+    # * =====================================================
+    # * ALREADY KNOWN
+    # * =====================================================
 
     if memory_result.get(
         "already_known"
@@ -1599,9 +1599,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # SHOW STORED MEMORIES
-    # =====================================================
+    # * =====================================================
+    # * SHOW STORED MEMORIES
+    # * =====================================================
 
     MEMORY_VIEW_COMMANDS = (
 
@@ -1633,9 +1633,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # USER PROFILE
-    # =====================================================
+    # * =====================================================
+    # * USER PROFILE
+    # * =====================================================
 
     PROFILE_COMMANDS = (
 
@@ -1668,9 +1668,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # MEMORY STATISTICS
-    # =====================================================
+    # * =====================================================
+    # * MEMORY STATISTICS
+    # * =====================================================
 
     MEMORY_STATS_COMMANDS = (
 
@@ -1721,9 +1721,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # FORGET MEMORY
-    # =====================================================
+    # * =====================================================
+    # * FORGET MEMORY
+    # * =====================================================
 
     forget_result = memory_forget(
         command
@@ -1784,9 +1784,9 @@ def dispatch(
 
         return
 
-    # =====================================================
-    # PENDING SEARCH SUBJECT
-    # =====================================================
+    # * =====================================================
+    # * PENDING SEARCH SUBJECT
+    # * =====================================================
 
     pending = get_memory(
         "pending_subject"
@@ -1875,19 +1875,19 @@ def dispatch(
 
             return
         
-    # =====================================================
-    # LIVE CONVERSATION FALLBACK BARRIER
-    # =====================================================
+    # * =====================================================
+    # * LIVE CONVERSATION FALLBACK BARRIER
+    # * =====================================================
     #
-    # When Gemini Live invokes jarvis_command, JARVIS
-    # skills must still execute through this dispatcher.
+    # * When Gemini Live invokes jarvis_command, JARVIS
+    # ! skills must still execute through this dispatcher.
     #
-    # However, if no JARVIS skill/action handled the
-    # command, NEVER fall through into the normal AI
-    # worker while Live Conversation is active.
+    # * However, if no JARVIS skill/action handled the
+    # ! command, NEVER fall through into the normal AI
+    # * worker while Live Conversation is active.
     #
-    # Gemini Live remains the conversational speaker.
-    # =====================================================
+    # * Gemini Live remains the conversational speaker.
+    # * =====================================================
 
     if is_live_execution():
 
@@ -1900,17 +1900,17 @@ def dispatch(
         return False
 
     
-    # =====================================================
-    # EXISTING CHAT / PLANNER
-    # =====================================================
+    # * =====================================================
+    # * EXISTING CHAT / PLANNER
+    # * =====================================================
 
     mode = detect(
         command
     )
 
-    # A context-aware conversational request must reach the existing chat
-    # worker even when the generic intent engine does not recognize a short
-    # phrase such as "Give me an example" as a chat prefix.
+    # ! A context-aware conversational request must reach the existing chat
+    # * worker even when the generic intent engine does not recognize a short
+    # * phrase such as "Give me an example" as a chat prefix.
     if (
         conversation_request is not None
         and conversation_request.mode == "conversation"
@@ -1918,9 +1918,9 @@ def dispatch(
     ):
         mode = "chat"
 
-    # -----------------------------------------------------
-    # Continue conversation
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Continue conversation
+    # * -----------------------------------------------------
 
     if get_value(
         "chat_mode"
@@ -1928,9 +1928,9 @@ def dispatch(
 
         mode = "chat"
 
-    # -----------------------------------------------------
-    # Chat
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Chat
+    # * -----------------------------------------------------
 
     if mode == "chat":
 
@@ -1940,9 +1940,9 @@ def dispatch(
             command,
         )
 
-    # -----------------------------------------------------
-    # Planner
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Planner
+    # * -----------------------------------------------------
 
     else:
 

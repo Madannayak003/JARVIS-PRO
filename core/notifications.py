@@ -41,7 +41,7 @@ def notify_windows_toast(title: str, body: str) -> bool:
         except Exception:
             pass
 
-    # Mark's last-resort Windows fallback.
+    # * Mark's last-resort Windows fallback.
     if not notified:
         try:
             subprocess.run(["msg", "*", "/TIME:30", message], check=False)

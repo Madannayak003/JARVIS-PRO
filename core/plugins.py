@@ -25,7 +25,7 @@ class PluginManager:
 
         return False
     
-    # Command Registry
+    # * Command Registry
 
 COMMANDS = []
 

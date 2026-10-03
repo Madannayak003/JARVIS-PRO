@@ -49,16 +49,16 @@ class AIRouter:
         Gemini 3.5 Flash Lite
     """
 
-    # ======================================================
-    # Configuration
-    # ======================================================
+    # * ======================================================
+    # * Configuration
+    # * ======================================================
 
-    # How long a model remains temporarily skipped after
-    # a quota/rate-limit failure.
+    # * How long a model remains temporarily skipped after
+    # * a quota/rate-limit failure.
     #
-    # 15 minutes is intentionally long enough to prevent
-    # repeated useless requests while still allowing the
-    # model to recover during the same JARVIS session.
+    # * 15 minutes is intentionally long enough to prevent
+    # * repeated useless requests while still allowing the
+    # * model to recover during the same JARVIS session.
     MODEL_COOLDOWN_SECONDS = 15 * 60
 
     def __init__(
@@ -77,21 +77,21 @@ class AIRouter:
             AIProvider
         ] = {}
 
-        # --------------------------------------------------
-        # Temporary model cooldowns
+        # * --------------------------------------------------
+        # * Temporary model cooldowns
         #
-        # {
-        #     "gemini:gemini-3.6-flash": expiry_timestamp
-        # }
-        # --------------------------------------------------
+        # * {
+        # * "gemini:gemini-3.6-flash": expiry_timestamp
+        # * }
+        # * --------------------------------------------------
 
         self._model_cooldowns = {}
 
         self._cooldown_lock = threading.Lock()
 
-    # ======================================================
-    # Provider Registration
-    # ======================================================
+    # * ======================================================
+    # * Provider Registration
+    # * ======================================================
 
     def register_provider(
         self,
@@ -102,9 +102,9 @@ class AIRouter:
             provider.name.lower()
         ] = provider
 
-    # ======================================================
-    # Provider Lookup
-    # ======================================================
+    # * ======================================================
+    # * Provider Lookup
+    # * ======================================================
 
     def get_provider(
         self,
@@ -118,9 +118,9 @@ class AIRouter:
             provider_name.lower()
         )
 
-    # ======================================================
-    # Model Cooldown Key
-    # ======================================================
+    # * ======================================================
+    # * Model Cooldown Key
+    # * ======================================================
 
     def _cooldown_key(
         self,
@@ -133,9 +133,9 @@ class AIRouter:
             f"{model_name.lower()}"
         )
 
-    # ======================================================
-    # Detect Quota / Rate Limit Error
-    # ======================================================
+    # * ======================================================
+    # ! Detect Quota / Rate Limit Error
+    # * ======================================================
 
     def _is_quota_error(
         self,
@@ -173,9 +173,9 @@ class AIRouter:
             for pattern in patterns
         )
 
-    # ======================================================
-    # Put Model On Cooldown
-    # ======================================================
+    # * ======================================================
+    # * Put Model On Cooldown
+    # * ======================================================
 
     def _cooldown_model(
         self,
@@ -201,18 +201,18 @@ class AIRouter:
             self.MODEL_COOLDOWN_SECONDS
         )
 
-        # --------------------------------------------------
-        # Try to extract a server-provided retry delay.
+        # * --------------------------------------------------
+        # * Try to extract a server-provided retry delay.
         #
-        # Example:
+        # * Example:
         #
-        # retryDelay: '17s'
+        # * retryDelay: '17s'
         #
-        # We do NOT blindly trust very small retry values
-        # for daily quota errors.
+        # ! We do NOT blindly trust very small retry values
+        # ! for daily quota errors.
         #
-        # Minimum cooldown remains configurable.
-        # --------------------------------------------------
+        # * Minimum cooldown remains configurable.
+        # * --------------------------------------------------
 
         if error:
 
@@ -234,8 +234,8 @@ class AIRouter:
                         match.group(1)
                     )
 
-                    # Only extend the cooldown if the
-                    # provider asks for a longer delay.
+                    # * Only extend the cooldown if the
+                    # * provider asks for a longer delay.
                     cooldown_seconds = max(
                         cooldown_seconds,
                         retry_seconds,
@@ -262,9 +262,9 @@ class AIRouter:
             f"({cooldown_seconds}s)",
         )
 
-    # ======================================================
-    # Check Model Cooldown
-    # ======================================================
+    # * ======================================================
+    # * Check Model Cooldown
+    # * ======================================================
 
     def _is_model_on_cooldown(
         self,
@@ -289,9 +289,9 @@ class AIRouter:
 
                 return False
 
-            # --------------------------------------------------
-            # Cooldown expired
-            # --------------------------------------------------
+            # * --------------------------------------------------
+            # * Cooldown expired
+            # * --------------------------------------------------
 
             if now >= expires_at:
 
@@ -310,9 +310,9 @@ class AIRouter:
 
             return True
 
-    # ======================================================
-    # Remaining Cooldown
-    # ======================================================
+    # * ======================================================
+    # * Remaining Cooldown
+    # * ======================================================
 
     def _cooldown_remaining(
         self,
@@ -353,18 +353,18 @@ class AIRouter:
                 remaining
             )
 
-    # ======================================================
-    # Candidate Models
-    # ======================================================
+    # * ======================================================
+    # * Candidate Models
+    # * ======================================================
 
     def _get_candidates(
         self,
         request: AIRequest,
     ):
 
-        # --------------------------------------------------
-        # Explicit model
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Explicit model
+        # * --------------------------------------------------
 
         if request.model:
 
@@ -380,17 +380,17 @@ class AIRouter:
 
             return [model]
 
-        # --------------------------------------------------
-        # Policy-aware candidates
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Policy-aware candidates
+        # * --------------------------------------------------
 
         candidates = self.model_manager.candidates(
             request.capability
         )
 
-        # --------------------------------------------------
-        # Explicit provider filter
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Explicit provider filter
+        # * --------------------------------------------------
 
         if request.provider:
 
@@ -410,12 +410,12 @@ class AIRouter:
             ]
 
         else:
-            # AUTO remains provider-first, but Gemini needs to retain its
-            # capability-specific model chain so an unavailable preferred
-            # model can fall through to the next configured Gemini model.
-            # Keep one configured model for every other provider so their
-            # existing fallback order remains exactly:
-            # Gemini -> Grok -> OpenAI -> Ollama.
+            # * AUTO remains provider-first, but Gemini needs to retain its
+            # * capability-specific model chain so an unavailable preferred
+            # * model can fall through to the next configured Gemini model.
+            # * Keep one configured model for every other provider so their
+            # * existing fallback order remains exactly:
+            # * Gemini -> Grok -> OpenAI -> Ollama.
             seen_providers = set()
             ordered_candidates = []
             for model in candidates:
@@ -431,9 +431,9 @@ class AIRouter:
 
         return candidates
 
-    # ======================================================
-    # Route Only
-    # ======================================================
+    # * ======================================================
+    # * Route Only
+    # * ======================================================
 
     def route(
         self,
@@ -451,15 +451,15 @@ class AIRouter:
                 f"capability: {request.capability}"
             )
 
-        # --------------------------------------------------
-        # Find first available provider/model
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Find first available provider/model
+        # * --------------------------------------------------
 
         for model in candidates:
 
-            # ----------------------------------------------
-            # Temporary cooldown
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Temporary cooldown
+            # * ----------------------------------------------
 
             if self._is_model_on_cooldown(
                 model.provider,
@@ -522,9 +522,9 @@ class AIRouter:
             f"capability: {request.capability}"
         )
 
-    # ======================================================
-    # Generate With Fallback
-    # ======================================================
+    # * ======================================================
+    # * Generate With Fallback
+    # * ======================================================
 
     def generate(
         self,
@@ -555,15 +555,15 @@ class AIRouter:
 
         last_error = None
 
-        # --------------------------------------------------
-        # Try every candidate in policy order
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Try every candidate in policy order
+        # * --------------------------------------------------
 
         for model in candidates:
 
-            # ----------------------------------------------
-            # Temporary cooldown
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Temporary cooldown
+            # * ----------------------------------------------
 
             if self._is_model_on_cooldown(
                 model.provider,
@@ -590,9 +590,9 @@ class AIRouter:
                 model.provider
             )
 
-            # ----------------------------------------------
-            # Provider not registered
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Provider not registered
+            # * ----------------------------------------------
 
             if provider is None:
 
@@ -603,9 +603,9 @@ class AIRouter:
 
                 continue
 
-            # ----------------------------------------------
-            # Provider unavailable
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Provider unavailable
+            # * ----------------------------------------------
 
             if not provider.is_available():
 
@@ -617,9 +617,9 @@ class AIRouter:
 
                 continue
 
-            # ----------------------------------------------
-            # Select model
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Select model
+            # * ----------------------------------------------
 
             request.model = model.name
 
@@ -631,9 +631,9 @@ class AIRouter:
                 model.name,
             )
 
-            # ----------------------------------------------
-            # Generate
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Generate
+            # * ----------------------------------------------
 
             try:
 
@@ -659,9 +659,9 @@ class AIRouter:
                         e,
                     )
 
-                # ------------------------------------------
-                # Quota/rate-limit protection
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Quota/rate-limit protection
+                # * ------------------------------------------
 
                 if quota_error:
 
@@ -673,9 +673,9 @@ class AIRouter:
 
                 continue
 
-            # ----------------------------------------------
-            # Success
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Success
+            # * ----------------------------------------------
 
             if response.success:
 
@@ -687,9 +687,9 @@ class AIRouter:
 
                 return response
 
-            # ----------------------------------------------
-            # Provider returned failure
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Provider returned failure
+            # * ----------------------------------------------
 
             last_error = response.error
 
@@ -712,9 +712,9 @@ class AIRouter:
                     response.error,
                 )
 
-            # ----------------------------------------------
-            # Quota/rate-limit protection
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Quota/rate-limit protection
+            # * ----------------------------------------------
 
             if quota_error:
 
@@ -724,15 +724,15 @@ class AIRouter:
                     response.error,
                 )
 
-            # ----------------------------------------------
-            # Continue to next model
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Continue to next model
+            # * ----------------------------------------------
 
             continue
 
-        # --------------------------------------------------
-        # Everything failed
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Everything failed
+        # * --------------------------------------------------
 
         return AIResponse(
 
@@ -751,9 +751,9 @@ class AIRouter:
             ),
         )
 
-    # ======================================================
-    # Streaming With Fallback
-    # ======================================================
+    # * ======================================================
+    # * Streaming With Fallback
+    # * ======================================================
 
     def stream(
         self,
@@ -771,23 +771,23 @@ class AIRouter:
                 f"capability: {request.capability}"
             )
 
-        # --------------------------------------------------
-        # Streaming generator
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Streaming generator
+        # * --------------------------------------------------
 
         def generate_stream():
 
             last_error = None
 
-            # ----------------------------------------------
-            # Try every candidate in policy order
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * Try every candidate in policy order
+            # * ----------------------------------------------
 
             for model in candidates:
 
-                # ------------------------------------------
-                # Temporary cooldown
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Temporary cooldown
+                # * ------------------------------------------
 
                 if self._is_model_on_cooldown(
                     model.provider,
@@ -814,9 +814,9 @@ class AIRouter:
                     model.provider
                 )
 
-                # ------------------------------------------
-                # Provider not registered
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Provider not registered
+                # * ------------------------------------------
 
                 if provider is None:
 
@@ -828,9 +828,9 @@ class AIRouter:
 
                     continue
 
-                # ------------------------------------------
-                # Provider unavailable
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Provider unavailable
+                # * ------------------------------------------
 
                 if not provider.is_available():
 
@@ -842,9 +842,9 @@ class AIRouter:
 
                     continue
 
-                # ------------------------------------------
-                # Select provider/model
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Select provider/model
+                # * ------------------------------------------
 
                 request.model = model.name
 
@@ -856,9 +856,9 @@ class AIRouter:
                     model.name,
                 )
 
-                # ------------------------------------------
-                # Start provider stream
-                # ------------------------------------------
+                # * ------------------------------------------
+                # * Start provider stream
+                # * ------------------------------------------
 
                 try:
 
@@ -868,15 +868,15 @@ class AIRouter:
 
                     received_text = False
 
-                    # --------------------------------------
-                    # Consume provider stream
-                    # --------------------------------------
+                    # * --------------------------------------
+                    # * Consume provider stream
+                    # * --------------------------------------
 
                     for chunk in provider_stream:
 
-                        # ----------------------------------
-                        # Stop requested
-                        # ----------------------------------
+                        # * ----------------------------------
+                        # * Stop requested
+                        # * ----------------------------------
 
                         if (
                             request.stop_event is not None
@@ -885,9 +885,9 @@ class AIRouter:
 
                             return
 
-                        # ----------------------------------
-                        # Provider reported an error
-                        # ----------------------------------
+                        # * ----------------------------------
+                        # ! Provider reported an error
+                        # * ----------------------------------
 
                         if (
                             chunk.done
@@ -926,9 +926,9 @@ class AIRouter:
                                     last_error,
                                 )
 
-                            # ----------------------------------
-                            # Quota/rate-limit protection
-                            # ----------------------------------
+                            # * ----------------------------------
+                            # * Quota/rate-limit protection
+                            # * ----------------------------------
 
                             if quota_error:
 
@@ -938,28 +938,28 @@ class AIRouter:
                                     last_error,
                                 )
 
-                            # ----------------------------------
-                            # If no text was produced, safely
-                            # try the next provider.
-                            # ----------------------------------
+                            # * ----------------------------------
+                            # * If no text was produced, safely
+                            # * try the next provider.
+                            # * ----------------------------------
 
                             if not received_text:
 
                                 break
 
-                            # ----------------------------------
-                            # Partial response already sent.
-                            # Do not duplicate it with another
-                            # provider.
-                            # ----------------------------------
+                            # * ----------------------------------
+                            # * Partial response already sent.
+                            # ! Do not duplicate it with another
+                            # * provider.
+                            # * ----------------------------------
 
                             yield chunk
 
                             return
 
-                        # ----------------------------------
-                        # Normal chunk
-                        # ----------------------------------
+                        # * ----------------------------------
+                        # * Normal chunk
+                        # * ----------------------------------
 
                         if chunk.text:
 
@@ -967,18 +967,18 @@ class AIRouter:
 
                         yield chunk
 
-                        # ----------------------------------
-                        # Normal completion
-                        # ----------------------------------
+                        # * ----------------------------------
+                        # * Normal completion
+                        # * ----------------------------------
 
                         if chunk.done:
 
                             return
 
-                    # --------------------------------------
-                    # Provider stream ended without an
-                    # explicit error.
-                    # --------------------------------------
+                    # * --------------------------------------
+                    # * Provider stream ended without an
+                    # ! explicit error.
+                    # * --------------------------------------
 
                     if received_text:
 
@@ -1002,9 +1002,9 @@ class AIRouter:
                             e,
                         )
 
-                    # --------------------------------------
-                    # Quota/rate-limit protection
-                    # --------------------------------------
+                    # * --------------------------------------
+                    # * Quota/rate-limit protection
+                    # * --------------------------------------
 
                     if quota_error:
 
@@ -1016,9 +1016,9 @@ class AIRouter:
 
                     continue
 
-            # ----------------------------------------------
-            # All providers failed
-            # ----------------------------------------------
+            # * ----------------------------------------------
+            # * All providers failed
+            # * ----------------------------------------------
 
             print(
                 "[AI ROUTER] All streaming providers failed."

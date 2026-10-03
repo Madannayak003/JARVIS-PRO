@@ -107,9 +107,9 @@ class DependencyValidator(BaseValidator):
 
         requirements = None
 
-        # -------------------------------------
-        # Find requirements.txt
-        # -------------------------------------
+        # * -------------------------------------
+        # * Find requirements.txt
+        # * -------------------------------------
 
         for file in project.files:
 
@@ -127,15 +127,15 @@ class DependencyValidator(BaseValidator):
 
             return
 
-        # -------------------------------------
-        # Declared packages
-        # -------------------------------------
+        # * -------------------------------------
+        # * Declared packages
+        # * -------------------------------------
 
         declared = set()
 
         for line in requirements.content.splitlines():
 
-            # Remove inline comments
+            # * Remove inline comments
             line = line.split("#", 1)[0].strip()
 
             if (
@@ -207,9 +207,9 @@ class DependencyValidator(BaseValidator):
 
             )
 
-        # -------------------------------------
-        # Imported packages
-        # -------------------------------------
+        # * -------------------------------------
+        # * Imported packages
+        # * -------------------------------------
 
         imported = set()
 
@@ -247,9 +247,9 @@ class DependencyValidator(BaseValidator):
 
                 imported.add(module.lower())
 
-        # -------------------------------------
-        # Compare
-        # -------------------------------------
+        # * -------------------------------------
+        # * Compare
+        # * -------------------------------------
 
         for package in sorted(declared):
             

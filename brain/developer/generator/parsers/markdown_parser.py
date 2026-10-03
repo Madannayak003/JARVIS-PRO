@@ -17,41 +17,41 @@ class MarkdownParser:
 
     Supported formats:
 
-        # FILE: src/main.py
+        # * FILE: src/main.py
         ```python
         ...
         ```
 
-        # FILE: requirements.txt
+        # * FILE: requirements.txt
         pytest
 
-        # FILE: .gitignore
+        # * FILE: .gitignore
         ```
 
     Supports nested paths and both Windows/Linux path separators.
     """
 
-    # ---------------------------------------------------------
-    # FILE header
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * FILE header
+    # * ---------------------------------------------------------
 
     FILE_HEADER_PATTERN = re.compile(
         r"^\s*#\s*FILE:\s*(.+?)\s*$",
         re.MULTILINE | re.IGNORECASE,
     )
 
-    # ---------------------------------------------------------
-    # Code fence
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Code fence
+    # * ---------------------------------------------------------
 
     CODE_FENCE_PATTERN = re.compile(
         r"^```([\w.+#-]*)\s*\n(.*?)^```\s*$",
         re.MULTILINE | re.DOTALL,
     )
 
-    # ---------------------------------------------------------
-    # Parse
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Parse
+    # * ---------------------------------------------------------
 
     def parse(
         self,
@@ -73,9 +73,9 @@ class MarkdownParser:
 
             return project
 
-        # ---------------------------------------------
-        # Find every FILE header
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Find every FILE header
+        # * ---------------------------------------------
 
         headers = list(
             self.FILE_HEADER_PATTERN.finditer(
@@ -93,9 +93,9 @@ class MarkdownParser:
 
             return project
 
-        # ---------------------------------------------
-        # Parse each FILE section
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Parse each FILE section
+        # * ---------------------------------------------
 
         for index, header in enumerate(headers):
 
@@ -110,9 +110,9 @@ class MarkdownParser:
             if not path:
                 continue
 
-            # -----------------------------------------
-            # Section boundaries
-            # -----------------------------------------
+            # * -----------------------------------------
+            # * Section boundaries
+            # * -----------------------------------------
 
             content_start = header.end()
 
@@ -134,9 +134,9 @@ class MarkdownParser:
                 "\r\n"
             )
 
-            # -----------------------------------------
-            # Parse fenced content
-            # -----------------------------------------
+            # * -----------------------------------------
+            # * Parse fenced content
+            # * -----------------------------------------
 
             fence_match = (
                 self.CODE_FENCE_PATTERN.search(
@@ -154,23 +154,23 @@ class MarkdownParser:
 
             else:
 
-                # -------------------------------------
-                # Plain text file
-                # -------------------------------------
+                # * -------------------------------------
+                # * Plain text file
+                # * -------------------------------------
 
                 markdown_language = ""
 
                 content = section
 
-                # Remove accidental separator lines
-                # before the next FILE block.
+                # * Remove accidental separator lines
+                # * before the next FILE block.
                 content = content.rstrip(
                     "\r\n"
                 )
 
-            # -----------------------------------------
-            # Remove trailing markdown separators
-            # -----------------------------------------
+            # * -----------------------------------------
+            # * Remove trailing markdown separators
+            # * -----------------------------------------
 
             content = self._clean_content(
                 content
@@ -212,9 +212,9 @@ class MarkdownParser:
                 generated_file
             )
 
-        # ---------------------------------------------
-        # Project status
-        # ---------------------------------------------
+        # * ---------------------------------------------
+        # * Project status
+        # * ---------------------------------------------
 
         project.generated = (
             len(project.files) > 0
@@ -231,9 +231,9 @@ class MarkdownParser:
 
         return project
 
-    # ---------------------------------------------------------
-    # Clean content
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Clean content
+    # * ---------------------------------------------------------
 
     @staticmethod
     def _clean_content(
@@ -248,8 +248,8 @@ class MarkdownParser:
             "\r\n"
         )
 
-        # Remove a markdown separator accidentally
-        # returned after the file.
+        # * Remove a markdown separator accidentally
+        # * returned after the file.
         if content.endswith(
             "\n================================================================================"
         ):
@@ -266,9 +266,9 @@ class MarkdownParser:
 
         return content
 
-    # ---------------------------------------------------------
-    # File name
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * File name
+    # * ---------------------------------------------------------
 
     @staticmethod
     def _get_name(
@@ -281,9 +281,9 @@ class MarkdownParser:
             .split("/")[-1]
         )
 
-    # ---------------------------------------------------------
-    # Extension
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Extension
+    # * ---------------------------------------------------------
 
     @staticmethod
     def _get_extension(
@@ -305,9 +305,9 @@ class MarkdownParser:
             + name.split(".")[-1].lower()
         )
 
-    # ---------------------------------------------------------
-    # Language
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * Language
+    # * ---------------------------------------------------------
 
     @staticmethod
     def _get_language(

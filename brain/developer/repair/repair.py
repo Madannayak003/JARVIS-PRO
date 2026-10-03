@@ -61,20 +61,20 @@ class Repair:
         
         self.local_builder = LocalFileBuilder()
 
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
 
     def repair(
         self,
         context: "DeveloperContext",
     ) -> RepairResult:
 
-        # Build repair request
+        # * Build repair request
 
         request = self.builder.build(context)
         
-        # -------------------------------------
-        # Generate standard files locally
-        # -------------------------------------
+        # * -------------------------------------
+        # * Generate standard files locally
+        # * -------------------------------------
 
         generated_locally = []
 
@@ -110,7 +110,7 @@ class Repair:
 
             )
 
-        # Nothing to repair
+        # * Nothing to repair
 
         if (
 
@@ -126,9 +126,9 @@ class Repair:
 
             return result
 
-        # -------------------------------------
-        # Build Prompt
-        # -------------------------------------
+        # * -------------------------------------
+        # * Build Prompt
+        # * -------------------------------------
 
         prompt = self.prompt_builder.build(
 
@@ -136,9 +136,9 @@ class Repair:
 
         )
 
-        # -------------------------------------
+        # * -------------------------------------
         # AI Response
-        # -------------------------------------
+        # * -------------------------------------
 
         response = self.provider.generate(
 
@@ -162,9 +162,9 @@ class Repair:
 
             return result
 
-        # -------------------------------------
-        # Parse Response
-        # -------------------------------------
+        # * -------------------------------------
+        # * Parse Response
+        # * -------------------------------------
 
         repaired_project = self.parser.parse(
 
@@ -180,9 +180,9 @@ class Repair:
         for file in repaired_project.files:
             print(file.path)
 
-        # -------------------------------------
-        # Merge Files
-        # -------------------------------------
+        # * -------------------------------------
+        # * Merge Files
+        # * -------------------------------------
 
         context.generated_project = self.merger.build(
 

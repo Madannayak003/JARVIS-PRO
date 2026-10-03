@@ -120,7 +120,7 @@ class PhoneCallMonitor:
             try:
                 self.poll_once()
             except Exception as error:
-                # ADB loss or a provider variation must not stop JARVIS.
+                # ! ADB loss or a provider variation must not stop JARVIS.
                 print(f"[PHONE CALL] Monitor check skipped: {error}")
 
     def _read_snapshot(self) -> CallSnapshot:
@@ -244,8 +244,8 @@ class PhoneCallMonitor:
                 changed = True
 
             elif observed.state == IDLE and previous.state == DISCONNECTED:
-                # Keep DISCONNECTED visible for one poll so the frontend can
-                # run its short exit animation, then return to IDLE.
+                # * Keep DISCONNECTED visible for one poll so the frontend can
+                # * run its short exit animation, then return to IDLE.
                 observed = CallSnapshot()
                 changed = True
 
@@ -289,7 +289,7 @@ class PhoneCallMonitor:
                 }
             )
         except Exception:
-            # HUD availability must never affect call-state monitoring.
+            # ! HUD availability must never affect call-state monitoring.
             pass
 
     def _call_log_confirms_missed(self, ring_started_at_ms: int) -> bool:

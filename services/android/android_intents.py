@@ -25,8 +25,8 @@ STANDARD_APP_INTENTS = {
 }
 
 
-# These are only discovery hints. A package is used only after it is found
-# in the connected device's installed-package list.
+# * These are only discovery hints. A package is used only after it is found
+# * in the connected device's installed-package list.
 PACKAGE_HINTS = {
     "chrome": ("com.android.chrome",),
     "youtube": ("com.google.android.youtube",),

@@ -37,7 +37,7 @@ export type HUDConnectionStatus =
   | "offline";
 
 const DEFAULT_URL =
-  "http://127.0.0.1:8766";
+  "http:  // * 127.0.0.1:8766";
 
 export class HUDBridge {
 
@@ -107,7 +107,7 @@ export class HUDBridge {
 
         } catch {
 
-          // Ignore malformed state.
+          // * Ignore malformed state.
         }
 
       }
@@ -138,7 +138,7 @@ export class HUDBridge {
 
         } catch {
 
-          // Ignore malformed events.
+          // * Ignore malformed events.
         }
 
       }

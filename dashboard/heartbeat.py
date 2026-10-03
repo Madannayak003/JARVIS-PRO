@@ -27,8 +27,8 @@ def _get_desktop_id() -> str:
     except FileNotFoundError:
         desktop_id = ""
     except OSError as error:
-        # An ID is still useful for this run if the project directory is not
-        # writable; the worker will continue without affecting JARVIS.
+        # * An ID is still useful for this run if the project directory is not
+        # * writable; the worker will continue without affecting JARVIS.
         print(f"[HEARTBEAT] Could not persist desktop ID: {error}")
         return str(uuid.uuid4())
 
@@ -107,8 +107,8 @@ class HeartbeatService:
         except (urllib.error.URLError, TimeoutError, OSError) as error:
             print(f"[HEARTBEAT] Network error: {error}")
         except Exception as error:
-            # A malformed endpoint or unexpected client-side error must not
-            # terminate the worker or the main JARVIS process.
+            # ! A malformed endpoint or unexpected client-side error must not
+            # * terminate the worker or the main JARVIS process.
             print(f"[HEARTBEAT] Error: {error}")
 
 

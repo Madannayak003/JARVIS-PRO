@@ -35,8 +35,8 @@ class OfflineDispatchResult:
 class OfflineActionBridge:
     """Classify and execute commands through shared JARVIS components."""
 
-    # These are aliases for capabilities that already exist in the shared
-    # registry but are not currently covered by the fast router.
+    # * These are aliases for capabilities that already exist in the shared
+    # * registry but are not currently covered by the fast router.
     LOCAL_COMMAND_PLANS = {
         "what is my cpu usage": [{"action": "taskmanager"}],
         "show my cpu usage": [{"action": "taskmanager"}],

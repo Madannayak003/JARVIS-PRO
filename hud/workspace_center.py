@@ -19,9 +19,9 @@ from typing import Any
 from urllib.parse import urlparse
 
 try:
-    # Keep the developer configuration authoritative when the full runtime is
-    # available.  The fallback also keeps this read-only HUD module usable in
-    # lightweight diagnostics where optional runtime dependencies are absent.
+    # * Keep the developer configuration authoritative when the full runtime is
+    # * available.  The fallback also keeps this read-only HUD module usable in
+    # * lightweight diagnostics where optional runtime dependencies are absent.
     from brain.developer.config import WORKSPACE_ROOT
 except (ImportError, OSError):
     WORKSPACE_ROOT = Path(__file__).resolve().parents[1] / "workspace"

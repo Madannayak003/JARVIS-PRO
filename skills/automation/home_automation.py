@@ -101,9 +101,9 @@ def home_automation(data=None):
 
     data = data if isinstance(data, dict) else {}
 
-    # -----------------------------------------------------
-    # Read command separately from registry action
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Read command separately from registry action
+    # * -----------------------------------------------------
 
     command = str(
         data.get(
@@ -112,9 +112,9 @@ def home_automation(data=None):
         )
     ).strip().lower()
 
-    # Backward compatibility:
-    # If somebody directly calls the skill using
-    # {"action": "turn_on"}, still support it.
+    # * Backward compatibility:
+    # * If somebody directly calls the skill using
+    # * {"action": "turn_on"}, still support it.
     if not command:
 
         command = str(
@@ -124,9 +124,9 @@ def home_automation(data=None):
             )
         ).strip().lower()
 
-    # -----------------------------------------------------
-    # STATUS
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * STATUS
+    # * -----------------------------------------------------
 
     if command == "status":
 
@@ -142,9 +142,9 @@ def home_automation(data=None):
             }
         )
 
-    # -----------------------------------------------------
-    # Device
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Device
+    # * -----------------------------------------------------
 
     device = str(
         data.get(
@@ -159,13 +159,13 @@ def home_automation(data=None):
             "such as light, led, or fan."
         )
 
-    # light and led are the same physical device
+    # * light and led are the same physical device
     if device in ("light", "led"):
         device = "light"
 
-    # -----------------------------------------------------
-    # State
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * State
+    # * -----------------------------------------------------
 
     if any(
         word in command
@@ -195,9 +195,9 @@ def home_automation(data=None):
             "Please specify ON or OFF."
         )
 
-    # -----------------------------------------------------
-    # Execute hardware command
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Execute hardware command
+    # * -----------------------------------------------------
 
     try:
 
@@ -218,9 +218,9 @@ def home_automation(data=None):
 
         return str(exc)
 
-    # -----------------------------------------------------
-    # Success
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Success
+    # * -----------------------------------------------------
 
     if ok:
 
@@ -229,9 +229,9 @@ def home_automation(data=None):
             f"{state.lower()}."
         )
 
-    # -----------------------------------------------------
-    # Failure
-    # -----------------------------------------------------
+    # * -----------------------------------------------------
+    # * Failure
+    # * -----------------------------------------------------
 
     return (
         f"I could not reach the ESP32 "

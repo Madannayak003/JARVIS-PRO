@@ -28,9 +28,9 @@ class EditValidator:
         - suspicious file destruction
     """
 
-    # --------------------------------------------------
-    # Safety thresholds
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * Safety thresholds
+    # * --------------------------------------------------
 
     MIN_PRESERVED_RATIO = 0.35
 
@@ -38,13 +38,13 @@ class EditValidator:
 
     MAX_LINE_REDUCTION = 0.60
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def __init__(self):
 
         self.syntax_validator = SyntaxValidator()
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def validate(
         self,
@@ -68,15 +68,15 @@ class EditValidator:
 
         original_files = original_files or {}
 
-        # --------------------------------------------------
-        # Validate every patch
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Validate every patch
+        # * --------------------------------------------------
 
         for patch in result.patches:
 
-            # -----------------------------
-            # Path required
-            # -----------------------------
+            # * -----------------------------
+            # ! Path required
+            # * -----------------------------
 
             if not patch.path:
 
@@ -86,9 +86,9 @@ class EditValidator:
 
                 continue
 
-            # -----------------------------
-            # Duplicate file
-            # -----------------------------
+            # * -----------------------------
+            # * Duplicate file
+            # * -----------------------------
 
             if patch.path in seen:
 
@@ -102,9 +102,9 @@ class EditValidator:
                 patch.path
             )
 
-            # -----------------------------
-            # Content required
-            # -----------------------------
+            # * -----------------------------
+            # ! Content required
+            # * -----------------------------
 
             if not patch.content.strip():
 
@@ -114,9 +114,9 @@ class EditValidator:
 
                 continue
 
-            # -----------------------------
-            # Destructive rewrite check
-            # -----------------------------
+            # * -----------------------------
+            # * Destructive rewrite check
+            # * -----------------------------
 
             original = original_files.get(
                 patch.path
@@ -132,9 +132,9 @@ class EditValidator:
 
                     continue
 
-            # -----------------------------
-            # Syntax Validation
-            # -----------------------------
+            # * -----------------------------
+            # * Syntax Validation
+            # * -----------------------------
 
             success, message = (
                 self.syntax_validator.validate(
@@ -154,9 +154,9 @@ class EditValidator:
                 patch
             )
 
-        # --------------------------------------------------
-        # Final result
-        # --------------------------------------------------
+        # * --------------------------------------------------
+        # * Final result
+        # * --------------------------------------------------
 
         result.patches = valid
 
@@ -167,9 +167,9 @@ class EditValidator:
 
         return result
 
-    # --------------------------------------------------
-    # File Size Safety
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # * File Size Safety
+    # * --------------------------------------------------
 
     def _safe_file_size(
         self,
@@ -195,11 +195,11 @@ class EditValidator:
             modified
         )
 
-        # ------------------------------------------
-        # Small files
+        # * ------------------------------------------
+        # * Small files
         #
-        # Size ratio is unreliable for tiny files.
-        # ------------------------------------------
+        # * Size ratio is unreliable for tiny files.
+        # * ------------------------------------------
 
         if (
             original_length
@@ -208,9 +208,9 @@ class EditValidator:
 
             return True
 
-        # ------------------------------------------
-        # Character preservation ratio
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Character preservation ratio
+        # * ------------------------------------------
 
         ratio = (
             modified_length
@@ -231,9 +231,9 @@ class EditValidator:
 
             return False
 
-        # ------------------------------------------
-        # Line reduction
-        # ------------------------------------------
+        # * ------------------------------------------
+        # * Line reduction
+        # * ------------------------------------------
 
         original_lines = max(
             len(original.splitlines()),
@@ -266,9 +266,9 @@ class EditValidator:
 
         return True
 
-    # --------------------------------------------------
-    # Error Helper
-    # --------------------------------------------------
+    # * --------------------------------------------------
+    # ! Error Helper
+    # * --------------------------------------------------
 
     def _add_destructive_error(
         self,
@@ -276,8 +276,8 @@ class EditValidator:
         message: str,
     ) -> None:
 
-        # This method exists so the validation
-        # logic remains easy to extend later.
+        # * This method exists so the validation
+        # * logic remains easy to extend later.
 
         print(
             f"[EDITOR SAFETY] REJECTED: {path}"

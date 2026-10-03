@@ -30,9 +30,9 @@ class CppPlanner(BasePlanner):
 
         plan = self.create_base_plan(analysis)
 
-        # -----------------------------
-        # Default C/C++ Structure
-        # -----------------------------
+        # * -----------------------------
+        # * Default C/C++ Structure
+        # * -----------------------------
 
         plan.folders = [
 

@@ -49,9 +49,9 @@ class ContextBuilder(BaseBuilder):
 
         ]
 
-        # -------------------------------------
-        # Arduino IDE projects
-        # -------------------------------------
+        # * -------------------------------------
+        # * Arduino IDE projects
+        # * -------------------------------------
 
         if analysis.workspace.name == "ARDUINO":
 
@@ -65,9 +65,9 @@ class ContextBuilder(BaseBuilder):
 
                 lines.append("")
 
-        # -------------------------------------
-        # Other workspaces
-        # -------------------------------------
+        # * -------------------------------------
+        # * Other workspaces
+        # * -------------------------------------
 
         else:
 
@@ -91,9 +91,9 @@ class ContextBuilder(BaseBuilder):
 
                 lines.append("")
 
-        # -------------------------------------
-        # Dependencies
-        # -------------------------------------
+        # * -------------------------------------
+        # * Dependencies
+        # * -------------------------------------
 
         if plan.dependencies:
 

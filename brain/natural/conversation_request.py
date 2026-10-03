@@ -27,39 +27,39 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
-# ============================================================
-# Conversation Request
-# ============================================================
+# * ============================================================
+# * Conversation Request
+# * ============================================================
 
 @dataclass(frozen=True)
 class ConversationRequest:
 
-    # --------------------------------------------------------
-    # Original request
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Original request
+    # * --------------------------------------------------------
 
     user_input: str
 
-    # --------------------------------------------------------
-    # Conversational relationship
+    # * --------------------------------------------------------
+    # * Conversational relationship
     #
-    # Examples:
+    # * Examples:
     #
-    #   new_request
-    #   follow_up
-    #   continuation
-    #   reference
-    #   correction
+    # * new_request
+    # * follow_up
+    # * continuation
+    # * reference
+    # * correction
     #
-    # This allows the common interface to preserve
-    # conversational context without executing anything.
-    # --------------------------------------------------------
+    # * This allows the common interface to preserve
+    # * conversational context without executing anything.
+    # * --------------------------------------------------------
 
     relation: Optional[str] = None
 
-    # --------------------------------------------------------
-    # NCI meaning
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * NCI meaning
+    # * --------------------------------------------------------
 
     intent: str = "unknown"
 
@@ -67,9 +67,9 @@ class ConversationRequest:
 
     confidence: float = 0.0
 
-    # --------------------------------------------------------
-    # Context
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Context
+    # * --------------------------------------------------------
 
     topic: Optional[str] = None
 
@@ -77,84 +77,84 @@ class ConversationRequest:
 
     object: Optional[str] = None
 
-    # --------------------------------------------------------
-    # Reference
+    # * --------------------------------------------------------
+    # * Reference
     #
-    # Single primary reference retained for compatibility
-    # with the existing NCI representation.
-    # --------------------------------------------------------
+    # * Single primary reference retained for compatibility
+    # * with the existing NCI representation.
+    # * --------------------------------------------------------
 
     reference: Optional[str] = None
 
-    # --------------------------------------------------------
-    # References
+    # * --------------------------------------------------------
+    # * References
     #
-    # Example:
+    # * Example:
     #
-    #   ["it"]
+    # * ["it"]
     #
-    # This preserves multiple detected references.
-    # --------------------------------------------------------
+    # * This preserves multiple detected references.
+    # * --------------------------------------------------------
 
     references: List[str] = field(
         default_factory=list
     )
 
-    # --------------------------------------------------------
-    # Resolved references
+    # * --------------------------------------------------------
+    # * Resolved references
     #
-    # Example:
+    # * Example:
     #
-    #   {
-    #       "it": "video"
-    #   }
-    # --------------------------------------------------------
+    # * {
+    # * "it": "video"
+    # * }
+    # * --------------------------------------------------------
 
     resolved_references: Dict[str, Any] = field(
         default_factory=dict
     )
 
-    # --------------------------------------------------------
-    # Unresolved references
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Unresolved references
+    # * --------------------------------------------------------
 
     unresolved_references: List[str] = field(
         default_factory=list
     )
 
-    # --------------------------------------------------------
-    # Application
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Application
+    # * --------------------------------------------------------
 
     application: Optional[str] = None
 
-    # --------------------------------------------------------
-    # Skill
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Skill
+    # * --------------------------------------------------------
 
     skill: Optional[str] = None
 
-    # --------------------------------------------------------
-    # Action
+    # * --------------------------------------------------------
+    # * Action
     #
-    # This is optional because NCI does not necessarily
-    # determine the final executable action.
+    # * This is optional because NCI does not necessarily
+    # * determine the final executable action.
     #
-    # Example:
+    # * Example:
     #
-    #   youtube_pause
-    #   youtube_resume
-    #   youtube_next
+    # * youtube_pause
+    # * youtube_resume
+    # * youtube_next
     #
-    # If NCI does not provide one, the existing execution
-    # architecture remains responsible for resolving it.
-    # --------------------------------------------------------
+    # * If NCI does not provide one, the existing execution
+    # * architecture remains responsible for resolving it.
+    # * --------------------------------------------------------
 
     action: Optional[str] = None
 
-    # --------------------------------------------------------
-    # Strategy
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Strategy
+    # * --------------------------------------------------------
 
     needs_ai: bool = False
 
@@ -162,24 +162,24 @@ class ConversationRequest:
 
     needs_clarification: bool = False
 
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
     # AI instructions
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
 
     instructions: str = ""
 
-    # --------------------------------------------------------
-    # Metadata
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
+    # * Metadata
+    # * --------------------------------------------------------
 
     metadata: Dict[str, Any] = field(
         default_factory=dict
     )
 
 
-# ============================================================
-# Builder
-# ============================================================
+# * ============================================================
+# * Builder
+# * ============================================================
 
 class ConversationRequestBuilder:
 
@@ -201,7 +201,7 @@ class ConversationRequestBuilder:
     integration layers.
     """
 
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
 
     @staticmethod
     def _value(
@@ -223,7 +223,7 @@ class ConversationRequestBuilder:
             default
         )
 
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
 
     @staticmethod
     def _list_value(
@@ -254,7 +254,7 @@ class ConversationRequestBuilder:
 
         return [value]
 
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
 
     @staticmethod
     def _dict_value(
@@ -279,7 +279,7 @@ class ConversationRequestBuilder:
 
         return {}
 
-    # --------------------------------------------------------
+    # * --------------------------------------------------------
 
     def build(
         self,
@@ -290,9 +290,9 @@ class ConversationRequestBuilder:
         context=None
     ) -> ConversationRequest:
 
-        # ====================================================
-        # Meaning
-        # ====================================================
+        # * ====================================================
+        # * Meaning
+        # * ====================================================
 
         intent = self._value(
             meaning,
@@ -308,9 +308,9 @@ class ConversationRequestBuilder:
             )
         )
 
-        # ====================================================
-        # Relationship
-        # ====================================================
+        # * ====================================================
+        # * Relationship
+        # * ====================================================
 
         relation = self._value(
             meaning,
@@ -318,11 +318,11 @@ class ConversationRequestBuilder:
             None
         )
         
-        # ----------------------------------------------------
-        # If meaning doesn't contain the relation,
-        # use the relation already established by the
-        # Conversation Coordinator.
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * If meaning doesn't contain the relation,
+        # * use the relation already established by the
+        # * Conversation Coordinator.
+        # * ----------------------------------------------------
 
         if relation is None and context is not None:
 
@@ -331,7 +331,7 @@ class ConversationRequestBuilder:
                 "relation"
             )
 
-        # Support enum-style relations safely.
+        # * Support enum-style relations safely.
         if hasattr(relation, "value"):
 
             relation = relation.value
@@ -342,9 +342,9 @@ class ConversationRequestBuilder:
                 relation
             )
 
-        # ====================================================
-        # Action
-        # ====================================================
+        # * ====================================================
+        # * Action
+        # * ====================================================
 
         action = self._value(
             meaning,
@@ -358,18 +358,18 @@ class ConversationRequestBuilder:
                 action
             )
 
-        # ====================================================
-        # References
-        # ====================================================
+        # * ====================================================
+        # * References
+        # * ====================================================
 
         references = self._list_value(
             meaning,
             "references"
         )
 
-        # Backward-compatible fallback:
-        # MeaningUnderstanding currently exposes a
-        # singular "reference" field.
+        # * Backward-compatible fallback:
+        # * MeaningUnderstanding currently exposes a
+        # * singular "reference" field.
         if not references:
 
             reference_value = self._value(
@@ -398,15 +398,15 @@ class ConversationRequestBuilder:
             )
         )
 
-        # ----------------------------------------------------
-        # Backward-compatible single reference
+        # * ----------------------------------------------------
+        # * Backward-compatible single reference
         #
-        # If NCI provides a single "reference" field,
-        # preserve it.
+        # * If NCI provides a single "reference" field,
+        # * preserve it.
         #
-        # Otherwise derive it from the first detected
-        # reference when possible.
-        # ----------------------------------------------------
+        # * Otherwise derive it from the first detected
+        # * reference when possible.
+        # * ----------------------------------------------------
 
         reference = self._value(
             meaning,
@@ -418,9 +418,9 @@ class ConversationRequestBuilder:
 
             reference = references[0]
 
-        # ====================================================
-        # Strategy
-        # ====================================================
+        # * ====================================================
+        # * Strategy
+        # * ====================================================
 
         mode = self._value(
             strategy,
@@ -462,9 +462,9 @@ class ConversationRequestBuilder:
             )
         )
 
-        # ====================================================
-        # Context
-        # ====================================================
+        # * ====================================================
+        # * Context
+        # * ====================================================
 
         topic = self._value(
             meaning,
@@ -491,9 +491,9 @@ class ConversationRequestBuilder:
             "skill"
         )
 
-        # ----------------------------------------------------
-        # If meaning doesn't contain context, use NCI context.
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * If meaning doesn't contain context, use NCI context.
+        # * ----------------------------------------------------
 
         if context is not None:
 
@@ -537,9 +537,9 @@ class ConversationRequestBuilder:
                 )
             )
 
-        # ====================================================
-        # Instructions
-        # ====================================================
+        # * ====================================================
+        # * Instructions
+        # * ====================================================
 
         instructions = (
             self._build_instructions(
@@ -561,9 +561,9 @@ class ConversationRequestBuilder:
             )
         )
 
-        # ====================================================
-        # Metadata
-        # ====================================================
+        # * ====================================================
+        # * Metadata
+        # * ====================================================
 
         metadata = {
 
@@ -627,9 +627,9 @@ class ConversationRequestBuilder:
             metadata=metadata
         )
 
-    # ========================================================
-    # Instruction Builder
-    # ========================================================
+    # * ========================================================
+    # * Instruction Builder
+    # * ========================================================
 
     @staticmethod
     def _build_instructions(
@@ -651,9 +651,9 @@ class ConversationRequestBuilder:
 
         instructions = []
 
-        # ----------------------------------------------------
-        # Relationship
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Relationship
+        # * ----------------------------------------------------
 
         if relation:
 
@@ -661,9 +661,9 @@ class ConversationRequestBuilder:
                 f"Conversation relation: {relation}."
             )
 
-        # ----------------------------------------------------
-        # Conversation
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Conversation
+        # * ----------------------------------------------------
 
         if mode == "conversation":
 
@@ -696,9 +696,9 @@ class ConversationRequestBuilder:
                     f"The user referenced: {reference}."
                 )
 
-        # ----------------------------------------------------
-        # Action
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Action
+        # * ----------------------------------------------------
 
         elif mode == "action":
 
@@ -713,9 +713,9 @@ class ConversationRequestBuilder:
                 "can handle the request."
             )
 
-        # ----------------------------------------------------
-        # Hybrid
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Hybrid
+        # * ----------------------------------------------------
 
         elif mode == "hybrid":
 
@@ -729,9 +729,9 @@ class ConversationRequestBuilder:
                 "Preserve both parts of the request."
             )
 
-        # ----------------------------------------------------
-        # Clarification
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Clarification
+        # * ----------------------------------------------------
 
         elif mode == "clarification":
 
@@ -744,9 +744,9 @@ class ConversationRequestBuilder:
                 "question before proceeding."
             )
 
-        # ----------------------------------------------------
-        # Application
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Application
+        # * ----------------------------------------------------
 
         if application:
 
@@ -754,9 +754,9 @@ class ConversationRequestBuilder:
                 f"Active application: {application}."
             )
 
-        # ----------------------------------------------------
-        # Skill
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Skill
+        # * ----------------------------------------------------
 
         if skill:
 
@@ -764,9 +764,9 @@ class ConversationRequestBuilder:
                 f"Active skill: {skill}."
             )
 
-        # ----------------------------------------------------
-        # Action
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Action
+        # * ----------------------------------------------------
 
         if action:
 
@@ -774,9 +774,9 @@ class ConversationRequestBuilder:
                 f"Resolved action: {action}."
             )
 
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
         # AI requirement
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
 
         if needs_ai:
 
@@ -790,9 +790,9 @@ class ConversationRequestBuilder:
                 "AI reasoning is not required."
             )
 
-        # ----------------------------------------------------
-        # Action requirement
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Action requirement
+        # * ----------------------------------------------------
 
         if needs_action:
 
@@ -800,9 +800,9 @@ class ConversationRequestBuilder:
                 "An executable action is required."
             )
 
-        # ----------------------------------------------------
-        # Clarification requirement
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Clarification requirement
+        # * ----------------------------------------------------
 
         if needs_clarification:
 
@@ -815,9 +815,9 @@ class ConversationRequestBuilder:
         )
 
 
-# ============================================================
-# Shared Builder
-# ============================================================
+# * ============================================================
+# * Shared Builder
+# * ============================================================
 
 conversation_request_builder = (
     ConversationRequestBuilder()

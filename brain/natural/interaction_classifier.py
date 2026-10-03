@@ -48,9 +48,9 @@ class InteractionClassifier:
     authoritative for actual execution.
     """
 
-    # ========================================================
-    # Conversation patterns
-    # ========================================================
+    # * ========================================================
+    # * Conversation patterns
+    # * ========================================================
 
     CONVERSATION_PATTERNS = (
 
@@ -100,9 +100,9 @@ class InteractionClassifier:
 
     )
 
-    # ========================================================
-    # Explicit action patterns
-    # ========================================================
+    # * ========================================================
+    # * Explicit action patterns
+    # * ========================================================
 
     ACTION_PATTERNS = (
 
@@ -176,9 +176,9 @@ class InteractionClassifier:
 
     )
 
-    # ========================================================
-    # Hybrid indicators
-    # ========================================================
+    # * ========================================================
+    # * Hybrid indicators
+    # * ========================================================
 
     HYBRID_PATTERNS = (
 
@@ -196,9 +196,9 @@ class InteractionClassifier:
 
     )
 
-    # ========================================================
-    # Clarification patterns
-    # ========================================================
+    # * ========================================================
+    # * Clarification patterns
+    # * ========================================================
 
     CLARIFICATION_PATTERNS = (
 
@@ -220,9 +220,9 @@ class InteractionClassifier:
 
     )
 
-    # ========================================================
-    # Main classification
-    # ========================================================
+    # * ========================================================
+    # * Main classification
+    # * ========================================================
 
     def classify(
         self,
@@ -234,9 +234,9 @@ class InteractionClassifier:
             or ""
         ).strip().lower()
 
-        # ----------------------------------------------------
-        # Empty input
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Empty input
+        # * ----------------------------------------------------
 
         if not command:
 
@@ -257,12 +257,12 @@ class InteractionClassifier:
                 ),
             )
             
-        # ----------------------------------------------------
-        # Existing Conversation Relation
-        # ----------------------------------------------------
-        # Preserve semantic relations already detected by
-        # ConversationUnderstandingEngine.
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Existing Conversation Relation
+        # * ----------------------------------------------------
+        # * Preserve semantic relations already detected by
+        # * ConversationUnderstandingEngine.
+        # * ----------------------------------------------------
 
         relation = str(
             context.conversation.get(
@@ -293,9 +293,9 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Hybrid must be checked before action.
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # ! Hybrid must be checked before action.
+        # * ----------------------------------------------------
 
         if self._matches_any(
             command,
@@ -322,9 +322,9 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Explicit clarification
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Explicit clarification
+        # * ----------------------------------------------------
 
         if self._matches_any(
             command,
@@ -351,9 +351,9 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Explicit conversation
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Explicit conversation
+        # * ----------------------------------------------------
 
         if self._matches_any(
             command,
@@ -380,11 +380,11 @@ class InteractionClassifier:
                 ),
             )
 
-        # Contextual conversational requests must be recognized before the
-        # generic action-prefix check. Otherwise short prompts such as
-        # "continue" or "show me another" can fall into the planner and ask
-        # for information that the immediately previous answer already made
-        # clear.
+        # ! Contextual conversational requests must be recognized before the
+        # * generic action-prefix check. Otherwise short prompts such as
+        # * "continue" or "show me another" can fall into the planner and ask
+        # * for information that the immediately previous answer already made
+        # * clear.
         if self._looks_like_contextual_conversation(
             command,
             context,
@@ -410,9 +410,9 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Explicit action
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Explicit action
+        # * ----------------------------------------------------
 
         if self._matches_any(
             command,
@@ -439,22 +439,22 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Context-dependent action
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Context-dependent action
+        # * ----------------------------------------------------
 
-        # ----------------------------------------------------
-        # Contextual conversation
+        # * ----------------------------------------------------
+        # * Contextual conversation
         #
-        # IMPORTANT:
-        # Check conversation BEFORE contextual action.
+        # ! IMPORTANT:
+        # * Check conversation BEFORE contextual action.
         #
-        # Example:
+        # * Example:
         #
-        #     "tell me more about it"
+        # * "tell me more about it"
         #
-        # contains "it", but it is clearly conversational.
-        # ----------------------------------------------------
+        # * contains "it", but it is clearly conversational.
+        # * ----------------------------------------------------
 
         if self._looks_like_contextual_conversation(
             command,
@@ -481,12 +481,12 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Context-dependent action
+        # * ----------------------------------------------------
+        # * Context-dependent action
         #
-        # Only reached if the input was NOT recognized
-        # as contextual conversation.
-        # ----------------------------------------------------
+        # * Only reached if the input was NOT recognized
+        # * as contextual conversation.
+        # * ----------------------------------------------------
 
         if self._looks_like_contextual_action(
             command,
@@ -512,9 +512,9 @@ class InteractionClassifier:
                     "action using the active context."
                 ),
             )
-        # ----------------------------------------------------
-        # Contextual conversation
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Contextual conversation
+        # * ----------------------------------------------------
 
         if self._looks_like_contextual_conversation(
             command,
@@ -541,9 +541,9 @@ class InteractionClassifier:
                 ),
             )
 
-        # ----------------------------------------------------
-        # Unknown / ambiguous
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Unknown / ambiguous
+        # * ----------------------------------------------------
 
         return InteractionDecision(
 
@@ -565,9 +565,9 @@ class InteractionClassifier:
             ),
         )
 
-    # ========================================================
-    # Pattern matching
-    # ========================================================
+    # * ========================================================
+    # * Pattern matching
+    # * ========================================================
 
     @staticmethod
     def _matches_any(
@@ -586,9 +586,9 @@ class InteractionClassifier:
 
         return False
 
-    # ========================================================
-    # Contextual Action
-    # ========================================================
+    # * ========================================================
+    # * Contextual Action
+    # * ========================================================
 
     @staticmethod
     def _looks_like_contextual_action(
@@ -614,9 +614,9 @@ class InteractionClassifier:
             )
         ).lower()
 
-        # ----------------------------------------------------
-        # Known short follow-ups
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Known short follow-ups
+        # * ----------------------------------------------------
 
         contextual_actions = (
 
@@ -651,9 +651,9 @@ class InteractionClassifier:
                 or skill
             )
 
-        # ----------------------------------------------------
-        # Context-dependent references
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Context-dependent references
+        # * ----------------------------------------------------
 
         references = (
 
@@ -683,9 +683,9 @@ class InteractionClassifier:
 
         return False
 
-    # ========================================================
-    # Contextual Conversation
-    # ========================================================
+    # * ========================================================
+    # * Contextual Conversation
+    # * ========================================================
 
     @staticmethod
     def _looks_like_contextual_conversation(
@@ -714,20 +714,20 @@ class InteractionClassifier:
         active_application = conversation.get("application")
         active_skill = conversation.get("skill")
 
-        # A completed conversational answer is useful context even when the
-        # deterministic action context has no topic label. The dispatcher
-        # records the current user input before classification, so
-        # ``last_user_input`` alone is not evidence of a previous exchange.
-        # Require the completed assistant turn to avoid guessing for an
-        # isolated prompt such as "Give me an example."
+        # * A completed conversational answer is useful context even when the
+        # * deterministic action context has no topic label. The dispatcher
+        # * records the current user input before classification, so
+        # * ``last_user_input`` alone is not evidence of a previous exchange.
+        # * Require the completed assistant turn to avoid guessing for an
+        # * isolated prompt such as "Give me an example."
         has_recent_exchange = bool(
             conversation.get("last_assistant_response")
         )
 
-        # Direct dispatcher callers may not have populated the semantic
-        # response field yet, while the conversation manager already contains
-        # the completed turn. Only accept a prior user/assistant pair from
-        # recent history so an isolated prompt is still not guessed.
+        # * Direct dispatcher callers may not have populated the semantic
+        # * response field yet, while the conversation manager already contains
+        # * the completed turn. Only accept a prior user/assistant pair from
+        # * recent history so an isolated prompt is still not guessed.
         if not has_recent_exchange:
             recent_messages = context.recent_messages or ()
             roles = {
@@ -743,9 +743,9 @@ class InteractionClassifier:
                 "assistant",
             }.issubset(roles)
 
-        # ----------------------------------------------------
-        # Questions using the current context
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * Questions using the current context
+        # * ----------------------------------------------------
 
         question_words = (
 
@@ -822,9 +822,9 @@ class InteractionClassifier:
 
             return True
 
-        # ----------------------------------------------------
-        # References to current topic
-        # ----------------------------------------------------
+        # * ----------------------------------------------------
+        # * References to current topic
+        # * ----------------------------------------------------
 
         if (
             active_topic
@@ -841,10 +841,10 @@ class InteractionClassifier:
 
             return True
 
-        # Short references that do not name the subject should still remain
-        # conversational when a completed answer is immediately available.
-        # Do not steal concrete application follow-ups from the existing
-        # action bridge when an application/skill is active.
+        # ! Short references that do not name the subject should still remain
+        # * conversational when a completed answer is immediately available.
+        # ! Do not steal concrete application follow-ups from the existing
+        # * action bridge when an application/skill is active.
         conversational_follow_ups = (
             "explain more",
             "explain again",
@@ -902,9 +902,9 @@ class InteractionClassifier:
         )
 
 
-# ============================================================
-# Shared Classifier
-# ============================================================
+# * ============================================================
+# * Shared Classifier
+# * ============================================================
 
 interaction_classifier = (
     InteractionClassifier()

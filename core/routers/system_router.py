@@ -4,9 +4,9 @@ from core.assistant_name import get_assistant_aliases
 
 SYSTEM = {
 
-    # ---------------------------------------------------------
-    # JARVIS APPLICATION SHUTDOWN
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * JARVIS APPLICATION SHUTDOWN
+    # * ---------------------------------------------------------
 
     "shutdown": {
         "action": "terminate_jarvis"
@@ -32,9 +32,9 @@ SYSTEM = {
         "action": "terminate_jarvis"
     },
 
-    # ---------------------------------------------------------
-    # SYSTEM ACTIONS
-    # ---------------------------------------------------------
+    # * ---------------------------------------------------------
+    # * SYSTEM ACTIONS
+    # * ---------------------------------------------------------
 
     "restart": {
         "action": "restart"
@@ -152,7 +152,7 @@ def system_route(command):
     if command in assistant_shutdown_commands:
         return [{"action": "terminate_jarvis"}]
 
-    # ---------- Lock ----------
+    # * ---------- Lock ----------
 
     if command in [
         "lock",
@@ -163,7 +163,7 @@ def system_route(command):
     ]:
         return [{"action": "lock"}]
 
-    # ---------- Windows Shutdown ----------
+    # * ---------- Windows Shutdown ----------
 
     if command in [
         "shutdown computer",
@@ -176,7 +176,7 @@ def system_route(command):
     ]:
         return [{"action": "shutdown"}]
 
-    # ---------- Restart ----------
+    # * ---------- Restart ----------
 
     if command in [
         "restart",
@@ -185,7 +185,7 @@ def system_route(command):
     ]:
         return [{"action": "restart"}]
 
-    # ---------- Sleep ----------
+    # * ---------- Sleep ----------
 
     if command in [
         "sleep",
@@ -194,7 +194,7 @@ def system_route(command):
     ]:
         return [{"action": "sleep"}]
     
-    # ---------- Fixed Volume ----------
+    # * ---------- Fixed Volume ----------
 
     match = re.fullmatch(
         r"(?:set|change)\s+(?:the\s+)?volume\s+(?:to\s+)?(\d{1,3})(?:\s*(?:percent|%))?",
@@ -214,7 +214,7 @@ def system_route(command):
 
         return None
 
-    # ---------- Fixed Brightness ----------
+    # * ---------- Fixed Brightness ----------
 
     match = re.fullmatch(
         r"(?:set|change)\s+(?:the\s+)?brightness\s+(?:to\s+)?(\d{1,3})(?:\s*(?:percent|%))?",
@@ -234,7 +234,7 @@ def system_route(command):
 
         return None
 
-    # ---------- Exact system commands ----------
+    # * ---------- Exact system commands ----------
 
     if command in SYSTEM:
         return [SYSTEM[command]]

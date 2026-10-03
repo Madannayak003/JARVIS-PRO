@@ -80,7 +80,7 @@ class Analyzer:
 
         )
 
-        # Resolve inferred values
+        # * Resolve inferred values
 
         for resolver in self.resolvers:
             resolver.resolve(result)

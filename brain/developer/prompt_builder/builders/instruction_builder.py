@@ -31,17 +31,17 @@ class InstructionBuilder(BaseBuilder):
 
         ]
 
-        # ------------------------------------
-        # Standard Instructions
-        # ------------------------------------
+        # * ------------------------------------
+        # * Standard Instructions
+        # * ------------------------------------
 
         lines.extend(INSTRUCTION_RULES)
 
         lines.append("")
 
-        # ------------------------------------
-        # Arduino Instructions
-        # ------------------------------------
+        # * ------------------------------------
+        # * Arduino Instructions
+        # * ------------------------------------
 
         if context.analysis.workspace.name == "ARDUINO":
 
@@ -107,9 +107,9 @@ class InstructionBuilder(BaseBuilder):
 
             ])
 
-        # ------------------------------------
-        # User Request
-        # ------------------------------------
+        # * ------------------------------------
+        # * User Request
+        # * ------------------------------------
 
         lines.append("# User Request")
 
@@ -119,9 +119,9 @@ class InstructionBuilder(BaseBuilder):
 
         lines.append("")
 
-        # ------------------------------------
-        # Output Format
-        # ------------------------------------
+        # * ------------------------------------
+        # * Output Format
+        # * ------------------------------------
 
         lines.append(GENERATOR_RULES.strip())
 

@@ -60,7 +60,7 @@ def ensure_spotify():
     except:
         subprocess.Popen("start spotify:", shell=True)
 
-    # Wait for process
+    # * Wait for process
     for _ in range(30):
 
         if is_spotify_running():
@@ -68,7 +68,7 @@ def ensure_spotify():
 
         time.sleep(1)
 
-    # Extra time for Spotify to connect
+    # * Extra time for Spotify to connect
     time.sleep(5)
 
 def get_device():
@@ -193,30 +193,30 @@ def current_song():
     )
     
     
-# _PREMIUM = None
+# * _PREMIUM = None
 
 
-# def is_premium():
+# * def is_premium():
 
-#     global _PREMIUM
+# * global _PREMIUM
 
-#     if _PREMIUM is not None:
-#         return _PREMIUM
+# * if _PREMIUM is not None:
+# * return _PREMIUM
 
-#     try:
+# * try:
 
-#         spotify = spotify_client()
+# * spotify = spotify_client()
 
-#         user = spotify.me()
+# * user = spotify.me()
 
-#         _PREMIUM = (
-#             user.get("product", "").lower() == "premium"
-#         )
+# * _PREMIUM = (
+# * user.get("product", "").lower() == "premium"
+# * )
 
-#     except Exception as e:
+# * except Exception as e:
 
-#         print("[SPOTIFY] Premium check failed:", e)
+# * print("[SPOTIFY] Premium check failed:", e)
 
-#         _PREMIUM = False
+# * _PREMIUM = False
 
-#     return _PREMIUM
+# * return _PREMIUM

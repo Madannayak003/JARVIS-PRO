@@ -66,6 +66,9 @@ Backup/
 bin/
 skills_backup/
 
+# Backup files created by project formatting/tools
+*.bak
+
 # IDE
 .vscode/
 .idea/

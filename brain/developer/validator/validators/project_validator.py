@@ -42,9 +42,9 @@ class ProjectValidator(BaseValidator):
         analysis = context.analysis
         plan = context.execution_plan
 
-        # -------------------------------------
-        # Project Generated
-        # -------------------------------------
+        # * -------------------------------------
+        # * Project Generated
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -73,9 +73,9 @@ class ProjectValidator(BaseValidator):
 
         result.passed_checks += 1
 
-        # -------------------------------------
-        # Files Generated
-        # -------------------------------------
+        # * -------------------------------------
+        # * Files Generated
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -104,9 +104,9 @@ class ProjectValidator(BaseValidator):
 
             result.passed_checks += 1
 
-        # -------------------------------------
-        # Project Type
-        # -------------------------------------
+        # * -------------------------------------
+        # * Project Type
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -142,9 +142,9 @@ class ProjectValidator(BaseValidator):
 
             )
 
-        # -------------------------------------
-        # Entry File
-        # -------------------------------------
+        # * -------------------------------------
+        # * Entry File
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -173,9 +173,9 @@ class ProjectValidator(BaseValidator):
 
             )
 
-        # -------------------------------------
-        # Build Command
-        # -------------------------------------
+        # * -------------------------------------
+        # * Build Command
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -220,9 +220,9 @@ class ProjectValidator(BaseValidator):
 
             )
 
-        # -------------------------------------
-        # Run Command
-        # -------------------------------------
+        # * -------------------------------------
+        # * Run Command
+        # * -------------------------------------
 
         result.total_checks += 1
 
@@ -249,9 +249,9 @@ class ProjectValidator(BaseValidator):
 
             )
 
-        # -------------------------------------
-        # Planned Files
-        # -------------------------------------
+        # * -------------------------------------
+        # * Planned Files
+        # * -------------------------------------
 
         result.total_checks += 1
 

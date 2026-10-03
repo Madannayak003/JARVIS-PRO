@@ -14,7 +14,7 @@ class RollbackManager:
     Restores project files from backups.
     """
 
-    # --------------------------------------------------
+    # * --------------------------------------------------
 
     def restore(
         self,
