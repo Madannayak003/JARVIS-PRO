@@ -1552,8 +1552,9 @@ body {
 
 @media (max-width: 900px) {
   .hud-command-dock {
-    left: 260px;
-    width: calc(100vw - 272px);
+    left: 190px;
+    bottom: 1px;
+    width: calc(50vw - 100px);
   }
 }
 
@@ -1569,7 +1570,6 @@ body {
   .hud-interrupt-button {
     min-width: 38px;
     width: 38px;
-    padding: 0;
   }
 
   .hud-interrupt-button span { display: none; }
