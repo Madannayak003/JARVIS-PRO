@@ -753,6 +753,8 @@ def _get_weather(latitude, longitude):
     Fetch current weather from Open-Meteo.
     """
 
+    print("[WEATHER] Fetching current weather...")
+
     response = requests.get(
         WEATHER_URL,
         params={
@@ -779,7 +781,32 @@ def _get_weather(latitude, longitude):
 
     response.raise_for_status()
 
-    return response.json()
+    data = response.json()
+    current = data.get("current")
+    if not isinstance(current, dict):
+        raise ValueError("Open-Meteo response did not contain current weather data")
+
+    print("[WEATHER] Current weather ready")
+    return data
+
+
+def get_current_weather(location=None):
+    """Return current weather through the existing provider without TTS."""
+    resolved = _resolve_location(location)
+    if resolved is None:
+        return None
+    weather_data = _get_weather(resolved["latitude"], resolved["longitude"])
+    current = weather_data.get("current", {})
+    code = current.get("weather_code")
+    temperature = current.get("temperature_2m")
+    if temperature is None and code is None:
+        return None
+    return {
+        "location": resolved.get("name"),
+        "temperature": temperature,
+        "condition": WEATHER_CODES.get(code),
+        "weather_code": code,
+    }
 
 
 # * =========================================================

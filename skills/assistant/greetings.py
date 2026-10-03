@@ -233,6 +233,19 @@ def startup_greeting(now: datetime | None = None, profile=None) -> str:
     return greeting or _fallback_startup(context)
 
 
+def startup_brief_greeting(now: datetime | None = None, profile=None) -> str:
+    """Return the existing time-aware greeting as a concise opening."""
+    context = _time_context(now)
+    name = _preferred_name(profile)
+    opening = {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening",
+        "night": "Good evening",
+    }.get(context, "Hello")
+    return f"{opening}{f', {name}' if name else ''}."
+
+
 def _get_speaker():
     """Load the established TTS entry point only when speech is requested."""
 
@@ -269,6 +282,22 @@ def speak_startup_greeting(speaker=None, profile=None, now=None) -> bool:
         return False
 
     print("[GREETING] Startup greeting spoken")
+    return True
+
+
+def speak_startup_text(speaker, text: str) -> bool:
+    """Speak coordinator output using the existing one-shot lifecycle guard."""
+    global _startup_spoken
+    with _startup_lock:
+        if _startup_spoken:
+            return False
+        _startup_spoken = True
+    try:
+        (speaker or _get_speaker())(text or _fallback_startup(_time_context()))
+    except Exception as error:
+        print(f"[GREETING] Startup speech failed safely: {error}")
+        return False
+    print("[GREETING] Startup brief spoken")
     return True
 
 

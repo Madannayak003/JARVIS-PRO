@@ -162,6 +162,19 @@ def list_notes(data=None):
     return True
 
 
+def get_latest_note():
+    """Return the most recently stored note without speaking.
+
+    Notes currently have no timestamp field, so append order is the existing
+    source of truth for which note is latest.
+    """
+    notes = _load_notes()
+    for note in reversed(notes):
+        if isinstance(note, dict) and str(note.get("text", "")).strip():
+            return note
+    return None
+
+
 # * =========================================================
 # * Clear Notes
 # * =========================================================

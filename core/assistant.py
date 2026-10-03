@@ -22,7 +22,7 @@ from core.action_memory import set_memory
 
 from core.interrupt import interrupt
 
-from skills.assistant.greetings import speak_startup_greeting
+from core.startup_brief import speak_startup_brief, start_weather_fetch
 
 from core.whatsapp_memory import (
     get_contact,
@@ -63,7 +63,6 @@ from core.assistant_name import (
 
 from core.morning_brief import (
     start_news_fetch,
-    build_spoken_brief,
 )
 
 
@@ -157,15 +156,16 @@ def run():
     # * core-ready event, so it represents JARVIS being ready to use.
     # * ========================================================
 
-    speak_startup_greeting(speak, profile=profile)
+    weather_future = None
+    try:
+        # Start weather before the optional RSS fetch so the existing provider
+        # gets the full bounded startup window to return its result.
+        weather_future = start_weather_fetch()
+    except Exception as error:
+        print(f"[STARTUP BRIEF] Weather could not start: {error}")
 
-    # * ========================================================
-    # * MORNING BRIEF
-    # * ========================================================
-
+    news_future = None
     if morning_brief_enabled:
-
-        news_future = None
 
         try:
 
@@ -183,48 +183,20 @@ def run():
                 f"Could not start news fetch: {e}"
             )
 
-        if news_future is not None:
-
-            try:
-
-                headlines = news_future.result(
-                    timeout=15
-                )
-
-                if not headlines:
-
-                    print(
-                        "[MORNING BRIEF] "
-                        "No headlines available."
-                    )
-
-                else:
-
-                    spoken_brief = (
-                        build_spoken_brief(
-                            headlines
-                        )
-                    )
-
-                    if spoken_brief:
-
-                        speak(
-                            spoken_brief
-                        )
-
-            except Exception as e:
-
-                print(
-                    "[MORNING BRIEF] "
-                    f"Brief failed safely: {e}"
-                )
-
     else:
 
         print(
             "[MORNING BRIEF] "
             "Startup news disabled."
         )
+
+    speak_startup_brief(
+        speak,
+        profile=profile,
+        news_enabled=morning_brief_enabled,
+        news_future=news_future,
+        weather_future=weather_future,
+    )
 
     # * ========================================================
     # * START EXISTING MICROPHONE

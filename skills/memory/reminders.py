@@ -219,6 +219,22 @@ def list_reminders(data=None):
     return True
 
 
+def get_active_reminders(now=None):
+    """Return active reminders due on the supplied local date, without TTS."""
+    current = now or datetime.now()
+    result = []
+    for item in _load_reminders():
+        if item.get("completed", False):
+            continue
+        try:
+            target = datetime.fromisoformat(str(item.get("remind_at", "")))
+        except ValueError:
+            continue
+        if target.date() == current.date():
+            result.append(item)
+    return result
+
+
 # * =========================================================
 # * Cancel Reminder
 # * =========================================================
