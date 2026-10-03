@@ -1256,6 +1256,222 @@ body {
 }
 
 /* =========================================================
+   JARVIS GALLERY
+   ========================================================= */
+
+.hud-gallery-backdrop,
+.hud-gallery-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 6, 23, .72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 210;
+}
+
+.hud-gallery-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(680px, 90vh);
+  overflow: hidden;
+  border: 1px solid rgba(103, 232, 249, .28);
+  border-radius: var(--radius-lg);
+  background: rgba(4, 10, 18, .96);
+  box-shadow: 0 0 34px rgba(34, 211, 238, .14), var(--shadow-card);
+}
+
+.hud-gallery-header,
+.hud-gallery-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #67e8f9;
+  font-size: 12px;
+  letter-spacing: .12em;
+}
+
+.hud-gallery-header > div,
+.hud-gallery-preview-header > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-gallery-header button,
+.hud-gallery-preview-header button {
+  border: 0;
+  background: transparent;
+  color: var(--hud-text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hud-gallery-header button:hover,
+.hud-gallery-preview-header button:hover {
+  color: #67e8f9;
+}
+
+.hud-gallery-refresh {
+  font-size: 18px !important;
+}
+
+.hud-gallery-tabs {
+  display: flex;
+  gap: 18px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.hud-gallery-tabs button {
+  padding: 9px 2px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--hud-text-secondary);
+  font: 700 9px var(--hud-font-sans);
+  letter-spacing: .1em;
+  cursor: pointer;
+}
+
+.hud-gallery-tabs button:hover,
+.hud-gallery-tabs button.is-active {
+  border-bottom-color: #67e8f9;
+  color: #67e8f9;
+}
+
+.hud-gallery-content {
+  min-height: 220px;
+  overflow: auto;
+  padding: 16px;
+  scrollbar-color: rgba(56, 189, 248, .55) rgba(15, 23, 42, .35);
+  scrollbar-width: thin;
+}
+
+.hud-gallery-content::-webkit-scrollbar { width: 6px; }
+.hud-gallery-content::-webkit-scrollbar-track { background: rgba(15, 23, 42, .35); }
+.hud-gallery-content::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, .55); border-radius: 999px; }
+
+.hud-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.hud-gallery-card {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, .72);
+  color: var(--hud-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.hud-gallery-card:hover {
+  border-color: rgba(103, 232, 249, .6);
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(34, 211, 238, .12);
+}
+
+.hud-gallery-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: rgba(2, 6, 23, .8);
+}
+
+.hud-gallery-media img,
+.hud-gallery-media video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.hud-gallery-play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  padding: 8px 10px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(103, 232, 249, .7);
+  border-radius: 50%;
+  background: rgba(2, 6, 23, .72);
+  color: #67e8f9;
+}
+
+.hud-gallery-name,
+.hud-gallery-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-gallery-name {
+  padding: 8px 9px 2px;
+  color: #e2e8f0;
+  font-size: 10px;
+}
+
+.hud-gallery-card small {
+  padding: 0 9px 8px;
+  color: #64748b;
+  font-size: 8px;
+}
+
+.hud-gallery-state {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #67e8f9;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+.hud-gallery-empty-icon { font-size: 28px; opacity: .7; }
+.hud-gallery-error { color: #fca5a5; }
+
+.hud-gallery-preview-backdrop { z-index: 220; }
+
+.hud-gallery-preview {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  border: 1px solid rgba(103, 232, 249, .35);
+  border-radius: var(--radius-lg);
+  background: rgba(4, 10, 18, .98);
+  box-shadow: 0 0 40px rgba(34, 211, 238, .18);
+}
+
+.hud-gallery-preview-header span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-gallery-preview > img,
+.hud-gallery-preview > video { width: 100%; max-height: calc(90vh - 64px); object-fit: contain; background: #020617; }
+
+@media (max-width: 560px) {
+  .hud-gallery-backdrop,
+  .hud-gallery-preview-backdrop { padding: 12px; }
+  .hud-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hud-gallery-content { padding: 12px; }
+}
+
+/* =========================================================
    PROMINENT FLOATING AI COMMAND BAR
    ========================================================= */
 

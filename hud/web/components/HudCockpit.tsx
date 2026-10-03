@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -48,6 +49,21 @@ type Props = {
   showSystemMonitor: boolean;
   showQuickTools: boolean;
 };
+
+type GalleryTab = "screenshots" | "recordings";
+
+type GalleryItem = {
+  name: string;
+  size: number;
+  modified_at: number;
+  url: string;
+};
+
+const GALLERY_DASHBOARD_URL =
+  process.env.NEXT_PUBLIC_JARVIS_DASHBOARD_URL ||
+  (typeof window !== "undefined"
+    ? `http://${window.location.hostname}:8765`
+    : "http://127.0.0.1:8765");
 
 type HeaderIconName =
   | "power"
@@ -448,6 +464,34 @@ export default function HudCockpit({
   // * Live Clock State
   const [currentTime, setCurrentTime] = useState("");
   const [todayDate, setTodayDate] = useState("");
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryTab, setGalleryTab] = useState<GalleryTab>("screenshots");
+  const [galleryItems, setGalleryItems] = useState<Record<GalleryTab, GalleryItem[]>>({ screenshots: [], recordings: [] });
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [galleryError, setGalleryError] = useState("");
+  const [galleryPreview, setGalleryPreview] = useState<GalleryItem | null>(null);
+
+  const loadGallery = useCallback(async () => {
+    setGalleryLoading(true);
+    setGalleryError("");
+    try {
+      const response = await fetch(`${GALLERY_DASHBOARD_URL}/api/local/gallery`, { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Gallery unavailable.");
+      setGalleryItems({
+        screenshots: Array.isArray(result.screenshots) ? result.screenshots : [],
+        recordings: Array.isArray(result.recordings) ? result.recordings : [],
+      });
+    } catch (error) {
+      setGalleryError(error instanceof Error ? error.message : "Gallery unavailable.");
+    } finally {
+      setGalleryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (galleryOpen) void loadGallery();
+  }, [galleryOpen, loadGallery]);
 
   useEffect(() => {
     const updateClock = () => {
@@ -930,22 +974,20 @@ export default function HudCockpit({
             <span>EMAIL</span>
           </button>
 
-          {/* MAPS */}
+          {/* GALLERY */}
           <button
             type="button"
-            onClick={() => onCommand("open google maps")}
-            aria-label="Open Google Maps"
+            onClick={() => setGalleryOpen(true)}
+            aria-label="Open Gallery"
           >
             <span className="quick-tool-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22">
-                <path
-                  fill="#EA4335"
-                  d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-                />
-                <circle fill="#FFFFFF" cx="12" cy="9" r="3" />
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <circle cx="8.5" cy="9" r="1.5" />
+                <path d="m4 17 4.5-4 3.5 3 2.5-2 5.5 4" />
               </svg>
             </span>
-            <span>MAPS</span>
+            <span>GALLERY</span>
           </button>
 
           {/* WEBSITES */}
@@ -1035,6 +1077,70 @@ export default function HudCockpit({
         </div>
 
       </aside>
+    )}
+
+    {galleryOpen && (
+      <div className="hud-gallery-backdrop" onClick={() => { setGalleryOpen(false); setGalleryPreview(null); }}>
+        <section className="hud-gallery-panel" onClick={(event) => event.stopPropagation()} aria-label="JARVIS Gallery">
+          <header className="hud-gallery-header">
+            <strong>JARVIS GALLERY</strong>
+            <div>
+              <button type="button" className="hud-gallery-refresh" onClick={() => void loadGallery()} aria-label="Refresh gallery" title="Refresh gallery">↻</button>
+              <button type="button" onClick={() => { setGalleryOpen(false); setGalleryPreview(null); }} aria-label="Close gallery">×</button>
+            </div>
+          </header>
+          <nav className="hud-gallery-tabs" aria-label="Gallery categories">
+            {(["screenshots", "recordings"] as GalleryTab[]).map((tab) => (
+              <button key={tab} type="button" className={galleryTab === tab ? "is-active" : ""} onClick={() => { setGalleryTab(tab); setGalleryPreview(null); }}>
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </nav>
+          <div className="hud-gallery-content">
+            {galleryLoading && <div className="hud-gallery-state">LOADING GALLERY...</div>}
+            {!galleryLoading && galleryError && <div className="hud-gallery-state hud-gallery-error">{galleryError}</div>}
+            {!galleryLoading && !galleryError && galleryItems[galleryTab].length === 0 && (
+              <div className="hud-gallery-state">
+                <span className="hud-gallery-empty-icon">▧</span>
+                {galleryTab === "screenshots" ? "NO SCREENSHOTS AVAILABLE" : "NO RECORDINGS AVAILABLE"}
+              </div>
+            )}
+            {!galleryLoading && !galleryError && galleryItems[galleryTab].length > 0 && (
+              <div className={`hud-gallery-grid hud-gallery-grid--${galleryTab}`}>
+                {galleryItems[galleryTab].map((item) => (
+                  <button key={item.url} type="button" className="hud-gallery-card" onClick={() => setGalleryPreview(item)}>
+                    <div className="hud-gallery-media">
+                      {galleryTab === "screenshots" ? (
+                        <img src={`${GALLERY_DASHBOARD_URL}${item.url}`} alt={item.name} loading="lazy" />
+                      ) : (
+                        <video src={`${GALLERY_DASHBOARD_URL}${item.url}`} preload="metadata" />
+                      )}
+                      {galleryTab === "recordings" && <span className="hud-gallery-play">▶</span>}
+                    </div>
+                    <span className="hud-gallery-name" title={item.name}>{item.name}</span>
+                    <small>{new Date(item.modified_at * 1000).toLocaleString()}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {galleryPreview && (
+            <div className="hud-gallery-preview-backdrop" onClick={() => setGalleryPreview(null)}>
+              <div className="hud-gallery-preview" onClick={(event) => event.stopPropagation()}>
+                <div className="hud-gallery-preview-header">
+                  <span title={galleryPreview.name}>{galleryPreview.name}</span>
+                  <button type="button" onClick={() => setGalleryPreview(null)} aria-label="Close media preview">×</button>
+                </div>
+                {galleryTab === "screenshots" ? (
+                  <img src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} alt={galleryPreview.name} />
+                ) : (
+                  <video src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls preload="metadata" />
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
     )}
       
     </div>

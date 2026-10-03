@@ -36,6 +36,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import mimetypes
 import os
 import secrets
 import socket
@@ -49,6 +50,7 @@ from typing import Callable, Optional
 import json
 
 from core.runtime import handle_priority
+from core.paths import RECORDINGS, SCREENSHOTS
 from core.diagnostics import debug_print
 from ai.core.service import ai_service
 from config.settings import (
@@ -1789,6 +1791,53 @@ class DashboardServer:
             if action == "open-folder":
                 return workspace_center.open_folder(project_id)
             return JSONResponse({"ok": False, "error": "Unknown workspace action."}, status_code=404)
+
+        # * =====================================================
+        # * LOCAL — HUD GALLERY
+        # * =====================================================
+
+        gallery_directories = {
+            "screenshots": (SCREENSHOTS, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "recordings": (RECORDINGS, {".mp4", ".webm", ".mkv", ".avi", ".mov"}),
+        }
+
+        @app.get("/api/local/gallery")
+        async def local_gallery(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            payload = {}
+            for category, (directory, extensions) in gallery_directories.items():
+                directory.mkdir(parents=True, exist_ok=True)
+                items = []
+                for item in sorted(directory.iterdir(), key=lambda path: path.stat().st_mtime, reverse=True):
+                    if not item.is_file() or item.suffix.lower() not in extensions:
+                        continue
+                    stat = item.stat()
+                    items.append({
+                        "name": item.name,
+                        "size": stat.st_size,
+                        "modified_at": stat.st_mtime,
+                        "url": f"/api/local/gallery/{category}/{item.name}",
+                    })
+                payload[category] = items
+            return {"ok": True, **payload}
+
+        @app.get("/api/local/gallery/{category}/{filename:path}")
+        async def local_gallery_file(category: str, filename: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            entry = gallery_directories.get(category)
+            if not entry or "/" in filename or "\\" in filename:
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
+            directory, extensions = entry
+            candidate = (directory / filename).resolve()
+            try:
+                candidate.relative_to(directory.resolve())
+            except ValueError:
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
+            if not candidate.is_file() or candidate.suffix.lower() not in extensions:
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
+            return FileResponse(str(candidate), media_type=mimetypes.guess_type(candidate.name)[0] or "application/octet-stream")
 
         # * =====================================================
         # * LOCAL — FILE INTELLIGENCE
