@@ -1874,16 +1874,16 @@ export default function Home() {
           {intelligenceFiles.map((file) => <div className="hud-file-chip" key={file.id}>
             <span title={file.filename}>{file.filename}</span>
             <small>{file.processing_status}</small>
-            {file.processing_status === "READY" && <>
+            {file.processing_status === "READY" && <div className="hud-file-chip-actions">
               <button type="button" onClick={() => void readIntelligenceFile(file.id)} aria-label={`Read ${file.filename}`}>READ</button>
               <button type="button" onClick={() => void readIntelligenceFile(file.id, true)} disabled={Boolean(summaryProcessingId)} aria-label={`Summarize ${file.filename}`}>{summaryProcessingId === file.id ? "⟳ SUMMARIZING..." : "SUMMARY"}</button>
               <button type="button" onClick={() => void openIntelligenceFolder(file.id)} aria-label={`Open folder for ${file.filename}`}>FOLDER</button>
-            </>}
+            </div>}
             <button type="button" onClick={() => void removeIntelligenceFile(file.id)} aria-label={`Remove ${file.filename}`}>×</button>
           </div>)}
         </div>}
         {fileUploadMessage && <div className="hud-file-upload-message">{fileUploadMessage}</div>}
-        {filePanel && <div className="hud-file-panel"><div><strong>{filePanel.filename}</strong><span><em>{filePanel.label}</em><button type="button" className="hud-file-speak-button" onClick={() => void toggleFileSpeech()} aria-label={fileSpeakingId ? "Stop file speech" : "Speak file content"} title={fileSpeakingId ? "Stop file speech" : "Speak file content"}>{fileSpeakingId ? "⏹" : "🔊"}</button><button type="button" onClick={() => void closeFilePreview()} aria-label="Close file preview">×</button></span></div><pre>{filePanel.text}</pre></div>}
+        {filePanel && <div className="hud-file-panel"><div><strong>{filePanel.filename}</strong><span><em>{filePanel.label}</em><button type="button" className="hud-file-speak-button" onClick={() => void toggleFileSpeech()} aria-label={fileSpeakingId ? "Stop file speech" : "Speak file content"} title={fileSpeakingId ? "Stop file speech" : "Speak file content"}>{fileSpeakingId ? "🔊" : "🔈"}</button><button type="button" onClick={() => void closeFilePreview()} aria-label="Close file preview">×</button></span></div><pre>{filePanel.text}</pre></div>}
         <div 
           className="hud-command-row"
           onClick={() => commandInputRef.current?.focus()}
