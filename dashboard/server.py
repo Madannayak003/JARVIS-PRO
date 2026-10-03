@@ -38,6 +38,7 @@ import base64
 import hashlib
 import mimetypes
 import os
+import shutil
 import secrets
 import socket
 import threading
@@ -50,7 +51,7 @@ from typing import Callable, Optional
 import json
 
 from core.runtime import handle_priority
-from core.paths import RECORDINGS, SCREENSHOTS
+from core.paths import DOWNLOADS, RECORDINGS, SCREENSHOTS
 from core.diagnostics import debug_print
 from ai.core.service import ai_service
 from config.settings import (
@@ -1821,6 +1822,33 @@ class DashboardServer:
                     })
                 payload[category] = items
             return {"ok": True, **payload}
+
+        @app.post("/api/local/gallery/screenshots/{filename:path}/copy")
+        async def local_gallery_screenshot_copy(filename: str, request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            if "/" in filename or "\\" in filename:
+                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
+            source = (SCREENSHOTS / filename).resolve()
+            try:
+                source.relative_to(SCREENSHOTS.resolve())
+            except ValueError:
+                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
+            if not source.is_file() or source.suffix.lower() not in gallery_directories["screenshots"][1]:
+                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
+            try:
+                DOWNLOADS.mkdir(parents=True, exist_ok=True)
+                stem = source.stem
+                suffix = source.suffix
+                target = DOWNLOADS / f"{stem}_copy{suffix}"
+                counter = 2
+                while target.exists():
+                    target = DOWNLOADS / f"{stem}_copy_{counter}{suffix}"
+                    counter += 1
+                shutil.copy2(source, target)
+                return {"ok": True, "filename": target.name}
+            except Exception:
+                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=500)
 
         @app.get("/api/local/gallery/{category}/{filename:path}")
         async def local_gallery_file(category: str, filename: str, request: Request):

@@ -470,6 +470,7 @@ export default function HudCockpit({
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryError, setGalleryError] = useState("");
   const [galleryPreview, setGalleryPreview] = useState<GalleryItem | null>(null);
+  const [gallerySaveState, setGallerySaveState] = useState<"" | "saving" | "saved" | "error">("");
 
   const loadGallery = useCallback(async () => {
     setGalleryLoading(true);
@@ -492,6 +493,43 @@ export default function HudCockpit({
   useEffect(() => {
     if (galleryOpen) void loadGallery();
   }, [galleryOpen, loadGallery]);
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+    const handleGalleryKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (galleryPreview) {
+        setGalleryPreview(null);
+        setGallerySaveState("");
+      } else {
+        setGalleryOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleGalleryKeyDown);
+    return () => window.removeEventListener("keydown", handleGalleryKeyDown);
+  }, [galleryOpen, galleryPreview]);
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [galleryOpen]);
+
+  const saveGalleryScreenshotCopy = async () => {
+    if (!galleryPreview || galleryTab !== "screenshots") return;
+    setGallerySaveState("saving");
+    try {
+      const response = await fetch(`${GALLERY_DASHBOARD_URL}/api/local/gallery/screenshots/${encodeURIComponent(galleryPreview.name)}/copy`, { method: "POST" });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error("copy failed");
+      setGallerySaveState("saved");
+    } catch {
+      setGallerySaveState("error");
+    }
+  };
 
   useEffect(() => {
     const updateClock = () => {
@@ -1080,13 +1118,13 @@ export default function HudCockpit({
     )}
 
     {galleryOpen && (
-      <div className="hud-gallery-backdrop" onClick={() => { setGalleryOpen(false); setGalleryPreview(null); }}>
-        <section className="hud-gallery-panel" onClick={(event) => event.stopPropagation()} aria-label="JARVIS Gallery">
-          <header className="hud-gallery-header">
+      <div className="workspace-center-backdrop hud-gallery-backdrop" onClick={() => { setGalleryOpen(false); setGalleryPreview(null); }}>
+        {!galleryPreview && <section className="workspace-center hud-gallery-panel" onClick={(event) => event.stopPropagation()} aria-label="JARVIS Gallery">
+          <header className="workspace-center-header hud-gallery-header">
             <strong>JARVIS GALLERY</strong>
             <div>
               <button type="button" className="hud-gallery-refresh" onClick={() => void loadGallery()} aria-label="Refresh gallery" title="Refresh gallery">↻</button>
-              <button type="button" onClick={() => { setGalleryOpen(false); setGalleryPreview(null); }} aria-label="Close gallery">×</button>
+              <button type="button" onClick={(event) => { event.stopPropagation(); setGalleryOpen(false); setGalleryPreview(null); setGallerySaveState(""); }} aria-label="Close gallery">×</button>
             </div>
           </header>
           <nav className="hud-gallery-tabs" aria-label="Gallery categories">
@@ -1124,22 +1162,31 @@ export default function HudCockpit({
               </div>
             )}
           </div>
-          {galleryPreview && (
-            <div className="hud-gallery-preview-backdrop" onClick={() => setGalleryPreview(null)}>
-              <div className="hud-gallery-preview" onClick={(event) => event.stopPropagation()}>
-                <div className="hud-gallery-preview-header">
-                  <span title={galleryPreview.name}>{galleryPreview.name}</span>
-                  <button type="button" onClick={() => setGalleryPreview(null)} aria-label="Close media preview">×</button>
-                </div>
-                {galleryTab === "screenshots" ? (
-                  <img src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} alt={galleryPreview.name} />
-                ) : (
-                  <video src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls preload="metadata" />
-                )}
+        </section>}
+        {galleryPreview && (
+          <div className="workspace-center-backdrop hud-gallery-preview-backdrop" onClick={(event) => { event.stopPropagation(); setGalleryPreview(null); setGallerySaveState(""); }}>
+            <div className="workspace-center hud-gallery-preview" onClick={(event) => event.stopPropagation()}>
+              <div className="hud-gallery-preview-header">
+                <span title={galleryPreview.name}>{galleryPreview.name}</span>
+                <button type="button" onClick={(event) => { event.stopPropagation(); setGalleryPreview(null); setGallerySaveState(""); }} aria-label="Close media preview">×</button>
               </div>
+              {galleryTab === "screenshots" ? (
+                <>
+                  <img src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} alt={galleryPreview.name} />
+                  <div className="hud-gallery-preview-actions">
+                    <button type="button" onClick={() => void saveGalleryScreenshotCopy()} disabled={gallerySaveState === "saving"}>
+                      {gallerySaveState === "saving" ? "SAVING..." : "SAVE COPY"}
+                    </button>
+                    {gallerySaveState === "saved" && <small>✓ COPY SAVED</small>}
+                    {gallerySaveState === "error" && <small className="hud-gallery-copy-error">COULD NOT SAVE COPY</small>}
+                  </div>
+                </>
+              ) : (
+                <video src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls preload="metadata" />
+              )}
             </div>
-          )}
-        </section>
+          </div>
+        )}
       </div>
     )}
       
