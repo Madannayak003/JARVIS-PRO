@@ -29,8 +29,8 @@ HUD_URL = "http://127.0.0.1:3000"
 
 WINDOW_TITLE = get_assistant_display_name()
 
-WINDOW_WIDTH = 900
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1300
+WINDOW_HEIGHT = 750
 
 SHUTDOWN_URL = (
     "http://127.0.0.1:8766/shutdown"
@@ -428,8 +428,8 @@ def run():
         height=WINDOW_HEIGHT,
 
         min_size=(
-            900,
-            600,
+            WINDOW_WIDTH,
+            WINDOW_HEIGHT,
         ),
 
         resizable=True,
