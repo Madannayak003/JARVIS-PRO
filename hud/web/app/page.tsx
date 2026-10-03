@@ -1334,6 +1334,14 @@ export default function Home() {
     setCommandSending(false);
   };
 
+  const interruptCurrentActivity = async () => {
+    try {
+      await fetch(`${JARVIS_DASHBOARD_URL}/api/local/interrupt`, { method: "POST", cache: "no-store" });
+    } catch {
+      // Interrupt is best-effort and should never surface an error for an idle HUD.
+    }
+  };
+
   const uploadIntelligenceFiles = async (files: FileList | File[]) => {
     const selected = Array.from(files);
     if (!selected.length) return;
@@ -1868,143 +1876,273 @@ export default function Home() {
       {/* =====================================================
           COMMAND INPUT
           ===================================================== */}
-      {!workspaceOpen && <div className="hud-command-input">
-        <div className="hud-command-label">◆ COMMAND INPUT</div>
-        {intelligenceFiles.length > 0 && <div className="hud-file-context" aria-label="Uploaded files">
-          {intelligenceFiles.map((file) => <div className="hud-file-chip" key={file.id}>
-            <span title={file.filename}>{file.filename}</span>
-            <small>{file.processing_status}</small>
-            {file.processing_status === "READY" && <div className="hud-file-chip-actions">
-              <button type="button" onClick={() => void readIntelligenceFile(file.id)} aria-label={`Read ${file.filename}`}>READ</button>
-              <button type="button" onClick={() => void readIntelligenceFile(file.id, true)} disabled={Boolean(summaryProcessingId)} aria-label={`Summarize ${file.filename}`}>{summaryProcessingId === file.id ? "⟳ SUMMARIZING..." : "SUMMARY"}</button>
-              <button type="button" onClick={() => void openIntelligenceFolder(file.id)} aria-label={`Open folder for ${file.filename}`}>FOLDER</button>
-            </div>}
-            <button type="button" onClick={() => void removeIntelligenceFile(file.id)} aria-label={`Remove ${file.filename}`}>×</button>
-          </div>)}
-        </div>}
-        {fileUploadMessage && <div className="hud-file-upload-message">{fileUploadMessage}</div>}
-        {filePanel && <div className="hud-file-panel"><div><strong>{filePanel.filename}</strong><span><em>{filePanel.label}</em><button type="button" className="hud-file-speak-button" onClick={() => void toggleFileSpeech()} aria-label={fileSpeakingId ? "Stop file speech" : "Speak file content"} title={fileSpeakingId ? "Stop file speech" : "Speak file content"}>{fileSpeakingId ? "🔊" : "🔈"}</button><button type="button" onClick={() => void closeFilePreview()} aria-label="Close file preview">×</button></span></div><pre>{filePanel.text}</pre></div>}
-        <div 
-          className="hud-command-row"
-          onClick={() => commandInputRef.current?.focus()}
-        >
-          <input
-            ref={filePickerRef}
-            className="hud-file-picker"
-            type="file"
-            multiple
-            accept=".pdf,.txt,.md,.docx,.py,.js,.ts,.jsx,.tsx,.html,.css,.json,.xml,.yaml,.yml,.sql,.c,.cpp,.h,.java,.kt,.cs,.php,.go,.rs,.sh,.bat,.ps1,.csv,.xlsx,.png,.jpg,.jpeg,.webp"
-            onChange={(event) => {
-              if (event.target.files) void uploadIntelligenceFiles(event.target.files);
-              event.currentTarget.value = "";
-            }}
-          />
-
-          <button type="button" className="hud-file-button" onClick={(event) => { event.stopPropagation(); filePickerRef.current?.click(); }} aria-label="Attach files" title="Attach files">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-          </button>
-
-          <input
-            ref={commandInputRef}
-            type="text"
-            value={commandInput}
-            onChange={(event) => setCommandInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void sendHudCommand();
-              }
-            }}
-            placeholder="Type a command or question..."
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            disabled={commandSending}
-          />
-
-          {/* SEND BUTTON */}
+      {!workspaceOpen && (
+        <div className="hud-command-dock">
+          {/* INTERRUPT BUTTON (Placed first so it sits on the left) */}
           <button
             type="button"
-            onClick={() => void sendHudCommand()}
-            disabled={commandSending || !commandInput.trim()}
-            aria-label="Send command"
+            className="hud-interrupt-button"
+            onClick={() => void interruptCurrentActivity()}
+            title="Interrupt current task"
+            aria-label="Interrupt current task"
           >
             <svg
               viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              xmlns="http:  // * www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M21.5 3.5L10.7 14.3"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M21.5 3.5L14.6 21L10.7 14.3L3.5 10.4L21.5 3.5Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          {/* MIC BUTTON */}
-          <button
-            type="button"
-            className={`hud-mic-button ${microphoneEnabled ? "is-active" : ""}`}
-            onClick={() => void toggleMicrophone()}
-            aria-label={microphoneEnabled ? "Disable microphone" : "Enable microphone"}
-            title={microphoneEnabled ? "Disable microphone" : "Enable microphone"}
-          >
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="8" y="3" width="8" height="12" rx="4" />
-              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
-            </svg>
-          </button>
-
-          {/* LIVE BUTTON (Updated to hud-live-circle) */}
-          <button
-            type="button"
-            className={`hud-live-circle ${liveConversationEnabled ? "is-active" : ""}`}
-            aria-label="Toggle live conversation"
-            onClick={async () => {
-              const next = !liveConversationEnabled;
-              setLiveConversationEnabled(next);
-              try {
-                const res = await fetch(
-                  `${JARVIS_DASHBOARD_URL}/api/live/${next ? "start" : "stop"}`,
-                  { method: "POST", cache: "no-store" }
-                );
-                const result = await res.json();
-                if (!res.ok || !result.ok) throw new Error(result.error);
-                setLiveConversationEnabled(next);
-              } catch (err) {
-                console.error(err);
-                setLiveConversationEnabled(!next);
-              }
-            }}
-          >
-            <svg
-              className="btn-icon"
-              viewBox="0 0 24 24"
+              width="14"
+              height="14"
               fill="currentColor"
-              xmlns="http:  // * www.w3.org/2000/svg"
               aria-hidden="true"
             >
-              {/* Main 4-point AI Star */}
-              <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" />
-              {/* Accent Mini Sparkle */}
-              <path d="M19 3C19 4.7 17.7 6 16 6C17.7 6 19 7.3 19 9C19 7.3 20.3 6 22 6C20.3 6 19 4.7 19 3Z" />
+              <rect x="5" y="5" width="14" height="14" rx="2" />
             </svg>
+            <span>INTERRUPT</span>
           </button>
+
+          <div className="hud-command-input">
+            <div className="hud-command-label">◆ COMMAND INPUT</div>
+            {intelligenceFiles.length > 0 && (
+              <div className="hud-file-context" aria-label="Uploaded files">
+                {intelligenceFiles.map((file) => (
+                  <div className="hud-file-chip" key={file.id}>
+                    <span title={file.filename}>{file.filename}</span>
+                    <small>{file.processing_status}</small>
+                    {file.processing_status === "READY" && (
+                      <div className="hud-file-chip-actions">
+                        <button
+                          type="button"
+                          onClick={() => void readIntelligenceFile(file.id)}
+                          aria-label={`Read ${file.filename}`}
+                        >
+                          READ
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void readIntelligenceFile(file.id, true)}
+                          disabled={Boolean(summaryProcessingId)}
+                          aria-label={`Summarize ${file.filename}`}
+                        >
+                          {summaryProcessingId === file.id
+                            ? "⟳ SUMMARIZING..."
+                            : "SUMMARY"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void openIntelligenceFolder(file.id)}
+                          aria-label={`Open folder for ${file.filename}`}
+                        >
+                          FOLDER
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void removeIntelligenceFile(file.id)}
+                      aria-label={`Remove ${file.filename}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {fileUploadMessage && (
+              <div className="hud-file-upload-message">{fileUploadMessage}</div>
+            )}
+            {filePanel && (
+              <div className="hud-file-panel">
+                <div>
+                  <strong>{filePanel.filename}</strong>
+                  <span>
+                    <em>{filePanel.label}</em>
+                    <button
+                      type="button"
+                      className="hud-file-speak-button"
+                      onClick={() => void toggleFileSpeech()}
+                      aria-label={
+                        fileSpeakingId
+                          ? "Stop file speech"
+                          : "Speak file content"
+                      }
+                      title={
+                        fileSpeakingId
+                          ? "Stop file speech"
+                          : "Speak file content"
+                      }
+                    >
+                      {fileSpeakingId ? "🔊" : "🔈"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void closeFilePreview()}
+                      aria-label="Close file preview"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+                <pre>{filePanel.text}</pre>
+              </div>
+            )}
+            <div
+              className="hud-command-row"
+              onClick={() => commandInputRef.current?.focus()}
+            >
+              <input
+                ref={filePickerRef}
+                className="hud-file-picker"
+                type="file"
+                multiple
+                accept=".pdf,.txt,.md,.docx,.py,.js,.ts,.jsx,.tsx,.html,.css,.json,.xml,.yaml,.yml,.sql,.c,.cpp,.h,.java,.kt,.cs,.php,.go,.rs,.sh,.bat,.ps1,.csv,.xlsx,.png,.jpg,.jpeg,.webp"
+                onChange={(event) => {
+                  if (event.target.files)
+                    void uploadIntelligenceFiles(event.target.files);
+                  event.currentTarget.value = "";
+                }}
+              />
+
+              <button
+                type="button"
+                className="hud-file-button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  filePickerRef.current?.click();
+                }}
+                aria-label="Attach files"
+                title="Attach files"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="17"
+                  height="17"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+
+              <input
+                ref={commandInputRef}
+                type="text"
+                value={commandInput}
+                onChange={(event) => setCommandInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void sendHudCommand();
+                  }
+                }}
+                placeholder="Type a command or question..."
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                disabled={commandSending}
+              />
+
+              {/* SEND BUTTON */}
+              <button
+                type="button"
+                onClick={() => void sendHudCommand()}
+                disabled={commandSending || !commandInput.trim()}
+                aria-label="Send command"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21.5 3.5L10.7 14.3" />
+                  <path d="M21.5 3.5L14.6 21L10.7 14.3L3.5 10.4L21.5 3.5Z" />
+                </svg>
+              </button>
+
+              {/* MIC BUTTON */}
+              <button
+                type="button"
+                className={`hud-mic-button ${microphoneEnabled ? "is-active" : ""}`}
+                onClick={() => void toggleMicrophone()}
+                aria-label={
+                  microphoneEnabled
+                    ? "Disable microphone"
+                    : "Enable microphone"
+                }
+                title={
+                  microphoneEnabled
+                    ? "Disable microphone"
+                    : "Enable microphone"
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="17"
+                  height="17"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  {microphoneEnabled ? (
+                    <>
+                      <rect x="8" y="3" width="8" height="12" rx="4" />
+                      <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+                    </>
+                  ) : (
+                    <>
+                      <rect x="8" y="3" width="8" height="12" rx="4" />
+                      <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6M4 4l16 16" />
+                    </>
+                  )}
+                </svg>
+              </button>
+
+              {/* LIVE BUTTON */}
+              <button
+                type="button"
+                className={`hud-live-circle ${liveConversationEnabled ? "is-active" : ""}`}
+                aria-label="Toggle live conversation"
+                onClick={async () => {
+                  const next = !liveConversationEnabled;
+                  setLiveConversationEnabled(next);
+                  try {
+                    const res = await fetch(
+                      `${JARVIS_DASHBOARD_URL}/api/live/${next ? "start" : "stop"}`,
+                      { method: "POST", cache: "no-store" }
+                    );
+                    const result = await res.json();
+                    if (!res.ok || !result.ok) throw new Error(result.error);
+                    setLiveConversationEnabled(next);
+                  } catch (err) {
+                    console.error(err);
+                    setLiveConversationEnabled(!next);
+                  }
+                }}
+              >
+                <svg
+                  className="btn-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" />
+                  <path d="M19 3C19 4.7 17.7 6 16 6C17.7 6 19 7.3 19 9C19 7.3 20.3 6 22 6C20.3 6 19 4.7 19 3Z" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* =====================================================
           MORNING BRIEF OVERLAY

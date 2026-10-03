@@ -1488,13 +1488,91 @@ body {
 .hud-command-input {
   position: fixed;
   right: auto;
-  left: 470px;
+  left: 340px;
   bottom: 20px;
   width: 600px;
   max-width: calc(100vw - 48px);
   z-index: 120;
   background: transparent;
   pointer-events: auto !important;
+}
+
+/* Keep INTERRUPT as a separate control beside the command pill. */
+.hud-command-dock {
+  position: fixed;
+  left: 340px;
+  bottom: 20px;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(760px, calc(100vw - 500px));
+  pointer-events: auto;
+}
+
+.hud-command-dock .hud-command-input {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: auto;
+  max-width: none;
+  flex: 1 1 auto;
+}
+
+.hud-interrupt-button {
+  order: -1; /* Places the interrupt button to the left of the input */
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 104px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(251, 191, 36, .38);
+  border-radius: var(--radius-pill);
+  background: rgba(15, 23, 42, .92);
+  color: #fbbf24;
+  font: 700 9px var(--hud-font-sans);
+  letter-spacing: .08em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm), inset 0 0 10px rgba(251, 191, 36, .05);
+  transition: all var(--transition-fast);
+}
+
+.hud-interrupt-button:hover {
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, .14);
+  color: #fde68a;
+  box-shadow: 0 0 16px rgba(251, 191, 36, .28);
+  transform: translateY(-1px);
+}
+
+.hud-interrupt-button:active { transform: translateY(1px); }
+
+@media (max-width: 900px) {
+  .hud-command-dock {
+    left: 260px;
+    width: calc(100vw - 272px);
+  }
+}
+
+@media (max-width: 560px) {
+  .hud-command-dock {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    gap: 6px;
+  }
+
+  .hud-interrupt-button {
+    min-width: 38px;
+    width: 38px;
+    padding: 0;
+  }
+
+  .hud-interrupt-button span { display: none; }
 }
 
 .hud-command-label {

@@ -51,6 +51,7 @@ from typing import Callable, Optional
 import json
 
 from core.runtime import handle_priority
+from core.interrupt import interrupt
 from core.paths import DOWNLOADS, RECORDINGS, SCREENSHOTS
 from core.diagnostics import debug_print
 from ai.core.service import ai_service
@@ -2423,6 +2424,16 @@ class DashboardServer:
                 "running": running,
                 "paused": paused,
             }
+
+        @app.post("/api/local/interrupt")
+        async def local_interrupt(request: Request):
+            if not self._authorize_local(request):
+                return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
+            try:
+                interrupt()
+                return {"ok": True}
+            except Exception:
+                return JSONResponse({"ok": False, "error": "Interrupt unavailable."}, status_code=500)
                 
         # * =====================================================
         # * LOCAL — MORNING BRIEF STATUS
