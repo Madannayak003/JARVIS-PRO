@@ -41,6 +41,8 @@ TEXT_EXTENSIONS = {
 }
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 SUPPORTED_EXTENSIONS = TEXT_EXTENSIONS | IMAGE_EXTENSIONS | {".pdf", ".docx", ".xlsx"}
+FILE_INTELLIGENCE_PROVIDER = "gemini"
+FILE_INTELLIGENCE_MODEL = "gemini-3.5-flash-lite"
 _speech_lock = threading.Lock()
 _speech_thread: threading.Thread | None = None
 _speech_session = None
@@ -271,12 +273,17 @@ def remove_file(file_id: str) -> bool:
     return True
 
 
-def summarize_file(file_id: str, question: str = "") -> str:
+def summarize_file(file_id: str, question: str = "", operation: str = "summary") -> str:
     from ai.core.service import ai_service
     payload = read_file(file_id)
     text = payload["text"]
     if not text:
         return "This file has no extractable text. Image understanding/OCR is not available through File Intelligence yet."
+    print(f"[FILE INTELLIGENCE] Operation: {operation}")
+    print("[FILE INTELLIGENCE] Capability: file_intelligence")
+    print("[FILE INTELLIGENCE] Provider: Gemini")
+    print(f"[FILE INTELLIGENCE] Model: {FILE_INTELLIGENCE_MODEL}")
+    print("[FILE INTELLIGENCE] Fallback: DISABLED")
     instruction = question.strip() or "Create a concise summary with the most important points and page/section references when available."
     context_limit = 120_000
     context = text[:context_limit]
@@ -286,7 +293,9 @@ def summarize_file(file_id: str, question: str = "") -> str:
         response = ai_service.generate(
             prompt=f"File: {payload['file']['filename']}\n\n{instruction}\n\nDocument context:\n{context}",
             system_prompt="You are JARVIS File Intelligence. Use only the supplied file context. Do not invent facts. Preserve page and section references.",
-            capability="reasoning",
+            capability="file_intelligence",
+            provider=FILE_INTELLIGENCE_PROVIDER,
+            model=FILE_INTELLIGENCE_MODEL,
         )
     except Exception as exc:
         print(f"[FILE INTELLIGENCE AI ERROR] {exc}")
@@ -380,9 +389,22 @@ def file_intelligence_action(data: dict[str, Any] | None = None) -> Any:
     if action == "file_list": return list_files()
     if action in {"file_intelligence_info", "file_read"}: return read_file(str(data.get("file_id"))) if action == "file_read" else _record(get_file(str(data.get("file_id"))))
     if action == "file_search": return search_files(str(data.get("query", "")), data.get("file_ids"))
-    if action in {"file_summarize", "file_question", "file_analyze"}: return summarize_file(str(data.get("file_id")), str(data.get("question", "")))
-    if action == "file_intelligence_request": return summarize_file(_active_file_id(), str(data.get("request", "")))
-    if action == "file_question_request": return summarize_file(_active_file_id(), str(data.get("question", "")))
+    if action in {"file_summarize", "file_question", "file_analyze"}: return summarize_file(str(data.get("file_id")), str(data.get("question", "")), operation="summary" if action == "file_summarize" else "question")
+    if action == "file_intelligence_request":
+        request = str(data.get("request", "")).strip()
+        file_id = _active_file_id()
+        if request.lower().startswith(("read", "show")):
+            payload = read_file(file_id)
+            speak_file(file_id)
+            return payload
+        operation = "summary" if request.lower().startswith(("summarize", "summarise")) else "question"
+        return summarize_file(file_id, request, operation=operation)
+    if action == "file_question_request":
+        file_id = _active_file_id()
+        active = get_file(file_id)
+        print("[FILE INTELLIGENCE] File question detected")
+        print(f"[FILE INTELLIGENCE] Active file: {active.get('filename', 'unknown')}")
+        return summarize_file(file_id, str(data.get("question", "")), operation="question")
     if action == "file_search_request": return search_files(str(data.get("query", "")), [_active_file_id()])
     if action == "file_edit": return edit_file(str(data.get("file_id")), str(data.get("find", "")), str(data.get("replace", "")), expected_text=data.get("expected_text"))
     if action == "file_save": return edit_file(str(data.get("file_id")), str(data.get("find", "")), str(data.get("replace", "")), expected_text=data.get("expected_text"))

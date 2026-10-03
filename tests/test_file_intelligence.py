@@ -66,7 +66,53 @@ class FileIntelligenceTests(unittest.TestCase):
         service_module.ai_service = Service()
         with patch.dict(sys.modules, {"ai.core.service": service_module}):
             self.assertEqual(files.summarize_file(record["id"], "Summarize it."), "A short summary.")
-        self.assertEqual(calls[0]["capability"], "reasoning")
+        self.assertEqual(calls[0]["capability"], "file_intelligence")
+        self.assertEqual(calls[0]["provider"], "gemini")
+        self.assertEqual(calls[0]["model"], "gemini-3.5-flash-lite")
+
+    def test_file_question_uses_the_same_dedicated_model(self):
+        record = files.save_uploaded_file("notes.txt", b"The phone number is 555-0100.")
+        calls = []
+
+        class Response:
+            success = True
+            text = "555-0100"
+
+        class Service:
+            def generate(self, **kwargs):
+                calls.append(kwargs)
+                return Response()
+
+        service_module = types.ModuleType("ai.core.service")
+        service_module.ai_service = Service()
+        with patch.dict(sys.modules, {"ai.core.service": service_module}):
+            result = files.file_intelligence_action({"action": "file_question_request", "question": "What is the phone number?"})
+        self.assertEqual(result, "555-0100")
+        self.assertEqual(calls[0]["capability"], "file_intelligence")
+        self.assertEqual(calls[0]["provider"], "gemini")
+        self.assertEqual(calls[0]["model"], "gemini-3.5-flash-lite")
+
+    def test_question_router_requires_active_ready_file(self):
+        from core.routers.file_router import file_route
+
+        self.assertIsNone(file_route("What is the phone number mentioned in this file?"))
+        files.save_uploaded_file("resume.txt", b"phone number: 555-0100")
+        for question in (
+            "What is the phone number mentioned in this file?",
+            "What is the person's name?",
+            "Where did they do their internship?",
+            "What does this PDF say about education?",
+            "Can you explain this document?",
+        ):
+            plan = file_route(question)
+            self.assertEqual(plan[0]["action"], "file_question_request", question)
+
+    def test_read_does_not_call_ai(self):
+        record = files.save_uploaded_file("read.txt", b"Read-only content")
+        with patch.object(files, "speak_file", return_value={"started": True}), \
+             patch.dict(sys.modules, {"ai.core.service": types.ModuleType("ai.core.service")}):
+            result = files.file_intelligence_action({"action": "file_intelligence_request", "request": "Read this file"})
+        self.assertEqual(result["file"]["id"], record["id"])
 
     def test_folder_action_uses_exact_record_path(self):
         record = files.save_uploaded_file("notes.txt", b"content")

@@ -563,6 +563,36 @@ def dispatch(
             "[CONVERSATION] "
             f"Analysis failed safely: {e}"
         )
+
+    # * ---------------------------------------------------------
+    # * File Intelligence question preemption
+    # * ---------------------------------------------------------
+    # ! A natural-language question about the active uploaded file can be
+    # ! classified by ConversationRequest as generic conversation first. Give
+    # ! the existing File Intelligence router a chance before contextual chat
+    # ! follow-up handling so it reaches its dedicated model path.
+    # * ---------------------------------------------------------
+    if not skip_fast:
+        try:
+            from core.routers.file_router import file_route
+
+            file_plan = file_route(command)
+            file_question_plan = [
+                action
+                for action in (file_plan or [])
+                if action.get("action") == "file_question_request"
+            ]
+
+            if file_question_plan:
+                print("[DISPATCHER] File Intelligence question preempted generic conversation routing.")
+                for action in file_question_plan:
+                    result = execute(action["action"], action)
+                    if isinstance(result, str) and result.strip():
+                        from voice.manager import speak
+                        speak(result)
+                return
+        except Exception as error:
+            print(f"[FILE INTELLIGENCE ROUTING] Preemption failed safely: {error}")
         
     # * =====================================================
     # * NATURAL CONVERSATION FOLLOW-UP PRIORITY

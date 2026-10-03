@@ -38,6 +38,14 @@ FILES = {
 # * File Router
 # * =========================================================
 
+def _active_file_context_available():
+    """Only claim File Intelligence language when a READY file exists."""
+    try:
+        from skills.files.file_intelligence import list_files
+        return any(item.get("processing_status") == "READY" for item in list_files())
+    except Exception:
+        return False
+
 def file_route(command):
 
     command = command.lower().strip()
@@ -45,12 +53,19 @@ def file_route(command):
     if not command:
         return None
 
-    if command in {"read it", "read this", "summarize it", "summarise it", "summarize this", "summarise this", "explain it", "explain this", "what does this say"}:
+    file_context_available = _active_file_context_available()
+
+    if file_context_available and command in {"read it", "read this", "summarize it", "summarise it", "summarize this", "summarise this"}:
         return [{"action": "file_intelligence_request", "request": command}]
 
+    if file_context_available and command in {"explain it", "explain this", "what does this say"}:
+        return [{"action": "file_question_request", "question": command}]
+
     if (
-        re.match(r"(?:what|where|when|who|how|tell me)", command, re.IGNORECASE)
-        and any(marker in command for marker in ("this", "it", "document", "pdf", "phone number", "internship", "important points"))
+        file_context_available
+        and
+        re.match(r"(?:what|where|when|who|how|tell me|can you explain|please explain)", command, re.IGNORECASE)
+        and any(marker in command for marker in ("this", "it", "document", "pdf", "file", "person", "their", "they", "phone number", "internship", "education", "skills", "important points"))
     ):
         return [{"action": "file_question_request", "question": command}]
 
@@ -61,8 +76,9 @@ def file_route(command):
     # File Intelligence keeps natural-language requests on the existing
     # fast-router/dispatcher path while leaving the legacy file actions intact.
     match = re.fullmatch(r"(?:read|summarize|analyse|analyze|explain)\s+(?:this|the)?\s*(?:file|document|pdf)?\s*(.*)", command, re.IGNORECASE)
-    if match:
-        return [{"action": "file_intelligence_request", "request": command}]
+    if file_context_available and match:
+        action = "file_question_request" if command.startswith("explain") else "file_intelligence_request"
+        return [{"action": action, "question" if action == "file_question_request" else "request": command}]
 
     match = re.fullmatch(r"(?:find|search)\s+(?:for\s+)?(.+?)\s+(?:in|inside)\s+(?:this\s+)?file", command, re.IGNORECASE)
     if match:

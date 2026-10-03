@@ -437,6 +437,7 @@ class ModelRegistry:
                     "planning",
                     "editing",
                     "repair",
+                    "file_intelligence",
                     "reasoning",
                     "memory",
                     "fast",
