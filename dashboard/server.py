@@ -1248,11 +1248,19 @@ class DashboardServer:
         try:
 
             from voice.agent import (
+                Agent,
                 agent_status,
+                stop_agent,
                 send_agent_text,
             )
 
             if agent_status():
+
+                if Agent._is_stop_command(text):
+
+                    stop_agent()
+
+                    return
 
                 if send_agent_text(text):
 
