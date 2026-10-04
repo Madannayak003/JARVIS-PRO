@@ -123,7 +123,7 @@ def start_heartbeat() -> bool:
 
     endpoint = get_env("FIREBASE_PRESENCE_URL").strip()
     if not endpoint:
-        print("[HEARTBEAT] FIREBASE_PRESENCE_URL is not configured; disabled")
+       # print("[HEARTBEAT] FIREBASE_PRESENCE_URL is not configured; disabled")
         return False
 
     with _service_lock:

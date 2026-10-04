@@ -384,6 +384,48 @@ class ModelRegistry:
         )
 
         # * --------------------------------------------------
+        # * Gemini 3.1 Flash-Lite - Additional Gemini Fallback
+        # * --------------------------------------------------
+
+        self.register(
+
+            ModelDefinition(
+
+                name="gemini-3.1-flash-lite",
+
+                provider="gemini",
+
+                capabilities=[
+                    "conversation",
+                    "planning",
+                    "editing",
+                    "repair",
+                    "file_intelligence",
+                    "reasoning",
+                    "memory",
+                    "fast",
+                    "coding",
+                    "developer",
+                ],
+
+                streaming=True,
+
+                vision=False,
+
+                local=False,
+
+                enabled=True,
+
+                priority=40,
+
+                description=(
+                    "Gemini 3.1 Flash-Lite model for "
+                    "lightweight AI tasks."
+                ),
+            )
+        )
+
+        # * --------------------------------------------------
         # * Grok - xAI general AI model
         # * --------------------------------------------------
 
