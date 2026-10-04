@@ -140,12 +140,6 @@ def build_startup_brief(
     if not reminders and not tasks:
         parts.append("You have no reminders or scheduled tasks for today.")
 
-    if latest_note_provider is not None:
-        latest_note = _safe_call("Notes", latest_note_provider)
-    note_sentence = _note_sentence(latest_note)
-    if note_sentence:
-        parts.append(note_sentence)
-
     if weather_provider is None:
         def weather_provider():
             from skills.network.weather import get_current_weather
