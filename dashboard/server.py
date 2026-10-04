@@ -3794,17 +3794,73 @@ class DashboardServer:
                     target,
                 )
 
-                await self.broadcast({
+                intelligence_record = None
+                intelligence_error = ""
+                try:
+                    intelligence_record = intelligence_save_uploaded_file(
+                        original_name,
+                        target.read_bytes(),
+                        mime_type=file.content_type or "",
+                    )
+                except Exception as exc:
+                    intelligence_error = str(exc)
+
+                event = {
                     "type": "file_received",
                     "name": target.name,
                     "size": total,
-                })
+                }
+                if intelligence_record:
+                    event["file"] = intelligence_record
+                    event["file_id"] = intelligence_record.get("id", "")
+                    event["processing_status"] = intelligence_record.get(
+                        "processing_status", ""
+                    )
+                if intelligence_error:
+                    event["file_intelligence_error"] = intelligence_error
+                await self.broadcast(event)
 
-                return {
+                if intelligence_error:
+                    return JSONResponse(
+                        {
+                            "ok": False,
+                            "name": target.name,
+                            "size": total,
+                            "file_intelligence": {
+                                "ok": False,
+                                "error": intelligence_error,
+                            },
+                            "error": (
+                                "Raw upload succeeded, but File Intelligence "
+                                f"ingestion failed: {intelligence_error}"
+                            ),
+                        },
+                        status_code=500,
+                    )
+
+                response = {
                     "ok": True,
                     "name": target.name,
                     "size": total,
+                    "file": intelligence_record,
+                    "file_id": intelligence_record.get("id", ""),
                 }
+
+                if intelligence_record.get("processing_status") != "READY":
+                    response["ok"] = False
+                    response["error"] = (
+                        intelligence_record.get("error")
+                        or "File Intelligence processing failed."
+                    )
+                    response["file_intelligence"] = {
+                        "ok": False,
+                        "processing_status": intelligence_record.get(
+                            "processing_status", ""
+                        ),
+                    }
+                    return JSONResponse(response, status_code=422)
+
+                return response
 
         # * =====================================================
         # * FILE DOWNLOAD
