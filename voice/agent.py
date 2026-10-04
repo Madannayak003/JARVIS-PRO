@@ -605,10 +605,7 @@ class Agent:
             or loop is None
             or loop.is_closed()
         ):
-            print(
-                "[LIVE] Cannot send typed text: "
-                "Live session is not active."
-            )
+            
             return False
 
         async def _send():
