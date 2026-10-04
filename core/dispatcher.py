@@ -876,9 +876,14 @@ def dispatch(
                 )
 
                 if result is not False:
-                    app = str(action.get("app", "")).strip()
+                    app = str(
+                        action.get("app")
+                        or action.get("process", "")
+                    ).strip()
                     if action_name == "open" and app:
                         action_label = f"Opening {app}"
+                    elif action_name == "close_process" and app:
+                        action_label = f"Closing {app}"
                     else:
                         action_label = action_name.replace("_", " ").title()
                     print(f"[ACTION] {action_label}")

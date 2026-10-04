@@ -29,10 +29,15 @@ def execute_ai_plan(
 
         action = step["action"]
 
-        app = str(step.get("app", "")).strip()
+        app = str(
+            step.get("app")
+            or step.get("process", "")
+        ).strip()
         action_label = (
             f"Opening {app}"
             if action == "open" and app
+            else f"Closing {app}"
+            if action == "close_process" and app
             else action.replace("_", " ").title()
         )
         print(f"[ACTION] {action_label}")

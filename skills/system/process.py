@@ -188,8 +188,12 @@ def process_action(data=None):
 
                 process.kill()
 
+            display_name = str(
+                data.get("app") or target
+            ).strip()
+
             speak(
-                f"I closed {name}."
+                f"I closed {display_name}."
             )
 
             print(

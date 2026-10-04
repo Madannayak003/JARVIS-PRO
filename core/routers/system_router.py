@@ -1,6 +1,7 @@
 import re
 
 from core.assistant_name import get_assistant_aliases
+from core.skill_categories import LOCAL_APPLICATIONS
 
 SYSTEM = {
 
@@ -135,6 +136,16 @@ SYSTEM = {
 def system_route(command):
 
     command = command.lower().strip()
+
+    if command.startswith("close "):
+        app = command[len("close "):].strip()
+        if app in LOCAL_APPLICATIONS:
+            return [
+                {
+                    "action": "close_process",
+                    "process": app,
+                }
+            ]
 
     assistant_shutdown_commands = {
         f"{prefix} {alias}"
