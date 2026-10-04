@@ -1,6 +1,6 @@
 """
 =============================================================
-JARVIS PRO — LIVE CONVERSATION
+JARVIS PRO — AGENT
 =============================================================
 
 Gemini Live native-audio conversation.
@@ -9,7 +9,7 @@ IMPORTANT ARCHITECTURE:
 
     Normal JARVIS microphone
             |
-            | start_live_conversation
+            | start_agent
             v
     pause normal listener
             |
@@ -143,7 +143,7 @@ def _api_key() -> str:
 def _system_prompt() -> str:
     """
     Load the existing JARVIS prompt and add only the
-    Live Conversation behavior rules.
+    Agent behavior rules.
     """
 
     prompt_path = (
@@ -168,7 +168,7 @@ def _system_prompt() -> str:
 
     live_rules = f"""
 =============================================================
-LIVE CONVERSATION BEHAVIOR
+AGENT BEHAVIOR
 =============================================================
 
 You are {assistant_name} in a natural realtime spoken conversation.
@@ -209,14 +209,14 @@ REALTIME LIMITATIONS
 - Do not claim to have live web/news access unless such access
   is actually available in this Live session.
 - If the user asks for information requiring real-time data,
-  clearly say that Live Conversation does not currently have
+  clearly say that Agent does not currently have
   that external data source instead of pretending.
 
 STOP COMMAND
-- If the user says "stop live conversation", stop the Live
+- If the user says "stop agent", stop the Live
   conversation immediately.
-- Equivalent commands such as "end live conversation" or
-  "exit live conversation" should also be understood.
+- Equivalent commands such as "end agent" or
+  "exit agent" should also be understood.
 
 IMPORTANT:
 This is a spoken conversation. Favor natural short answers
@@ -387,10 +387,10 @@ JARVIS_COMMAND_TOOL = _build_jarvis_command_tool()
 
 
 # * =============================================================
-# * LIVE CONVERSATION CLASS
+# * AGENT CLASS
 # * =============================================================
 
-class LiveConversation:
+class Agent:
 
     def __init__(self):
 
@@ -420,7 +420,7 @@ class LiveConversation:
         # * -----------------------------------------------------
         # * Prevent duplicate pause/resume operations.
         #
-        # * This is intentionally owned by LiveConversation so
+        # * This is intentionally owned by Agent so
         # * repeated calls cannot pause/resume the normal listener
         # * multiple times.
         # * -----------------------------------------------------
@@ -668,13 +668,13 @@ class LiveConversation:
         self.set_microphone_enabled(True)
         
         print(
-            "[LIVE] LIVE CONVERSATION START REQUESTED"
+            "[LIVE] AGENT START REQUESTED"
         )
 
         self._thread = threading.Thread(
             target=self._thread_main,
             daemon=True,
-            name="JARVIS-LiveConversation",
+            name="JARVIS-Agent",
         )
 
         self._thread.start()
@@ -727,7 +727,7 @@ class LiveConversation:
                 "[LIVE] =================================================="
             )
             print(
-                "[LIVE] LIVE CONVERSATION ENDED"
+                "[LIVE] AGENT ENDED"
             )
             print(
                 "[LIVE] =================================================="
@@ -748,7 +748,7 @@ class LiveConversation:
             )
             
         print(
-            "[LIVE] LIVE CONVERSATION STARTING"
+            "[LIVE] AGENT STARTING"
         )
 
         print(
@@ -906,7 +906,7 @@ class LiveConversation:
             # * rollovers.
             #
             # * The physical microphone and speaker belong to
-            # * the LiveConversation instance, not to a single
+            # * the Agent instance, not to a single
             # * Gemini connection.
             # * =================================================
 
@@ -952,7 +952,7 @@ class LiveConversation:
 
             stop_task = asyncio.create_task(
                 self._wait_for_stop(),
-                name="JARVIS-LiveStopWatcher",
+                name="JARVIS-AgentStopWatcher",
             )
 
             try:
@@ -1278,7 +1278,7 @@ class LiveConversation:
                         await asyncio.sleep(1.0)
 
                         print(
-                            "[LIVE] Resuming Live Conversation..."
+                            "[LIVE] Resuming Agent..."
                         )
 
                         continue
@@ -1426,7 +1426,7 @@ class LiveConversation:
         Therefore the same stream is immediately restarted
         so the next Gemini response can continue using it.
 
-        This affects ONLY the Live Conversation speaker.
+        This affects ONLY the Agent speaker.
         """
 
         if speaker is None:
@@ -1529,7 +1529,7 @@ class LiveConversation:
         IMPORTANT:
 
         Returning from this function does NOT terminate
-        Live Conversation.
+        Agent.
 
         The SAME Gemini session remains alive.
 
@@ -1942,7 +1942,7 @@ class LiveConversation:
                 # * The user may begin speaking while Gemini is
                 # * producing audio.
                 #
-                # * This is a normal Live Conversation event.
+                # * This is a normal Agent event.
                 #
                 # ! IMPORTANT:
                 # ! Do NOT close the Gemini session.
@@ -2083,14 +2083,14 @@ class LiveConversation:
         )
 
         stop_commands = (
-            "stop live conversation",
-            "stop the live conversation",
-            "end live conversation",
-            "end the live conversation",
-            "exit live conversation",
-            "exit the live conversation",
-            "close live conversation",
-            "close the live conversation",
+            "stop agent",
+            "stop the agent",
+            "end agent",
+            "end the agent",
+            "exit agent",
+            "exit the agent",
+            "close agent",
+            "close the agent",
         )
 
         return any(
@@ -2201,97 +2201,97 @@ class LiveConversation:
 # * GLOBAL LIVE INSTANCE
 # * =============================================================
 
-_live = LiveConversation()
+_agent = Agent()
 
 
 # * =============================================================
 # * LIVE TEXT BRIDGE
 # * =============================================================
 
-def send_live_text(
+def send_agent_text(
     text: str,
 ) -> bool:
     """
     Send typed Command Input to the active Gemini Live session.
     """
 
-    return _live.send_text(text)
+    return _agent.send_text(text)
 
 
 # * =============================================================
 # * REGISTRY ACTIONS
 # * =============================================================
 
-def start_live_conversation(
+def start_agent(
     _data=None,
 ):
 
-    if _live.running:
+    if _agent.running:
 
         return (
-            "Live conversation is already running."
+            "Agent is already running."
         )
 
-    _live.start()
+    _agent.start()
 
     try:
 
         HUDIntegration.system_activity(
-            "LIVE CONVERSATION ON"
+            "AGENT ON"
         )
 
     except Exception as exc:
 
         print(
-            "[HUD LIVE CONVERSATION LOG ERROR]",
+            "[HUD AGENT LOG ERROR]",
             exc,
         )
 
     return (
-        "Live conversation started."
+        "Agent started."
     )
 
 
-def stop_live_conversation(
+def stop_agent(
     _data=None,
 ):
 
-    if not _live.running:
+    if not _agent.running:
 
         return (
-            "Live conversation is already stopped."
+            "Agent is already stopped."
         )
 
-    _live.stop()
+    _agent.stop()
 
     try:
 
         HUDIntegration.system_activity(
-            "LIVE CONVERSATION OFF"
+            "AGENT OFF"
         )
 
     except Exception as exc:
 
         print(
-            "[HUD LIVE CONVERSATION LOG ERROR]",
+            "[HUD AGENT LOG ERROR]",
             exc,
         )
 
     return (
-        "Stopping live conversation."
+        "Stopping Agent."
     )
 
 
-def live_conversation_status(
+def agent_status(
     _data=None,
 ):
 
-    if _live.running:
+    if _agent.running:
 
         return (
-            "Live conversation is running."
+            "Agent is running."
         )
 
     return (
-        "Live conversation is stopped."
+        "Agent is stopped."
     )

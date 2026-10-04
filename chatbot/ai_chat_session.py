@@ -17,7 +17,7 @@ It does NOT import or use:
     - core.dispatcher
     - JARVIS memory
     - JARVIS conversation manager
-    - Live Conversation
+    - Agent
     - existing JARVIS context
     - existing JARVIS response pipeline
 

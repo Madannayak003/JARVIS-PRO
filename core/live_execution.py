@@ -4,7 +4,7 @@ JARVIS PRO — LIVE EXECUTION CONTEXT
 =============================================================
 
 Global execution state used to identify commands originating
-from Gemini Live Conversation.
+from Gemini Agent.
 
 This is intentionally process-wide because Live commands may
 cross worker/thread boundaries.

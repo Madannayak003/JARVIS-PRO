@@ -130,7 +130,7 @@ services/ Android, contacts, email, files, location, remote, media, web.
 skills/ import-time action modules grouped by capability. tests/ focused
 routing, provider, vision, remote, and feature tests. tools/ Windows
 integration and database utility scripts. voice/ online/offline STT/TTS,
-live conversation, queues and state.
+Agent, queues and state.
 
 Large/derived areas: hud/web/node*modules/ installed Node dependencies;
 not manually audited. hud/web/.next/ Next build/development output if
@@ -896,7 +896,7 @@ classes=- \| functions=- tools/windows*integration.py \| classes=- \|
 functions=*require*windows,*python*executable,*desktop*directory,create*desktop*shortcut,*startup*directory,*autostart*shortcut*path,get*autostart*status,set*autostart
 voice/**init**.py \| classes=- \| functions=- voice/interrupt.py \|
 classes=- \| functions=stop,clear,stopped voice/live*conversation.py \|
-classes=LiveConversation \|
+classes=Agent \|
 functions=*api*key,*system*prompt,send*live*text,start*live*conversation,stop*live*conversation,live*conversation*status
 voice/manager.py \| classes=- \|
 functions=*clean*tts*text,add*speech*listener,remove*speech*listener,*notify*speech*listeners,notify*speech*output,check*internet,start*speech*session,*worker,prepare*speech,play*prepared*speech,speak,wait*for*speech,stop*speaking
@@ -1071,7 +1071,7 @@ memory learning, storage, search/ranking/semantic helpers,
 profile/preference/forget/stats/view APIs. Runtime persistence is
 generally under ai/memory.db and related local data. voice/\*: Online
 Edge TTS and SpeechRecognition path, offline Faster-Whisper, Piper TTS,
-shared voice state/queues, and Gemini Live conversation.
+shared voice state/queues, and Gemini Agent.
 services/remote_control.py: Optional thin FastAPI remote service with
 PIN pairing and bearer token; compatible with the dispatcher but not the
 primary object started by current main.py. dashboard/server.py: Active
@@ -1182,7 +1182,7 @@ Priority established by dispatcher: 1. empty input / pending
 clarification reply 2. known assistant invocation normalization 3.
 pending face registration input 4. pending clarification
 resolution/cancel/new request 5. pending email composition reply 6.
-live-conversation control commands 7. legacy clarification contexts such
+Agent control commands 7. legacy clarification contexts such
 as Google/YouTube/GitHub choice 8. screen/browser/file follow-up
 resolution and action memory 9. deterministic fast route 10. BrainRouter
 developer path 11. AI intent/conversation/planner path 12. action
@@ -1201,8 +1201,8 @@ normalization if alias list matches current settings. \"take a photo\",
 \"make payment using `<app>`{=html}\" \"open file\", \"create folder\",
 \"recent files\", \"zip \...\", \"recycle bin\" \"wifi status\",
 \"bluetooth status\", \"weather\", \"get news\" \"open whatsapp\",
-\"send whatsapp message\", \"send email\" \"start live conversation\",
-\"stop live conversation\" \"create note\", \"list reminders\",
+\"send whatsapp message\", \"send email\" \"start Agent\",
+\"stop Agent\" \"create note\", \"list reminders\",
 \"remember \...\" \"volume\", \"brightness\", \"battery\", \"running
 apps\", \"lock\", \"sleep\" These are representative source-confirmed
 patterns, not a promise that external dependencies or devices are
@@ -1251,9 +1251,9 @@ router fallback STATUS: implemented; requires a reachable local Ollama
 service/model.
 
     PROVIDER: Google Gemini
-    MODELS: Gemini model names registered above; live conversation also uses
-            a Gemini Live path in voice/live_conversation.py
-    IMPLEMENTATION: ai/providers/gemini.py; voice/live_conversation.py
+    MODELS: Gemini model names registered above; Agent also uses
+            a Gemini Live path in voice/agent.py
+    IMPLEMENTATION: ai/providers/gemini.py; voice/agent.py
     GENERATION: Google GenAI client, including text and supported multimodal
                 context paths
     STREAMING: implemented
@@ -1376,7 +1376,7 @@ autonomous learning.
 # 15. PERSONALIZATION / USER PROFILE
 
 Settings/profile surfaces include: assistant name, user name, assistant
-colour, selected voice, morning brief, microphone/live-conversation
+colour, selected voice, morning brief, microphone/Agent
 toggles, HUD visibility toggles, personal links, contacts, email
 contacts, WhatsApp contacts, and remembered facts.
 
@@ -1428,7 +1428,7 @@ may be supporting, legacy, or route-only code.
 
 The loader records configured, loaded, and failed lists and continues
 after a module import error. Registration is explicit and occurs as a
-side effect of module import. main.py adds the three live-conversation
+side effect of module import. main.py adds the three Agent
 actions after core startup.
 
 Action registry behavior: register(name, handler, category) get*handler
@@ -1501,7 +1501,7 @@ voice.offline.offline*tts.py uses Piper process/model output and
 playback. offline*runner.py runs typed and microphone commands through
 the shared OfflineActionBridge and avoids duplicate local-action speech.
 
-Live conversation: voice/live_conversation.py contains a separate Gemini
+Agent: voice/agent.py contains a separate Gemini
 Live session, microphone/audio streaming, typed-to-live integration,
 interruption and session lifecycle. main.py registers start/stop/status
 actions after startup.
@@ -1812,7 +1812,7 @@ pipeline.
 
 # 33. EXPERIMENTAL FEATURES
 
-    - Gemini Live conversation/audio session in voice/live_conversation.py.
+    - Gemini Agent/audio session in voice/agent.py.
     - Offline shared-core mode with local Ollama and Piper.
     - YOLO temporal stabilization and local LBPH identity recognition.
     - Android wireless/ADB connection and phone-call monitor.
@@ -2035,8 +2035,8 @@ package/module.
         open_personal_link, show_personal_links
         skills/web/personal_links.py
     Runtime-registered after core init:
-        start_live_conversation, stop_live_conversation,
-        live_conversation_status            main.py
+        start_agent, stop_agent,
+        agent_status            main.py
 
 # 40. SECURITY ARCHITECTURE
 

@@ -47,7 +47,7 @@ ONLINE = False
 # * - Activity Log
 # * - Remote Dashboard
 # * - UI
-# * - Live Conversation
+# * - Agent
 # * =========================================================
 
 def _clean_tts_text(text):
@@ -307,7 +307,7 @@ def prepare_speech(
         return None
 
     # * -----------------------------------------------------
-    # * LIVE CONVERSATION SPEECH GATE
+    # * AGENT SPEECH GATE
     # * -----------------------------------------------------
 
     if is_live_execution():
@@ -450,7 +450,7 @@ def speak(
         return
 
     # * -----------------------------------------------------
-    # * LIVE CONVERSATION SPEECH GATE
+    # * AGENT SPEECH GATE
     #
     # * Gemini Live is already the active speaker.
     # * Prevent normal Edge/Piper TTS from speaking at the

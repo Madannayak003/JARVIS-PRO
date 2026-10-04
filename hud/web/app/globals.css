@@ -1125,7 +1125,7 @@ body.gallery-open .ultron-layer {
 
 /* Control Buttons in Command Row */
 .hud-command-row button[aria-label="Send command"],
-.hud-command-row .hud-live-circle,
+.hud-command-row .hud-agent-circle,
 .hud-command-row .hud-mic-button {
   flex: 0 0 34px !important;
   width: 34px !important;
@@ -1161,12 +1161,12 @@ body.gallery-open .ultron-layer {
 }
 .hud-command-row button[aria-label="Send command"]:disabled { opacity: 0.25 !important; cursor: not-allowed !important; }
 
-.hud-command-row .hud-live-circle {
+.hud-command-row .hud-agent-circle {
   background: rgba(255, 255, 255, 0.08) !important;
   outline: none !important;
   box-shadow: var(--shadow-sm), var(--glass-specular-subtle);
 }
-.hud-command-row .hud-live-circle .btn-icon {
+.hud-command-row .hud-agent-circle .btn-icon {
   width: 18px !important;
   height: 18px !important;
   color: #2f80ed !important;
@@ -1176,20 +1176,20 @@ body.gallery-open .ultron-layer {
   transition: all var(--transition-fast) !important;
   filter: drop-shadow(0 0 5px rgba(47, 128, 237, 0.65)) !important;
 }
-.hud-command-row .hud-live-circle:hover {
+.hud-command-row .hud-agent-circle:hover {
   background: rgba(47, 128, 237, 0.25) !important;
   border-color: rgba(47, 128, 237, 0.5) !important;
   transform: scale(1.06) !important;
   box-shadow: 0 0 14px rgba(47, 128, 237, 0.5) !important;
 }
-.hud-command-row .hud-live-circle.is-active .btn-icon {
+.hud-command-row .hud-agent-circle.is-active .btn-icon {
   color: #00d4ff !important;
   fill: #00d4ff !important;
   background: #00d4ff !important;
   box-shadow: 0 0 12px #00d4ff, 0 0 20px #00d4ff !important;
   filter: drop-shadow(0 0 6px #00d4ff) drop-shadow(0 0 12px #00d4ff) !important;
 }
-.hud-command-row .hud-live-circle > span:not(.btn-icon) { display: none !important; }
+.hud-command-row .hud-agent-circle > span:not(.btn-icon) { display: none !important; }
 
 .hud-command-row .hud-file-button {
   display: flex !important;
@@ -1235,7 +1235,7 @@ body.gallery-open .ultron-layer {
 }
 .hud-command-row .hud-mic-button svg { display: block; pointer-events: none; }
 
-.hud-command-row .hud-live-circle { order: -1; }
+.hud-command-row .hud-agent-circle { order: -1; }
 .hud-command-row .hud-file-button { order: -0.5; }
 .hud-command-row input { order: 0; }
 .hud-command-row .hud-mic-button { order: 1; }
@@ -2331,7 +2331,7 @@ body.gallery-open .ultron-layer {
   .hud-command-row { height: 38px !important; padding: 0 6px 0 12px !important; }
   .hud-command-row input { font-size: 11px !important; }
   .hud-command-row button[aria-label="Send command"],
-  .hud-command-row .hud-live-circle,
+  .hud-command-row .hud-agent-circle,
   .hud-command-row .hud-mic-button {
     flex: 0 0 28px !important;
     width: 28px !important;
@@ -2341,7 +2341,7 @@ body.gallery-open .ultron-layer {
     min-height: 28px !important;
     max-height: 28px !important;
   }
-  .hud-command-row .hud-live-circle .btn-icon { width: 14px !important; height: 14px !important; }
+  .hud-command-row .hud-agent-circle .btn-icon { width: 14px !important; height: 14px !important; }
   .hud-command-row .hud-file-button { flex: 0 0 26px !important; width: 26px !important; height: 26px !important; min-width: 26px !important; }
   .hud-interrupt-button { min-width: 82px !important; height: 32px !important; padding: 0 8px !important; font-size: 8px !important; }
 

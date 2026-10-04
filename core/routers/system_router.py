@@ -118,24 +118,16 @@ SYSTEM = {
         "action": "date"
     },
 
-    "start live conversation": {
-        "action": "start_live_conversation"
+    "start agent": {
+        "action": "start_agent"
     },
 
-    "start live": {
-        "action": "start_live_conversation"
+    "stop agent": {
+        "action": "stop_agent"
     },
 
-    "stop live conversation": {
-        "action": "stop_live_conversation"
-    },
-
-    "stop live": {
-        "action": "stop_live_conversation"
-    },
-
-    "live conversation status": {
-        "action": "live_conversation_status"
+    "agent status": {
+        "action": "agent_status"
     },
 }
 

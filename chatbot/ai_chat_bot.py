@@ -12,7 +12,7 @@ It does NOT use:
 - JARVIS prompt builder
 - ai.core.service
 - ai.providers.gemini
-- Live Conversation
+- Agent
 """
 
 from dataclasses import dataclass
@@ -48,7 +48,7 @@ You do not have access to:
 - JARVIS memory
 - JARVIS skills
 - JARVIS system state
-- JARVIS Live Conversation
+- JARVIS Agent
 
 Answer the user naturally and helpfully.
 

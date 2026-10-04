@@ -13,7 +13,7 @@ The service:
 - accepts text commands
 - sends commands into the existing JARVIS dispatcher
 - provides useful diagnostics when authentication fails
-- can stop Live Conversation directly
+- can stop Agent directly
 - does NOT replace the existing JARVIS brain/dispatcher
 
 Remote Control is intentionally a thin interface over the
@@ -127,7 +127,7 @@ class RemoteControlServer:
         command_handler: Optional[
             Callable[[str], object]
         ] = None,
-        live_stop_handler: Optional[
+        agent_stop_handler: Optional[
             Callable[[], object]
         ] = None,
         port: int = PORT,
@@ -138,13 +138,13 @@ class RemoteControlServer:
             command_handler
         )
 
-        # * Direct Live Conversation stop action.
+        # * Direct Agent stop action.
         #
         # ! This is important because the normal JARVIS
-        # * microphone is paused while Live Conversation
+        # * microphone is paused while Agent
         # * owns the microphone.
-        self.live_stop_handler = (
-            live_stop_handler
+        self.agent_stop_handler = (
+            agent_stop_handler
         )
 
         self.port = int(port)
@@ -596,13 +596,13 @@ class RemoteControlServer:
             )
 
         # * ==================================================
-        # * DIRECT LIVE CONVERSATION STOP
+        # * DIRECT AGENT STOP
         # * ==================================================
 
         @app.post(
-            "/api/live/stop"
+            "/api/agent/stop"
         )
-        async def live_stop(
+        async def agent_stop_endpoint(
             request: "Request",
         ):
 
@@ -641,7 +641,7 @@ class RemoteControlServer:
             # * Handler availability
             # * ----------------------------------------------
 
-            if not self.live_stop_handler:
+            if not self.agent_stop_handler:
 
                 print(
                     "[REMOTE LIVE] "
@@ -653,14 +653,14 @@ class RemoteControlServer:
                     {
                         "ok": False,
                         "error":
-                            "Live Conversation stop "
+                            "Agent stop "
                             "handler is not connected.",
                     },
                     status_code=503,
                 )
 
             # * ----------------------------------------------
-            # * Stop Live Conversation
+            # * Stop Agent
             # * ----------------------------------------------
 
             try:
@@ -672,19 +672,19 @@ class RemoteControlServer:
                 )
 
                 result = (
-                    self.live_stop_handler()
+                    self.agent_stop_handler()
                 )
 
                 print(
                     "[REMOTE LIVE] "
-                    "Live Conversation stop "
+                    "Agent stop "
                     "requested successfully."
                 )
 
                 return {
                     "ok": True,
                     "message":
-                        "Live Conversation stopped.",
+                        "Agent stopped.",
                     "result":
                         str(result),
                 }
@@ -701,7 +701,7 @@ class RemoteControlServer:
                         "ok": False,
                         "error":
                             "Unable to stop "
-                            "Live Conversation: "
+                            "Agent: "
                             f"{exc}",
                     },
                     status_code=500,
@@ -735,9 +735,9 @@ class RemoteControlServer:
                         self._token is not None
                     ),
 
-                "live_stop_available":
+                "agent_stop_available":
                     (
-                        self.live_stop_handler
+                        self.agent_stop_handler
                         is not None
                     ),
 
@@ -996,13 +996,13 @@ button:active {
         scale(0.98);
 }
 
-.live-button {
+.agent-button {
 
     background:
         # * b91c1c;
 }
 
-.live-button:hover {
+.agent-button:hover {
 
     background:
         # * dc2626;
@@ -1133,20 +1133,20 @@ button:active {
 
 
     <!-- ================================================
-         LIVE CONVERSATION
+         AGENT
          ================================================ -->
 
     <div class="section">
 
         <p>
-            Live Conversation
+            Agent
         </p>
 
         <button
-            class="live-button"
-            onclick="stopLiveConversation()"
+            class="agent-button"
+            onclick="stopAgent()"
         >
-            Stop Live Conversation
+            Stop Agent
         </button>
 
     </div>
@@ -1157,10 +1157,10 @@ button:active {
         Normal commands are sent directly into
         your existing __ASSISTANT_NAME__ dispatcher.
 
-        The Live Conversation stop button directly
+        The Agent stop button directly
         controls the Gemini Live session because
         the normal __ASSISTANT_NAME__ microphone is paused
-        while Live Conversation is active.
+        while Agent is active.
 
     </p>
 
@@ -1559,10 +1559,10 @@ async function sendCommandText(
 
 
 /* ========================================================
-   STOP LIVE CONVERSATION
+   STOP AGENT
    ======================================================== */
 
-async function stopLiveConversation() {
+async function stopAgent() {
 
     if (!token) {
 
@@ -1575,7 +1575,7 @@ async function stopLiveConversation() {
 
 
     setStatus(
-        "Stopping Live Conversation..."
+        "Stopping Agent..."
     );
 
 
@@ -1583,7 +1583,7 @@ async function stopLiveConversation() {
 
         const response =
             await fetch(
-                "/api/live/stop",
+                "/api/agent/stop",
                 {
                     method:
                         "POST",
@@ -1627,7 +1627,7 @@ async function stopLiveConversation() {
 
 
         setStatus(
-            "Live Conversation stopped. "
+            "Agent stopped. "
             +
             "Normal __ASSISTANT_NAME__ voice resumed."
         );
@@ -1635,7 +1635,7 @@ async function stopLiveConversation() {
 
         console.log(
             "[__ASSISTANT_NAME__ REMOTE] "
-            + "Live Conversation stopped."
+            + "Agent stopped."
         );
 
     }

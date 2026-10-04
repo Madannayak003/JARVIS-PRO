@@ -351,7 +351,7 @@ export default function Home() {
   const [autoStart, setAutoStart] = useState(false);
   const [morningBrief, setMorningBrief] = useState(true);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(true);
-  const [liveConversationEnabled, setLiveConversationEnabled] = useState(false);
+  const [agentEnabled, setAgentEnabled] = useState(false);
 
   const [assistantName, setAssistantName] = useState(DEFAULT_ASSISTANT_NAME);
   const [userName, setUserName] = useState("");
@@ -963,26 +963,26 @@ export default function Home() {
   }, []);
 
   /* =========================================================
-     LIVE CONVERSATION STATUS SYNC
+     AGENT STATUS SYNC
      ========================================================= */
   useEffect(() => {
     let cancelled = false;
 
-    const loadLiveConversation = async () => {
+    const loadAgent = async () => {
       if (cancelled) return;
       try {
-        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/live/status`, {
+        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/agent/status`, {
           cache: "no-store",
         });
         const result = await response.json();
         if (response.ok && result.ok && typeof result.running === "boolean" && !cancelled) {
-          setLiveConversationEnabled(result.running);
+          setAgentEnabled(result.running);
         }
       } catch {}
     };
 
-    loadLiveConversation();
-    const syncTimer = window.setInterval(loadLiveConversation, 1000);
+    loadAgent();
+    const syncTimer = window.setInterval(loadAgent, 1000);
 
     return () => {
       cancelled = true;
@@ -2152,22 +2152,22 @@ export default function Home() {
               {/* LIVE BUTTON */}
               <button
                 type="button"
-                className={`hud-live-circle ${liveConversationEnabled ? "is-active" : ""}`}
-                aria-label="Toggle live conversation"
+                className={`hud-agent-circle ${agentEnabled ? "is-active" : ""}`}
+                aria-label="Toggle Agent"
                 onClick={async () => {
-                  const next = !liveConversationEnabled;
-                  setLiveConversationEnabled(next);
+                  const next = !agentEnabled;
+                  setAgentEnabled(next);
                   try {
                     const res = await fetch(
-                      `${JARVIS_DASHBOARD_URL}/api/live/${next ? "start" : "stop"}`,
+                      `${JARVIS_DASHBOARD_URL}/api/agent/${next ? "start" : "stop"}`,
                       { method: "POST", cache: "no-store" }
                     );
                     const result = await res.json();
                     if (!res.ok || !result.ok) throw new Error(result.error);
-                    setLiveConversationEnabled(next);
+                    setAgentEnabled(next);
                   } catch (err) {
                     console.error(err);
-                    setLiveConversationEnabled(!next);
+                    setAgentEnabled(!next);
                   }
                 }}
               >

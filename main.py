@@ -472,25 +472,25 @@ def main():
             print("[MAIN HUD] Next.js HUD failed to start.")
             return 1
 
-        # * Register live conversation actions
+        # * Register Agent actions
         from core.registry import register
-        from voice.live_conversation import (
-            start_live_conversation,
-            stop_live_conversation,
-            live_conversation_status,
+        from voice.agent import (
+            start_agent,
+            stop_agent,
+            agent_status,
         )
 
-        register("start_live_conversation", start_live_conversation, category="voice")
-        register("stop_live_conversation", stop_live_conversation, category="voice")
-        register("live_conversation_status", live_conversation_status, category="voice")
-        print("[LIVE] Live Conversation actions registered.")
+        register("start_agent", start_agent, category="voice")
+        register("stop_agent", stop_agent, category="voice")
+        register("agent_status", agent_status, category="voice")
+        print("[LIVE] Agent actions registered.")
 
         # * Remote dashboard
         from core.dispatcher import dispatch
 
         remote_server = DashboardServer(
             command_handler=dispatch,
-            live_stop_handler=stop_live_conversation,
+            agent_stop_handler=stop_agent,
         )
         remote_server.new_pairing_pin()
 
@@ -500,7 +500,7 @@ def main():
                 f"{remote_server.url()}"
             )
             print(f"[REMOTE] Pairing PIN: {remote_server._pin}")
-            print("[REMOTE] Dashboard Live stop control: READY")
+            print("[REMOTE] Dashboard Agent stop control: READY")
 
         start_voice_engine()
 

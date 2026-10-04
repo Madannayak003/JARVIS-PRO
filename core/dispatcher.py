@@ -211,40 +211,37 @@ def dispatch(
         return
     
     # * =====================================================
-    # * LIVE CONVERSATION CONTROL
+    # * AGENT CONTROL
     # * =====================================================
 
-    live_command = command.lower().strip()
+    agent_command = command.lower().strip()
 
-    if live_command in {
-        "start live conversation",
-        "start live mode",
-        "enter live conversation",
-        "start natural live conversation",
+    if agent_command in {
+        "start agent",
+        "enter agent",
+        "start natural agent",
     }:
 
         return execute(
-            "start_live_conversation"
+            "start_agent"
         )
 
-    if live_command in {
-        "stop live conversation",
-        "stop live mode",
-        "exit live conversation",
-        "end live conversation",
+    if agent_command in {
+        "stop agent",
+        "exit agent",
+        "end agent",
     }:
 
         return execute(
-            "stop_live_conversation"
+            "stop_agent"
         )
 
-    if live_command in {
-        "live conversation status",
-        "live mode status",
+    if agent_command in {
+        "agent status",
     }:
 
         return execute(
-            "live_conversation_status"
+            "agent_status"
         )
 
     # * =====================================================
@@ -1916,7 +1913,7 @@ def dispatch(
             return
         
     # * =====================================================
-    # * LIVE CONVERSATION FALLBACK BARRIER
+    # * AGENT FALLBACK BARRIER
     # * =====================================================
     #
     # * When Gemini Live invokes jarvis_command, JARVIS
@@ -1924,7 +1921,7 @@ def dispatch(
     #
     # * However, if no JARVIS skill/action handled the
     # ! command, NEVER fall through into the normal AI
-    # * worker while Live Conversation is active.
+    # * worker while Agent is active.
     #
     # * Gemini Live remains the conversational speaker.
     # * =====================================================

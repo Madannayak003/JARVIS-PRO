@@ -163,7 +163,7 @@ Source package summaries:
     skills/      import-time action modules grouped by capability.
     tests/       focused routing, provider, vision, remote, and feature tests.
     tools/       Windows integration and database utility scripts.
-    voice/       online/offline STT/TTS, live conversation, queues and state.
+    voice/       online/offline STT/TTS, Agent, queues and state.
 
 Large/derived areas:
     hud/web/node_modules/   installed Node dependencies; not manually audited.
@@ -736,7 +736,7 @@ tools/database_delete.py | classes=- | functions=-
 tools/windows_integration.py | classes=- | functions=_require_windows,_python_executable,_desktop_directory,create_desktop_shortcut,_startup_directory,_autostart_shortcut_path,get_autostart_status,set_autostart
 voice/__init__.py | classes=- | functions=-
 voice/interrupt.py | classes=- | functions=stop,clear,stopped
-voice/live_conversation.py | classes=LiveConversation | functions=_api_key,_system_prompt,send_live_text,start_live_conversation,stop_live_conversation,live_conversation_status
+voice/agent.py | classes=Agent | functions=_api_key,_system_prompt,send_agent_text,start_agent,stop_agent,agent_status
 voice/manager.py | classes=- | functions=_clean_tts_text,add_speech_listener,remove_speech_listener,_notify_speech_listeners,notify_speech_output,check_internet,start_speech_session,_worker,prepare_speech,play_prepared_speech,speak,wait_for_speech,stop_speaking
 voice/mode.py | classes=- | functions=internet_available,get_mode
 voice/offline/__init__.py | classes=- | functions=-
@@ -930,7 +930,7 @@ Important source-file descriptions:
         generally under ai/memory.db and related local data.
     voice/*:
         Online Edge TTS and SpeechRecognition path, offline Faster-Whisper,
-        Piper TTS, shared voice state/queues, and Gemini Live conversation.
+        Piper TTS, shared voice state/queues, and Gemini Agent.
     services/remote_control.py:
         Optional thin FastAPI remote service with PIN pairing and bearer token;
         compatible with the dispatcher but not the primary object started by
@@ -1080,7 +1080,7 @@ Priority established by dispatcher:
     3. pending face registration input
     4. pending clarification resolution/cancel/new request
     5. pending email composition reply
-    6. live-conversation control commands
+    6. Agent control commands
     7. legacy clarification contexts such as Google/YouTube/GitHub choice
     8. screen/browser/file follow-up resolution and action memory
     9. deterministic fast route
@@ -1103,7 +1103,7 @@ Examples confirmed by routers/actions:
     "open file", "create folder", "recent files", "zip ...", "recycle bin"
     "wifi status", "bluetooth status", "weather", "get news"
     "open whatsapp", "send whatsapp message", "send email"
-    "start live conversation", "stop live conversation"
+    "start Agent", "stop Agent"
     "create note", "list reminders", "remember ..."
     "volume", "brightness", "battery", "running apps", "lock", "sleep"
     These are representative source-confirmed patterns, not a promise that
@@ -1163,9 +1163,9 @@ Provider summary:
     STATUS: implemented; requires a reachable local Ollama service/model.
 
     PROVIDER: Google Gemini
-    MODELS: Gemini model names registered above; live conversation also uses
-            a Gemini Live path in voice/live_conversation.py
-    IMPLEMENTATION: ai/providers/gemini.py; voice/live_conversation.py
+    MODELS: Gemini model names registered above; Agent also uses
+            a Gemini Live path in voice/agent.py
+    IMPLEMENTATION: ai/providers/gemini.py; voice/agent.py
     GENERATION: Google GenAI client, including text and supported multimodal
                 context paths
     STREAMING: implemented
@@ -1302,7 +1302,7 @@ What is actually learned:
 
 Settings/profile surfaces include:
     assistant name, user name, assistant colour, selected voice, morning brief,
-    microphone/live-conversation toggles, HUD visibility toggles, personal links,
+    microphone/Agent toggles, HUD visibility toggles, personal links,
     contacts, email contacts, WhatsApp contacts, and remembered facts.
 
 Persistence is split:
@@ -1361,7 +1361,7 @@ or route-only code.
 
 The loader records configured, loaded, and failed lists and continues after a
 module import error. Registration is explicit and occurs as a side effect of
-module import. main.py adds the three live-conversation actions after core
+module import. main.py adds the three Agent actions after core
 startup.
 
 Action registry behavior:
@@ -1446,8 +1446,8 @@ Offline:
     offline_runner.py runs typed and microphone commands through the shared
     OfflineActionBridge and avoids duplicate local-action speech.
 
-Live conversation:
-    voice/live_conversation.py contains a separate Gemini Live session,
+Agent:
+    voice/agent.py contains a separate Gemini Live session,
     microphone/audio streaming, typed-to-live integration, interruption and
     session lifecycle. main.py registers start/stop/status actions after startup.
 
@@ -1810,7 +1810,7 @@ DEVELOPER/AGENT:
 33. EXPERIMENTAL FEATURES
 =========================
 
-    - Gemini Live conversation/audio session in voice/live_conversation.py.
+    - Gemini Agent/audio session in voice/agent.py.
     - Offline shared-core mode with local Ollama and Piper.
     - YOLO temporal stabilization and local LBPH identity recognition.
     - Android wireless/ADB connection and phone-call monitor.
@@ -2046,8 +2046,8 @@ module-level register(...) calls. Handler source is shown by package/module.
         open_personal_link, show_personal_links
         skills/web/personal_links.py
     Runtime-registered after core init:
-        start_live_conversation, stop_live_conversation,
-        live_conversation_status            main.py
+        start_agent, stop_agent,
+        agent_status            main.py
 
 40. SECURITY ARCHITECTURE
 =========================

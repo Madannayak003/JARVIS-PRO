@@ -28,7 +28,7 @@ Features:
     - File upload
     - File download
     - Phone microphone WebSocket queue
-    - Direct Live Conversation stop
+    - Direct Agent stop
 """
 
 from __future__ import annotations
@@ -543,7 +543,7 @@ class DashboardServer:
             Callable[[str], object]
         ] = None,
 
-        live_stop_handler: Optional[
+        agent_stop_handler: Optional[
             Callable[..., object]
         ] = None,
 
@@ -559,11 +559,11 @@ class DashboardServer:
         )
 
         # * -----------------------------------------------------
-        # * Direct Live Conversation stop
+        # * Direct Agent stop
         # * -----------------------------------------------------
 
-        self.live_stop_handler = (
-            live_stop_handler
+        self.agent_stop_handler = (
+            agent_stop_handler
         )
 
         # * -----------------------------------------------------
@@ -624,7 +624,7 @@ class DashboardServer:
         # * Phone audio
         #
         # * This queue will later be connected to the
-        # * existing JARVIS Live Conversation engine.
+        # * existing JARVIS Agent engine.
         # * -----------------------------------------------------
 
         self._phone_audio_queue = (
@@ -1191,7 +1191,7 @@ class DashboardServer:
         # * "stop conversation" means:
         # * stop the current response/task.
         #
-        # * It does NOT stop Live Conversation.
+        # * It does NOT stop Agent.
         # * =====================================================
 
         try:
@@ -1237,7 +1237,7 @@ class DashboardServer:
         # * =====================================================
         # * LIVE TEXT BRIDGE
         #
-        # * When Live Conversation is active, typed Command
+        # * When Agent is active, typed Command
         # * Input is sent directly into the active Gemini Live
         # * session.
         #
@@ -1247,14 +1247,14 @@ class DashboardServer:
 
         try:
 
-            from voice.live_conversation import (
-                live_conversation_status,
-                send_live_text,
+            from voice.agent import (
+                agent_status,
+                send_agent_text,
             )
 
-            if live_conversation_status():
+            if agent_status():
 
-                if send_live_text(text):
+                if send_agent_text(text):
 
                     return
 
@@ -2347,20 +2347,20 @@ class DashboardServer:
 
             try:
 
-                from voice.live_conversation import _live
+                from voice.agent import _agent
 
             except Exception:
 
-                _live = None
+                _agent = None
 
-            if _live is not None and _live.running:
+            if _agent is not None and _agent.running:
 
-                _live.set_microphone_enabled(
+                _agent.set_microphone_enabled(
                     enabled
                 )
 
                 actual_enabled = (
-                    _live.microphone_enabled()
+                    _agent.microphone_enabled()
                 )
 
                 running = True
@@ -3494,13 +3494,13 @@ class DashboardServer:
             }
             
         # * =====================================================
-        # * DIRECT LIVE STATUS
+        # * DIRECT AGENT STATUS
         # * =====================================================
 
         @app.get(
-            "/api/live/status"
+            "/api/agent/status"
         )
-        async def live_status(
+        async def agent_status_endpoint(
             request: Request,
         ):
 
@@ -3520,13 +3520,13 @@ class DashboardServer:
 
             try:
 
-                from voice.live_conversation import (
-                    live_conversation_status,
+                from voice.agent import (
+                    agent_status,
                 )
 
                 running = (
-                    live_conversation_status()
-                    == "Live conversation is running."
+                    agent_status()
+                    == "Agent is running."
                 )
 
                 return {
@@ -3545,13 +3545,13 @@ class DashboardServer:
                 )
 
         # * =====================================================
-        # * DIRECT LIVE START
+        # * DIRECT AGENT START
         # * =====================================================
 
         @app.post(
-            "/api/live/start"
+            "/api/agent/start"
         )
-        async def live_start(
+        async def agent_start_endpoint(
             request: Request,
         ):
 
@@ -3571,18 +3571,18 @@ class DashboardServer:
 
             try:
 
-                from voice.live_conversation import (
-                    start_live_conversation,
+                from voice.agent import (
+                    start_agent,
                 )
 
                 result = (
-                    start_live_conversation()
+                    start_agent()
                 )
 
                 await self.broadcast({
                     "type": "sys",
                     "text": (
-                        "Live Conversation "
+                        "Agent "
                         "start requested."
                     ),
                 })
@@ -3607,13 +3607,13 @@ class DashboardServer:
                 )
 
         # * =====================================================
-        # * DIRECT LIVE STOP
+        # * DIRECT AGENT STOP
         # * =====================================================
 
         @app.post(
-            "/api/live/stop"
+            "/api/agent/stop"
         )
-        async def live_stop(
+        async def agent_stop_endpoint(
             request: Request,
         ):
 
@@ -3631,7 +3631,7 @@ class DashboardServer:
                     status_code=401,
                 )
 
-            if not self.live_stop_handler:
+            if not self.agent_stop_handler:
 
                 return JSONResponse(
                     {
@@ -3647,13 +3647,13 @@ class DashboardServer:
             try:
 
                 result = (
-                    self.live_stop_handler()
+                    self.agent_stop_handler()
                 )
 
                 await self.broadcast({
                     "type": "sys",
                     "text": (
-                        "Live Conversation "
+                        "Agent "
                         "stop requested."
                     ),
                 })

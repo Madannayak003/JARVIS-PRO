@@ -109,7 +109,7 @@ JARVIS PRO combines:
 - Python-to-web HUD event bridge
 - Live assistant state, activity, system telemetry, call state, and notifications
 - Mobile-friendly dashboard with pairing, command submission, history, settings,
-  Android controls, uploads, and live-conversation controls
+  Android controls, uploads, and Agent controls
 
 Feature availability depends on Windows permissions, installed applications,
 hardware, model files, network access, and configured credentials.
@@ -160,7 +160,7 @@ Service / Windows API / browser / Android / external API
 | <code>brain/</code> | Conversation context, intent understanding, clarification, developer routing, planning, and follow-up resolution. |
 | <code>skills/</code> | Capability modules that register executable actions. |
 | <code>services/</code> | Shared adapters for Android, Windows, communication, media, external APIs, and related integrations. |
-| <code>voice/</code> | Speech input, TTS, offline mode, voice state, queues, interruption, and live conversation. |
+| <code>voice/</code> | Speech input, TTS, offline mode, voice state, queues, interruption, and Agent. |
 | <code>hud/</code> | Python HUD state/events, telemetry, native window, and web bridge. |
 | <code>dashboard/server.py</code> | FastAPI dashboard/API layer that forwards commands into the existing dispatcher. |
 
@@ -208,11 +208,11 @@ command. Pending clarification, email composition, face registration, browser
 references, and other follow-up state are handled before a reply is treated as
 a new command.
 
-Live conversation is registered after core initialization through:
+Agent is registered after core initialization through:
 
-- <code>start_live_conversation</code>
-- <code>stop_live_conversation</code>
-- <code>live_conversation_status</code>
+- <code>start_agent</code>
+- <code>stop_agent</code>
+- <code>agent_status</code>
 
 ## 🖥️ Desktop Automation
 
@@ -431,7 +431,7 @@ It provides, where configured:
 - Settings/customization
 - Android status and connection controls
 - Upload/download and desktop integration endpoints
-- Direct live-conversation stop control
+- Direct Agent stop control
 
 The active application path constructs <code>DashboardServer</code> in
 <code>dashboard/server.py</code> and passes the existing
@@ -617,7 +617,7 @@ Important environment variables include:
 
 | Variable | Purpose |
 | --- | --- |
-| <code>GEMINI_API_KEY</code> | Gemini provider and live conversation access |
+| <code>GEMINI_API_KEY</code> | Gemini provider and Agent access |
 | <code>OPENAI_API_KEY</code> | OpenAI provider access |
 | <code>YOUTUBE_API_KEY</code> | YouTube API integration |
 | <code>SPOTIFY_CLIENT_ID</code> / <code>SPOTIFY_CLIENT_SECRET</code> | Spotify integration |
@@ -661,7 +661,7 @@ JARVIS-PRO/
 │   └── web/                   # Next.js/React/Three.js frontend
 ├── services/                  # Android, Windows, communication, and API adapters
 ├── skills/                    # Registered capability modules
-├── voice/                     # Online/offline voice and live conversation
+├── voice/                     # Online/offline voice and Agent
 ├── data/                      # Runtime data, settings, logs, and face samples
 ├── tests/                     # Focused feature and regression tests
 ├── tools/                     # Supporting utilities
@@ -688,7 +688,7 @@ modules.
 | <code>dashboard/server.py</code> | Active FastAPI remote/local dashboard |
 | <code>hud/</code> | Python event bus, state, telemetry, bridge, and native window |
 | <code>hud/web/</code> | Integrated Next.js HUD frontend |
-| <code>voice/</code> | Online/offline speech pipelines and live conversation |
+| <code>voice/</code> | Online/offline speech pipelines and Agent |
 
 ## 🔐 Safety and Design Boundaries
 

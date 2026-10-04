@@ -10,7 +10,7 @@ This module does NOT use:
 - Brain
 - JARVIS conversation manager
 - JARVIS memory
-- Live Conversation
+- Agent
 """
 
 from chatbot.ai_chat_bot import (

@@ -737,7 +737,7 @@
             <button class="action live" id="wakeButton" type="button">Wake</button>
             <button class="action" id="micButton" type="button">Microphone</button>
             <button class="action" id="uploadButton" type="button">Upload</button>
-            <button class="action danger" id="stopLiveButton" type="button">Stop Live</button>
+            <button class="action danger" id="stopAgentButton" type="button">Stop Agent</button>
         </div>
 
         <div class="audio-state" id="audioState">
@@ -790,7 +790,7 @@ const statusValue = document.getElementById("statusValue");
 const wakeButton = document.getElementById("wakeButton");
 const micButton = document.getElementById("micButton");
 const uploadButton = document.getElementById("uploadButton");
-const stopLiveButton = document.getElementById("stopLiveButton");
+const stopAgentButton = document.getElementById("stopAgentButton");
 const fileInput = document.getElementById("fileInput");
 const audioState = document.getElementById("audioState");
 const scrollToBottomBtn = document.getElementById("scrollToBottomBtn");
@@ -1103,9 +1103,9 @@ wakeButton.addEventListener("click", async function () {
 // ============================================================
 // STOP LIVE
 // ============================================================
-stopLiveButton.addEventListener("click", async function () {
+stopAgentButton.addEventListener("click", async function () {
     try {
-        const response = await fetch("/api/live/stop", {
+        const response = await fetch("/api/agent/stop", {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token
@@ -1114,7 +1114,7 @@ stopLiveButton.addEventListener("click", async function () {
 
         const data = await response.json();
         if (!response.ok || !data.ok) {
-            addMessage("system", data.error || "Unable to stop Live Conversation.");
+            addMessage("system", data.error || "Unable to stop Agent.");
         }
     } catch (error) {
         addMessage("system", "Live stop request failed.");
