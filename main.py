@@ -30,6 +30,7 @@ from pathlib import Path
 # * Load local configuration before importing application components.
 import config  # * noqa: F401
 from config.settings import get_assistant_display_name
+from core.diagnostics import debug_print
 
 # * * =============================================================
 # * ! JARVIS CORE
@@ -76,7 +77,7 @@ def start_web_hud() -> bool:
     global _web_hud_process
 
     if _web_hud_process is not None and _web_hud_process.poll() is None:
-        print("[MAIN HUD] Next.js HUD already running.")
+        debug_print("[MAIN HUD] Next.js HUD already running.")
         return True
 
     package_json = WEB_HUD_DIRECTORY / "package.json"
@@ -96,7 +97,7 @@ def start_web_hud() -> bool:
         web_log = open(web_log_path, "a", encoding="utf-8", buffering=1)
         creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 
-        print("[MAIN HUD] Starting Next.js HUD...")
+        debug_print("[MAIN HUD] Starting Next.js HUD...")
 
         _web_hud_process = subprocess.Popen(
             [npm_command, "run", "dev"],
@@ -107,10 +108,9 @@ def start_web_hud() -> bool:
             creationflags=creation_flags,
         )
 
-        print("[MAIN HUD] Next.js HUD started.")
-        print("[MAIN HUD] HUD URL:")
-        print(WEB_HUD_URL)
-        print(f"[MAIN HUD] Web logs: {web_log_path}")
+        debug_print("[MAIN HUD] Next.js HUD started.")
+        debug_print("[MAIN HUD] HUD URL:", WEB_HUD_URL)
+        debug_print(f"[MAIN HUD] Web logs: {web_log_path}")
         return True
 
     except FileNotFoundError:
@@ -128,7 +128,7 @@ def start_web_hud() -> bool:
 def wait_for_web_hud(timeout: float = 30.0) -> bool:
     import urllib.request
 
-    print("[MAIN HUD] Waiting for Next.js HUD...")
+    debug_print("[MAIN HUD] Waiting for Next.js HUD...")
     started = time.time()
 
     while time.time() - started < timeout:
@@ -137,7 +137,7 @@ def wait_for_web_hud(timeout: float = 30.0) -> bool:
 
         try:
             with urllib.request.urlopen(WEB_HUD_URL, timeout=1):
-                print("[MAIN HUD] Next.js HUD is ready.")
+                debug_print("[MAIN HUD] Next.js HUD is ready.")
                 return True
         except Exception:
             time.sleep(0.25)
@@ -152,16 +152,16 @@ def wait_for_web_hud(timeout: float = 30.0) -> bool:
 
 def run_voice_engine():
     try:
-        print("[MAIN] Voice engine waiting for core...")
+        debug_print("[MAIN] Voice engine waiting for core...")
         wait_for_core()
 
         if _shutdown_event.is_set():
             return
 
-        print("[MAIN] Core ready. Starting voice engine...")
+        debug_print("[MAIN] Core ready. Starting voice engine...")
         from voice.online_runner import run
 
-        print(
+        debug_print(
             f"[MAIN] Online {get_assistant_display_name()} voice engine started."
         )
         run()
@@ -182,14 +182,14 @@ def start_voice_engine():
         daemon=True,
     )
     _voice_thread.start()
-    print("[MAIN] Voice engine thread started.")
+    debug_print("[MAIN] Voice engine thread started.")
 
 
 def run_offline_voice_engine():
     """Run offline providers against the shared, initialized JARVIS core."""
 
     try:
-        print("[MAIN] Offline voice engine waiting for core...")
+        debug_print("[MAIN] Offline voice engine waiting for core...")
         wait_for_core()
 
         if _shutdown_event.is_set():
@@ -197,7 +197,7 @@ def run_offline_voice_engine():
 
         from voice.offline.offline_runner import run
 
-        print("[MAIN] Offline voice engine started.")
+        debug_print("[MAIN] Offline voice engine started.")
         run()
 
     except Exception as error:
@@ -216,7 +216,7 @@ def start_offline_voice_engine():
         daemon=True,
     )
     _voice_thread.start()
-    print("[MAIN] Offline voice engine thread started.")
+    debug_print("[MAIN] Offline voice engine thread started.")
 
 
 # * =============================================================
@@ -258,7 +258,7 @@ def request_jarvis_shutdown():
 
 def configure_hud_shutdown():
     hud_web.set_shutdown_callback(request_jarvis_shutdown)
-    print("[MAIN HUD] Desktop shutdown callback registered.")
+    debug_print("[MAIN HUD] Desktop shutdown callback registered.")
 
 
 # * =============================================================
@@ -269,13 +269,20 @@ def start_native_hud():
     if not wait_for_web_hud():
         return False
 
+    print("[BOOT] HUD           : READY")
+
     try:
         from dashboard.heartbeat import start_heartbeat
         start_heartbeat()
     except Exception as error:
         print(f"[HEARTBEAT] Startup skipped: {error}")
 
-    print(
+    print()
+    print("=" * 50)
+    print(f"{(get_assistant_display_name() + ' READY'):^50}")
+    print("=" * 50)
+
+    debug_print(
         f"[MAIN HUD] Opening {get_assistant_display_name()} desktop window..."
     )
 
@@ -284,7 +291,7 @@ def start_native_hud():
 
         # * pywebview requires the MAIN THREAD.
         result = run()
-        print(f"[MAIN HUD] Desktop HUD exited: {result}")
+        debug_print(f"[MAIN HUD] Desktop HUD exited: {result}")
 
         if not _shutdown_event.is_set():
             request_jarvis_shutdown()
@@ -336,18 +343,21 @@ def stop_web_hud():
 
 def initialize_core_background():
     try:
-        print("[CORE] Background initialization started.")
-        print("[CORE] Loading skills...")
-        load_all()
+        debug_print("[CORE] Background initialization started.")
+        debug_print("[CORE] Loading skills...")
+        skill_info = load_all()
+        print(f"[BOOT] Skills        : {skill_info['loaded_count']} loaded")
 
-        print("[CORE] Initializing memory...")
+        debug_print("[CORE] Initializing memory...")
         init_memory()
 
-        print("[CORE] Starting services...")
+        debug_print("[CORE] Starting services...")
         start_all()
+        print("[BOOT] Services      : READY")
 
-        print("[CORE] Background initialization complete.")
+        debug_print("[CORE] Background initialization complete.")
         mark_core_ready()
+        print("[BOOT] Core          : READY")
 
     except Exception as error:
         print(f"[CORE] Background initialization failed: {error}")
@@ -361,13 +371,18 @@ def initialize_core_background():
 def main():
     try:
         mode = get_mode()
-        print(f"[MAIN] Voice mode: {mode}")
+        assistant_name = get_assistant_display_name()
+        print("=" * 50)
+        print(f"{assistant_name:^50}")
+        print("=" * 50)
+        print()
+        print(f"[BOOT] Voice Mode    : {str(mode).upper()}")
 
         HUDIntegration.voice_mode(mode)
-        print(f"[MAIN HUD] Voice mode sent to HUD: {mode}")
+        debug_print(f"[MAIN HUD] Voice mode sent to HUD: {mode}")
 
         if mode == "offline":
-            print(
+            debug_print(
                 f"[MAIN] Starting shared {get_assistant_display_name()} runtime "
                 "in offline mode..."
             )
@@ -385,15 +400,15 @@ def main():
                 daemon=True,
             )
             core_thread.start()
-            print("[MAIN] Offline core initialization started.")
+            debug_print("[MAIN] Offline core initialization started.")
 
             hud_runtime.start()
-            print("[MAIN HUD] Offline HUD runtime started.")
+            debug_print("[MAIN HUD] Offline HUD runtime started.")
 
             if not hud_web.start():
                 print("[MAIN HUD] WARNING: HUD bridge failed.")
             else:
-                print("[MAIN HUD] Offline HUD bridge started.")
+                debug_print("[MAIN HUD] Offline HUD bridge started.")
 
             configure_hud_shutdown()
 
@@ -424,7 +439,7 @@ def main():
             offline_dashboard.new_pairing_pin()
 
             if offline_dashboard.start():
-                print(
+                debug_print(
                     f"[OFFLINE] Local Dashboard API: "
                     f"{offline_dashboard.url()}"
                 )
@@ -433,11 +448,11 @@ def main():
 
             start_offline_voice_engine()
 
-            print(
+            debug_print(
                 f"[MAIN HUD] Starting native {get_assistant_display_name()} HUD..."
             )
             start_native_hud()
-            print("[MAIN] Native HUD closed.")
+            debug_print("[MAIN] Native HUD closed.")
             request_jarvis_shutdown()
 
             if _voice_thread is not None and _voice_thread.is_alive():
@@ -446,7 +461,7 @@ def main():
             return 0
 
         os.environ.pop("JARVIS_OFFLINE_MODE", None)
-        print(
+        debug_print(
             f"[MAIN] Starting existing online {get_assistant_display_name()}..."
         )
 
@@ -456,15 +471,15 @@ def main():
             daemon=True,
         )
         core_thread.start()
-        print("[MAIN] Core initialization started in background.")
+        debug_print("[MAIN] Core initialization started in background.")
 
         hud_runtime.start()
-        print("[MAIN HUD] HUD runtime started.")
+        debug_print("[MAIN HUD] HUD runtime started.")
 
         if not hud_web.start():
             print("[MAIN HUD] WARNING: HUD bridge failed.")
         else:
-            print("[MAIN HUD] Web HUD bridge started.")
+            debug_print("[MAIN HUD] Web HUD bridge started.")
 
         configure_hud_shutdown()
 
@@ -483,7 +498,7 @@ def main():
         register("start_agent", start_agent, category="voice")
         register("stop_agent", stop_agent, category="voice")
         register("agent_status", agent_status, category="voice")
-        print("[LIVE] Agent actions registered.")
+        print("[BOOT] Agent         : READY")
 
         # * Remote dashboard
         from core.dispatcher import dispatch
@@ -495,21 +510,18 @@ def main():
         remote_server.new_pairing_pin()
 
         if remote_server.start():
-            print(
-                f"[REMOTE] {get_assistant_display_name()} Dashboard: "
-                f"{remote_server.url()}"
-            )
-            print(f"[REMOTE] Pairing PIN: {remote_server._pin}")
-            print("[REMOTE] Dashboard Agent stop control: READY")
+            print(f"[REMOTE] Address     : {remote_server.url()}")
+            print(f"[REMOTE] Pairing PIN : {remote_server._pin}")
+            print("[BOOT] Remote        : READY")
 
         start_voice_engine()
 
-        print(
+        debug_print(
             f"[MAIN HUD] Starting native {get_assistant_display_name()} HUD..."
         )
         start_native_hud()
 
-        print("[MAIN] Native HUD closed.")
+        debug_print("[MAIN] Native HUD closed.")
         request_jarvis_shutdown()
 
         # * Instant check instead of hanging on join

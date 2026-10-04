@@ -67,6 +67,7 @@ from core.live_execution import (
 from hud.integration import HUDIntegration
 from config.environment import get_env
 from config.settings import get_assistant_display_name
+from core.diagnostics import debug_print
 
 # * =============================================================
 # * CONFIGURATION
@@ -648,9 +649,7 @@ class Agent:
 
         if self.running:
 
-            print(
-                "[LIVE] Already running."
-            )
+            debug_print("[LIVE] Already running.")
 
             return
 
@@ -664,9 +663,7 @@ class Agent:
         
         self.set_microphone_enabled(True)
         
-        print(
-            "[LIVE] AGENT START REQUESTED"
-        )
+        print("[AGENT] Starting...")
 
         self._thread = threading.Thread(
             target=self._thread_main,
@@ -684,15 +681,11 @@ class Agent:
 
         if not self.running:
 
-            print(
-                "[LIVE] Already stopped."
-            )
+            debug_print("[LIVE] Already stopped.")
 
             return
 
-        print(
-            "[LIVE] Stop requested."
-        )
+        print("[AGENT] Stopping...")
 
         self._stop_event.set()
 
@@ -720,15 +713,7 @@ class Agent:
 
             self._set_running(False)
 
-            print(
-                "[LIVE] =================================================="
-            )
-            print(
-                "[LIVE] AGENT ENDED"
-            )
-            print(
-                "[LIVE] =================================================="
-            )
+            print("[AGENT] Stopped")
 
     # * =========================================================
     # * MAIN SESSION
@@ -744,17 +729,9 @@ class Agent:
                 "GEMINI_API_KEY is not configured."
             )
             
-        print(
-            "[LIVE] AGENT STARTING"
-        )
-
-        print(
-            "[LIVE] Starting Gemini Live session..."
-        )
-
-        print(
-            f"[LIVE] Model: {LIVE_MODEL}"
-        )
+        debug_print("[LIVE] AGENT STARTING")
+        debug_print("[LIVE] Starting Gemini Live session...")
+        debug_print(f"[LIVE] Model: {LIVE_MODEL}")
 
         # * -----------------------------------------------------
         # * Pause the normal JARVIS microphone exactly once.
@@ -762,7 +739,7 @@ class Agent:
 
         self._pause_normal_microphone()
         
-        print(
+        debug_print(
             f"[LIVE] Normal {get_assistant_display_name()} microphone paused."
         )
 
@@ -1052,9 +1029,7 @@ class Agent:
                             config=connection_config,
                         ) as session:
 
-                            print(
-                                "[LIVE] Gemini Live connected."
-                            )
+                            print("[AGENT] Connected")
 
                             with self._session_lock:
                                 self._session = session
@@ -1073,9 +1048,7 @@ class Agent:
                                     "resumed automatically."
                                 )
 
-                            print(
-                                "[LIVE] Waiting for conversation..."
-                            )
+                            print("[AGENT] Listening...")
 
                             # * =========================================
                             # * AUDIO SENDER

@@ -14,6 +14,7 @@ from core.registry import register
 from core.notifications import notify_windows_toast
 from hud.integration import HUDIntegration
 from voice.manager import speak
+from core.diagnostics import debug_print
 
 DATA_FILE = Path("data") / "schedules.json"
 _lock = threading.RLock()
@@ -187,7 +188,7 @@ def _run_due() -> None:
 
 
 def _worker() -> None:
-    print("[SCHEDULER] Background scheduler started")
+    debug_print("[SCHEDULER] Background scheduler started")
     while not _stop_event.is_set():
         try:
             _run_due()

@@ -18,6 +18,7 @@ ScreenContextManager for later contextual use.
 """
 
 from core.registry import register
+from core.diagnostics import debug_print
 
 from ai.core.service import ai_service
 
@@ -202,6 +203,6 @@ register(
     category="screen",
 )
 
-print(
+debug_print(
     "[SCREEN VISION SKILL] Registered."
 )

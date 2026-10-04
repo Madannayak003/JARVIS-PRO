@@ -2,6 +2,7 @@ import threading
 import os
 import requests
 import re
+from core.diagnostics import debug_print
 
 from core.live_execution import (
     is_live_execution,
@@ -528,7 +529,7 @@ def speak(
         f"[VOICE DEBUG] {speech_text}"
     )
 
-    print("[VOICE] Speaking response.")
+    debug_print("[VOICE] Speaking response.")
     
     # * -----------------------------------------------------
     # * HUD — JARVIS is speaking

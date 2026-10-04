@@ -11,6 +11,7 @@ Responsibilities:
 """
 
 from importlib import import_module
+from core.diagnostics import debug_print
 
 
 # * =========================================================
@@ -111,7 +112,7 @@ def load_skill(skill):
         if skill not in _LOADED:
             _LOADED.append(skill)
 
-        print(
+        debug_print(
             f"[SKILL LOADER] Loaded: {skill}"
         )
 
@@ -146,7 +147,7 @@ def load_all():
 
     global _INITIALIZED
 
-    print(
+    debug_print(
         "[SKILL LOADER] Starting..."
     )
 
@@ -158,16 +159,16 @@ def load_all():
 
     result = loader_info()
 
-    print(
+    debug_print(
         "[SKILL LOADER] Complete"
     )
 
-    print(
+    debug_print(
         f"[SKILL LOADER] "
         f"Modules loaded: {result['loaded_count']}"
     )
 
-    print(
+    debug_print(
         f"[SKILL LOADER] "
         f"Modules failed: {result['failed_count']}"
     )

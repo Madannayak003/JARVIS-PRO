@@ -5,6 +5,7 @@ from core.task_queue import get_task
 from core.task_queue import has_tasks
 
 from core.registry import execute
+from core.diagnostics import debug_print
 
 running = True
 
@@ -18,13 +19,11 @@ def worker():
 
             action = task["action"]
 
-            print(f"\n[TASK] {action}")
-
-            print("Starting:", action)
+            debug_print("[TASK] Starting:", action)
 
             execute(action, task)
 
-            print("Finished:", action)
+            debug_print("[TASK] Finished:", action)
 
         else:
 

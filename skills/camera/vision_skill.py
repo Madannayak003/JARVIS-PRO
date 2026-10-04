@@ -24,6 +24,7 @@ Camera skill itself is not modified.
 """
 
 from core.registry import register
+from core.diagnostics import debug_print
 
 from skills.camera.vision_loop import vision_loop
 from skills.camera.vision_query import vision_query
@@ -609,6 +610,6 @@ register(
 )
 
 
-print(
+debug_print(
     "[VISION SKILL] Registered."
 )

@@ -29,7 +29,13 @@ def execute_ai_plan(
 
         action = step["action"]
 
-        print(f"\nExecuting {action}")
+        app = str(step.get("app", "")).strip()
+        action_label = (
+            f"Opening {app}"
+            if action == "open" and app
+            else action.replace("_", " ").title()
+        )
+        print(f"[ACTION] {action_label}")
 
         # * Existing context
         set_value("last_action", action)
@@ -45,6 +51,8 @@ def execute_ai_plan(
         if "query" in step:
             set_memory("search", step["query"])
 
-        results.append(execute(action, step))
+        result = execute(action, step)
+        results.append(result)
+        print("[STATUS] Failed" if result is False else "[STATUS] Done")
 
     return results

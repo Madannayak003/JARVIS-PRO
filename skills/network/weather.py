@@ -10,6 +10,7 @@ No API key required.
 
 import asyncio
 import requests
+from core.diagnostics import debug_print
 
 from core.registry import register
 from voice.manager import speak
@@ -618,7 +619,7 @@ def _detect_current_location():
 
             if latitude is not None and longitude is not None:
 
-                print(
+                debug_print(
                     "[WEATHER LOCATION] "
                     f"Windows location: "
                     f"{latitude}, {longitude} | "
@@ -661,7 +662,7 @@ def _detect_current_location():
 
         if latitude is not None and longitude is not None:
 
-            print(
+            debug_print(
                 "[WEATHER LOCATION] "
                 "Using IP geolocation fallback."
             )
@@ -718,7 +719,7 @@ def _detect_current_location():
                 "Location coordinates were not returned."
             )
 
-        print(
+        debug_print(
             "[WEATHER LOCATION] "
             "Using ipwho.is fallback."
         )
@@ -753,7 +754,7 @@ def _get_weather(latitude, longitude):
     Fetch current weather from Open-Meteo.
     """
 
-    print("[WEATHER] Fetching current weather...")
+    debug_print("[WEATHER] Fetching current weather...")
 
     response = requests.get(
         WEATHER_URL,
@@ -786,7 +787,7 @@ def _get_weather(latitude, longitude):
     if not isinstance(current, dict):
         raise ValueError("Open-Meteo response did not contain current weather data")
 
-    print("[WEATHER] Current weather ready")
+    debug_print("[WEATHER] Current weather ready")
     return data
 
 

@@ -3,6 +3,7 @@ Background Services
 """
 
 from services.remote_control import RemoteControlServer
+from core.diagnostics import debug_print
 
 SERVICES = {
 
@@ -15,19 +16,19 @@ _scheduler_started = False
 
 def start_all():
 
-    print("[SERVICES] Ready")
+    debug_print("[SERVICES] Ready")
 
     global _scheduler_started
     try:
         from skills.memory.reminders import start_scheduler as start_reminder_scheduler
         start_reminder_scheduler()
-        print("[SERVICES] Reminder scheduler started.")
+        debug_print("[SERVICES] Reminder scheduler started.")
     except Exception as error:
         print(f"[SERVICES] Reminder scheduler unavailable: {error}")
     try:
         from skills.automation.scheduling import start_scheduler
         _scheduler_started = start_scheduler()
-        print("[SERVICES] Scheduler started.")
+        debug_print("[SERVICES] Scheduler started.")
     except Exception as error:
         print(f"[SERVICES] Scheduler unavailable: {error}")
 
@@ -36,7 +37,7 @@ def start_all():
         from skills.phone_call.monitor import start_phone_call_monitor
 
         _phone_call_monitor = start_phone_call_monitor()
-        print("[SERVICES] Phone Call monitor started.")
+        debug_print("[SERVICES] Phone Call monitor started.")
     except Exception as error:
         print(f"[SERVICES] Phone Call monitor unavailable: {error}")
 
@@ -60,7 +61,7 @@ def stop_all():
         from skills.phone_call.monitor import stop_phone_call_monitor
 
         stop_phone_call_monitor()
-        print("[SERVICES] Phone Call monitor stopped.")
+        debug_print("[SERVICES] Phone Call monitor stopped.")
     except Exception as error:
         print(f"[SERVICES] Phone Call monitor shutdown skipped: {error}")
     finally:

@@ -145,7 +145,7 @@ def run():
         is_morning_brief_enabled()
     )
 
-    print(
+    debug_print(
         "[MORNING BRIEF] "
         f"Startup speech: "
         f"{'ON' if morning_brief_enabled else 'OFF'}"
@@ -169,7 +169,7 @@ def run():
 
         try:
 
-            print(
+            debug_print(
                 "[MORNING BRIEF] "
                 "Starting background news fetch..."
             )
@@ -185,7 +185,7 @@ def run():
 
     else:
 
-        print(
+        debug_print(
             "[MORNING BRIEF] "
             "Startup news disabled."
         )

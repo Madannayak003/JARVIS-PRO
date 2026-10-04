@@ -625,7 +625,7 @@ class TTSPipeline:
 
                         self.hud_speaking = True
 
-                        print("[VOICE] Speaking response.")
+                        debug_print("[VOICE] Speaking response.")
 
                     except Exception as e:
 

@@ -1,6 +1,7 @@
 import threading
 from queue import Queue
 import speech_recognition as sr
+from core.diagnostics import debug_print
 
 
 # * ============================================================
@@ -183,9 +184,7 @@ def start_listener():
 
         _listener_paused = False
 
-    print(
-        "[MIC] Background listener started"
-    )
+    print("[BOOT] Microphone    : READY")
 
 
 # * ============================================================

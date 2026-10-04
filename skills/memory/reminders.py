@@ -14,6 +14,7 @@ from datetime import datetime
 from core.registry import register
 from voice.manager import speak
 from core.notifications import notify_windows_toast
+from core.diagnostics import debug_print
 
 
 # * =========================================================
@@ -302,7 +303,7 @@ def cancel_reminder(data=None):
 
 def _reminder_worker():
 
-    print(
+    debug_print(
         "[REMINDERS] Background scheduler started"
     )
 

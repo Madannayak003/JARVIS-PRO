@@ -11,6 +11,7 @@ from core.action_memory import get_memory
 from core.action_memory import set_memory
 
 from core.app_resolver import resolve_app
+from core.diagnostics import debug_print
 
 
 # * Commands that already express an operation should continue through the
@@ -64,7 +65,7 @@ def create_plan(command, stop_event):
     if stop_event.is_set():
         return None
 
-    print("[PLANNER] Command:", command)
+    debug_print("[PLANNER] Command:", command)
 
 
     # * =========================================================
@@ -111,7 +112,7 @@ def create_plan(command, stop_event):
 
             if note_text:
 
-                print(
+                debug_print(
                     "[NOTES ROUTER] Creating note:",
                     note_text,
                 )
@@ -131,7 +132,7 @@ def create_plan(command, stop_event):
         command,
     ):
 
-        print("[NOTES ROUTER] Listing notes")
+        debug_print("[NOTES ROUTER] Listing notes")
 
         return [{
             "action": "list_notes"
@@ -143,7 +144,7 @@ def create_plan(command, stop_event):
         command,
     ):
 
-        print("[NOTES ROUTER] Listing notes")
+        debug_print("[NOTES ROUTER] Listing notes")
 
         return [{
             "action": "list_notes"
@@ -159,7 +160,7 @@ def create_plan(command, stop_event):
         command,
     ):
 
-        print("[NOTES ROUTER] Clearing notes")
+        debug_print("[NOTES ROUTER] Clearing notes")
 
         return [{
             "action": "clear_notes"
@@ -172,7 +173,7 @@ def create_plan(command, stop_event):
 
     plan = fast_route(command)
 
-    print("[PLANNER] Fast Route:", plan)
+    debug_print("[PLANNER] Fast Route:", plan)
     
     if plan:
         return plan
@@ -237,7 +238,7 @@ def create_plan(command, stop_event):
 
         if platform:
 
-            print(f"[SMART SEARCH] Using {platform}")
+            debug_print(f"[SMART SEARCH] Using {platform}")
 
             if platform == "youtube":
 
@@ -317,7 +318,7 @@ def create_plan(command, stop_event):
 
     if app:
 
-        print(f"[SMART APP] {app}")
+        debug_print(f"[SMART APP] {app}")
 
         return [{
             "action": "open",
@@ -387,7 +388,7 @@ def create_plan(command, stop_event):
 
     if not response.success:
 
-        print(
+        debug_print(
             "[PLANNER AI ERROR]",
             response.error
         )
@@ -418,9 +419,9 @@ def create_plan(command, stop_event):
                 .strip()
         )
 
-    print("\n========== AI PLAN ==========")
-    print(answer)
-    print("=============================\n")
+    debug_print("\n========== AI PLAN ==========")
+    debug_print(answer)
+    debug_print("=============================\n")
 
     try:
 

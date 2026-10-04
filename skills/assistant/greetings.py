@@ -16,6 +16,7 @@ from typing import Mapping
 
 from core.registry import register
 from config.settings import get_assistant_display_name
+from core.diagnostics import debug_print
 
 
 # * ---------------------------------------------------------------------------
@@ -297,7 +298,7 @@ def speak_startup_text(speaker, text: str) -> bool:
     except Exception as error:
         print(f"[GREETING] Startup speech failed safely: {error}")
         return False
-    print("[GREETING] Startup brief spoken")
+    debug_print("[GREETING] Startup brief spoken")
     return True
 
 

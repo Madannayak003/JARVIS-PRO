@@ -688,7 +688,7 @@ class DashboardServer:
                 self._on_voice_output
             )
 
-            print(
+            debug_print(
                 "[REMOTE] Voice output bridge connected."
             )
 
@@ -719,7 +719,7 @@ class DashboardServer:
                 saved_voice
             )
 
-            print(
+            debug_print(
                 "[VOICE SETTINGS] "
                 f"Restored: {saved_voice}"
             )
@@ -824,7 +824,7 @@ class DashboardServer:
 
         self._token_keys.clear()
 
-        print(
+        debug_print(
             "[REMOTE] New pairing PIN generated."
         )
 
@@ -1172,7 +1172,7 @@ class DashboardServer:
         text: str,
     ):
 
-        print(
+        debug_print(
             "[REMOTE COMMAND] Received:",
             text,
         )

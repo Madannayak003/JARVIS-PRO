@@ -14,6 +14,7 @@ Only ONE task of each type runs at a time.
 """
 
 import threading
+from core.diagnostics import debug_print
 
 
 class TaskManager:
@@ -44,7 +45,7 @@ class TaskManager:
 
             thread.start()
 
-            print(f"[TASK] Started : {name}")
+            debug_print(f"[TASK] Started : {name}")
 
     def stop(self, name):
 
@@ -53,7 +54,7 @@ class TaskManager:
 
         if thread and thread.is_alive():
 
-            print(f"[TASK] Stopping : {name}")
+            debug_print(f"[TASK] Stopping : {name}")
 
             event.set()
 

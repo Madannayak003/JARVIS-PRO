@@ -15,6 +15,7 @@ It only publishes display information to the HUD.
 from __future__ import annotations
 
 import threading
+from core.diagnostics import debug_print
 import time
 
 from .manager import hud
@@ -61,7 +62,7 @@ class HUDRuntime:
 
         self.thread.start()
 
-        print(
+        debug_print(
             "[HUD RUNTIME] Started."
         )
 
@@ -89,7 +90,7 @@ class HUDRuntime:
 
         self.thread = None
 
-        print(
+        debug_print(
             "[HUD RUNTIME] Stopped."
         )
 

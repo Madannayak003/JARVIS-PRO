@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Callable, Mapping
 
 from skills.assistant.greetings import startup_brief_greeting, speak_startup_text
+from core.diagnostics import debug_print
 
 
 _DATA_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="JARVIS-Startup")
@@ -120,7 +121,7 @@ def build_startup_brief(
 ) -> str:
     """Collect available data and render one natural spoken utterance."""
     now = now or datetime.now()
-    print("[STARTUP BRIEF] Building daily startup brief...")
+    debug_print("[STARTUP BRIEF] Building daily startup brief...")
     parts = [
         startup_brief_greeting(now=now, profile=profile),
         _date_sentence(now),
@@ -128,12 +129,12 @@ def build_startup_brief(
     ]
 
     reminders = list(_safe_call("Reminders", reminders_provider or (lambda: _today_reminders(now)), []) or [])
-    print(f"[STARTUP BRIEF] Reminders: {len(reminders)}")
+    debug_print(f"[STARTUP BRIEF] Reminders: {len(reminders)}")
     if reminders:
         parts.append(_count_sentence(len(reminders), "reminder", "reminders"))
 
     tasks = list(_safe_call("Schedule", tasks_provider or (lambda: _today_tasks(now)), []) or [])
-    print(f"[STARTUP BRIEF] Schedule: {len(tasks)} scheduled tasks")
+    debug_print(f"[STARTUP BRIEF] Schedule: {len(tasks)} scheduled tasks")
     if tasks:
         parts.append(_count_sentence(len(tasks), "scheduled task", "scheduled tasks"))
     if not reminders and not tasks:
@@ -156,7 +157,7 @@ def build_startup_brief(
         sentence = _weather_sentence(weather or {})
         if sentence:
             parts.append(sentence)
-            print("[STARTUP BRIEF] Weather: READY")
+            debug_print("[STARTUP BRIEF] Weather: READY")
         else:
             print("[STARTUP BRIEF] Weather unavailable: no current fields")
     except Exception as error:
@@ -168,7 +169,7 @@ def build_startup_brief(
         try:
             from core.morning_brief import build_spoken_brief
             parts.append(build_spoken_brief(news_headlines))
-            print(f"[STARTUP BRIEF] News: {len(news_headlines[:3])} headlines")
+            debug_print(f"[STARTUP BRIEF] News: {len(news_headlines[:3])} headlines")
         except Exception as error:
             print(f"[STARTUP BRIEF] News unavailable: {error}")
     elif news_enabled:
@@ -176,9 +177,9 @@ def build_startup_brief(
     else:
         print("[STARTUP BRIEF] News: DISABLED")
 
-    print("[STARTUP BRIEF] Greeting: READY")
-    print("[STARTUP BRIEF] Date: READY")
-    print("[STARTUP BRIEF] Brief generated successfully")
+    debug_print("[STARTUP BRIEF] Greeting: READY")
+    debug_print("[STARTUP BRIEF] Date: READY")
+    debug_print("[STARTUP BRIEF] Brief generated successfully")
     return " ".join(part.strip() for part in parts if part and part.strip())
 
 
@@ -192,7 +193,7 @@ def speak_startup_brief(
 ) -> bool:
     """Collect existing startup providers within one bounded readiness window."""
     try:
-        print("[STARTUP BRIEF] Collecting startup data...")
+        debug_print("[STARTUP BRIEF] Collecting startup data...")
         if weather_future is None:
             weather_future = start_weather_fetch()
         futures = {
@@ -204,7 +205,7 @@ def speak_startup_brief(
         if news_enabled and news_future is not None:
             futures[news_future] = "news"
 
-        print("[STARTUP BRIEF] Waiting for startup data...")
+        debug_print("[STARTUP BRIEF] Waiting for startup data...")
         done, pending = wait(futures, timeout=STARTUP_DATA_TIMEOUT)
         pending = set(pending)
 
@@ -226,15 +227,15 @@ def speak_startup_brief(
             try:
                 results[label] = future.result()
                 if label == "weather":
-                    print("[STARTUP BRIEF] Weather: READY")
+                    debug_print("[STARTUP BRIEF] Weather: READY")
                 elif label == "reminders":
-                    print(f"[STARTUP BRIEF] Reminders: {len(results[label] or [])}")
+                    debug_print(f"[STARTUP BRIEF] Reminders: {len(results[label] or [])}")
                 elif label == "schedule":
-                    print(f"[STARTUP BRIEF] Schedule: {len(results[label] or [])} scheduled tasks")
+                    debug_print(f"[STARTUP BRIEF] Schedule: {len(results[label] or [])} scheduled tasks")
                 elif label == "notes":
-                    print("[STARTUP BRIEF] Notes: READY" if results[label] else "[STARTUP BRIEF] Notes: EMPTY")
+                    debug_print("[STARTUP BRIEF] Notes: READY" if results[label] else "[STARTUP BRIEF] Notes: EMPTY")
                 elif results[label]:
-                    print(f"[STARTUP BRIEF] News: {len(results[label][:3])} headlines")
+                    debug_print(f"[STARTUP BRIEF] News: {len(results[label][:3])} headlines")
             except Exception as error:
                 print(f"[STARTUP BRIEF] {label.title()} unavailable: {error}")
 
@@ -250,7 +251,7 @@ def speak_startup_brief(
         reminders = results.get("reminders", [])
         tasks = results.get("schedule", [])
         latest_note = results.get("notes")
-        print("[STARTUP BRIEF] Startup data collection complete.")
+        debug_print("[STARTUP BRIEF] Startup data collection complete.")
         text = build_startup_brief(
             now=now,
             profile=profile,

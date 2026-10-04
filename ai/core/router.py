@@ -30,6 +30,7 @@ from ai.core.schemas import (
 )
 
 from ai.providers.base import AIProvider
+from core.diagnostics import debug_print
 
 
 class AIRouter:
@@ -255,7 +256,7 @@ class AIRouter:
                 key
             ] = expires_at
 
-        print(
+        debug_print(
             "[AI ROUTER] Model cooldown:",
             provider_name,
             model_name,
@@ -300,7 +301,7 @@ class AIRouter:
                     None,
                 )
 
-                print(
+                debug_print(
                     "[AI ROUTER] Model cooldown expired:",
                     provider_name,
                     model_name,
@@ -473,7 +474,7 @@ class AIRouter:
                     )
                 )
 
-                print(
+                debug_print(
                     "[AI ROUTER] Model on cooldown:",
                     model.provider,
                     model.name,
@@ -488,7 +489,7 @@ class AIRouter:
 
             if provider is None:
 
-                print(
+                debug_print(
                     "[AI ROUTER] Provider not registered:",
                     model.provider,
                 )
@@ -497,7 +498,7 @@ class AIRouter:
 
             if not provider.is_available():
 
-                print(
+                debug_print(
                     "[AI ROUTER] Provider unavailable:",
                     model.provider,
                     model.name,
@@ -509,7 +510,7 @@ class AIRouter:
 
             request.provider = model.provider
 
-            print(
+            debug_print(
                 "[AI ROUTER] Selected:",
                 model.provider,
                 model.name,
@@ -577,7 +578,7 @@ class AIRouter:
                     )
                 )
 
-                print(
+                debug_print(
                     "[AI ROUTER] Skipping model on cooldown:",
                     model.provider,
                     model.name,
@@ -596,7 +597,7 @@ class AIRouter:
 
             if provider is None:
 
-                print(
+                debug_print(
                     "[AI ROUTER] Provider not registered:",
                     model.provider,
                 )
@@ -609,7 +610,7 @@ class AIRouter:
 
             if not provider.is_available():
 
-                print(
+                debug_print(
                     "[AI ROUTER] Skipping unavailable:",
                     model.provider,
                     model.name,
@@ -625,7 +626,7 @@ class AIRouter:
 
             request.provider = model.provider
 
-            print(
+            debug_print(
                 "[AI ROUTER] Trying:",
                 model.provider,
                 model.name,
@@ -679,7 +680,7 @@ class AIRouter:
 
             if response.success:
 
-                print(
+                debug_print(
                     "[AI ROUTER] Success:",
                     model.provider,
                     model.name,
@@ -801,7 +802,7 @@ class AIRouter:
                         )
                     )
 
-                    print(
+                    debug_print(
                         "[AI ROUTER] Streaming skip:",
                         model.provider,
                         model.name,
@@ -820,7 +821,7 @@ class AIRouter:
 
                 if provider is None:
 
-                    print(
+                    debug_print(
                         "[AI ROUTER] Streaming provider "
                         "not registered:",
                         model.provider,
@@ -834,7 +835,7 @@ class AIRouter:
 
                 if not provider.is_available():
 
-                    print(
+                    debug_print(
                         "[AI ROUTER] Streaming skip:",
                         model.provider,
                         model.name,
@@ -850,7 +851,7 @@ class AIRouter:
 
                 request.provider = model.provider
 
-                print(
+                debug_print(
                     "[AI ROUTER] Streaming:",
                     model.provider,
                     model.name,

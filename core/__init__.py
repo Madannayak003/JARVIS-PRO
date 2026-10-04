@@ -11,5 +11,3 @@ All skill modules are loaded exclusively through:
 This prevents circular imports between:
     core -> skills -> voice.manager -> core
 """
-
-print("CORE INIT LOADED")

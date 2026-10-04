@@ -319,6 +319,7 @@ from typing import Any
 from .bus import hud_bus
 from .manager import hud
 from config.settings import get_assistant_display_name
+from core.diagnostics import debug_print
 
 
 # * =============================================================
@@ -558,7 +559,7 @@ class _BridgeHandler(
 
             if recent_events:
 
-                print(
+                debug_print(
                     "[HUD WEB] Replaying "
                     f"{len(recent_events)} recent event(s) "
                     "to new HUD client."

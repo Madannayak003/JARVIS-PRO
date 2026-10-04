@@ -761,7 +761,7 @@ def dispatch(
 
                     )
 
-                    print(
+                    debug_print(
                         "[CONVERSATION EXECUTION]",
                         conversation_coordinator.context.snapshot(),
                     )
@@ -850,7 +850,7 @@ def dispatch(
 
         if fast_plan:
 
-            print(
+            debug_print(
                 "[DISPATCHER] "
                 "Fast route handled command:",
                 fast_plan,
@@ -870,10 +870,19 @@ def dispatch(
                     action,
                 )
 
-                print(
+                debug_print(
                     "[DISPATCHER RESULT]",
                     repr(result),
                 )
+
+                if result is not False:
+                    app = str(action.get("app", "")).strip()
+                    if action_name == "open" and app:
+                        action_label = f"Opening {app}"
+                    else:
+                        action_label = action_name.replace("_", " ").title()
+                    print(f"[ACTION] {action_label}")
+                    print("[STATUS] Done")
 
                 # * =========================================
                 # * NATURAL CONVERSATION
@@ -922,7 +931,7 @@ def dispatch(
 
                     )
 
-                    print(
+                    debug_print(
                         "[CONVERSATION EXECUTION]",
                         conversation_coordinator.context.snapshot(),
                     )
@@ -1096,12 +1105,12 @@ def dispatch(
 
             if current_site == "youtube":
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     "Context resolved: YouTube"
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     f"YouTube Search: {query}"
                 )
@@ -1116,7 +1125,7 @@ def dispatch(
                     },
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY RESULT]",
                     repr(result),
                 )
@@ -1129,12 +1138,12 @@ def dispatch(
 
             if current_site == "google":
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     "Context resolved: Google"
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     f"Google Search: {query}"
                 )
@@ -1149,7 +1158,7 @@ def dispatch(
                     },
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY RESULT]",
                     repr(result),
                 )
@@ -1162,12 +1171,12 @@ def dispatch(
 
             if current_site == "github":
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     "Context resolved: GitHub"
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY] "
                     f"GitHub Search: {query}"
                 )
@@ -1182,7 +1191,7 @@ def dispatch(
                     },
                 )
 
-                print(
+                debug_print(
                     "[ACTION MEMORY RESULT]",
                     repr(result),
                 )
@@ -1308,7 +1317,7 @@ def dispatch(
 
                     )
 
-                    print(
+                    debug_print(
                         "[CONVERSATION EXECUTION]",
                         conversation_coordinator.context.snapshot(),
                     )
@@ -1591,7 +1600,7 @@ def dispatch(
         "saved"
     ):
 
-        print(
+        debug_print(
             f"[MEMORY] Saved -> "
             f"{memory_result['key']} = "
             f"{memory_result['value']}"
@@ -1626,7 +1635,7 @@ def dispatch(
 
         from voice.manager import speak
 
-        print(
+        debug_print(
             "[MEMORY] Already known."
         )
 

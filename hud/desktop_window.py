@@ -24,6 +24,7 @@ from pathlib import Path
 
 import webview
 from config.settings import get_assistant_display_name
+from core.diagnostics import debug_print
 from core.paths import CAPTURES, GENERATED_IMAGES, RECORDINGS, SCREENSHOTS
 
 
@@ -247,7 +248,7 @@ def wait_for_hud(
     timeout: float = 30.0,
 ) -> bool:
 
-    print(
+    debug_print(
         "[DESKTOP HUD] "
         "Waiting for Next.js HUD..."
     )
@@ -266,7 +267,7 @@ def wait_for_hud(
                 timeout=1,
             ):
 
-                print(
+                debug_print(
                     "[DESKTOP HUD] "
                     "Next.js HUD is ready."
                 )
@@ -308,7 +309,7 @@ def _load_nextjs_when_ready(
 
     if not ready:
 
-        print(
+        debug_print(
             "[DESKTOP HUD] "
             "Keeping loading screen because "
             "Next.js HUD is unavailable."
@@ -318,7 +319,7 @@ def _load_nextjs_when_ready(
 
     try:
 
-        print(
+        debug_print(
             "[DESKTOP HUD] "
             "Loading Next.js HUD into native window..."
         )
@@ -327,7 +328,7 @@ def _load_nextjs_when_ready(
             HUD_URL
         )
 
-        print(
+        debug_print(
             "[DESKTOP HUD] "
             "Next.js HUD loaded into native window."
         )
@@ -354,7 +355,7 @@ def request_jarvis_shutdown():
         "[DESKTOP HUD] Window closed."
     )
 
-    print(
+    debug_print(
         "[DESKTOP HUD] "
         f"Requesting {get_assistant_display_name()} shutdown..."
     )
@@ -443,7 +444,7 @@ def run():
     # ! Do NOT wait for Next.js before creating this window.
     # * =========================================================
 
-    print(
+    debug_print(
         "[DESKTOP HUD] "
         f"Creating native {get_assistant_display_name()} window..."
     )
@@ -489,7 +490,7 @@ def run():
     )
 
 
-    print(
+    debug_print(
         "[DESKTOP HUD] "
         f"Native {get_assistant_display_name()} window created."
     )
@@ -519,7 +520,7 @@ def run():
     loader_thread.start()
 
 
-    print(
+    debug_print(
         "[DESKTOP HUD] "
         "Starting pywebview..."
     )

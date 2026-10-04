@@ -16,6 +16,7 @@ Responsibilities:
 """
 
 from core.fallback import fallback
+from core.diagnostics import debug_print
 
 from core.skill_categories import (
     get_category,
@@ -229,17 +230,17 @@ def execute(action, data=None):
 
     action = action.strip()
 
-    print(
+    debug_print(
         "Requested action :",
         repr(action),
     )
 
-    print(
+    debug_print(
         "Category         :",
         get_skill_category(action),
     )
 
-    print(
+    debug_print(
         "Available actions:",
         sorted(SKILLS.keys()),
     )

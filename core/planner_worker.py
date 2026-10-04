@@ -1,11 +1,12 @@
 from ai.planner import create_plan
 from core.executor import execute_ai_plan
 from core.busy_manager import start_task, finish_task
+from core.diagnostics import debug_print
 
 
 def planner_worker(command, stop_event):
 
-    print("[PLANNER WORKER]")
+    debug_print("[PLANNER WORKER]")
 
     start_task("planner")
 

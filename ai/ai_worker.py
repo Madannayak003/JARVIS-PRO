@@ -55,7 +55,7 @@ def run_chat(
 
     if memory_result["saved"]:
 
-        print(
+        debug_print(
             "[MEMORY] Saved -> "
             f"{memory_result['key']} = "
             f"{memory_result['value']}"
@@ -65,7 +65,7 @@ def run_chat(
         "already_known"
     ):
 
-        print(
+        debug_print(
             "[MEMORY] Already known."
         )
 
@@ -91,7 +91,7 @@ def run_chat(
         time.perf_counter() - t0
     )
 
-    print("[AI] Streaming response...")
+    debug_print("[AI] Streaming response...")
 
     # * =====================================================
     # * Response State
@@ -326,7 +326,7 @@ def run_chat(
         # * finishes. TTS can continue preparing/playing progressively without
         # * delaying the single coherent HUD/activity entry.
         HUDIntegration.response(answer)
-        print("[AI] Response completed.")
+        debug_print("[AI] Response completed.")
 
     # * =====================================================
     # * Remaining Text

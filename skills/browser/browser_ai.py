@@ -2,6 +2,7 @@ from core.registry import register
 from voice.manager import speak
 from skills.browser.navigation import navigation
 from core.action_memory import set_memory
+from core.diagnostics import debug_print
 from core.action_memory import dump
 from skills.browser.browser_controller import browser
 
@@ -86,7 +87,7 @@ def ai_open(data):
         set_memory("site", app)
         set_memory("action", "open")
         
-        print("[MEMORY]", dump())
+        debug_print("[MEMORY]", dump())
 
         return True
 
@@ -102,7 +103,7 @@ def ai_open(data):
         set_memory("app", app)
         set_memory("action", "open")
         
-        print("[MEMORY]", dump())
+        debug_print("[MEMORY]", dump())
 
         return True
 
