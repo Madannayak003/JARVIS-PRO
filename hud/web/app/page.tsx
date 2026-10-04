@@ -384,6 +384,48 @@ export default function Home() {
   const fileSpeechPollRef = useRef<number | null>(null);
   const filePickerRef = useRef<HTMLInputElement | null>(null);
 
+  // Keep the existing HUD file-chip state synchronized with the canonical
+  // File Intelligence index. This also picks up files ingested remotely,
+  // whose upload event is delivered to the remote dashboard WebSocket rather
+  // than this desktop HUD's SSE bridge.
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshIntelligenceFiles = async () => {
+      try {
+        const response = await fetch(`${JARVIS_DASHBOARD_URL}/api/local/file-intelligence/files`, {
+          cache: "no-store",
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok || cancelled) return;
+
+        const nextFiles = Array.isArray(result.files) ? result.files as IntelligenceFile[] : [];
+        setIntelligenceFiles((previous) => {
+          const unchanged = previous.length === nextFiles.length && previous.every((item, index) => {
+            const next = nextFiles[index];
+            return next
+              && item.id === next.id
+              && item.filename === next.filename
+              && item.processing_status === next.processing_status
+              && item.size === next.size;
+          });
+          return unchanged ? previous : nextFiles;
+        });
+      } catch {
+        // The existing local upload path remains authoritative when the HUD
+        // list endpoint is temporarily unavailable.
+      }
+    };
+
+    void refreshIntelligenceFiles();
+    const syncTimer = window.setInterval(refreshIntelligenceFiles, 1000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(syncTimer);
+    };
+  }, []);
+
   // * 1. Inside your component, add an input ref:
   const commandInputRef = useRef<HTMLInputElement | null>(null);
 
