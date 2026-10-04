@@ -111,6 +111,15 @@ def dispatch(
         if fast_plan:
             skip_nci = True
 
+    # * Resolve deterministic commands before NCI can classify a fresh
+    # * command as a contextual conversation follow-up. This preserves the
+    # * existing follow-up path when no deterministic route matches, while
+    # * allowing registered Vision and other skill commands to execute first.
+    if not skip_fast and fast_plan is None:
+        fast_plan = fast_route(command)
+        if fast_plan:
+            skip_nci = True
+
     # * A face registration flow owns its next reply until it completes or is
     # * cancelled. This keeps a name such as "Madan" from becoming a new task.
     from skills.camera.face_registration import face_registration
@@ -822,6 +831,7 @@ def dispatch(
         }
         and conversation_request.mode == "conversation"
         and conversation_request.needs_ai
+        and not fast_plan
     )
 
     if not skip_fast and not contextual_chat_follow_up:

@@ -28,6 +28,7 @@ htmlcov/
 .tox/
 .nox/
 test/
+tests/
 
 # Logs / cache / temporary
 *.log
@@ -40,9 +41,11 @@ temp/
 .spotify_cache
 *.tmp
 *.temp
-*.bak
 *.swp
 *.swo
+
+# Backup files created by project formatting/tools
+*.bak
 
 # Generated files
 generated/
@@ -65,9 +68,6 @@ archive/
 Backup/
 bin/
 skills_backup/
-
-# Backup files created by project formatting/tools
-*.bak
 
 # IDE
 .vscode/
