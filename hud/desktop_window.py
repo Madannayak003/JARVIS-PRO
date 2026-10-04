@@ -19,9 +19,12 @@ import sys
 import time
 import threading
 import urllib.request
+import shutil
+from pathlib import Path
 
 import webview
 from config.settings import get_assistant_display_name
+from core.paths import CAPTURES, GENERATED_IMAGES, RECORDINGS, SCREENSHOTS
 
 
 HUD_URL = "http://127.0.0.1:3000"
@@ -44,6 +47,40 @@ _native_window = None
 
 
 class _WindowApi:
+
+    def save_gallery_file(self, category: str, filename: str):
+        directories = {
+            "screenshots": (SCREENSHOTS, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "captures": (CAPTURES, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "generated_images": (GENERATED_IMAGES, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "recordings": (RECORDINGS, {".mp4", ".webm", ".mkv", ".avi", ".mov", ".wav", ".mp3", ".m4a", ".ogg"}),
+        }
+        entry = directories.get(category)
+        if not entry or Path(filename).name != filename:
+            return {"ok": False, "cancelled": False, "error": "Invalid Gallery file."}
+        source_root, extensions = entry
+        source = (source_root / filename).resolve()
+        try:
+            source.relative_to(source_root.resolve())
+        except ValueError:
+            return {"ok": False, "cancelled": False, "error": "Invalid Gallery file."}
+        if not source.is_file() or source.suffix.lower() not in extensions:
+            return {"ok": False, "cancelled": False, "error": "Gallery file not found."}
+        try:
+            target = _native_window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                directory=str(source_root),
+                save_filename=source.name,
+                file_types=(f"{source.suffix.upper().lstrip('.')} files (*{source.suffix})", "All files (*.*)"),
+            )
+            if not target:
+                return {"ok": True, "cancelled": True}
+            destination = Path(target[0] if isinstance(target, (list, tuple)) else target)
+            shutil.copy2(source, destination)
+            return {"ok": True, "cancelled": False, "filename": destination.name}
+        except Exception as error:
+            print(f"[DESKTOP HUD] Gallery save failed: {error}")
+            return {"ok": False, "cancelled": False, "error": "Could not save Gallery file."}
 
     def toggle_fullscreen(self):
 

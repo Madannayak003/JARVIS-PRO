@@ -50,13 +50,14 @@ type Props = {
   showQuickTools: boolean;
 };
 
-type GalleryTab = "screenshots" | "recordings";
+type GalleryTab = "screenshots" | "captures" | "generated_images" | "recordings";
 
 type GalleryItem = {
   name: string;
   size: number;
   modified_at: number;
   url: string;
+  media_type?: string;
 };
 
 const GALLERY_DASHBOARD_URL =
@@ -466,11 +467,12 @@ export default function HudCockpit({
   const [todayDate, setTodayDate] = useState("");
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryTab, setGalleryTab] = useState<GalleryTab>("screenshots");
-  const [galleryItems, setGalleryItems] = useState<Record<GalleryTab, GalleryItem[]>>({ screenshots: [], recordings: [] });
+  const [galleryItems, setGalleryItems] = useState<Record<GalleryTab, GalleryItem[]>>({ screenshots: [], captures: [], generated_images: [], recordings: [] });
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryError, setGalleryError] = useState("");
   const [galleryPreview, setGalleryPreview] = useState<GalleryItem | null>(null);
   const [gallerySaveState, setGallerySaveState] = useState<"" | "saving" | "saved" | "error">("");
+  const [galleryDeletePending, setGalleryDeletePending] = useState(false);
 
   const loadGallery = useCallback(async () => {
     setGalleryLoading(true);
@@ -481,6 +483,8 @@ export default function HudCockpit({
       if (!response.ok || !result.ok) throw new Error(result.error || "Gallery unavailable.");
       setGalleryItems({
         screenshots: Array.isArray(result.screenshots) ? result.screenshots : [],
+        captures: Array.isArray(result.captures) ? result.captures : [],
+        generated_images: Array.isArray(result.generated_images) ? result.generated_images : [],
         recordings: Array.isArray(result.recordings) ? result.recordings : [],
       });
     } catch (error) {
@@ -512,20 +516,37 @@ export default function HudCockpit({
   useEffect(() => {
     if (!galleryOpen) return;
     const previousOverflow = document.body.style.overflow;
+    document.body.classList.add("gallery-open");
     document.body.style.overflow = "hidden";
     return () => {
+      document.body.classList.remove("gallery-open");
       document.body.style.overflow = previousOverflow;
     };
   }, [galleryOpen]);
 
-  const saveGalleryScreenshotCopy = async () => {
-    if (!galleryPreview || galleryTab !== "screenshots") return;
+  const saveGalleryFile = async () => {
+    if (!galleryPreview || !(window as typeof window & { pywebview?: { api?: { save_gallery_file?: (category: string, filename: string) => Promise<{ ok: boolean; cancelled?: boolean }> } } }).pywebview?.api?.save_gallery_file) {
+      setGallerySaveState("error");
+      return;
+    }
     setGallerySaveState("saving");
     try {
-      const response = await fetch(`${GALLERY_DASHBOARD_URL}/api/local/gallery/screenshots/${encodeURIComponent(galleryPreview.name)}/copy`, { method: "POST" });
+      const result = await (window as typeof window & { pywebview: { api: { save_gallery_file: (category: string, filename: string) => Promise<{ ok: boolean; cancelled?: boolean }> } } }).pywebview.api.save_gallery_file(galleryTab, galleryPreview.name);
+      setGallerySaveState(result.cancelled ? "" : result.ok ? "saved" : "error");
+    } catch {
+      setGallerySaveState("error");
+    }
+  };
+
+  const deleteGalleryFile = async () => {
+    if (!galleryPreview) return;
+    try {
+      const response = await fetch(`${GALLERY_DASHBOARD_URL}/api/local/gallery/${galleryTab}/${encodeURIComponent(galleryPreview.name)}`, { method: "DELETE" });
       const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error("copy failed");
-      setGallerySaveState("saved");
+      if (!response.ok || !result.ok) throw new Error("delete failed");
+      setGalleryPreview(null);
+      setGalleryDeletePending(false);
+      await loadGallery();
     } catch {
       setGallerySaveState("error");
     }
@@ -1128,7 +1149,7 @@ export default function HudCockpit({
             </div>
           </header>
           <nav className="hud-gallery-tabs" aria-label="Gallery categories">
-            {(["screenshots", "recordings"] as GalleryTab[]).map((tab) => (
+            {(["screenshots", "captures", "generated_images", "recordings"] as GalleryTab[]).map((tab) => (
               <button key={tab} type="button" className={galleryTab === tab ? "is-active" : ""} onClick={() => { setGalleryTab(tab); setGalleryPreview(null); }}>
                 {tab.toUpperCase()}
               </button>
@@ -1140,7 +1161,7 @@ export default function HudCockpit({
             {!galleryLoading && !galleryError && galleryItems[galleryTab].length === 0 && (
               <div className="hud-gallery-state">
                 <span className="hud-gallery-empty-icon">▧</span>
-                {galleryTab === "screenshots" ? "NO SCREENSHOTS AVAILABLE" : "NO RECORDINGS AVAILABLE"}
+                {`NO ${galleryTab.replace("_", " ").toUpperCase()} AVAILABLE`}
               </div>
             )}
             {!galleryLoading && !galleryError && galleryItems[galleryTab].length > 0 && (
@@ -1148,7 +1169,7 @@ export default function HudCockpit({
                 {galleryItems[galleryTab].map((item) => (
                   <button key={item.url} type="button" className="hud-gallery-card" onClick={() => setGalleryPreview(item)}>
                     <div className="hud-gallery-media">
-                      {galleryTab === "screenshots" ? (
+                      {galleryTab !== "recordings" ? (
                         <img src={`${GALLERY_DASHBOARD_URL}${item.url}`} alt={item.name} loading="lazy" />
                       ) : (
                         <video src={`${GALLERY_DASHBOARD_URL}${item.url}`} preload="metadata" />
@@ -1170,20 +1191,36 @@ export default function HudCockpit({
                 <span title={galleryPreview.name}>{galleryPreview.name}</span>
                 <button type="button" onClick={(event) => { event.stopPropagation(); setGalleryPreview(null); setGallerySaveState(""); }} aria-label="Close media preview">×</button>
               </div>
-              {galleryTab === "screenshots" ? (
+              {galleryTab !== "recordings" ? (
                 <>
                   <img src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} alt={galleryPreview.name} />
                   <div className="hud-gallery-preview-actions">
-                    <button type="button" onClick={() => void saveGalleryScreenshotCopy()} disabled={gallerySaveState === "saving"}>
-                      {gallerySaveState === "saving" ? "SAVING..." : "SAVE COPY"}
+                    <button type="button" onClick={() => void saveGalleryFile()} disabled={gallerySaveState === "saving"}>
+                      {gallerySaveState === "saving" ? "SAVING..." : "SAVE"}
                     </button>
-                    {gallerySaveState === "saved" && <small>✓ COPY SAVED</small>}
-                    {gallerySaveState === "error" && <small className="hud-gallery-copy-error">COULD NOT SAVE COPY</small>}
+                    <button type="button" className="hud-gallery-delete" onClick={() => setGalleryDeletePending(true)}>DELETE</button>
+                    {gallerySaveState === "saved" && <small>✓ SAVED</small>}
+                    {gallerySaveState === "error" && <small className="hud-gallery-copy-error">COULD NOT SAVE</small>}
                   </div>
                 </>
               ) : (
-                <video src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls preload="metadata" />
+                <>
+                  {galleryPreview.media_type?.startsWith("audio/") ? <audio src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls /> : <video src={`${GALLERY_DASHBOARD_URL}${galleryPreview.url}`} controls preload="metadata" />}
+                  <div className="hud-gallery-preview-actions">
+                    <button type="button" onClick={() => void saveGalleryFile()} disabled={gallerySaveState === "saving"}>{gallerySaveState === "saving" ? "SAVING..." : "SAVE"}</button>
+                    <button type="button" className="hud-gallery-delete" onClick={() => setGalleryDeletePending(true)}>DELETE</button>
+                  </div>
+                </>
               )}
+            </div>
+          </div>
+        )}
+        {galleryDeletePending && galleryPreview && (
+          <div className="hud-gallery-confirm-backdrop" role="dialog" aria-modal="true" onClick={() => setGalleryDeletePending(false)}>
+            <div className="hud-gallery-confirm" onClick={(event) => event.stopPropagation()}>
+              <strong>Delete this file?</strong>
+              <span>{galleryPreview.name}</span>
+              <div className="hud-gallery-preview-actions"><button type="button" onClick={() => setGalleryDeletePending(false)}>CANCEL</button><button type="button" className="hud-gallery-delete" onClick={() => void deleteGalleryFile()}>DELETE</button></div>
             </div>
           </div>
         )}

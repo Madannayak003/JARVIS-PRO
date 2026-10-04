@@ -17,6 +17,7 @@ DATA = ROOT / "data"
 SCREENSHOTS = DATA / "screenshots"
 CAPTURES = DATA / "captures"
 RECORDINGS = DATA / "recordings"
+GENERATED_IMAGES = DATA / "generated_images"
 LOGS = DATA / "logs"
 MEMORIES = DATA / "memories"
 TEMP = DATA / "temp"
@@ -36,6 +37,8 @@ for folder in [
     CAPTURES,
 
     RECORDINGS,
+
+    GENERATED_IMAGES,
 
     LOGS,
 

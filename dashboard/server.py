@@ -52,7 +52,7 @@ import json
 
 from core.runtime import handle_priority
 from core.interrupt import interrupt
-from core.paths import DOWNLOADS, RECORDINGS, SCREENSHOTS
+from core.paths import CAPTURES, GENERATED_IMAGES, RECORDINGS, SCREENSHOTS
 from core.diagnostics import debug_print
 from ai.core.service import ai_service
 from config.settings import (
@@ -1800,7 +1800,9 @@ class DashboardServer:
 
         gallery_directories = {
             "screenshots": (SCREENSHOTS, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
-            "recordings": (RECORDINGS, {".mp4", ".webm", ".mkv", ".avi", ".mov"}),
+            "captures": (CAPTURES, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "generated_images": (GENERATED_IMAGES, {".png", ".jpg", ".jpeg", ".webp", ".gif"}),
+            "recordings": (RECORDINGS, {".mp4", ".webm", ".mkv", ".avi", ".mov", ".wav", ".mp3", ".m4a", ".ogg"}),
         }
 
         @app.get("/api/local/gallery")
@@ -1820,36 +1822,31 @@ class DashboardServer:
                         "size": stat.st_size,
                         "modified_at": stat.st_mtime,
                         "url": f"/api/local/gallery/{category}/{item.name}",
+                        "media_type": mimetypes.guess_type(item.name)[0] or "application/octet-stream",
                     })
                 payload[category] = items
             return {"ok": True, **payload}
 
-        @app.post("/api/local/gallery/screenshots/{filename:path}/copy")
-        async def local_gallery_screenshot_copy(filename: str, request: Request):
+        @app.delete("/api/local/gallery/{category}/{filename:path}")
+        async def local_gallery_delete(category: str, filename: str, request: Request):
             if not self._authorize_local(request):
                 return JSONResponse({"ok": False, "error": "Local access required."}, status_code=403)
-            if "/" in filename or "\\" in filename:
-                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
-            source = (SCREENSHOTS / filename).resolve()
+            entry = gallery_directories.get(category)
+            if not entry or "/" in filename or "\\" in filename:
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
+            directory, extensions = entry
+            source = (directory / filename).resolve()
             try:
-                source.relative_to(SCREENSHOTS.resolve())
+                source.relative_to(directory.resolve())
             except ValueError:
-                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
-            if not source.is_file() or source.suffix.lower() not in gallery_directories["screenshots"][1]:
-                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=404)
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
+            if not source.is_file() or source.suffix.lower() not in extensions:
+                return JSONResponse({"ok": False, "error": "Gallery file not found."}, status_code=404)
             try:
-                DOWNLOADS.mkdir(parents=True, exist_ok=True)
-                stem = source.stem
-                suffix = source.suffix
-                target = DOWNLOADS / f"{stem}_copy{suffix}"
-                counter = 2
-                while target.exists():
-                    target = DOWNLOADS / f"{stem}_copy_{counter}{suffix}"
-                    counter += 1
-                shutil.copy2(source, target)
-                return {"ok": True, "filename": target.name}
+                source.unlink()
+                return {"ok": True, "filename": source.name}
             except Exception:
-                return JSONResponse({"ok": False, "error": "Screenshot copy failed."}, status_code=500)
+                return JSONResponse({"ok": False, "error": "Gallery delete failed."}, status_code=500)
 
         @app.get("/api/local/gallery/{category}/{filename:path}")
         async def local_gallery_file(category: str, filename: str, request: Request):
