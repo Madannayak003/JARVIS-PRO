@@ -647,25 +647,717 @@ values and private URLs do not belong in this README.
 
 ~~~text
 JARVIS-PRO/
-├── main.py                    # Application lifecycle and startup
-├── run_jarvis.py              # Shortcut-safe launcher
-├── requirements.txt           # Python dependencies
-├── .env.example               # Environment variable template
-├── ai/                        # AI providers, models, prompts, and memory
-├── brain/                     # Conversation, intent, clarification, developer system
-├── chatbot/                   # Independent dashboard AI-chat sessions/API
-├── config/                    # Runtime and integration configuration
-├── core/                      # Dispatch, routers, registry, workers, and state
-├── dashboard/                 # FastAPI dashboard server and static clients
-├── hud/                       # Python HUD events, bridge, telemetry, native window
-│   └── web/                   # Next.js/React/Three.js frontend
-├── services/                  # Android, Windows, communication, and API adapters
-├── skills/                    # Registered capability modules
-├── voice/                     # Online/offline voice and Agent
-├── data/                      # Runtime data, settings, logs, and face samples
-├── tests/                     # Focused feature and regression tests
-├── tools/                     # Supporting utilities
-└── workspace/                 # Generated/user project workspace data
+├── ai
+│   ├── core
+│   │   ├── commands.py
+│   │   ├── model_manager.py
+│   │   ├── policy.py
+│   │   ├── preference.py
+│   │   ├── registry.py
+│   │   ├── router.py
+│   │   ├── schemas.py
+│   │   └── service.py
+│   ├── providers
+│   │   ├── base.py
+│   │   ├── gemini.py
+│   │   ├── grok.py
+│   │   ├── ollama.py
+│   │   └── openai.py
+│   ├── __init__.py
+│   ├── ai_worker.py
+│   ├── chat_prompt.py
+│   ├── chat.py
+│   ├── conversation.py
+│   ├── intent.py
+│   ├── llm.py
+│   ├── memory_ai.py
+│   ├── memory_answer.py
+│   ├── memory_confidence.py
+│   ├── memory_forget.py
+│   ├── memory_intent.py
+│   ├── memory_manager.py
+│   ├── memory_pipeline.py
+│   ├── memory_preference.py
+│   ├── memory_profile.py
+│   ├── memory_rank.py
+│   ├── memory_schema.py
+│   ├── memory_search.py
+│   ├── memory_semantic.py
+│   ├── memory_stats.py
+│   ├── memory_store.py
+│   ├── memory_view.py
+│   ├── memory.py
+│   ├── planner_prompt.py
+│   ├── planner.py
+│   ├── prompt_builder.py
+│   ├── query_parser.py
+│   └── sentence_buffer.py
+├── assets
+│   └── icons
+│       └── jarvis.ico
+├── brain
+│   ├── developer
+│   │   ├── analyzer
+│   │   │   ├── detectors
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_detector.py
+│   │   │   │   ├── board_detector.py
+│   │   │   │   ├── framework_detector.py
+│   │   │   │   ├── intent_detector.py
+│   │   │   │   ├── language_detector.py
+│   │   │   │   ├── project_detector.py
+│   │   │   │   ├── runtime_detector.py
+│   │   │   │   └── workspace_detector.py
+│   │   │   ├── resolvers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_resolver.py
+│   │   │   │   ├── board_resolver.py
+│   │   │   │   ├── language_resolver.py
+│   │   │   │   └── workspace_resolver.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── board_language_rules.py
+│   │   │   │   ├── board_rules.py
+│   │   │   │   ├── framework_language_rules.py
+│   │   │   │   ├── framework_rules.py
+│   │   │   │   ├── intent_rules.py
+│   │   │   │   ├── language_rules.py
+│   │   │   │   ├── project_rules.py
+│   │   │   │   ├── runtime_rules.py
+│   │   │   │   └── workspace_rules.py
+│   │   │   ├── __init__.py
+│   │   │   └── analyzer.py
+│   │   ├── api
+│   │   │   └── __init__.py
+│   │   ├── config
+│   │   │   └── config.py
+│   │   ├── context
+│   │   │   ├── __init__.py
+│   │   │   └── developer_context.py
+│   │   ├── editor
+│   │   │   ├── analyzer
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── edit_analyzer.py
+│   │   │   │   ├── project_scanner.py
+│   │   │   │   └── target_locator.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── edit_context.py
+│   │   │   │   ├── edit_plan.py
+│   │   │   │   ├── edit_request.py
+│   │   │   │   ├── edit_result.py
+│   │   │   │   ├── patch.py
+│   │   │   │   ├── project_index.py
+│   │   │   │   ├── prompt_context.py
+│   │   │   │   └── prompt_result.py
+│   │   │   ├── parser
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── block_parser.py
+│   │   │   │   ├── file_parser.py
+│   │   │   │   └── response_parser.py
+│   │   │   ├── planner
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── dependency_analyzer.py
+│   │   │   │   ├── edit_planner.py
+│   │   │   │   ├── file_selector.py
+│   │   │   │   └── instruction_planner.py
+│   │   │   ├── prompt_builder
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── context_builder.py
+│   │   │   │   ├── instruction_builder.py
+│   │   │   │   ├── prompt_builder.py
+│   │   │   │   └── system_builder.py
+│   │   │   ├── provider
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_provider.py
+│   │   │   │   └── ollama_provider.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── edit_rules.py
+│   │   │   ├── validator
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── edit_validator.py
+│   │   │   │   └── syntax_validator.py
+│   │   │   ├── workspace
+│   │   │   │   ├── appliers
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── base_applier.py
+│   │   │   │   │   ├── python_applier.py
+│   │   │   │   │   └── text_applier.py
+│   │   │   │   ├── extractors
+│   │   │   │   │   ├── arduino_extractor.py
+│   │   │   │   │   ├── base_extractor.py
+│   │   │   │   │   ├── python_extractor.py
+│   │   │   │   │   └── regex_extractor.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── backup_builder.py
+│   │   │   │   ├── code_extractor.py
+│   │   │   │   ├── file_reader.py
+│   │   │   │   ├── patch_applier.py
+│   │   │   │   ├── patch_writer.py
+│   │   │   │   └── rollback_manager.py
+│   │   │   ├── __init__.py
+│   │   │   └── editor.py
+│   │   ├── enums
+│   │   │   ├── __init__.py
+│   │   │   ├── board.py
+│   │   │   ├── framework.py
+│   │   │   ├── intent.py
+│   │   │   ├── language.py
+│   │   │   ├── project_type.py
+│   │   │   ├── runtime.py
+│   │   │   └── workspace.py
+│   │   ├── generator
+│   │   │   ├── metadata
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── metadata_builder.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── generated_file.py
+│   │   │   │   └── generated_project.py
+│   │   │   ├── parsers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── markdown_parser.py
+│   │   │   │   └── response_parser.py
+│   │   │   ├── providers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_provider.py
+│   │   │   │   └── ollama_provider.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── generator_rules.py
+│   │   │   ├── __init__.py
+│   │   │   └── generator.py
+│   │   ├── integration
+│   │   │   ├── __init__.py
+│   │   │   └── active_project.py
+│   │   ├── logging
+│   │   │   ├── __init__.py
+│   │   │   └── logger.py
+│   │   ├── memory
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── dependency_record.py
+│   │   │   │   ├── edit_record.py
+│   │   │   │   ├── file_profile.py
+│   │   │   │   ├── memory_record.py
+│   │   │   │   ├── project_profile.py
+│   │   │   │   ├── session_state.py
+│   │   │   │   ├── style_profile.py
+│   │   │   │   └── symbol_record.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── memory_rules.py
+│   │   │   ├── __init__.py
+│   │   │   ├── developer_memory.py
+│   │   │   ├── memory_builder.py
+│   │   │   ├── memory_context.py
+│   │   │   ├── memory_indexer.py
+│   │   │   ├── memory_loader.py
+│   │   │   ├── memory_manager.py
+│   │   │   ├── memory_saver.py
+│   │   │   ├── memory_search.py
+│   │   │   └── memory_store.py
+│   │   ├── models
+│   │   │   ├── __init__.py
+│   │   │   ├── analysis_context.py
+│   │   │   ├── analysis_result.py
+│   │   │   ├── developer_request.py
+│   │   │   ├── developer_result.py
+│   │   │   ├── generation_result.py
+│   │   │   ├── project_plan.py
+│   │   │   ├── validation_result.py
+│   │   │   └── workspace_result.py
+│   │   ├── pipeline
+│   │   │   ├── __init__.py
+│   │   │   └── developer_pipeline.py
+│   │   ├── planner
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── execution_plan.py
+│   │   │   ├── planners
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── arduino_planner.py
+│   │   │   │   ├── base_planner.py
+│   │   │   │   ├── cpp_planner.py
+│   │   │   │   ├── esp32_planner.py
+│   │   │   │   ├── general_planner.py
+│   │   │   │   ├── javascript_planner.py
+│   │   │   │   └── python_planner.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── board_rules.py
+│   │   │   │   ├── framework_rules.py
+│   │   │   │   ├── language_rules.py
+│   │   │   │   └── planner_rules.py
+│   │   │   ├── templates
+│   │   │   │   └── __init__.py
+│   │   │   ├── utils
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── path_utils.py
+│   │   │   ├── __init__.py
+│   │   │   └── planner.py
+│   │   ├── prompt_builder
+│   │   │   ├── builders
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_builder.py
+│   │   │   │   ├── context_builder.py
+│   │   │   │   ├── instruction_builder.py
+│   │   │   │   └── system_builder.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── prompt_context.py
+│   │   │   │   └── prompt_result.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── instruction_rules.py
+│   │   │   │   └── system_rules.py
+│   │   │   ├── __init__.py
+│   │   │   └── prompt_builder.py
+│   │   ├── repair
+│   │   │   ├── builders
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_builder.py
+│   │   │   │   ├── repair_context_builder.py
+│   │   │   │   └── repair_instruction_builder.py
+│   │   │   ├── models
+│   │   │   │   ├── repair_prompt.py
+│   │   │   │   ├── repair_request.py
+│   │   │   │   └── repair_result.py
+│   │   │   ├── __init__.py
+│   │   │   ├── local_file_builder.py
+│   │   │   ├── merge_builder.py
+│   │   │   ├── prompt_builder.py
+│   │   │   ├── repair_builder.py
+│   │   │   ├── repair_parser.py
+│   │   │   ├── repair_provider.py
+│   │   │   └── repair.py
+│   │   ├── tools
+│   │   │   ├── __init__.py
+│   │   │   ├── scaffold.py
+│   │   │   └── templates.py
+│   │   ├── utils
+│   │   │   └── __init__.py
+│   │   ├── validator
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── validation_issue.py
+│   │   │   │   ├── validation_level.py
+│   │   │   │   ├── validation_result.py
+│   │   │   │   └── validation_summary.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── validator_rules.py
+│   │   │   ├── utils
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── validation_utils.py
+│   │   │   ├── validators
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base_validator.py
+│   │   │   │   ├── content_validator.py
+│   │   │   │   ├── dependency_validator.py
+│   │   │   │   ├── file_validator.py
+│   │   │   │   ├── framework_validator.py
+│   │   │   │   ├── language_validator.py
+│   │   │   │   ├── project_validator.py
+│   │   │   │   └── structure_validator.py
+│   │   │   ├── __init__.py
+│   │   │   └── validator.py
+│   │   ├── workspace
+│   │   │   ├── builders
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── file_builder.py
+│   │   │   │   ├── folder_builder.py
+│   │   │   │   ├── project_builder.py
+│   │   │   │   ├── project_name_resolver.py
+│   │   │   │   └── workspace_resolver.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── created_file.py
+│   │   │   │   ├── created_folder.py
+│   │   │   │   └── workspace_result.py
+│   │   │   ├── rules
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── workspace_rules.py
+│   │   │   ├── writers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── file_writer.py
+│   │   │   │   └── folder_writer.py
+│   │   │   ├── __init__.py
+│   │   │   └── workspace.py
+│   │   ├── __init__.py
+│   │   ├── CHANGELOG.md
+│   │   ├── config.py
+│   │   ├── constants.py
+│   │   ├── developer.py
+│   │   ├── exceptions.py
+│   │   ├── README.md
+│   │   └── version.py
+│   ├── natural
+│   │   ├── __init__.py
+│   │   ├── conversation_request.py
+│   │   ├── interaction_classifier.py
+│   │   ├── interaction_decision.py
+│   │   ├── interaction_mode.py
+│   │   ├── meaning_understanding.py
+│   │   ├── natural_bridge.py
+│   │   ├── natural_context.py
+│   │   ├── natural_pipeline.py
+│   │   └── response_strategy.py
+│   ├── routing
+│   │   └── base_router.py
+│   ├── __init__.py
+│   ├── ai_pipeline.py
+│   ├── brain_controller.py
+│   ├── brain_router.py
+│   ├── brain.py
+│   ├── clarification_manager.py
+│   ├── context_builder.py
+│   ├── context_types.py
+│   ├── conversation_context.py
+│   ├── conversation_coordinator.py
+│   ├── conversation_manager.py
+│   ├── conversation_state.py
+│   ├── conversation_understanding.py
+│   ├── execution_context.py
+│   ├── execution_engine.py
+│   ├── followup_execution_bridge.py
+│   ├── followup_resolver.py
+│   ├── goal_analyzer.py
+│   ├── intent_engine.py
+│   ├── profile_manager.py
+│   ├── prompt_builder.py
+│   ├── reasoning_loop.py
+│   ├── reference_resolver.py
+│   ├── screen_context.py
+│   ├── screen_followup.py
+│   ├── task_planner.py
+│   └── tool_selector.py
+├── chatbot
+│   ├── __init__.py
+│   ├── ai_chat_api.py
+│   ├── ai_chat_bot.py
+│   ├── ai_chat_clipboard.py
+│   └── ai_chat_session.py
+├── config
+│   ├── __init__.py
+│   ├── environment.py
+│   ├── hud_settings.py
+│   ├── personal_links.py
+│   ├── settings.py
+│   ├── spotify.py
+│   ├── whatsapp.py
+│   └── youtube.py
+├── core
+│   ├── routers
+│   │   ├── __init__.py
+│   │   ├── android_router.py
+│   │   ├── automation_router.py
+│   │   ├── browser_router.py
+│   │   ├── contact_router.py
+│   │   ├── email_router.py
+│   │   ├── file_router.py
+│   │   ├── file_selection_router.py
+│   │   ├── greeting_router.py
+│   │   ├── media_router.py
+│   │   ├── memory_router.py
+│   │   ├── network_router.py
+│   │   ├── news_router.py
+│   │   ├── payment_router.py
+│   │   ├── phone_call_router.py
+│   │   ├── schedule_router.py
+│   │   ├── spotify_router.py
+│   │   ├── system_router.py
+│   │   ├── vision_router.py
+│   │   ├── weather_router.py
+│   │   ├── web_router.py
+│   │   └── whatsapp_router.py
+│   ├── __init__.py
+│   ├── action_memory.py
+│   ├── ai.py
+│   ├── app_resolver.py
+│   ├── assistant_name.py
+│   ├── assistant.py
+│   ├── browser_context.py
+│   ├── browser_reference.py
+│   ├── browser_worker.py
+│   ├── busy_manager.py
+│   ├── camera_manager.py
+│   ├── command_queue.py
+│   ├── confirmation.py
+│   ├── context.py
+│   ├── core_state.py
+│   ├── diagnostics.py
+│   ├── dispatcher.py
+│   ├── executor_worker.py
+│   ├── executor.py
+│   ├── fallback.py
+│   ├── fast_router.py
+│   ├── file_selection_memory.py
+│   ├── hud_bridge.py
+│   ├── intent.py
+│   ├── interrupt.py
+│   ├── listener.py
+│   ├── live_execution.py
+│   ├── memory.py
+│   ├── morning_brief.py
+│   ├── notifications.py
+│   ├── path_resolver.py
+│   ├── paths.py
+│   ├── pipeline.py
+│   ├── planner_worker.py
+│   ├── planner.py
+│   ├── plugins.py
+│   ├── power.py
+│   ├── registry.py
+│   ├── router.py
+│   ├── runtime.py
+│   ├── services.py
+│   ├── skill_categories.py
+│   ├── speech_queue.py
+│   ├── spotify_controller.py
+│   ├── startup_brief.py
+│   ├── task_manager.py
+│   ├── task_queue.py
+│   ├── task_worker.py
+│   ├── tasks.py
+│   ├── voice_queue.py
+│   ├── voice_worker.py
+│   ├── voice.py
+│   ├── wakeword.py
+│   ├── whatsapp_memory.py
+│   └── workers.py
+├── dashboard
+│   ├── static
+│   │   ├── app.html
+│   │   ├── crypto-js.min.js
+│   │   └── login.html
+│   ├── __init__.py
+│   ├── heartbeat.py
+│   └── server.py
+├── data
+│   └── faces
+│       └── .gitkeep
+├── hud
+│   ├── panels
+│   │   └── __init__.py
+│   ├── web
+│   │   ├── app
+│   │   │   ├── ai-chat.css
+│   │   │   ├── globals.css
+│   │   │   ├── globals.css.append
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── components
+│   │   │   ├── AIChatBot.tsx
+│   │   │   ├── HudCockpit.tsx
+│   │   │   ├── JarvisOrb.tsx
+│   │   │   └── PhoneCallIsland.tsx
+│   │   ├── lib
+│   │   │   ├── expressiveRobot.ts
+│   │   │   ├── flyingRobot.ts
+│   │   │   ├── handTracker.ts
+│   │   │   ├── hudBridge.ts
+│   │   │   ├── jarvisAvatar.tsx
+│   │   │   ├── jarvisFullBody.tsx
+│   │   │   └── orbScene.ts
+│   │   ├── public
+│   │   │   └── models
+│   │   │       ├── flying_robot.glb
+│   │   │       ├── jarvis.glb
+│   │   │       ├── jarvis1.glb
+│   │   │       └── RobotExpressive.glb
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.ts
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   ├── __init__.py
+│   ├── adapter.py
+│   ├── bus.py
+│   ├── desktop_window.py
+│   ├── emitter.py
+│   ├── event_contract.py
+│   ├── events.py
+│   ├── integration.py
+│   ├── manager.py
+│   ├── runtime.py
+│   ├── state.py
+│   ├── telemetry.py
+│   ├── web_bridge.py
+│   └── workspace_center.py
+├── services
+│   ├── android
+│   │   ├── __init__.py
+│   │   ├── adb_client.py
+│   │   ├── android_intents.py
+│   │   ├── device_manager.py
+│   │   └── models.py
+│   ├── contact_manager.py
+│   ├── email_contact_manager.py
+│   ├── file_manager.py
+│   ├── gmail_service.py
+│   ├── location.py
+│   ├── personal_link_service.py
+│   ├── remote_control.py
+│   ├── spotify_api.py
+│   ├── web_launcher.py
+│   ├── whatsapp_api.py
+│   ├── whatsapp_parser.py
+│   └── windows_automation.py
+├── skills
+│   ├── ai
+│   │   ├── __init__.py
+│   │   └── clarify.py
+│   ├── android_control
+│   │   ├── __init__.py
+│   │   └── android_control.py
+│   ├── assistant
+│   │   ├── __init__.py
+│   │   ├── greetings.py
+│   │   └── test_greetings.py
+│   ├── automation
+│   │   ├── ESP CODE.ino
+│   │   ├── ESP CODE.txt
+│   │   ├── home_automation.py
+│   │   ├── init.py
+│   │   └── scheduling.py
+│   ├── browser
+│   │   ├── __init__.py
+│   │   ├── browser_ai.py
+│   │   ├── browser_config.py
+│   │   ├── browser_controller.py
+│   │   ├── browser_open.py
+│   │   ├── browser_resolver.py
+│   │   ├── browser_runtime.py
+│   │   ├── navigation.py
+│   │   ├── youtube_api.py
+│   │   └── youtube.py
+│   ├── browser_control
+│   │   ├── __init__.py
+│   │   └── browser_controls.py
+│   ├── camera
+│   │   ├── __init__.py
+│   │   ├── camera.py
+│   │   ├── detector.py
+│   │   ├── face_recognizer.py
+│   │   ├── face_registration.py
+│   │   ├── face_registry.py
+│   │   ├── face_speech.py
+│   │   ├── scene_analyzer.py
+│   │   ├── spatial_analyzer.py
+│   │   ├── vision_analyzer.py
+│   │   ├── vision_loop.py
+│   │   ├── vision_query.py
+│   │   ├── vision_skill.py
+│   │   └── vision.py
+│   ├── communication
+│   │   ├── __init__.py
+│   │   ├── chatgpt.py
+│   │   ├── contact.py
+│   │   ├── email.py
+│   │   ├── github.py
+│   │   └── whatsapp.py
+│   ├── files
+│   │   ├── __init__.py
+│   │   ├── file_info.py
+│   │   ├── file_intelligence.py
+│   │   ├── files.py
+│   │   ├── recent.py
+│   │   ├── recycle.py
+│   │   └── zip_manager.py
+│   ├── media
+│   │   ├── __init__.py
+│   │   ├── image_generation.py
+│   │   ├── media.py
+│   │   └── spotify.py
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── memory.py
+│   │   ├── notes.py
+│   │   └── reminders.py
+│   ├── navigation
+│   │   ├── maps.py
+│   │   └── translate.py
+│   ├── network
+│   │   ├── __init__.py
+│   │   ├── bluetooth.py
+│   │   ├── weather.py
+│   │   └── wifi.py
+│   ├── news
+│   │   └── news.py
+│   ├── payments
+│   │   ├── __init__.py
+│   │   └── payments.py
+│   ├── phone_call
+│   │   ├── __init__.py
+│   │   ├── monitor.py
+│   │   └── phone_call.py
+│   ├── screen
+│   │   ├── __init__.py
+│   │   ├── clipboard.py
+│   │   ├── screen_vision_skill.py
+│   │   ├── screen_vision.py
+│   │   ├── screenshot_ai.py
+│   │   └── screenshot.py
+│   ├── system
+│   │   ├── __init__.py
+│   │   ├── battery.py
+│   │   ├── brightness.py
+│   │   ├── process.py
+│   │   ├── system.py
+│   │   ├── taskmanager.py
+│   │   └── volume.py
+│   ├── utilities
+│   │   ├── __init__.py
+│   │   ├── calculator.py
+│   │   ├── search.py
+│   │   └── time_skill.py
+│   ├── web
+│   │   └── personal_links.py
+│   ├── __init__.py
+│   └── loader.py
+├── tools
+│   ├── database_delete.py
+│   └── windows_integration.py
+├── voice
+│   ├── models
+│   │   └── en_US-lessac-medium.onnx.json
+│   ├── offline
+│   │   ├── __init__.py
+│   │   ├── offline_action_bridge.py
+│   │   ├── offline_ai.py
+│   │   ├── offline_player.py
+│   │   ├── offline_runner.py
+│   │   ├── offline_stt.py
+│   │   ├── offline_tts.py
+│   │   └── offline_voice.py
+│   ├── __init__.py
+│   ├── agent.py
+│   ├── interrupt.py
+│   ├── manager.py
+│   ├── mode.py
+│   ├── offline_piper.py
+│   ├── online_edge.py
+│   ├── online_runner.py
+│   ├── player.py
+│   ├── queue.py
+│   ├── runner.py
+│   ├── speech_state.py
+│   ├── speech_text.py
+│   ├── state.py
+│   └── tts_pipeline.py
+├── workspace
+├── .env.example
+├── format_project_comments.py
+├── main.py
+├── PROJECT_DOCUMENTATION.md
+├── PROJECT_DOCUMENTATION.txt
+├── README.md
+├── requirements.txt
+└── run_jarvis.py
 ~~~
 
 Generated dependency and cache directories such as
