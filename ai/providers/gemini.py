@@ -14,10 +14,13 @@ Supports:
 - Stop-event interruption
 """
 
+import ssl
 import time
 from pathlib import Path
 from typing import Iterator, Optional
 
+import httpx
+import requests
 from google import genai
 from google.genai import types
 
@@ -45,6 +48,50 @@ def _is_quota_error(error) -> bool:
             "rate_limit",
             "too many requests",
         )
+    )
+
+
+_NETWORK_EXCEPTIONS = (
+    requests.exceptions.RequestException,
+    httpx.RequestError,
+    ssl.SSLError,
+    ConnectionError,
+    TimeoutError,
+)
+
+
+def _network_error_details(error) -> tuple[str, str]:
+    """Return a stable user-facing message and category for transport errors."""
+
+    error_text = str(error or "")
+    lowered = error_text.lower()
+
+    if isinstance(error, ssl.SSLError) or any(
+        marker in lowered
+        for marker in (
+            "ssl",
+            "certificate verify failed",
+            "tls",
+            "handshake",
+        )
+    ):
+        return (
+            "Gemini SSL/TLS connection failed; trying another model.",
+            "ssl",
+        )
+
+    if isinstance(error, (TimeoutError, httpx.TimeoutException)) or any(
+        marker in lowered
+        for marker in ("timed out", "timeout")
+    ):
+        return (
+            "Gemini connection timed out; trying another model.",
+            "timeout",
+        )
+
+    return (
+        "Gemini network connection failed; trying another model.",
+        "connection",
     )
 
 
@@ -332,6 +379,29 @@ class GeminiProvider(AIProvider):
                 or ""
             )
 
+            if not text.strip():
+
+                return AIResponse(
+
+                    text="",
+
+                    provider=self.name,
+
+                    model=model,
+
+                    success=False,
+
+                    error="Gemini returned an empty response.",
+
+                    metadata={
+                        "response": response,
+
+                        "multimodal": bool(
+                            request.images
+                        ),
+                    },
+                )
+
             return AIResponse(
 
                 text=text,
@@ -347,6 +417,34 @@ class GeminiProvider(AIProvider):
                     "multimodal": bool(
                         request.images
                     ),
+                },
+            )
+
+        except _NETWORK_EXCEPTIONS as e:
+
+            message, error_type = _network_error_details(e)
+
+            print(
+                "[GEMINI WARNING]",
+                message,
+                "provider endpoint.",
+            )
+
+            return AIResponse(
+
+                text="",
+
+                provider=self.name,
+
+                model=model,
+
+                success=False,
+
+                error=message,
+
+                metadata={
+                    "error_type": error_type,
+                    "exception_type": type(e).__name__,
                 },
             )
 
@@ -540,6 +638,36 @@ class GeminiProvider(AIProvider):
                             "response": chunk,
                         },
                     )
+
+        except _NETWORK_EXCEPTIONS as e:
+
+            message, error_type = _network_error_details(e)
+
+            print(
+                "[GEMINI STREAM WARNING]",
+                message,
+                "provider endpoint.",
+            )
+
+            yield AIStreamChunk(
+
+                text="",
+
+                provider=self.name,
+
+                model=model,
+
+                done=True,
+
+                metadata={
+                    "error": message,
+                    "success": False,
+                    "error_type": error_type,
+                    "exception_type": type(e).__name__,
+                },
+            )
+
+            return
 
         except Exception as e:
 

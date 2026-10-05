@@ -21,7 +21,7 @@ class SystemBuilder:
 
             [
 
-                "You are __ASSISTANT_NAME__ Developer Editor.",
+                "You are JARVIS PRO Developer Editor.",
 
                 "You are an expert software engineer.",
 

@@ -42,6 +42,10 @@ from brain.developer.generator.models.generated_project import (
     GeneratedProject,
 )
 
+from brain.developer.generator.metadata.metadata_builder import (
+    MetadataBuilder,
+)
+
 class Repair:
     """
     Main Repair Engine.
@@ -60,6 +64,8 @@ class Repair:
         self.merger = MergeBuilder()
         
         self.local_builder = LocalFileBuilder()
+
+        self.metadata_builder = MetadataBuilder()
 
     # * -----------------------------------------------------
 
@@ -146,11 +152,11 @@ class Repair:
 
         )
         
-        print("\n" + "=" * 80)
-        print("RAW REPAIR RESPONSE")
-        print("=" * 80)
-        print(response)
-        print("=" * 80)
+        # print("\n" + "=" * 80)
+        # print("RAW REPAIR RESPONSE")
+        # print("=" * 80)
+        # print(response)
+        # print("=" * 80)
 
         if not response:
 
@@ -172,8 +178,8 @@ class Repair:
 
         )
         
-        print("\n========== REPAIR RESPONSE ==========")
-        print(response)
+        # print("\n========== REPAIR RESPONSE ==========")
+        # print(response)
 
         print("\n========== REPAIRED FILES ==========")
 
@@ -191,11 +197,29 @@ class Repair:
             repaired_project,
 
         )
+
+        # Repaired projects can start from an empty Generator result.
+        # Restore the same project metadata normally populated by Generator
+        # before the pipeline performs re-validation.
+        project = context.generated_project
+        analysis = context.analysis
+
+        project.user_request = context.user_request
+        project.language = str(analysis.language)
+        project.framework = str(analysis.framework)
+        project.workspace = str(analysis.workspace)
+        project.project_type = str(analysis.project_type)
+        project.runtime = str(analysis.runtime)
+        project.board = str(analysis.board)
+
+        self.metadata_builder.build(project)
         
-        print("\n========== MERGED FILES ==========")
+        print("\n=========== MERGED FILES ===========")
 
         for file in context.generated_project.files:
             print(file.path)
+            
+        print("======================================")
 
         result.files = repaired_project.files
 
