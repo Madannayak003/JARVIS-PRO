@@ -141,6 +141,7 @@ class AIRouter:
     def _is_quota_error(
         self,
         error,
+        provider_name: str = "",
     ) -> bool:
         """
         Detect temporary quota/rate-limit failures.
@@ -169,10 +170,32 @@ class AIRouter:
             "too many requests",
         )
 
-        return any(
+        if any(
             pattern in text
             for pattern in patterns
-        )
+        ):
+            return True
+
+        # Gemini can temporarily reject an otherwise valid model with a
+        # 503/UNAVAILABLE response during service pressure or high demand.
+        # Keep this scoped to Gemini so unrelated provider/configuration
+        # errors containing "unavailable" are not cooled down accidentally.
+        if provider_name.lower() == "gemini":
+            return (
+                "503" in text
+                or "high demand" in text
+                or "service unavailable" in text
+                or text.strip() == "unavailable"
+                or (
+                    bool(re.search(r"\bunavailable\b", text))
+                    and any(
+                        marker in text
+                        for marker in ("model", "gemini", "service")
+                    )
+                )
+            )
+
+        return False
 
     # * ======================================================
     # * Put Model On Cooldown
@@ -646,7 +669,7 @@ class AIRouter:
 
                 last_error = str(e)
 
-                quota_error = self._is_quota_error(e)
+                quota_error = self._is_quota_error(e, model.provider)
 
                 if quota_error and model.provider.lower() == "gemini":
                     print(
@@ -680,6 +703,12 @@ class AIRouter:
 
             if response.success:
 
+                print(
+                    "[AI ROUTER] Model used:",
+                    response.provider or model.provider,
+                    response.model or model.name,
+                )
+
                 debug_print(
                     "[AI ROUTER] Success:",
                     model.provider,
@@ -700,7 +729,7 @@ class AIRouter:
                 model.name,
             )
 
-            quota_error = self._is_quota_error(response.error)
+            quota_error = self._is_quota_error(response.error, model.provider)
 
             if quota_error and model.provider.lower() == "gemini":
                 print(
@@ -913,7 +942,8 @@ class AIRouter:
                             )
 
                             quota_error = self._is_quota_error(
-                                last_error
+                                last_error,
+                                model.provider,
                             )
 
                             if quota_error and model.provider.lower() == "gemini":
@@ -974,6 +1004,12 @@ class AIRouter:
 
                         if chunk.done:
 
+                            print(
+                                "[AI ROUTER] Model used:",
+                                model.provider,
+                                model.name,
+                            )
+
                             return
 
                     # * --------------------------------------
@@ -983,13 +1019,19 @@ class AIRouter:
 
                     if received_text:
 
+                        print(
+                            "[AI ROUTER] Model used:",
+                            model.provider,
+                            model.name,
+                        )
+
                         return
 
                 except Exception as e:
 
                     last_error = str(e)
 
-                    quota_error = self._is_quota_error(e)
+                    quota_error = self._is_quota_error(e, model.provider)
 
                     if quota_error and model.provider.lower() == "gemini":
                         print(
