@@ -152,11 +152,11 @@ class Repair:
 
         )
         
-        # print("\n" + "=" * 80)
-        # print("RAW REPAIR RESPONSE")
-        # print("=" * 80)
-        # print(response)
-        # print("=" * 80)
+        print("\n" + "=" * 80)
+        print("RAW REPAIR RESPONSE")
+        print("=" * 80)
+        print(response)
+        print("=" * 80)
 
         if not response:
 
@@ -178,8 +178,8 @@ class Repair:
 
         )
         
-        # print("\n========== REPAIR RESPONSE ==========")
-        # print(response)
+        print("\n========== REPAIR RESPONSE ==========")
+        print(response)
 
         print("\n========== REPAIRED FILES ==========")
 
@@ -214,7 +214,7 @@ class Repair:
 
         self.metadata_builder.build(project)
         
-        print("\n=========== MERGED FILES ===========")
+        print("\n========== MERGED FILES ==========")
 
         for file in context.generated_project.files:
             print(file.path)
