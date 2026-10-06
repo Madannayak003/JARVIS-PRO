@@ -32,7 +32,7 @@ from brain.developer.pipeline import (
 
 def _launch_project_assets(folder_path: str) -> None:
     """
-    1. Opens the project directory in File Explorer.
+    1. Opens the project directory in VS Code.
     2. Opens HTML files in default browser.
     3. Conforms sketch folder structure and silently launches Arduino IDE without terminal spam.
     """
@@ -42,14 +42,28 @@ def _launch_project_assets(folder_path: str) -> None:
     sys_platform = platform.system()
     abs_folder = os.path.abspath(folder_path)
 
-    # * 1. Open project folder in explorer
+    # * 1. Open project folder in VS Code
     try:
         if sys_platform == "Windows":
-            os.startfile(abs_folder)
+            subprocess.Popen(
+                ["cmd.exe", "/c", "code", abs_folder],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
         elif sys_platform == "Darwin":
-            subprocess.Popen(["open", abs_folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                ["code", abs_folder],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         else:
-            subprocess.Popen(["xdg-open", abs_folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                ["code", abs_folder],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
     except Exception:
         pass
 
