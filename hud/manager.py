@@ -268,6 +268,7 @@ class HUDManager:
     def system_activity(
         self,
         message,
+        actions=None,
     ):
 
         message = str(
@@ -281,7 +282,8 @@ class HUDManager:
         self._publish(
             HUD_SYSTEM_ACTIVITY,
             {
-                "message": message
+                "message": message,
+                "actions": actions or [],
             }
         )
 

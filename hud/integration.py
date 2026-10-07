@@ -221,6 +221,17 @@ class HUDIntegration:
         )
 
     @classmethod
+    def activity_action(cls, message, actions):
+        cls._emit(
+            HUDEvent.SYSTEM_ACTIVITY,
+            {
+                "message": str(message),
+                "actions": actions or [],
+                "speaker": "jarvis",
+            },
+        )
+
+    @classmethod
     def personal_links(
         cls,
         entries,

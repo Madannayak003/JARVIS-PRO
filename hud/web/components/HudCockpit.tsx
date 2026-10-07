@@ -13,6 +13,7 @@ import type {
 
 import type {
   HUDActivity,
+  HUDActivityAction,
   PersonalLinkEntry,
 } from "@/app/page";
 
@@ -36,6 +37,8 @@ type Props = {
   onMorningBriefClose: () => void;
 
   onCommand: (command: string) => void;
+
+  onActivityAction: (activityId: string, actionId: string, action: string) => void;
 
   onFullscreen: () => void;
 
@@ -450,6 +453,7 @@ export default function HudCockpit({
   morningBriefHeadlines,
   onMorningBriefClose,
   onCommand,
+  onActivityAction,
   onFullscreen,
   onSettings,
   onSchedules,
@@ -935,6 +939,20 @@ export default function HudCockpit({
                         }
                       />
                     )}
+
+                    {activity.actions?.length ? (
+                      <div className="activity-actions">
+                        {activity.actions.map((action: HUDActivityAction) => (
+                          <button
+                            key={`${action.id}-${action.action}`}
+                            type="button"
+                            onClick={() => onActivityAction(activity.id, action.id, action.action)}
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
 
                   </div>
 

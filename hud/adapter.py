@@ -145,10 +145,11 @@ class HUDAdapter:
     # * =====================================================
 
     @staticmethod
-    def system_activity(message):
+    def system_activity(message, actions=None):
 
         hud.system_activity(
-            message
+            message,
+            actions,
         )
 
     @staticmethod

@@ -28,12 +28,13 @@ from brain.developer.memory.models.edit_record import (
 from brain.developer.pipeline import (
     DeveloperPipeline,
 )
+from hud.integration import HUDIntegration
+from hud.web_bridge import hud_web
 
 
 def _launch_project_assets(folder_path: str) -> None:
     """
-    1. Opens the project directory in VS Code.
-    2. Opens HTML files in default browser.
+    1. Opens HTML files in default browser.
     3. Conforms sketch folder structure and silently launches Arduino IDE without terminal spam.
     """
     if not folder_path or not os.path.exists(folder_path):
@@ -42,32 +43,7 @@ def _launch_project_assets(folder_path: str) -> None:
     sys_platform = platform.system()
     abs_folder = os.path.abspath(folder_path)
 
-    # * 1. Open project folder in VS Code
-    try:
-        if sys_platform == "Windows":
-            subprocess.Popen(
-                ["cmd.exe", "/c", "code", abs_folder],
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW,
-            )
-        elif sys_platform == "Darwin":
-            subprocess.Popen(
-                ["code", abs_folder],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        else:
-            subprocess.Popen(
-                ["code", abs_folder],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-    except Exception:
-        pass
-
-    # * 2. Collect project files
+    # * 1. Collect project files
     html_files = []
     ino_files = []
 
@@ -80,7 +56,7 @@ def _launch_project_assets(folder_path: str) -> None:
             elif ext == ".ino":
                 ino_files.append(full_path)
 
-    # * 3. Launch HTML in browser (prefer index.html)
+    # * 2. Launch HTML in browser (prefer index.html)
     if html_files:
         target_html = next(
             (f for f in html_files if os.path.basename(f).lower() == "index.html"),
@@ -91,7 +67,7 @@ def _launch_project_assets(folder_path: str) -> None:
         except Exception:
             pass
 
-    # * 4. Launch Arduino / ESP sketch cleanly
+    # * 3. Launch Arduino / ESP sketch cleanly
     if ino_files:
         target_ino = ino_files[0]
         sketch_name = os.path.splitext(os.path.basename(target_ino))[0]
@@ -205,6 +181,10 @@ class Developer:
                 self.memory.save()
 
                 _launch_project_assets(project_path)
+                _request_vscode_permission(
+                    project_path,
+                    result.project_name or os.path.basename(project_path),
+                )
 
             return result
 
@@ -265,3 +245,40 @@ class Developer:
         self.memory.save()
 
         return result
+
+
+def _request_vscode_permission(folder_path: str, project_name: str) -> None:
+    abs_folder = os.path.abspath(folder_path)
+
+    def handle_action(action: str) -> None:
+        if action != "open":
+            return
+        try:
+            if platform.system() == "Windows":
+                subprocess.Popen(
+                    ["cmd.exe", "/c", "code", abs_folder],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            else:
+                subprocess.Popen(
+                    ["code", abs_folder],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            HUDIntegration.system_activity(
+                f"Opened {project_name} in VS Code."
+            )
+        except Exception:
+            pass
+
+    action_id = hud_web.register_action(handle_action)
+    HUDIntegration.activity_action(
+        "Open this project in VS Code?",
+        [
+            {"id": action_id, "label": "OPEN IN VS CODE", "action": "open"},
+            {"id": action_id, "label": "CANCEL", "action": "cancel"},
+        ],
+    )

@@ -751,6 +751,9 @@ body {
   text-transform: uppercase;
 }
 .activity-message-text { font-size: 12px; line-height: 1.5; color: var(--hud-text); word-break: break-word; }
+.activity-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.activity-actions button { border: 1px solid var(--hud-jarvis-colour); background: rgba(0, 229, 255, 0.08); color: var(--hud-jarvis-colour); padding: 6px 10px; font: inherit; font-size: 10px; letter-spacing: 0.08em; cursor: pointer; }
+.activity-actions button:hover { background: rgba(0, 229, 255, 0.18); }
 
 .activity-user { border-left: 3px solid var(--hud-user-colour); }
 .activity-user .activity-message-meta { color: var(--hud-user-colour); }

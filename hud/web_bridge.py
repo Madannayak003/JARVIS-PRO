@@ -311,6 +311,7 @@ from __future__ import annotations
 
 import json
 import threading
+from uuid import uuid4
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Empty, Queue
@@ -413,7 +414,7 @@ class _BridgeHandler(
 
         self.send_header(
             "Access-Control-Allow-Methods",
-            "GET, OPTIONS",
+            "GET, POST, OPTIONS",
         )
 
         self.send_header(
@@ -471,6 +472,20 @@ class _BridgeHandler(
     # * ---------------------------------------------------------
 
     def do_POST(self) -> None:
+
+        if self.path == "/action":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length) or b"{}")
+            except (TypeError, ValueError, json.JSONDecodeError):
+                self._json({"ok": False, "error": "Invalid action payload."}, 400)
+                return
+
+            if self.bridge.handle_action(payload):
+                self._json({"ok": True})
+            else:
+                self._json({"ok": False, "error": "Action unavailable."}, 404)
+            return
 
         if self.path == "/shutdown":
 
@@ -697,6 +712,8 @@ class HUDWebBridge:
 
         self._shutdown_callback = None
 
+        self._actions = {}
+
         # * -----------------------------------------------------
         # * RECENT EVENT BUFFER
         # * -----------------------------------------------------
@@ -816,6 +833,34 @@ class HUDWebBridge:
     ) -> None:
 
         self._shutdown_callback = callback
+
+    def register_action(self, callback) -> str:
+        action_id = uuid4().hex
+        with self._lock:
+            self._actions[action_id] = callback
+        return action_id
+
+    def handle_action(self, payload: Any) -> bool:
+        if not isinstance(payload, dict):
+            return False
+
+        action_id = str(payload.get("id", "")).strip()
+        if not action_id:
+            return False
+
+        with self._lock:
+            callback = self._actions.pop(action_id, None)
+
+        if callback is None:
+            return False
+
+        threading.Thread(
+            target=callback,
+            args=(str(payload.get("action", "")),),
+            name="jarvis-hud-action",
+            daemon=True,
+        ).start()
+        return True
 
     # * ---------------------------------------------------------
     # * REQUEST SHUTDOWN

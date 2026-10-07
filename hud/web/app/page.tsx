@@ -67,6 +67,13 @@ export type HUDActivity = {
   text: string;
   timestamp: string;
   personalLinks?: PersonalLinkEntry[];
+  actions?: HUDActivityAction[];
+};
+
+export type HUDActivityAction = {
+  id: string;
+  label: string;
+  action: string;
 };
 
 export type PersonalLinkEntry = {
@@ -1097,6 +1104,18 @@ export default function Home() {
             ? personalLinkEntries(event.data?.entries)
             : [];
 
+        const actions = event.name === "system_activity"
+          && Array.isArray(event.data?.actions)
+          ? event.data.actions.flatMap((action: unknown) => {
+              if (!action || typeof action !== "object") return [];
+              const value = action as Record<string, unknown>;
+              const id = String(value.id ?? "").trim();
+              const label = String(value.label ?? "").trim();
+              const actionName = String(value.action ?? "").trim();
+              return id && label && actionName ? [{ id, label, action: actionName }] : [];
+            })
+          : [];
+
         const speaker =
           event.name === "command"
             ? "user"
@@ -1104,6 +1123,8 @@ export default function Home() {
             ? event.data?.speaker === "live"
               ? "live"
               : "jarvis"
+            : event.data?.speaker === "jarvis"
+              ? "jarvis"
             : "system";
 
         const text = String(
@@ -1162,6 +1183,7 @@ export default function Home() {
             text,
             timestamp: event.timestamp,
             personalLinks: links.length > 0 ? links : undefined,
+            actions: actions.length > 0 ? actions : undefined,
           };
 
           return [...previous, activity].slice(-30);
@@ -1859,6 +1881,19 @@ export default function Home() {
 
         onCommand={(command) => {
           void sendHudCommand(command);
+        }}
+
+        onActivityAction={async (activityId, actionId, action) => {
+          setActivities((previous) => previous.filter((item) => item.id !== activityId));
+          try {
+            await fetch(`${HUD_BRIDGE_URL}/action`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: actionId, action }),
+            });
+          } catch {
+            // The permission action is one-shot; no terminal output is needed.
+          }
         }}
 
         onFullscreen={toggleFullscreen}

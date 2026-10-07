@@ -142,7 +142,8 @@ class HUDEmitter:
         if event == HUDEvent.SYSTEM_ACTIVITY:
 
             HUDAdapter.system_activity(
-                data.get("message", "")
+                data.get("message", ""),
+                data.get("actions", []),
             )
             return
 
