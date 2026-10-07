@@ -46,6 +46,7 @@ class ModelManager:
     CAPABILITY_MODEL_PREFERENCES = {
 
         "conversation": [
+            "gemini-3.5-flash-lite",
             "gemini-3.6-flash",
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
@@ -53,6 +54,7 @@ class ModelManager:
         ],
 
         "fast": [
+            "gemini-3.5-flash-lite",
             "gemini-3.6-flash",
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
@@ -88,6 +90,7 @@ class ModelManager:
         ],
 
         "reasoning": [
+            "gemini-3.5-flash-lite",
             "gemini-3.6-flash",
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
@@ -95,6 +98,7 @@ class ModelManager:
         ],
 
         "planning": [
+            "gemini-3.5-flash-lite",
             "gemini-3.6-flash",
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
@@ -102,6 +106,7 @@ class ModelManager:
         ],
 
         "screen_vision": [
+            "gemini-3.5-flash-lite",
             "gemini-3.6-flash",
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
