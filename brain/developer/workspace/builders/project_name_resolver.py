@@ -24,6 +24,8 @@ class ProjectNameResolver:
     DEFAULT_NAME = "GeneratedProject"
 
     SPECIAL_WORDS = {
+        "ai": "AI",
+        "ecommerce": "ECommerce",
         "rfid": "RFID",
         "iot": "IoT",
         "api": "API",
@@ -50,6 +52,16 @@ class ProjectNameResolver:
         "python": "Python",
         "cpp": "CPP",
         "c++": "CPP",
+    }
+
+    TECHNOLOGY_WORDS = set(SPECIAL_WORDS)
+    LANGUAGE_WORDS = {
+        "python",
+        "javascript",
+        "typescript",
+        "cpp",
+        "c++",
+        "c",
     }
 
     # Words that describe the command rather than the project itself.
@@ -83,6 +95,7 @@ class ProjectNameResolver:
         "web",
         "site",
         "script",
+        "solution",
     }
 
     # Implementation/detail words that commonly make names unnecessarily long.
@@ -117,6 +130,25 @@ class ProjectNameResolver:
         "simple",
         "basic",
         "advanced",
+        "powered",
+        "power",
+        "ui",
+        "ux",
+        "mode",
+        "modes",
+        "animation",
+        "animations",
+        "chart",
+        "charts",
+        "notification",
+        "notifications",
+        "animated",
+        "dark",
+        "light",
+        "location",
+        "search",
+        "filter",
+        "filters",
     }
 
     # Detailed implementation phrases that should not become folder names.
@@ -131,6 +163,7 @@ class ProjectNameResolver:
         r"\bwith\s+responsive\s+design\b",
         r"\bwith\s+modern\s+ui\b",
         r"\bwith\s+modern\s+responsive\s+ui\b",
+        r"\bai[\s-]+powered\b",
         r"\baddition\s*,?\s*subtraction\s*,?\s*multiplication\s*(?:and\s*)?division\b",
         r"\baddition\s+subtraction\s+multiplication\s+division\b",
     )
@@ -142,7 +175,6 @@ class ProjectNameResolver:
         "subtraction",
         "multiplication",
         "division",
-        "calculator",
         "calculation",
     }
 
@@ -270,6 +302,11 @@ class ProjectNameResolver:
         PascalCase project name.
         """
 
+        explicit_name = self._explicit_name(text)
+
+        if explicit_name:
+            return self._format_name(explicit_name.split())
+
         # Remove implementation/detail phrases first.
         for pattern in self.DETAIL_PHRASES:
             text = re.sub(
@@ -280,137 +317,124 @@ class ProjectNameResolver:
             )
 
         # Normalize punctuation.
+        text = re.sub(r"\be[\s-]+commerce\b", "ecommerce", text, flags=re.IGNORECASE)
         text = re.sub(
             r"[^A-Za-z0-9+# ]",
             " ",
             text,
         )
 
-        # Tokenize.
-        words = text.split()
-
-        cleaned = []
-
-        for word in words:
-            key = word.lower()
-
-            # Command words.
-            if key in self.COMMAND_WORDS:
-                continue
-
-            # Generic words.
-            if key in self.GENERIC_WORDS:
-                continue
-
-            # Detail/filler words.
-            if key in self.DETAIL_WORDS:
-                continue
-
-            cleaned.append(word)
-
-        # -------------------------------------------------
-        # Prefer important project words.
-        # -------------------------------------------------
-
-        important = []
-        technology = []
-
-        for word in cleaned:
-            key = word.lower()
-
-            if key in self.SPECIAL_WORDS:
-                technology.append(word)
-                continue
-
-            if key in self.PROJECT_NOUNS:
-                important.append(word)
-
-        # -------------------------------------------------
-        # Language prefix
-        # -------------------------------------------------
-
-        language = str(getattr(project, "language", "") or "").lower()
-
-        language_name = ""
-
-        if "python" in language:
-            language_name = "Python"
-        elif "javascript" in language or language == "js":
-            language_name = "JavaScript"
-        elif "typescript" in language or language == "ts":
-            language_name = "TypeScript"
-        elif "cpp" in language or "c++" in language:
-            language_name = "CPP"
-        elif language == "c":
-            language_name = "C"
-
-        # -------------------------------------------------
-        # Build concise name
-        # -------------------------------------------------
-
-        result_words = []
-
-        if language_name:
-            result_words.append(language_name)
-
-        # Add important project nouns in request order.
-        for word in important:
-            if word.lower() not in {
-                item.lower() for item in result_words
-            }:
-                result_words.append(word)
-
-        # If no strong project noun was found, keep a small
-        # amount of meaningful request content.
-        if len(result_words) <= 1:
-            fallback = []
-
-            for word in cleaned:
-                key = word.lower()
-
-                if key in self.SPECIAL_WORDS:
-                    continue
-
-                if len(key) <= 2:
-                    continue
-
-                fallback.append(word)
-
-            # Keep only the first few meaningful words.
-            result_words.extend(fallback[:3])
-
-        # -------------------------------------------------
-        # Special technology-only projects
-        # -------------------------------------------------
-
-        if not result_words and technology:
-            result_words.extend(technology[:2])
-
-        # -------------------------------------------------
-        # Final formatting
-        # -------------------------------------------------
-
-        parts = []
-
-        for word in result_words:
-            key = word.lower()
-
-            if key in self.SPECIAL_WORDS:
-                parts.append(self.SPECIAL_WORDS[key])
-            else:
-                # Preserve existing acronym-like words.
-                if word.isupper() and len(word) <= 5:
-                    parts.append(word)
-                else:
-                    parts.append(word.capitalize())
-
-        name = "".join(parts)
-
-        # Final safety cleanup.
-        name = re.sub(
-            r"[^A-Za-z0-9_]+",
-            "",
-            name,
+        words = re.findall(r"[A-Za-z0-9]+(?:\+\+)?", text)
+        lowered = [word.lower() for word in words]
+        using_index = next(
+            (index for index, key in enumerate(lowered) if key in {"using", "with"}),
+            len(words),
         )
 
+        candidates = []
+        seen = set()
+        technology = []
+
+        for index, word in enumerate(words):
+            key = word.lower()
+
+            if (
+                key in self.COMMAND_WORDS
+                or key in self.GENERIC_WORDS
+                or key in self.DETAIL_WORDS
+                or key in self.OPERATION_WORDS
+                or len(key) <= 2
+            ):
+                continue
+
+            if key in seen:
+                continue
+
+            if key in self.TECHNOLOGY_WORDS:
+                technology.append((index, word))
+                # Markup/language details after "using" are implementation,
+                # while leading or hardware technologies can identify a project.
+                if index > using_index:
+                    continue
+                if key in {"html", "css", "javascript", "json", "http", "https"}:
+                    continue
+
+            seen.add(key)
+            candidates.append((index, word))
+
+        # A request can contain a long feature list. Keep the first coherent
+        # concept and at most four meaningful words in its original order.
+        if len(candidates) > 4:
+            candidates = candidates[:4]
+
+        result_words = [word for _, word in candidates]
+
+        # Metadata can supply a language when the request explicitly used it
+        # as the project identity, e.g. "Python calculator". Do not prefix
+        # every project with its implementation language.
+        language = str(getattr(project, "language", "") or "").lower()
+        language_name = next(
+            (
+                canonical
+                for key, canonical in self.SPECIAL_WORDS.items()
+                if key in self.LANGUAGE_WORDS and key in language
+            ),
+            "",
+        )
+        if language_name and result_words:
+            first_key = result_words[0].lower()
+            if first_key in self.LANGUAGE_WORDS and first_key not in seen:
+                result_words.insert(0, language_name)
+
+        # If all descriptive content was filtered, retain a technology name
+        # rather than inventing one.
+        if not result_words and technology:
+            result_words = [technology[0][1]]
+
+        return self._format_name(result_words)
+
+    @staticmethod
+    def _explicit_name(text: str) -> str:
+        """Return a user-supplied project name when one is clearly labelled."""
+
+        quoted = re.search(
+            r"\b(?:called|named|name(?:d)?)\s+(?:[\"']([^\"']+)[\"']|([A-Za-z0-9_]+))",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if quoted:
+            return (quoted.group(1) or quoted.group(2)).strip()
+
+        quoted_project = re.search(
+            r"\bproject\s+[\"']([^\"']+)[\"']",
+            text,
+            flags=re.IGNORECASE,
+        )
+        if quoted_project:
+            return quoted_project.group(1).strip()
+
+        return ""
+
+    def _format_name(self, words: list[str]) -> str:
+        """Format ordered, already-selected words as a safe PascalCase name."""
+
+        parts = []
+        seen = set()
+
+        for word in words:
+            key = re.sub(r"[^a-z0-9]+", "", word.lower())
+            if not key or key in seen:
+                continue
+            seen.add(key)
+
+            special = self.SPECIAL_WORDS.get(key)
+            if special:
+                parts.append(special)
+            elif word.isupper() and len(word) <= 5:
+                parts.append(word)
+            else:
+                parts.append(word[:1].upper() + word[1:])
+
+        name = re.sub(r"[^A-Za-z0-9_]+", "", "".join(parts))
+        name = name.strip(" .")
         return name or self.DEFAULT_NAME
