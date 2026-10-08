@@ -1800,6 +1800,8 @@ class DashboardServer:
                 return workspace_center.stop_preview(project_id)
             if action == "open-folder":
                 return workspace_center.open_folder(project_id)
+            if action == "delete":
+                return workspace_center.delete_project(project_id)
             return JSONResponse({"ok": False, "error": "Unknown workspace action."}, status_code=404)
 
         # * =====================================================

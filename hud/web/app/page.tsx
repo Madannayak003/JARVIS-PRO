@@ -320,6 +320,8 @@ export default function Home() {
   const [workspaceFilter, setWorkspaceFilter] = useState("ALL");
   const [workspaceMessage, setWorkspaceMessage] = useState("");
   const [workspacePreviewProjectId, setWorkspacePreviewProjectId] = useState<string | null>(null);
+  const [workspaceDeleteProject, setWorkspaceDeleteProject] = useState<WorkspaceProject | null>(null);
+  const [workspaceDeleteLoading, setWorkspaceDeleteLoading] = useState(false);
   const [workspacePreviewRefresh, setWorkspacePreviewRefresh] = useState(0);
   const [hudNotification, setHudNotification] = useState<{ title: string; message: string; level: string } | null>(null);
   const [phoneCall, setPhoneCall] = useState<PhoneCallState | null>(null);
@@ -565,9 +567,27 @@ export default function Home() {
       }
       if (action === "start-preview") setWorkspacePreviewProjectId(project.id);
       if (action === "open-folder") setWorkspaceMessage(`Opened ${project.name}.`);
+      if (action === "delete") {
+        setWorkspaceDeleteProject(null);
+        setWorkspaceDeleteLoading(false);
+        if (workspacePreviewProjectId === project.id) setWorkspacePreviewProjectId(null);
+        await refreshWorkspace();
+      }
     } catch (error) {
+      if (action === "delete") setWorkspaceDeleteLoading(false);
       setWorkspaceMessage(error instanceof Error ? error.message : "Workspace action failed.");
     }
+  };
+
+  const requestWorkspaceDelete = (project: WorkspaceProject) => {
+    setWorkspaceMessage("");
+    setWorkspaceDeleteProject(project);
+  };
+
+  const confirmWorkspaceDelete = async () => {
+    if (!workspaceDeleteProject || workspaceDeleteLoading) return;
+    setWorkspaceDeleteLoading(true);
+    await workspaceAction("delete", workspaceDeleteProject);
   };
 
   const connectAndroid = async () => {
@@ -1925,7 +1945,7 @@ export default function Home() {
                   <div className="workspace-project-meta"><span>MODIFIED</span><code>{project.last_modified ? new Date(project.last_modified).toLocaleString() : "--"}</code></div>
                   {project.entry_file && <div className="workspace-project-entry">ENTRY · {project.entry_file}</div>}
                   {project.preview_running && <div className="workspace-preview-url">{project.preview_url}</div>}
-                  <div className="workspace-project-buttons">{project.preview_available && <button type="button" onClick={() => void workspaceAction(project.preview_running ? "stop-preview" : "start-preview", project)}>{project.preview_running ? "STOP PREVIEW" : "PREVIEW"}</button>}<button type="button" onClick={() => void navigator.clipboard?.writeText(project.location).then(() => setWorkspaceMessage("Project path copied."))}>COPY PATH</button><button type="button" onClick={() => void workspaceAction("open-folder", project)}>OPEN FOLDER</button></div>
+                  <div className="workspace-project-buttons">{project.preview_available && <button type="button" onClick={() => void workspaceAction(project.preview_running ? "stop-preview" : "start-preview", project)}>{project.preview_running ? "STOP PREVIEW" : "PREVIEW"}</button>}<button type="button" onClick={() => void navigator.clipboard?.writeText(project.location).then(() => setWorkspaceMessage("Project path copied."))}>COPY PATH</button><button type="button" onClick={() => void workspaceAction("open-folder", project)}>OPEN FOLDER</button><button type="button" className="workspace-delete-button" onClick={() => requestWorkspaceDelete(project)}>DELETE</button></div>
                 </article>
               ))}
               {!filteredWorkspaceProjects.length && <div className="workspace-empty"><strong>NO PROJECTS DETECTED</strong><span>{workspaceMessage || "Workspace contains no matching recognized projects."}</span></div>}
@@ -1940,6 +1960,24 @@ export default function Home() {
                 <div className="workspace-preview-initializing">INITIALIZING LOCAL PREVIEW…</div>
               )}
             </div>}
+          </section>
+        </div>
+      )}
+
+      {workspaceDeleteProject && (
+        <div className="workspace-delete-backdrop" role="dialog" aria-modal="true" aria-label="Delete Project Confirmation">
+          <section className="workspace-delete-dialog">
+            <span className="workspace-delete-kicker">PROJECT DELETION</span>
+            <h2>Delete Project?</h2>
+            <p>Are you sure you want to delete</p>
+            <strong>{workspaceDeleteProject.name}</strong>
+            <small>This will permanently remove the project and its files.</small>
+            <div className="workspace-delete-actions">
+              <button type="button" className="workspace-delete-confirm" onClick={() => void confirmWorkspaceDelete()} disabled={workspaceDeleteLoading}>
+                {workspaceDeleteLoading ? "DELETING…" : "DELETE PROJECT"}
+              </button>
+              <button type="button" onClick={() => setWorkspaceDeleteProject(null)} disabled={workspaceDeleteLoading}>CANCEL</button>
+            </div>
           </section>
         </div>
       )}

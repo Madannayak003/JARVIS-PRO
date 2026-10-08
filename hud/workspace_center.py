@@ -11,6 +11,7 @@ import functools
 import http.server
 import os
 import socket
+import shutil
 import threading
 import webbrowser
 from datetime import datetime, timezone
@@ -213,6 +214,58 @@ class WorkspaceCenter:
         except OSError:
             return {"ok": False, "error": "Unable to open the project folder."}
         return {"ok": True, "location": str(project)}
+
+    def delete_project(self, project_id: str) -> dict[str, Any]:
+        """Delete one listed project after strict workspace validation."""
+
+        raw_candidate = Path(str(project_id)).expanduser()
+        project = self._resolve(raw_candidate.as_posix())
+        root = self.workspace_root.resolve()
+
+        if project is None or project == root:
+            return {"ok": False, "error": "Project is outside the configured workspace."}
+
+        try:
+            project.relative_to(root)
+        except ValueError:
+            return {"ok": False, "error": "Project is outside the configured workspace."}
+
+        # Only a project currently exposed by Workspace Center may be deleted.
+        listed_projects = {path.resolve() for path, _ in self._roots()}
+        if project not in listed_projects:
+            return {"ok": False, "error": "Only recognized workspace projects can be deleted."}
+
+        # Reject symlinked targets/components so a client cannot redirect the
+        # deletion outside the configured workspace.
+        raw_absolute = raw_candidate.absolute()
+        try:
+            relative_parts = raw_absolute.relative_to(root).parts
+        except ValueError:
+            return {"ok": False, "error": "Project is outside the configured workspace."}
+        current = root
+        for part in relative_parts:
+            current = current / part
+            if current.is_symlink():
+                return {"ok": False, "error": "Symlinked project paths cannot be deleted."}
+
+        try:
+            from brain.developer.integration.active_project import ActiveProjectResolver
+
+            active_project = ActiveProjectResolver().resolve()
+        except Exception:
+            active_project = None
+
+        if active_project and Path(active_project).resolve() == project:
+            return {"ok": False, "error": "Active project cannot be deleted."}
+
+        self.stop_preview(str(project))
+
+        try:
+            shutil.rmtree(project)
+        except OSError:
+            return {"ok": False, "error": "Unable to delete the project directory."}
+
+        return {"ok": True, "deleted": str(project)}
 
 
 workspace_center = WorkspaceCenter()
