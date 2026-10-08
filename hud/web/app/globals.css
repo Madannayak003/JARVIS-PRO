@@ -2181,79 +2181,108 @@ body.gallery-open .ultron-layer {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: linear-gradient(155deg, rgba(12, 20, 32, 0.98), rgba(5, 10, 18, 0.98));
-  border-color: rgba(56, 189, 248, 0.24);
+  background:
+    radial-gradient(circle at 86% -8%, rgba(217, 164, 76, 0.08), transparent 34%),
+    linear-gradient(155deg, rgba(24, 25, 27, 0.99), rgba(10, 11, 13, 0.99));
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.56), 0 0 0 1px rgba(255, 255, 255, 0.025);
 }
 .settings-preferences-modal .settings-modal-heading {
-  flex: 0 0 52px;
-  padding-inline: 22px;
-  background: rgba(15, 23, 42, 0.24);
-  border-bottom-color: rgba(56, 189, 248, 0.16);
+  flex: 0 0 58px;
+  padding-inline: 24px;
+  background: rgba(255, 255, 255, 0.018);
+  border-bottom-color: rgba(255, 255, 255, 0.075);
+  font-size: 12px;
+  letter-spacing: 0.16em;
 }
-.settings-preferences-modal .settings-heading-icon { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.34); }
-.settings-preferences-modal .settings-modal-close { right: 18px; border-radius: 3px; }
+.settings-preferences-modal .settings-heading-icon { color: #d8a85e; text-shadow: none; font-size: 10px; }
+.settings-preferences-modal .settings-modal-close { right: 19px; width: 30px; height: 30px; border-radius: 8px; }
+.settings-preferences-modal .settings-modal-close:hover { color: #f4eee5; background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.1); }
 .settings-preferences-modal .settings-form {
   min-height: 0;
   overflow-y: auto;
-  padding: 22px;
-  scrollbar-color: rgba(56, 189, 248, 0.42) rgba(15, 23, 42, 0.44);
+  padding: 22px 24px 24px;
+  scrollbar-color: rgba(216, 168, 94, 0.52) transparent;
+  scrollbar-width: thin;
 }
+.settings-preferences-modal .settings-form::-webkit-scrollbar { width: 7px; }
+.settings-preferences-modal .settings-form::-webkit-scrollbar-track { background: transparent; }
+.settings-preferences-modal .settings-form::-webkit-scrollbar-thumb { background: rgba(216, 168, 94, 0.42); border: 2px solid transparent; background-clip: padding-box; border-radius: 999px; }
 .settings-preferences-modal .settings-control-section,
 .settings-preferences-modal .settings-bottom-actions-section,
 .settings-preferences-modal .settings-visibility-section {
-  padding-block: 0 20px;
-  margin-bottom: 20px;
-  border-color: rgba(148, 163, 184, 0.14);
+  padding-block: 0 22px;
+  margin-bottom: 22px;
+  border-color: rgba(255, 255, 255, 0.075);
 }
 .settings-preferences-modal .settings-control-section + .settings-control-section { padding-top: 0; }
-.settings-preferences-modal .settings-bottom-actions-section { padding-top: 20px; border-top: 1px solid rgba(148, 163, 184, 0.14); }
-.settings-preferences-modal .settings-visibility-section { padding-top: 20px; }
-.settings-preferences-modal .settings-control-header { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; margin-bottom: 12px; }
-.settings-preferences-modal .settings-control-icon { width: 28px; min-width: 28px; height: 24px; color: #67e8f9; }
-.settings-preferences-modal .settings-control-title { letter-spacing: 0.09em; }
-.settings-preferences-modal .settings-control-description { margin-top: 5px; color: #8292a8; }
-.settings-preferences-modal .settings-select-wrap { height: 42px; border-color: rgba(56, 189, 248, 0.2); border-radius: 3px; background: rgba(15, 23, 42, 0.66); }
+.settings-preferences-modal .settings-bottom-actions-section { padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.075); }
+.settings-preferences-modal .settings-visibility-section { padding-top: 22px; }
+.settings-preferences-modal .settings-control-header { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 11px; align-items: start; margin-bottom: 13px; }
+.settings-preferences-modal .settings-control-icon { width: 30px; min-width: 30px; height: 25px; color: #d8a85e; opacity: 0.9; }
+.settings-preferences-modal .settings-control-title { letter-spacing: 0.1em; font-size: 11.5px; }
+.settings-preferences-modal .settings-control-description { margin-top: 5px; color: #92939a; font-size: 10.5px; }
+.settings-preferences-modal .settings-select-wrap { height: 43px; border-color: rgba(255, 255, 255, 0.1); border-radius: 10px; background: rgba(255, 255, 255, 0.045); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035); }
+.settings-preferences-modal .settings-select-wrap:hover { border-color: rgba(216, 168, 94, 0.38); background: rgba(255, 255, 255, 0.06); }
 .settings-preferences-modal .settings-select-wrap:focus-within {
-  border-color: rgba(56, 189, 248, 0.66);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: rgba(216, 168, 94, 0.7);
+  box-shadow: 0 0 0 3px rgba(216, 168, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .settings-preferences-modal .settings-select-icon,
-.settings-preferences-modal .settings-select-arrow { right: 14px; color: #67e8f9; }
-.settings-preferences-modal .settings-select-icon { left: 13px; right: auto; }
-.settings-preferences-modal .settings-voice-select { padding-inline: 38px; color: #e2e8f0; }
-.settings-preferences-modal .settings-bottom-actions-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.settings-preferences-modal .settings-select-arrow { right: 14px; color: #aaa7a0; }
+.settings-preferences-modal .settings-select-icon { left: 13px; right: auto; color: #d8a85e; opacity: 0.8; }
+.settings-preferences-modal .settings-voice-select { padding-inline: 38px; color: #f1eee8; font-size: 11.5px; }
+.settings-preferences-modal .settings-voice-select option { background: #1b1c1e; color: #f1eee8; }
+.settings-preferences-modal .settings-bottom-actions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 .settings-preferences-modal .settings-bottom-actions-grid .hud-bar-btn {
   width: 100%;
   min-width: 0;
-  min-height: 40px;
+  min-height: 42px;
   padding: 8px 7px;
-  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.038);
+  color: #c9c8c4;
   font-size: 9px;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.05em;
+  box-shadow: none;
 }
+.settings-preferences-modal .settings-bottom-actions-grid .hud-bar-btn:hover { border-color: rgba(216, 168, 94, 0.42); background: rgba(216, 168, 94, 0.09); color: #f5efe5; transform: translateY(-1px); }
+.settings-preferences-modal .settings-bottom-actions-grid .hud-bar-btn.is-active { border-color: rgba(216, 168, 94, 0.55); background: rgba(216, 168, 94, 0.13); color: #e9c98e; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); }
 .settings-preferences-modal .settings-bottom-actions-grid .hud-bar-btn span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .settings-preferences-modal .settings-toggle-row {
   grid-template-columns: 28px 132px minmax(0, 1fr) 38px 36px;
-  min-height: 46px;
-  margin-top: 8px;
+  min-height: 48px;
+  margin-top: 9px;
   padding-inline: 12px;
-  border-radius: 3px;
-  border-color: rgba(148, 163, 184, 0.14);
+  border-radius: 10px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
 }
-.settings-preferences-modal .settings-toggle-icon { width: 28px; text-align: center; color: #67e8f9; }
+.settings-preferences-modal .settings-toggle-row:hover { border-color: rgba(216, 168, 94, 0.36); background: rgba(255, 255, 255, 0.06); }
+.settings-preferences-modal .settings-toggle-icon { width: 28px; text-align: center; color: #d8a85e; }
 .settings-preferences-modal .settings-toggle-name { padding-right: 10px; letter-spacing: 0.04em; }
-.settings-preferences-modal .settings-toggle-description { padding-inline: 12px; }
-.settings-preferences-modal .settings-toggle-state { padding-left: 8px; color: #94a3b8; }
+.settings-preferences-modal .settings-toggle-description { padding-inline: 12px; color: #8f9096; }
+.settings-preferences-modal .settings-toggle-state { padding-left: 8px; color: #9c9b96; }
+.settings-preferences-modal .settings-switch { width: 34px; height: 18px; border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.09); }
+.settings-preferences-modal .settings-switch-on { border-color: #d8a85e; background: #d8a85e; }
+.settings-preferences-modal .settings-switch-on .settings-switch-knob { background: #151515; }
+.settings-preferences-modal .settings-switch-off { opacity: 0.75; }
 .settings-preferences-modal .settings-modal-actions {
   position: sticky;
   bottom: -22px;
   z-index: 2;
-  margin: 0 -22px -22px;
-  padding: 16px 22px 22px;
-  border-top: 1px solid rgba(56, 189, 248, 0.16);
-  background: linear-gradient(180deg, rgba(8, 15, 26, 0.8), rgba(8, 15, 26, 0.98) 34%);
+  margin: 0 -24px -24px;
+  padding: 17px 24px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(15, 16, 18, 0.78), rgba(15, 16, 18, 0.99) 34%);
 }
-.settings-preferences-modal .settings-modal-button { height: 40px; border-radius: 3px; }
+.settings-preferences-modal .settings-modal-button { height: 41px; border-radius: 10px; }
+.settings-preferences-modal .settings-modal-button:not(.settings-modal-button-primary) { border-color: rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.045); color: #b7b6b1; box-shadow: none; }
+.settings-preferences-modal .settings-modal-button:not(.settings-modal-button-primary):hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #f1eee8; }
+.settings-preferences-modal .settings-modal-button-primary { background: #d8a85e; border-color: #d8a85e; color: #17130d; box-shadow: 0 8px 20px rgba(216, 168, 94, 0.14); }
+.settings-preferences-modal .settings-modal-button-primary:hover { background: #e5ba73; border-color: #e5ba73; box-shadow: 0 10px 24px rgba(216, 168, 94, 0.2); }
 
 /* =========================================================
    1300 x 750 UI/UX OVERRIDES
