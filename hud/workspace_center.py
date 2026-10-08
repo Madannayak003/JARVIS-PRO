@@ -10,8 +10,10 @@ from __future__ import annotations
 import functools
 import http.server
 import os
+import platform
 import socket
 import shutil
+import subprocess
 import threading
 import webbrowser
 from datetime import datetime, timezone
@@ -214,6 +216,39 @@ class WorkspaceCenter:
         except OSError:
             return {"ok": False, "error": "Unable to open the project folder."}
         return {"ok": True, "location": str(project)}
+
+    def open_in_vscode(self, project_id: str) -> dict[str, Any]:
+        """Open one recognized workspace project in VS Code."""
+
+        project = self._resolve(project_id)
+        if project is None:
+            return {"ok": False, "error": "Project folder is no longer available."}
+
+        listed_projects = {path.resolve() for path, _ in self._roots()}
+        if project not in listed_projects:
+            return {"ok": False, "error": "Only recognized workspace projects can be opened."}
+
+        abs_folder = str(project.resolve())
+        try:
+            if platform.system() == "Windows":
+                subprocess.Popen(
+                    ["cmd.exe", "/c", "code", abs_folder],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            else:
+                subprocess.Popen(
+                    ["code", abs_folder],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+        except OSError:
+            return {"ok": False, "error": "Unable to open the project in VS Code."}
+
+        return {"ok": True, "location": abs_folder}
 
     def delete_project(self, project_id: str) -> dict[str, Any]:
         """Delete one listed project after strict workspace validation."""
