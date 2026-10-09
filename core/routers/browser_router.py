@@ -9,6 +9,8 @@ Personal/custom web destinations are handled
 by web_router.py and must not be duplicated here.
 """
 
+import re
+
 # * =========================================================
 # * Windows Applications
 # * =========================================================
@@ -240,6 +242,17 @@ def browser_route(command):
     # * -----------------------------------------------------
     # * Google Search
     # * -----------------------------------------------------
+
+    # Natural variants used by the compatibility command path.  Keep the
+    # provider explicit here so generic file searches remain file-owned.
+    match = re.fullmatch(
+        r"(?:google\s+search|search\s+google)\s+(?:for\s+)?(.+)",
+        command,
+        re.IGNORECASE,
+    )
+
+    if match:
+        return [{"action": "google_search", "query": match.group(1).strip()}]
 
     if command.startswith("search google"):
 

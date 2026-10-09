@@ -2,6 +2,8 @@ from playwright.sync_api import sync_playwright
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+import re
+from urllib.parse import urlsplit, urlunsplit
 
 from skills.browser.browser_config import BrowserConfigurationError
 from skills.browser.browser_resolver import BrowserExecutableNotFoundError
@@ -473,6 +475,123 @@ class BrowserController:
                 )
 
                 return False
+
+    # * =====================================================
+    # * READ CURRENT PAGE
+    # * =====================================================
+
+    def read_current_page(self, max_chars=12000, timeout_ms=10000):
+        """Extract readable text from the existing current page.
+
+        This deliberately uses the existing browser worker and page. It never
+        creates a tab or starts another browser runtime.
+        """
+        return self._run_browser(
+            self._read_current_page_impl,
+            max_chars,
+            timeout_ms,
+        )
+
+    @staticmethod
+    def _safe_page_url(url):
+        """Remove credentials, query strings, and fragments from a URL."""
+        raw = str(url or "").strip()
+        if not raw:
+            return ""
+        try:
+            parsed = urlsplit(raw)
+            hostname = parsed.hostname or ""
+            netloc = hostname
+            if parsed.port:
+                netloc = f"{hostname}:{parsed.port}"
+            return urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
+        except Exception:
+            return raw.split("?", 1)[0].split("#", 1)[0]
+
+    @staticmethod
+    def _redact_page_text(text):
+        """Redact common inline secret assignments from extracted text."""
+        pattern = re.compile(
+            r"(?im)\b(password|passcode|api[_ -]?key|access[_ -]?token|"
+            r"refresh[_ -]?token|authorization|cookie|secret)\b\s*[:=]\s*[^\s,;]+"
+        )
+        return pattern.sub(r"\1: [REDACTED]", text)
+
+    def _read_current_page_impl(self, max_chars=12000, timeout_ms=10000):
+        with _browser_lock:
+            try:
+                max_chars = max(1, min(int(max_chars), 50000))
+                timeout_ms = max(1000, min(int(timeout_ms), 15000))
+
+                if not self._start_impl() or not self.page:
+                    return {
+                        "ok": False,
+                        "status": "unavailable",
+                        "extraction_status": "unavailable",
+                        "url": "",
+                        "title": "",
+                        "content": "",
+                        "message": "No browser page is available to read.",
+                    }
+
+                if self.page.is_closed():
+                    return {
+                        "ok": False,
+                        "status": "unavailable",
+                        "extraction_status": "unavailable",
+                        "url": "",
+                        "title": "",
+                        "content": "",
+                        "message": "The current browser page is closed.",
+                    }
+
+                safe_url = self._safe_page_url(getattr(self.page, "url", ""))
+                try:
+                    title = str(self.page.title() or "").strip()[:500]
+                except Exception:
+                    title = ""
+
+                body = self.page.locator("body")
+                text = str(body.inner_text(timeout=timeout_ms) or "")
+                text = self._redact_page_text(text)
+                text = text.strip()
+                truncated = len(text) > max_chars
+                text = text[:max_chars]
+
+                if not text:
+                    return {
+                        "ok": False,
+                        "status": "empty_content",
+                        "extraction_status": "empty",
+                        "url": safe_url,
+                        "title": title,
+                        "content": "",
+                        "truncated": False,
+                        "message": "The page opened, but no readable text was extracted.",
+                    }
+
+                self._sync_context()
+                return {
+                    "ok": True,
+                    "status": "extracted",
+                    "extraction_status": "success",
+                    "url": safe_url,
+                    "title": title,
+                    "content": text,
+                    "content_length": len(text),
+                    "truncated": truncated,
+                    "message": "Readable page content extracted successfully.",
+                }
+            except Exception as exc:
+                return {
+                    "ok": False,
+                    "status": "extraction_failed",
+                    "extraction_status": "failed",
+                    "url": self._safe_page_url(getattr(self.page, "url", "")) if self.page else "",
+                    "title": "",
+                    "content": "",
+                    "message": f"Page content extraction failed: {exc}",
+                }
 
     # * =====================================================
     # * GOOGLE SEARCH

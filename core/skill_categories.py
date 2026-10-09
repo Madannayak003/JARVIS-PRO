@@ -37,6 +37,8 @@ CATEGORIES = {
         "open",
         "google_search",
         "youtube_search",
+        "browser_open_result",
+        "browser_read_page",
     },
 
     "browser_control": {
@@ -186,6 +188,8 @@ DEFAULT_CATEGORY = "uncategorized"
 NETWORK_REQUIRED_ACTIONS = {
     "google_search",
     "youtube_search",
+    "browser_open_result",
+    "browser_read_page",
     "youtube_play_first",
     "youtube_play_result",
     "youtube_pause",
@@ -201,7 +205,6 @@ NETWORK_REQUIRED_ACTIONS = {
     "translate_open",
     "translate_text",
     "open_personal_link",
-    "browser_open_result",
     "spotify_open",
     "spotify_play",
     "spotify_pause",

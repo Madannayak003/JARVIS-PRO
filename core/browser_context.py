@@ -384,6 +384,24 @@ class BrowserContext:
 
         self.selected_index = -1
 
+    def search_snapshot(self) -> dict[str, Any]:
+        """Return search state without mixing it with current page state."""
+        return {
+            "query": self.last_search_query,
+            "platform": self.last_search_platform,
+            "results": [
+                {
+                    "position": index,
+                    "title": result.title,
+                    "url": result.url,
+                    "platform": result.platform,
+                    "result_type": result.result_type,
+                    "data": dict(result.data),
+                }
+                for index, result in enumerate(self.last_search_results, 1)
+            ],
+        }
+
     # * =========================================================
     # * SNAPSHOT
     # * =========================================================

@@ -68,6 +68,71 @@ const DASHBOARD_URL =
 
 const DEFAULT_MODEL = "gemini-3.6-flash";
 
+type DashboardRequestErrorKind = "network" | "http" | "invalid_response";
+
+class DashboardRequestError extends Error {
+  readonly kind: DashboardRequestErrorKind;
+  readonly status?: number;
+
+  constructor(message: string, kind: DashboardRequestErrorKind, status?: number) {
+    super(message);
+    this.name = "DashboardRequestError";
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+async function fetchDashboardJson<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Network request failed.";
+    throw new DashboardRequestError(
+      `Unable to reach the JARVIS dashboard: ${detail}`,
+      "network",
+    );
+  }
+
+  let data: T | { error?: string; message?: string } | null = null;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new DashboardRequestError(
+        `JARVIS dashboard returned HTTP ${response.status}.`,
+        "http",
+        response.status,
+      );
+    }
+    throw new DashboardRequestError(
+      "JARVIS dashboard returned an invalid response.",
+      "invalid_response",
+      response.status,
+    );
+  }
+
+  if (!response.ok) {
+    const body = data && typeof data === "object"
+      ? data as { error?: string; message?: string }
+      : null;
+    const message = body && ("error" in body ? body.error : body.message);
+    throw new DashboardRequestError(
+      String(message || `JARVIS dashboard returned HTTP ${response.status}.`),
+      "http",
+      response.status,
+    );
+  }
+
+  return data as T;
+}
+
+const wait = (milliseconds: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
 const CHAT_MODELS = [
   { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", description: "Best overall" },
   { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", description: "Coding & agents" },
@@ -187,6 +252,7 @@ export default function AIChatBot({
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [modelUpdating, setModelUpdating] = useState(false);
@@ -249,37 +315,85 @@ export default function AIChatBot({
 
   const loadChat = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/${sessionId}`, {
-        cache: "no-store",
-      });
-      const data = await response.json();
+      const data = await fetchDashboardJson<{ success?: boolean; chat?: ChatSession }>(
+        `${DASHBOARD_URL}/api/ai-chat/${encodeURIComponent(sessionId)}`,
+        {
+          cache: "no-store",
+        },
+      );
       if (data?.success && data.chat) {
         setCurrentSession(data.chat);
+        setHistoryError(null);
         isNearBottomRef.current = true;
+        return true;
       }
+      throw new DashboardRequestError(
+        "The dashboard returned no chat for that session.",
+        "invalid_response",
+      );
     } catch (error) {
-      console.error("[AI CHAT] Failed to load chat:", error);
+      if (error instanceof DashboardRequestError && error.status === 404) {
+        setCurrentSession((previous) => (previous?.id === sessionId ? null : previous));
+        setHistoryError("That conversation is no longer available.");
+        console.warn("[AI CHAT] Chat session was not found:", sessionId);
+      } else {
+        setHistoryError(
+          error instanceof DashboardRequestError
+            ? error.message
+            : "Unable to load that conversation.",
+        );
+        console.error("[AI CHAT] Failed to load chat:", error);
+      }
+      return false;
     }
   }, []);
 
   const loadChats = useCallback(async () => {
+    let lastError: unknown = null;
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${DASHBOARD_URL}/api/ai-chat/chats`, {
-        cache: "no-store",
-      });
-      const data = await response.json();
+      setHistoryError(null);
 
-      if (data?.success) {
-        const chats = data.chats || [];
-        setSessions(chats);
+      // The Python dashboard starts immediately after the Next.js process.
+      // Retry only connectivity failures so a startup race is recoverable;
+      // HTTP errors and malformed responses are surfaced immediately.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const data = await fetchDashboardJson<{
+            success?: boolean;
+            chats?: ChatSession[];
+          }>(`${DASHBOARD_URL}/api/ai-chat/chats`, { cache: "no-store" });
 
-        if (chats.length > 0 && !currentSession) {
-          await loadChat(chats[0].id);
+          if (!data?.success || !Array.isArray(data.chats)) {
+            throw new DashboardRequestError(
+              "JARVIS dashboard returned an invalid chat history response.",
+              "invalid_response",
+            );
+          }
+
+          const chats = data.chats;
+          setSessions(chats);
+
+          if (chats.length > 0 && !currentSession) {
+            await loadChat(chats[0].id);
+          }
+          return;
+        } catch (error) {
+          lastError = error;
+          if (!(error instanceof DashboardRequestError) || error.kind !== "network" || attempt === 2) {
+            throw error;
+          }
+          await wait(250 * (attempt + 1));
         }
       }
     } catch (error) {
-      console.error("[AI CHAT] Failed to load chats:", error);
+      const requestError = (error || lastError) as unknown;
+      setHistoryError(
+        requestError instanceof DashboardRequestError
+          ? requestError.message
+          : "Unable to load chat history.",
+      );
+      console.error("[AI CHAT] Failed to load chats:", requestError);
     } finally {
       setLoadingHistory(false);
     }
@@ -552,6 +666,8 @@ export default function AIChatBot({
           <div className="ai-chat-history">
             {loadingHistory ? (
               <div className="ai-chat-empty">Loading history...</div>
+            ) : historyError ? (
+              <div className="ai-chat-empty">{historyError}</div>
             ) : sessions.length === 0 ? (
               <div className="ai-chat-empty">No conversations yet.</div>
             ) : (

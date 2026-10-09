@@ -853,7 +853,11 @@ def dispatch(
             debug_print(
                 "[DISPATCHER] "
                 "Fast route handled command:",
-                fast_plan,
+                {"actions": [
+                    item.get("action")
+                    for item in fast_plan
+                    if isinstance(item, dict)
+                ]},
             )
 
             for action in fast_plan:

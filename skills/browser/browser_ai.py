@@ -170,7 +170,17 @@ def browser_open_result(data):
     return browser.open(url)
 
 
+def browser_read_page(data=None):
+    """Read text from the current page using the existing browser worker."""
+    data = data or {}
+    return browser.read_current_page(
+        max_chars=data.get("max_chars", 12000),
+        timeout_ms=data.get("timeout_ms", 10000),
+    )
+
+
 register("browser_open_result", browser_open_result)
+register("browser_read_page", browser_read_page, category="browser")
 
 register("open", ai_open)
 

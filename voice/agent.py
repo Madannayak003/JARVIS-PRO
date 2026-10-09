@@ -63,6 +63,15 @@ from core.live_execution import (
     live_execution,
     get_live_responses,
 )
+from core.live_agent import (
+    build_live_capability_tool,
+    build_live_search_tools,
+    execute_live_capability,
+    execute_live_open_result,
+    execute_live_read_page,
+    execute_live_search,
+    structured_action_from_tool_name,
+)
 
 from hud.integration import HUDIntegration
 from config.environment import get_env
@@ -306,6 +315,38 @@ answer normally without calling the tool.
 
 Never claim that a computer action was completed unless the
 jarvis_command tool was actually executed successfully.
+
+STRUCTURED CAPABILITIES
+- Prefer jarvis_capability when the user's intent clearly maps to one
+  registered capability shown in that tool's catalog.
+- Pass the capability name in `action` and validated inputs in `parameters`.
+  Do not invent action names or parameters.
+- Treat failed, unsupported, and no-result responses as non-success. Explain
+  the limitation or ask for missing information instead of guessing.
+- Use jarvis_command when the request depends on JARVIS's natural-language
+  dispatcher, contextual reference resolver, or an action not in the catalog.
+- For "open the first/second result" use jarvis_open_result with the numbered
+  position from the latest jarvis_search response. If the result context is
+  stale or ambiguous, ask the user briefly rather than guessing.
+- A page-opened result does not imply that page content was read. Only give a
+  detailed page summary when jarvis_read_page explicitly returns extracted content.
+- After a tool result, decide from that real result whether another dependent
+  capability is needed. Do not execute a fixed sequence blindly.
+- Ordinary conversation and static questions do not need a tool call.
+
+FILE INTELLIGENCE
+- The supported JARVIS dashboard upload flow ingests the uploaded file into
+  File Intelligence and reports its processing status. Do not claim that a
+  raw upload path alone is indexed.
+- `file_list` reports registered File Intelligence records, not an arbitrary
+  project-folder or filesystem directory listing.
+- Use `file_search` only against indexed File Intelligence records. Treat its
+  `no_results` status as an empty search, and treat ingestion or handler
+  failures as failures.
+- When explaining upload/indexing, tell the user to use the supported JARVIS
+  File Intelligence upload control, wait for processing to be ready, then use
+  `file_list` or `file_search`. Do not invent an unsupported directory path or
+  indexing command.
 
 After a command is executed, briefly tell the user the result
 naturally.
@@ -785,7 +826,9 @@ class Agent:
             ),
             
             tools=[
-                _build_jarvis_command_tool()
+                _build_jarvis_command_tool(),
+                build_live_capability_tool(),
+                *build_live_search_tools(),
             ],
 
             speech_config=types.SpeechConfig(
@@ -990,7 +1033,9 @@ class Agent:
                         ),
 
                         tools=[
-                            _build_jarvis_command_tool()
+                            _build_jarvis_command_tool(),
+                            build_live_capability_tool(),
+                            *build_live_search_tools(),
                         ],
 
                         speech_config=types.SpeechConfig(
@@ -1744,9 +1789,11 @@ class Agent:
                                     elif dispatch_result is None:
 
                                         result = {
-                                            "success": True,
+                                            "success": False,
+                                            "status": "no_result",
                                             "message": (
-                                                "I completed that request."
+                                                "The command was dispatched, but it returned no result, "
+                                                "so completion could not be verified."
                                             ),
                                         }
 
@@ -1773,6 +1820,88 @@ class Agent:
                                         ),
                                     }
 
+                        elif function_name == "jarvis_search":
+
+                            args = function_call.args or {}
+                            with live_execution():
+                                result = execute_live_search(
+                                    args.get("query"),
+                                    args.get("provider", "google"),
+                                )
+                            if result.get("authoritative"):
+                                jarvis_authoritative_response = True
+
+                        elif function_name == "jarvis_open_result":
+
+                            args = function_call.args or {}
+                            with live_execution():
+                                result = execute_live_open_result(
+                                    args.get("position"),
+                                    args.get("url"),
+                                )
+                            if result.get("authoritative"):
+                                jarvis_authoritative_response = True
+
+                        elif function_name == "jarvis_read_page":
+
+                            args = function_call.args or {}
+                            with live_execution():
+                                result = execute_live_read_page(args)
+                            if result.get("authoritative"):
+                                jarvis_authoritative_response = True
+
+                        elif structured_action_from_tool_name(function_name):
+
+                            args = function_call.args or {}
+                            action = structured_action_from_tool_name(function_name)
+
+                            try:
+                                with live_execution():
+                                    result = execute_live_capability(
+                                        action,
+                                        args,
+                                    )
+                                if result.get("authoritative"):
+                                    jarvis_authoritative_response = True
+                            except Exception as exc:
+                                debug_print(
+                                    "[LIVE CAPABILITY ERROR]",
+                                    type(exc).__name__,
+                                )
+                                result = {
+                                    "ok": False,
+                                    "status": "failed",
+                                    "action": action,
+                                    "message": str(exc),
+                                }
+
+                        elif function_name == "jarvis_capability":
+
+                            args = function_call.args or {}
+                            action = args.get("action", "")
+                            parameters = args.get("parameters", {})
+
+                            try:
+                                # Keep the existing live execution context so
+                                # skill-generated speech remains authoritative.
+                                with live_execution():
+                                    result = execute_live_capability(
+                                        action,
+                                        parameters,
+                                    )
+                                if result.get("authoritative"):
+                                    jarvis_authoritative_response = True
+                            except Exception as exc:
+                                debug_print(
+                                    "[LIVE CAPABILITY ERROR]",
+                                    type(exc).__name__,
+                                )
+                                result = {
+                                    "ok": False,
+                                    "status": "failed",
+                                    "message": str(exc),
+                                }
+
                         else:
 
                             result = {
@@ -1790,6 +1919,18 @@ class Agent:
                                 response=result,
                             )
                         )
+
+                        # Keep runtime diagnostics useful without logging page
+                        # content, URLs with sensitive parameters, or secrets.
+                        if function_name == "jarvis_read_page" and isinstance(result, dict):
+                            print(
+                                "[LIVE PAGE READ RESULT]",
+                                "status=", result.get("status"),
+                                "extraction_status=", result.get("extraction_status"),
+                                "ok=", result.get("ok"),
+                                "content_length=", result.get("content_length", 0),
+                                "truncated=", result.get("truncated", False),
+                            )
 
                     # * ---------------------------------------------
                     # * Send result back to Gemini.

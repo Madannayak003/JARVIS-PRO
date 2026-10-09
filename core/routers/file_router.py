@@ -395,7 +395,7 @@ def file_route(command):
     # * =========================================================
 
     match = re.fullmatch(
-        r"(?:find|search\s+for|look\s+for)\s+(?:my\s+)?(.+)",
+        r"(?:find|search\s+for|look\s+for)\s+(?:my\s+)?(.+\b(?:file|files|folder|folders|directory|directories|document|documents|pdf)\b.*)",
         command,
         re.IGNORECASE
     )

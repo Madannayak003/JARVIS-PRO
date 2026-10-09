@@ -73,7 +73,10 @@ def fast_route(command):
     if android_targeted:
         android_plan = android_route(command)
         if android_plan:
-            debug_print("[FAST ROUTER MATCH]", android_plan)
+            debug_print(
+                "[FAST ROUTER MATCH]",
+                {"actions": [item.get("action") for item in android_plan if isinstance(item, dict)]},
+            )
             return android_plan
 
     for router in ROUTERS:
@@ -87,7 +90,10 @@ def fast_route(command):
         plan = router(route_command)
 
         if plan:
-            debug_print("[FAST ROUTER MATCH]", plan)
+            debug_print(
+                "[FAST ROUTER MATCH]",
+                {"actions": [item.get("action") for item in plan if isinstance(item, dict)]},
+            )
             return plan
 
     return None
