@@ -460,30 +460,20 @@ export default function JarvisOrb({
         }
 
         catch (err) {
+          console.error("[HAND TRACKER] Initialization failed:", err);
 
-          trackerRef.current =
-            null;
-
-
+          trackerRef.current = null;
           tracker.stop();
+          setCamera("error");
 
-
-          setCamera(
-            "error"
-          );
-
+          const message =
+            err instanceof Error ? err.message : String(err);
 
           setError(
-
-            err instanceof DOMException &&
-            err.name === "NotAllowedError"
-
+            err instanceof DOMException && err.name === "NotAllowedError"
               ? "CAMERA ACCESS DENIED"
-
-              : "TRACKING INIT FAILED"
-
+              : `TRACKING INIT FAILED: ${message}`
           );
-
         }
 
       },
